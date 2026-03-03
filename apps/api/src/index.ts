@@ -25,7 +25,7 @@ import {
 import { pool, query } from './db.js';
 import { env } from './env.js';
 import { checkRateLimit } from './rate-limit.js';
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 
 type UserRole = 'user' | 'mod' | 'admin';
 
