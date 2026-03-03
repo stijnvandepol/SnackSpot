@@ -32,51 +32,48 @@ jobs:
           fetch-depth: 1
 
       - name: Validate Docker availability
-        shell: pwsh
+        shell: bash
         run: |
           docker version
           docker compose version
 
       - name: Write environment file
-        shell: pwsh
+        shell: bash
         run: |
-          $envFile = "${{ secrets.SNACKSPOT_ENV_FILE }}"
-          if ([string]::IsNullOrWhiteSpace($envFile)) {
-            throw "GitHub secret SNACKSPOT_ENV_FILE is missing."
-          }
-          $envFile | Out-File -FilePath .env -Encoding utf8NoBOM
+          if [ -z "${{ secrets.SNACKSPOT_ENV_FILE }}" ]; then
+            echo "GitHub secret SNACKSPOT_ENV_FILE is missing."
+            exit 1
+          fi
+          printf '%s' "${{ secrets.SNACKSPOT_ENV_FILE }}" > .env
 
       - name: Build and start stack
-        shell: pwsh
+        shell: bash
         run: |
-          docker compose --env-file .env -f $env:COMPOSE_FILE pull
-          docker compose --env-file .env -f $env:COMPOSE_FILE build --pull
-          docker compose --env-file .env -f $env:COMPOSE_FILE up -d --remove-orphans
+          docker compose --env-file .env -f "$COMPOSE_FILE" pull
+          docker compose --env-file .env -f "$COMPOSE_FILE" build --pull
+          docker compose --env-file .env -f "$COMPOSE_FILE" up -d --remove-orphans
 
       - name: Run database migrations
-        shell: pwsh
+        shell: bash
         run: |
-          docker compose --env-file .env -f $env:COMPOSE_FILE run --rm api pnpm --filter @snackspot/db migrate
+          docker compose --env-file .env -f "$COMPOSE_FILE" run --rm api pnpm --filter @snackspot/db migrate
 
       - name: Verify API health
-        shell: pwsh
+        shell: bash
         run: |
-          $maxAttempts = 20
-          $delaySeconds = 3
-          for ($i = 1; $i -le $maxAttempts; $i++) {
-            try {
-              $response = Invoke-WebRequest -Uri "http://localhost:4000/health" -UseBasicParsing -TimeoutSec 5
-              if ($response.StatusCode -eq 200) {
-                Write-Host "API is healthy."
-                exit 0
-              }
-            } catch {
-              Start-Sleep -Seconds $delaySeconds
-            }
-          }
-          throw "API health check failed after multiple attempts."
+          max_attempts=20
+          delay_seconds=3
+          for i in $(seq 1 "$max_attempts"); do
+            if curl -fsS "http://localhost:4000/health" >/dev/null; then
+              echo "API is healthy."
+              exit 0
+            fi
+            sleep "$delay_seconds"
+          done
+          echo "API health check failed after multiple attempts."
+          exit 1
 
       - name: Cleanup dangling images
-        shell: pwsh
+        shell: bash
         run: |
           docker image prune -f
