@@ -5,7 +5,7 @@ RUN corepack enable
 COPY package.json pnpm-workspace.yaml tsconfig.base.json ./
 COPY apps/web/package.json apps/web/package.json
 
-RUN pnpm install --no-frozen-lockfile
+RUN pnpm install --no-frozen-lockfile --prod=false
 
 COPY . .
 RUN pnpm --filter @snackspot/web build
