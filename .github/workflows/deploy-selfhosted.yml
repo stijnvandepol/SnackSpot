@@ -40,11 +40,20 @@ jobs:
       - name: Write environment file
         shell: bash
         run: |
-          if [ -z "${{ secrets.SNACKSPOT_ENV_FILE }}" ]; then
-            echo "GitHub secret SNACKSPOT_ENV_FILE is missing."
-            exit 1
+          if [ -n "${{ secrets.SNACKSPOT_ENV_FILE }}" ]; then
+            printf '%s' "${{ secrets.SNACKSPOT_ENV_FILE }}" > .env
+            echo "Wrote .env from GitHub secret SNACKSPOT_ENV_FILE"
+            exit 0
           fi
-          printf '%s' "${{ secrets.SNACKSPOT_ENV_FILE }}" > .env
+
+          if [ -f .env ] && [ -s .env ]; then
+            echo "SNACKSPOT_ENV_FILE missing; using existing .env on runner workspace"
+            exit 0
+          fi
+
+          echo "GitHub secret SNACKSPOT_ENV_FILE is missing and no .env file exists in workspace."
+          echo "Add repository secret SNACKSPOT_ENV_FILE or create a .env on the runner."
+          exit 1
 
       - name: Build and start stack
         shell: bash
