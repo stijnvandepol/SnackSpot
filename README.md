@@ -28,3 +28,8 @@ Production-ready starter for SnackSpot (web + API + worker) with PostgreSQL/Post
 - Rate limiting with Redis-compatible strategy (memory fallback in dev)
 
 See `docs/` for full technical specification, API contracts, threat model, and production checklist.
+
+## Deployment (self-hosted)
+
+Use the GitHub Actions workflow at `.github/workflows/deploy-selfhosted.yml`.
+Setup details are documented in `docs/deploy-self-hosted.md`.

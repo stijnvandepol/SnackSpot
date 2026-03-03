@@ -1,0 +1,82 @@
+name: Deploy SnackSpot (Self-Hosted)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'infra/**'
+      - '.github/workflows/deploy-selfhosted.yml'
+      - 'package.json'
+      - 'pnpm-workspace.yaml'
+      - 'tsconfig.base.json'
+  workflow_dispatch:
+
+concurrency:
+  group: snackspot-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    timeout-minutes: 45
+
+    env:
+      COMPOSE_FILE: infra/docker/docker-compose.yml
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Validate Docker availability
+        shell: pwsh
+        run: |
+          docker version
+          docker compose version
+
+      - name: Write environment file
+        shell: pwsh
+        run: |
+          $envFile = "${{ secrets.SNACKSPOT_ENV_FILE }}"
+          if ([string]::IsNullOrWhiteSpace($envFile)) {
+            throw "GitHub secret SNACKSPOT_ENV_FILE is missing."
+          }
+          $envFile | Out-File -FilePath .env -Encoding utf8NoBOM
+
+      - name: Build and start stack
+        shell: pwsh
+        run: |
+          docker compose --env-file .env -f $env:COMPOSE_FILE pull
+          docker compose --env-file .env -f $env:COMPOSE_FILE build --pull
+          docker compose --env-file .env -f $env:COMPOSE_FILE up -d --remove-orphans
+
+      - name: Run database migrations
+        shell: pwsh
+        run: |
+          docker compose --env-file .env -f $env:COMPOSE_FILE run --rm api pnpm --filter @snackspot/db migrate
+
+      - name: Verify API health
+        shell: pwsh
+        run: |
+          $maxAttempts = 20
+          $delaySeconds = 3
+          for ($i = 1; $i -le $maxAttempts; $i++) {
+            try {
+              $response = Invoke-WebRequest -Uri "http://localhost:4000/health" -UseBasicParsing -TimeoutSec 5
+              if ($response.StatusCode -eq 200) {
+                Write-Host "API is healthy."
+                exit 0
+              }
+            } catch {
+              Start-Sleep -Seconds $delaySeconds
+            }
+          }
+          throw "API health check failed after multiple attempts."
+
+      - name: Cleanup dangling images
+        shell: pwsh
+        run: |
+          docker image prune -f
