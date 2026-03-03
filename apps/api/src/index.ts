@@ -547,6 +547,8 @@ app.patch('/api/v1/reviews/:id', async (req, reply) => {
       'SELECT rating, text, dish_name FROM reviews WHERE id = $1',
       [params.id]
     );
+    const currentReview = current[0];
+    if (!currentReview) return reply.code(404).send({ error: 'Review not found' });
 
     const updated = await query(
       `UPDATE reviews
@@ -558,9 +560,9 @@ app.patch('/api/v1/reviews/:id', async (req, reply) => {
        RETURNING id, rating, text, dish_name, updated_at`,
       [
         params.id,
-        body.rating ?? current[0].rating,
-        body.text ?? current[0].text,
-        body.dish_name ?? current[0].dish_name
+        body.rating ?? currentReview.rating,
+        body.text ?? currentReview.text,
+        body.dish_name ?? currentReview.dish_name
       ]
     );
 
@@ -662,15 +664,18 @@ app.post('/api/v1/photos/confirm-upload', async (req, reply) => {
       ]
     );
 
+    const createdPhoto = created[0];
+    if (!createdPhoto) return reply.code(500).send({ error: 'Photo creation failed' });
+
     await redis.lpush(
       'photo:process',
       JSON.stringify({
-        photoId: created[0].id,
+        photoId: createdPhoto.id,
         originalKey: body.storage_key
       })
     );
 
-    return reply.code(201).send({ photo_id: created[0].id, status: 'queued' });
+    return reply.code(201).send({ photo_id: createdPhoto.id, status: 'queued' });
   } catch (error) {
     if (error instanceof Error && error.message === 'UNAUTHORIZED') {
       return reply.code(401).send({ error: 'Unauthorized' });
@@ -702,7 +707,9 @@ app.post('/api/v1/reports', async (req, reply) => {
        RETURNING id`,
       [auth.userId, body.target_type, body.target_id, body.reason, body.details ?? null]
     );
-    return reply.code(201).send({ id: created[0].id, status: 'open' });
+    const report = created[0];
+    if (!report) return reply.code(500).send({ error: 'Report creation failed' });
+    return reply.code(201).send({ id: report.id, status: 'open' });
   } catch (error) {
     if (error instanceof Error && error.message === 'UNAUTHORIZED') {
       return reply.code(401).send({ error: 'Unauthorized' });
@@ -769,8 +776,9 @@ app.post('/api/v1/mod/actions', async (req, reply) => {
 });
 
 app.setErrorHandler((error, _req, reply) => {
-  if ('issues' in error) {
-    return reply.code(400).send({ error: 'Validation failed', details: (error as any).issues });
+  if (typeof error === 'object' && error !== null && 'issues' in error) {
+    const zodError = error as { issues: unknown };
+    return reply.code(400).send({ error: 'Validation failed', details: zodError.issues });
   }
   app.log.error(error);
   return reply.code(500).send({ error: 'Internal Server Error' });
