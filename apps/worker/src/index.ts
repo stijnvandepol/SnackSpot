@@ -1,5 +1,5 @@
 import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 import pg from 'pg';
 import sharp from 'sharp';
 
