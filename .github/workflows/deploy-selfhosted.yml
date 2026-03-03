@@ -62,10 +62,37 @@ jobs:
           docker compose --env-file .env -f "$COMPOSE_FILE" build --pull
           docker compose --env-file .env -f "$COMPOSE_FILE" up -d --remove-orphans
 
+      - name: Wait for PostgreSQL readiness
+        shell: bash
+        run: |
+          max_attempts=30
+          delay_seconds=2
+          for i in $(seq 1 "$max_attempts"); do
+            if docker compose --env-file .env -f "$COMPOSE_FILE" exec -T postgres pg_isready -U snackspot -d snackspot >/dev/null 2>&1; then
+              echo "Postgres is ready."
+              exit 0
+            fi
+            sleep "$delay_seconds"
+          done
+          echo "Postgres did not become ready in time."
+          docker compose --env-file .env -f "$COMPOSE_FILE" logs postgres | tail -n 100
+          exit 1
+
       - name: Run database migrations
         shell: bash
         run: |
-          docker compose --env-file .env -f "$COMPOSE_FILE" run --rm api pnpm --filter @snackspot/db migrate
+          max_attempts=5
+          delay_seconds=3
+          for i in $(seq 1 "$max_attempts"); do
+            if docker compose --env-file .env -f "$COMPOSE_FILE" run --rm api pnpm --filter @snackspot/db migrate; then
+              echo "Migrations completed."
+              exit 0
+            fi
+            echo "Migration attempt $i failed, retrying..."
+            sleep "$delay_seconds"
+          done
+          echo "Migrations failed after retries."
+          exit 1
 
       - name: Verify API health
         shell: bash
