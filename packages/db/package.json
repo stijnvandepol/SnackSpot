@@ -1,0 +1,16 @@
+{
+  "name": "@snackspot/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "migrate": "node ./scripts/migrate.mjs",
+    "seed": "node ./scripts/seed.mjs",
+    "build": "echo 'db package has no build step'",
+    "typecheck": "echo 'db package has no typecheck step'",
+    "lint": "echo 'db package has no lint step'"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}
