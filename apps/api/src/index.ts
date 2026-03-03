@@ -139,6 +139,7 @@ app.post('/api/v1/auth/register', async (req, reply) => {
   );
 
   const user = rows[0];
+  if (!user) return reply.code(500).send({ error: 'User creation failed' });
   const accessToken = signAccessToken({ sub: user.id, role: user.role });
   const refreshToken = signRefreshToken({ sub: user.id, role: user.role });
   const refreshHash = hashToken(refreshToken);
@@ -215,11 +216,12 @@ app.post('/api/v1/auth/refresh', async (req, reply) => {
   );
 
   if (!tokens[0]) return reply.code(401).send({ error: 'Refresh token revoked' });
+  const currentToken = tokens[0];
 
   const accessToken = signAccessToken({ sub: payload.sub, role: payload.role });
   const newRefreshToken = signRefreshToken({ sub: payload.sub, role: payload.role });
 
-  await query('UPDATE refresh_tokens SET revoked_at = now() WHERE id = $1', [tokens[0].id]);
+  await query('UPDATE refresh_tokens SET revoked_at = now() WHERE id = $1', [currentToken.id]);
   await query(
     `INSERT INTO refresh_tokens(user_id, token_hash, user_agent, ip, expires_at)
      VALUES ($1, $2, $3, $4, now() + ($5::text || ' seconds')::interval)`,
@@ -346,7 +348,8 @@ app.get('/api/v1/places/:id', async (req, reply) => {
   );
 
   if (!rows[0]) return reply.code(404).send({ error: 'Place not found' });
-  return rows[0];
+  const place = rows[0];
+  return place;
 });
 
 app.post('/api/v1/places', async (req, reply) => {
@@ -398,7 +401,9 @@ app.post('/api/v1/places', async (req, reply) => {
       ]
     );
 
-    return reply.code(201).send({ deduped: false, place: created[0] });
+    const place = created[0];
+    if (!place) return reply.code(500).send({ error: 'Place creation failed' });
+    return reply.code(201).send({ deduped: false, place });
   } catch (error) {
     if (error instanceof Error && error.message === 'UNAUTHORIZED') {
       return reply.code(401).send({ error: 'Unauthorized' });
@@ -494,6 +499,7 @@ app.post('/api/v1/reviews', async (req, reply) => {
     );
 
     const review = created[0];
+    if (!review) return reply.code(500).send({ error: 'Review creation failed' });
 
     for (let i = 0; i < body.photo_ids.length; i += 1) {
       await query(
@@ -540,8 +546,9 @@ app.patch('/api/v1/reviews/:id', async (req, reply) => {
       .parse(req.body);
 
     const owner = await query<{ user_id: string }>('SELECT user_id FROM reviews WHERE id = $1', [params.id]);
-    if (!owner[0]) return reply.code(404).send({ error: 'Review not found' });
-    if (owner[0].user_id !== auth.userId) return reply.code(403).send({ error: 'Forbidden' });
+    const ownerRow = owner[0];
+    if (!ownerRow) return reply.code(404).send({ error: 'Review not found' });
+    if (ownerRow.user_id !== auth.userId) return reply.code(403).send({ error: 'Forbidden' });
 
     const current = await query<{ rating: number; text: string; dish_name: string }>(
       'SELECT rating, text, dish_name FROM reviews WHERE id = $1',
@@ -566,7 +573,9 @@ app.patch('/api/v1/reviews/:id', async (req, reply) => {
       ]
     );
 
-    return updated[0];
+    const updatedReview = updated[0];
+    if (!updatedReview) return reply.code(500).send({ error: 'Review update failed' });
+    return updatedReview;
   } catch (error) {
     if (error instanceof Error && error.message === 'UNAUTHORIZED') {
       return reply.code(401).send({ error: 'Unauthorized' });
@@ -581,8 +590,9 @@ app.delete('/api/v1/reviews/:id', async (req, reply) => {
     const params = z.object({ id: z.string().uuid() }).parse(req.params);
 
     const owner = await query<{ user_id: string }>('SELECT user_id FROM reviews WHERE id = $1', [params.id]);
-    if (!owner[0]) return reply.code(404).send({ error: 'Review not found' });
-    if (owner[0].user_id !== auth.userId && auth.role === 'user') {
+    const ownerRow = owner[0];
+    if (!ownerRow) return reply.code(404).send({ error: 'Review not found' });
+    if (ownerRow.user_id !== auth.userId && auth.role === 'user') {
       return reply.code(403).send({ error: 'Forbidden' });
     }
 
