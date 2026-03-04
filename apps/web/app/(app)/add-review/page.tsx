@@ -14,6 +14,17 @@ interface PlaceForm {
   lng: string
 }
 
+interface SearchPlace {
+  id: string
+  name: string
+  address: string
+  lat: number
+  lng: number
+  distance_m?: number
+  avg_rating: number | null
+  review_count: number
+}
+
 interface UploadedPhoto {
   photoId: string
   previewUrl: string
@@ -42,8 +53,11 @@ export default function AddReviewPage() {
   const router = useRouter()
   const [step, setStep] = useState<Step>('place')
   const [place, setPlace] = useState<PlaceForm>({
-    mode: 'new', name: '', address: '', lat: '', lng: '',
+    mode: 'existing', name: '', address: '', lat: '', lng: '',
   })
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<SearchPlace[]>([])
+  const [searching, setSearching] = useState(false)
   const [rating, setRating] = useState(0)
   const [text, setText] = useState('')
   const [dishName, setDishName] = useState('')
@@ -53,6 +67,58 @@ export default function AddReviewPage() {
   const [fetchingLocation, setFetchingLocation] = useState(false)
   const [geocoding, setGeocoding] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Search for existing places
+  const handleSearchPlaces = async (query: string) => {
+    if (!query || query.length < 2) {
+      setSearchResults([])
+      return
+    }
+    
+    setSearching(true)
+    try {
+      const res = await fetch(
+        `/api/v1/places/search?q=${encodeURIComponent(query)}&limit=10`,
+        { credentials: 'include' }
+      )
+      if (!res.ok) throw new Error('Search failed')
+      const json = await res.json()
+      setSearchResults(json.data.data || [])
+    } catch (e) {
+      console.error('Place search failed:', e)
+      setSearchResults([])
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  // Debounced search
+  const handleSearchInputChange = (query: string) => {
+    setSearchQuery(query)
+    
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      handleSearchPlaces(query)
+    }, 300)
+  }
+
+  // Select a place from search results
+  const handleSelectPlace = (selectedPlace: SearchPlace) => {
+    setPlace((p) => ({
+      ...p,
+      placeId: selectedPlace.id,
+      name: selectedPlace.name,
+      address: selectedPlace.address,
+      lat: selectedPlace.lat.toString(),
+      lng: selectedPlace.lng.toString(),
+    }))
+    setSearchQuery(selectedPlace.name)
+    setSearchResults([])
+  }
 
   // Get current location and reverse geocode to address
   const handleUseCurrentLocation = async () => {
@@ -324,24 +390,94 @@ export default function AddReviewPage() {
         <div className="space-y-4">
           <div className="flex gap-2">
             <button
-              onClick={() => setPlace((p) => ({ ...p, mode: 'new' }))}
-              className={`flex-1 py-2 rounded-xl text-sm font-medium border transition ${place.mode === 'new' ? 'border-snack-primary bg-snack-surface text-snack-primary' : 'border-[#e4e4e4] text-snack-muted'}`}
-            >
-              New place
-            </button>
-            <button
-              onClick={() => setPlace((p) => ({ ...p, mode: 'existing' }))}
+              onClick={() => {
+                setPlace((p) => ({ ...p, mode: 'existing', placeId: undefined, name: '', address: '', lat: '', lng: '' }))
+                setSearchQuery('')
+                setSearchResults([])
+              }}
               className={`flex-1 py-2 rounded-xl text-sm font-medium border transition ${place.mode === 'existing' ? 'border-snack-primary bg-snack-surface text-snack-primary' : 'border-[#e4e4e4] text-snack-muted'}`}
             >
-              Existing place
+              📍 Existing place
+            </button>
+            <button
+              onClick={() => {
+                setPlace((p) => ({ ...p, mode: 'new', placeId: undefined, name: '', address: '', lat: '', lng: '' }))
+                setSearchQuery('')
+                setSearchResults([])
+              }}
+              className={`flex-1 py-2 rounded-xl text-sm font-medium border transition ${place.mode === 'new' ? 'border-snack-primary bg-snack-surface text-snack-primary' : 'border-[#e4e4e4] text-snack-muted'}`}
+            >
+              ➕ New place
             </button>
           </div>
 
-          {place.mode === 'new' ? (
+          {place.mode === 'existing' ? (
+            <>
+              <div className="relative">
+                <label className="label">Search for a place *</label>
+                <input 
+                  className="input" 
+                  placeholder="Start typing place name..." 
+                  value={searchQuery} 
+                  onChange={(e) => handleSearchInputChange(e.target.value)}
+                  autoComplete="off"
+                />
+                {searching && (
+                  <div className="absolute right-3 top-10 text-snack-muted">
+                    🔍...
+                  </div>
+                )}
+                
+                {/* Search results dropdown */}
+                {searchResults.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-snack-border rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                    {searchResults.map((result) => (
+                      <button
+                        key={result.id}
+                        type="button"
+                        onClick={() => handleSelectPlace(result)}
+                        className="w-full text-left px-4 py-3 hover:bg-snack-surface border-b border-snack-border last:border-b-0 transition"
+                      >
+                        <div className="font-medium text-snack-text">{result.name}</div>
+                        <div className="text-xs text-snack-muted mt-0.5">{result.address}</div>
+                        <div className="flex gap-3 mt-1 text-xs text-snack-muted">
+                          {result.avg_rating && (
+                            <span>⭐ {result.avg_rating.toFixed(1)}</span>
+                          )}
+                          <span>📝 {result.review_count} reviews</span>
+                          {result.distance_m !== undefined && (
+                            <span>📍 {(result.distance_m / 1000).toFixed(1)} km</span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {place.placeId && (
+                <div className="px-4 py-3 bg-green-50 border border-green-200 rounded-xl">
+                  <div className="flex items-start gap-2">
+                    <span className="text-lg">✓</span>
+                    <div className="flex-1">
+                      <div className="font-medium text-snack-text">{place.name}</div>
+                      <div className="text-xs text-snack-muted mt-0.5">{place.address}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
             <>
               <div>
                 <label className="label">Place name *</label>
-                <input className="input" placeholder="e.g. Café Stroopwafel" value={place.name} onChange={(e) => setPlace((p) => ({ ...p, name: e.target.value }))} />
+                <input 
+                  className="input" 
+                  placeholder="e.g. Café Stroopwafel" 
+                  value={place.name} 
+                  onChange={(e) => setPlace((p) => ({ ...p, name: e.target.value }))}
+                  autoComplete="off"
+                />
               </div>
               
               <div>
@@ -381,19 +517,18 @@ export default function AddReviewPage() {
                 </div>
               )}
             </>
-          ) : (
-            <div>
-              <label className="label">Place ID</label>
-              <input className="input" placeholder="Paste a place ID" value={place.placeId ?? ''} onChange={(e) => setPlace((p) => ({ ...p, placeId: e.target.value }))} />
-              <p className="text-xs text-snack-muted mt-1">You can find the ID in the URL on a place page: /place/&lt;id&gt;</p>
-            </div>
           )}
 
           <button
             className="btn-primary w-full mt-2"
-            disabled={geocoding || fetchingLocation}
+            disabled={geocoding || fetchingLocation || searching}
             onClick={async () => {
-              if (place.mode === 'new') {
+              if (place.mode === 'existing') {
+                if (!place.placeId) {
+                  setError('Please select a place from the search results'); return
+                }
+              } else {
+                // mode === 'new'
                 if (!place.name || !place.address) {
                   setError('Place name and address are required'); return
                 }
@@ -402,14 +537,12 @@ export default function AddReviewPage() {
                   setError('Please click "🔍 Find" to get coordinates first')
                   return
                 }
-              } else if (!place.placeId) {
-                setError('Place ID is required'); return
               }
               setError(null)
               setStep('review')
             }}
           >
-            {geocoding || fetchingLocation ? 'Loading...' : 'Next: Write Review →'}
+            {geocoding || fetchingLocation || searching ? 'Loading...' : 'Next: Write Review →'}
           </button>
           {error && <p className="text-sm text-red-500">{error}</p>}
         </div>
