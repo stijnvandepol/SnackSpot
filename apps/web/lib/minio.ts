@@ -17,21 +17,22 @@ export async function ensureBucket(): Promise<void> {
   const exists = await minioClient.bucketExists(BUCKET)
   if (!exists) {
     await minioClient.makeBucket(BUCKET, 'us-east-1')
-    // Set anonymous read policy for variants/* prefix only
-    const policy = JSON.stringify({
-      Version: '2012-10-17',
-      Statement: [
-        {
-          Effect: 'Allow',
-          Principal: { AWS: ['*'] },
-          Action: ['s3:GetObject'],
-          Resource: [`arn:aws:s3:::${BUCKET}/variants/*`],
-        },
-      ],
-    })
-    await minioClient.setBucketPolicy(BUCKET, policy)
     logger.info({ bucket: BUCKET }, 'MinIO bucket created')
   }
+
+  // Set anonymous read policy for variants/* prefix only
+  const policy = JSON.stringify({
+    Version: '2012-10-17',
+    Statement: [
+      {
+        Effect: 'Allow',
+        Principal: { AWS: ['*'] },
+        Action: ['s3:GetObject'],
+        Resource: [`arn:aws:s3:::${BUCKET}/variants/*`],
+      },
+    ],
+  })
+  await minioClient.setBucketPolicy(BUCKET, policy)
 }
 
 /** Generate a presigned PUT URL for direct browser upload */
@@ -43,7 +44,13 @@ export async function presignedPut(key: string, expirySeconds = 300): Promise<st
   const publicBase = env.MINIO_PUBLIC_URL
   const internalBase = `http${env.MINIO_USE_SSL ? 's' : ''}://${env.MINIO_ENDPOINT}:${env.MINIO_PORT}`
 
-  return internalUrl.replace(internalBase, publicBase)
+  logger.debug({ internalUrl, internalBase, publicBase }, 'Presigned PUT URL before replacement')
+  
+  const finalUrl = internalUrl.replace(internalBase, publicBase)
+  
+  logger.debug({ finalUrl }, 'Presigned PUT URL after replacement')
+
+  return finalUrl
 }
 
 /** Check if an object exists in the bucket */
