@@ -34,7 +34,6 @@ export function signAccessToken(payload: Omit<AccessTokenPayload, 'iat' | 'exp'>
   return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expiresIn: env.JWT_ACCESS_EXPIRES_IN as any,
-    subject: payload.sub,
   })
 }
 
