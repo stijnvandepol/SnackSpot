@@ -49,8 +49,11 @@ export function BottomNav() {
                 }`}
               >
                 {l.accent ? (
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-snack-primary shadow-sm -mt-5">
-                    <NavIcon name={l.icon} className="h-6 w-6" />
+                  <span className="flex h-12 w-12 items-center justify-center -mt-5">
+                    <svg viewBox="0 0 16 20" fill="none" className="h-8 w-6 text-snack-primary drop-shadow-sm" aria-hidden="true">
+                      <path d="M8 19c2.6-3.5 6-7.5 6-11a6 6 0 1 0-12 0c0 3.5 3.4 7.5 6 11Z" fill="currentColor"/>
+                      <circle cx="8" cy="8" r="2.25" fill="white"/>
+                    </svg>
                   </span>
                 ) : (
                   <NavIcon name={l.icon} className="h-6 w-6" />
