@@ -1,0 +1,15 @@
+FROM node:20-alpine
+
+RUN npm install -g pnpm@9
+
+WORKDIR /app
+
+COPY pnpm-workspace.yaml package.json ./
+COPY packages/db/package.json packages/db/
+COPY tsconfig.base.json ./
+
+RUN pnpm install --filter @snackspot/db
+
+COPY packages/db packages/db/
+
+CMD ["node", "packages/db/scripts/migrate.mjs"]

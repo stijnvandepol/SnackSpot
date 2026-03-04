@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum ReviewStatus {
+  PUBLISHED
+  HIDDEN
+  DELETED
+}
+
+enum PhotoModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+enum ReportTargetType {
+  REVIEW
+  PHOTO
+  USER
+}
+
+enum ModerationActionType {
+  HIDE_REVIEW
+  UNHIDE_REVIEW
+  DELETE_REVIEW
+  DELETE_PHOTO
+  BAN_USER
+  UNBAN_USER
+  DISMISS_REPORT
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  username     String    @unique
+  passwordHash String    @map("password_hash")
+  role         Role      @default(USER)
+  displayName  String?   @map("display_name")
+  avatarKey    String?   @map("avatar_key")
+  bannedAt     DateTime? @map("banned_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  reviews           Review[]
+  favorites         Favorite[]
+  reports           Report[]
+  moderationActions ModerationAction[]
+  refreshTokens     RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+/// location column is geography(Point,4326) – managed via raw SQL
+model Place {
+  id        String   @id @default(cuid())
+  name      String
+  address   String
+  /// Stored as geography(Point,4326); use raw SQL for spatial ops
+  location  Unsupported("geography(Point, 4326)")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  reviews   Review[]
+  favorites Favorite[]
+
+  @@map("places")
+}
+
+model Review {
+  id       String       @id @default(cuid())
+  userId   String       @map("user_id")
+  placeId  String       @map("place_id")
+  rating   Int
+  text     String
+  dishName String?      @map("dish_name")
+  status   ReviewStatus @default(PUBLISHED)
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place        Place         @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  reviewPhotos ReviewPhoto[]
+  reports      Report[]
+
+  @@index([createdAt(sort: Desc)])
+  @@index([placeId, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("reviews")
+}
+
+model Photo {
+  id               String                @id @default(cuid())
+  storageKey       String                @unique @map("storage_key")
+  uploaderId       String                @map("uploader_id")
+  variants         Json                  @default("{}")
+  metadata         Json                  @default("{}")
+  moderationStatus PhotoModerationStatus @default(PENDING) @map("moderation_status")
+  processedAt      DateTime?             @map("processed_at")
+  createdAt        DateTime              @default(now()) @map("created_at")
+
+  reviewPhotos ReviewPhoto[]
+  reports      Report[]
+
+  @@map("photos")
+}
+
+model ReviewPhoto {
+  reviewId  String @map("review_id")
+  photoId   String @map("photo_id")
+  sortOrder Int    @default(0) @map("sort_order")
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  photo  Photo  @relation(fields: [photoId], references: [id], onDelete: Cascade)
+
+  @@id([reviewId, photoId])
+  @@map("review_photos")
+}
+
+model Favorite {
+  userId    String   @map("user_id")
+  placeId   String   @map("place_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, placeId])
+  @@map("favorites")
+}
+
+model Report {
+  id         String           @id @default(cuid())
+  reporterId String           @map("reporter_id")
+  targetType ReportTargetType @map("target_type")
+  reviewId   String?          @map("review_id")
+  photoId    String?          @map("photo_id")
+  reason     String
+  status     ReportStatus     @default(OPEN)
+  createdAt  DateTime         @default(now()) @map("created_at")
+
+  reporter User    @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  review   Review? @relation(fields: [reviewId], references: [id], onDelete: SetNull)
+  photo    Photo?  @relation(fields: [photoId], references: [id], onDelete: SetNull)
+
+  @@map("reports")
+}
+
+model ModerationAction {
+  id          String               @id @default(cuid())
+  moderatorId String               @map("moderator_id")
+  actionType  ModerationActionType @map("action_type")
+  targetType  String               @map("target_type")
+  targetId    String               @map("target_id")
+  note        String?
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  moderator User @relation(fields: [moderatorId], references: [id], onDelete: Cascade)
+
+  @@map("moderation_actions")
+}

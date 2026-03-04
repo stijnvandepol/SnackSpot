@@ -1,0 +1,173 @@
+'use client'
+import { useCallback, useEffect, useState } from 'react'
+import { PlaceCard } from '@/components/place-card'
+
+interface Place {
+  id: string
+  name: string
+  address: string
+  lat: number
+  lng: number
+  avg_rating: number | null
+  review_count: number
+  distance_m: number
+}
+
+export default function NearbyPage() {
+  const [places, setPlaces] = useState<Place[]>([])
+  const [loading, setLoading] = useState(false)
+  const [geoError, setGeoError] = useState<string | null>(null)
+  const [radius, setRadius] = useState(3000)
+  const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null)
+  const [manualLat, setManualLat] = useState('')
+  const [manualLng, setManualLng] = useState('')
+
+  const search = useCallback(
+    async (lat: number, lng: number, r: number) => {
+      setLoading(true)
+      try {
+        const res = await fetch(`/api/v1/places/search?lat=${lat}&lng=${lng}&radius=${r}&limit=30`)
+        if (!res.ok) throw new Error('Search failed')
+        const json = await res.json()
+        setPlaces(json.data.data)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [],
+  )
+
+  const useMyLocation = () => {
+    if (!navigator.geolocation) {
+      setGeoError('Geolocation not supported by your browser.')
+      return
+    }
+    setLoading(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords
+        setPosition({ lat, lng })
+        search(lat, lng, radius)
+        setGeoError(null)
+      },
+      (err) => {
+        setGeoError(`Location error: ${err.message}`)
+        setLoading(false)
+      },
+    )
+  }
+
+  const searchManual = () => {
+    const lat = parseFloat(manualLat)
+    const lng = parseFloat(manualLng)
+    if (isNaN(lat) || isNaN(lng)) return
+    setPosition({ lat, lng })
+    search(lat, lng, radius)
+  }
+
+  // Re-search when radius changes
+  useEffect(() => {
+    if (position) search(position.lat, position.lng, radius)
+  }, [radius]) // eslint-disable-line
+
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-6">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">📍 Nearby Snacks</h1>
+
+      {/* Controls */}
+      <div className="card p-4 mb-6 space-y-4">
+        <button onClick={useMyLocation} className="btn-primary w-full" disabled={loading}>
+          {loading ? 'Searching…' : '📍 Use My Location'}
+        </button>
+
+        <div className="relative flex items-center gap-2">
+          <div className="flex-1 h-px bg-gray-200" />
+          <span className="text-xs text-gray-400 flex-shrink-0">or enter manually</span>
+          <div className="flex-1 h-px bg-gray-200" />
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            type="number"
+            placeholder="Latitude"
+            value={manualLat}
+            onChange={(e) => setManualLat(e.target.value)}
+            className="input"
+            step="any"
+          />
+          <input
+            type="number"
+            placeholder="Longitude"
+            value={manualLng}
+            onChange={(e) => setManualLng(e.target.value)}
+            className="input"
+            step="any"
+          />
+          <button onClick={searchManual} className="btn-secondary flex-shrink-0">Go</button>
+        </div>
+
+        <div>
+          <label className="label">
+            Radius: <span className="font-semibold text-amber-600">{radius >= 1000 ? `${radius / 1000} km` : `${radius} m`}</span>
+          </label>
+          <input
+            type="range"
+            min={200}
+            max={20000}
+            step={200}
+            value={radius}
+            onChange={(e) => setRadius(Number(e.target.value))}
+            className="w-full accent-amber-500"
+          />
+          <div className="flex justify-between text-xs text-gray-400 mt-1">
+            <span>200 m</span><span>20 km</span>
+          </div>
+        </div>
+
+        {geoError && <p className="text-sm text-red-500">{geoError}</p>}
+      </div>
+
+      {/* Results */}
+      {!position && !loading && (
+        <div className="text-center py-16">
+          <p className="text-5xl mb-3">🗺️</p>
+          <p className="text-gray-500">Choose your location to discover nearby spots.</p>
+        </div>
+      )}
+
+      {loading && (
+        <div className="space-y-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="card h-20 animate-pulse bg-gray-100" />
+          ))}
+        </div>
+      )}
+
+      {!loading && position && places.length === 0 && (
+        <div className="text-center py-16">
+          <p className="text-5xl mb-3">🔍</p>
+          <p className="text-gray-500">No spots found within {radius >= 1000 ? `${radius / 1000} km` : `${radius} m`}.</p>
+          <p className="text-sm text-gray-400 mt-1">Try increasing the radius.</p>
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {places.map((p) => (
+          <PlaceCard
+            key={p.id}
+            place={{
+              id: p.id,
+              name: p.name,
+              address: p.address,
+              avgRating: p.avg_rating,
+              reviewCount: p.review_count,
+              distance: p.distance_m,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}

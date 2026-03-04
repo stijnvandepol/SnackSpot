@@ -1,0 +1,119 @@
+'use client'
+import { useEffect, useState } from 'react'
+import { use } from 'react'
+import { ReviewCard } from '@/components/review-card'
+import Link from 'next/link'
+
+interface Place { id: string; name: string; address: string; lat: number; lng: number; avg_rating: number | null; review_count: number }
+interface Review {
+  id: string; rating: number; text: string; dishName?: string | null; createdAt: string; status: string
+  user: { id: string; username: string; displayName?: string | null; avatarKey?: string | null; role: string }
+  reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
+}
+
+export default function PlacePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
+  const [place, setPlace] = useState<Place | null>(null)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [sort, setSort] = useState<'new' | 'top'>('new')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch(`/api/v1/places/${id}`)
+      .then((r) => r.json())
+      .then((json) => json.data ? setPlace(json.data) : setError('Place not found'))
+      .catch(() => setError('Failed to load place'))
+  }, [id])
+
+  useEffect(() => {
+    if (!place) return
+    setLoading(true)
+    fetch(`/api/v1/places/${id}/reviews?sort=${sort}&limit=20`)
+      .then((r) => r.json())
+      .then((json) => setReviews(json.data?.data ?? []))
+      .finally(() => setLoading(false))
+  }, [place, sort, id])
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+        <p className="text-5xl mb-4">😕</p>
+        <p className="font-semibold text-gray-700">{error}</p>
+        <Link href="/feed" className="btn-primary mt-4 inline-block">Back to Feed</Link>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-6">
+      {!place ? (
+        <div className="space-y-4 animate-pulse">
+          <div className="h-8 bg-gray-200 rounded-xl w-2/3" />
+          <div className="h-5 bg-gray-100 rounded-xl w-1/2" />
+        </div>
+      ) : (
+        <>
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">{place.name}</h1>
+            <p className="text-sm text-gray-500 mt-1">{place.address}</p>
+
+            <div className="flex items-center gap-4 mt-3 flex-wrap">
+              {place.avg_rating !== null && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-amber-400">{'★'.repeat(Math.round(place.avg_rating ?? 0))}</span>
+                  <span className="font-semibold text-gray-800">{place.avg_rating?.toFixed(1)}</span>
+                </div>
+              )}
+              <span className="text-sm text-gray-500">{place.review_count} {place.review_count === 1 ? 'review' : 'reviews'}</span>
+              <a
+                href={`https://www.google.com/maps?q=${place.lat},${place.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-amber-600 hover:underline"
+              >
+                📍 Open in Maps
+              </a>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-gray-800">Reviews</h2>
+            <div className="flex gap-1">
+              {(['new', 'top'] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSort(s)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${sort === s ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                >
+                  {s === 'new' ? 'Newest' : 'Top'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Link href={`/add-review?placeId=${place.id}`} className="btn-primary block text-center mb-6">
+            + Write a Review
+          </Link>
+
+          {loading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => <div key={i} className="card h-32 animate-pulse bg-gray-100" />)}
+            </div>
+          ) : reviews.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-4xl mb-3">📝</p>
+              <p className="text-gray-500 text-sm">No reviews yet. Be the first!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map((r) => (
+                <ReviewCard key={r.id} review={{ ...r, place: { id: place.id, name: place.name, address: place.address } }} showPlace={false} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}

@@ -1,0 +1,18 @@
+{
+  "name": "snackspot",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm run db:generate && pnpm --filter web build",
+    "start": "pnpm --filter web start",
+    "db:generate": "pnpm --filter @snackspot/db generate",
+    "db:migrate": "pnpm --filter @snackspot/db migrate",
+    "db:seed": "pnpm --filter @snackspot/db seed",
+    "worker:dev": "pnpm --filter worker dev"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
