@@ -69,47 +69,90 @@ export default function AddReviewPage() {
         const lat = position.coords.latitude
         const lng = position.coords.longitude
         
+        console.log('Current position:', lat, lng)
+        
         try {
+          // Add small delay to respect Nominatim usage policy
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          
           // Reverse geocode: coordinates -> address
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
-            { headers: { 'User-Agent': 'SnackSpot/1.0' } }
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&zoom=18`,
+            { 
+              headers: { 
+                'User-Agent': 'SnackSpot/1.0 (contact@snackspot.app)',
+                'Accept-Language': 'nl,en'
+              } 
+            }
           )
+          
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`)
+          }
+          
           const data = await res.json()
+          console.log('Reverse geocoding result:', data)
           
           if (data.address) {
             const addr = data.address
-            const street = addr.road || addr.street || ''
-            const houseNumber = addr.house_number || ''
-            const city = addr.city || addr.town || addr.village || ''
-            const addressStr = [street, houseNumber, city].filter(Boolean).join(', ')
+            // Build address string
+            const parts = []
+            if (addr.road) parts.push(addr.road)
+            if (addr.house_number) parts.push(addr.house_number)
+            if (addr.city || addr.town || addr.village) {
+              parts.push(addr.city || addr.town || addr.village)
+            }
+            const addressStr = parts.length > 0 ? parts.join(', ') : data.display_name
             
             setPlace((p) => ({
               ...p,
-              address: addressStr || data.display_name,
+              address: addressStr,
               lat: lat.toString(),
               lng: lng.toString(),
             }))
+          } else {
+            // Still set coordinates even if address lookup failed
+            setPlace((p) => ({ 
+              ...p, 
+              lat: lat.toString(), 
+              lng: lng.toString() 
+            }))
+            setError('Got your location! Please enter the address manually.')
           }
         } catch (e) {
           console.error('Reverse geocoding failed:', e)
-          setError('Could not fetch address. Please enter manually.')
-          setPlace((p) => ({ ...p, lat: lat.toString(), lng: lng.toString() }))
+          // Still set coordinates
+          setPlace((p) => ({ 
+            ...p, 
+            lat: lat.toString(), 
+            lng: lng.toString() 
+          }))
+          setError('Got your location! Please enter the address manually.')
         } finally {
           setFetchingLocation(false)
         }
       },
       (err) => {
+        console.error('Geolocation error:', err)
         setError(`Location error: ${err.message}`)
         setFetchingLocation(false)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
       }
     )
   }
 
   // Geocode address to get coordinates
   const handleGeocodeAddress = async () => {
-    if (!place.address) {
-      setError('Please enter an address first')
+    if (!place.address || place.address.length < 3) {
+      return // Don't geocode very short text
+    }
+    
+    // Skip if we already have valid coordinates
+    if (place.lat && place.lng && !isNaN(parseFloat(place.lat)) && !isNaN(parseFloat(place.lng))) {
       return
     }
     
@@ -117,24 +160,42 @@ export default function AddReviewPage() {
     setError(null)
     
     try {
+      // Add small delay to respect Nominatim usage policy
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(place.address)}&format=json&addressdetails=1&limit=1`,
-        { headers: { 'User-Agent': 'SnackSpot/1.0' } }
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(place.address)}&format=json&addressdetails=1&limit=3&countrycodes=nl,be`,
+        { 
+          headers: { 
+            'User-Agent': 'SnackSpot/1.0 (contact@snackspot.app)',
+            'Accept-Language': 'nl,en'
+          } 
+        }
       )
+      
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+      }
+      
       const data = await res.json()
+      console.log('Geocoding results:', data)
       
       if (data && data.length > 0) {
+        const result = data[0]
         setPlace((p) => ({
           ...p,
-          lat: data[0].lat,
-          lng: data[0].lon,
+          lat: result.lat,
+          lng: result.lon,
+          address: result.display_name || p.address, // Update with full formatted address
         }))
+        console.log('Coordinates found:', result.lat, result.lon)
       } else {
-        setError('Address not found. Please check the address.')
+        console.warn('No results for address:', place.address)
+        setError('Address not found. Try a more specific address (e.g., "Dam 1, Amsterdam")')
       }
     } catch (e) {
-      console.error('Geocoding failed:', e)
-      setError('Could not find coordinates for this address')
+      console.error('Geocoding error:', e)
+      setError(`Could not geocode address: ${e instanceof Error ? e.message : 'Unknown error'}. You can continue without coordinates.`)
     } finally {
       setGeocoding(false)
     }
@@ -291,19 +352,26 @@ export default function AddReviewPage() {
                     placeholder="Street, City" 
                     value={place.address} 
                     onChange={(e) => setPlace((p) => ({ ...p, address: e.target.value }))} 
-                    onBlur={handleGeocodeAddress}
                   />
+                  <button
+                    type="button"
+                    onClick={handleGeocodeAddress}
+                    disabled={geocoding || !place.address}
+                    className="btn-secondary px-3 whitespace-nowrap"
+                  >
+                    {geocoding ? '🔍...' : '🔍 Find'}
+                  </button>
                   <button
                     type="button"
                     onClick={handleUseCurrentLocation}
                     disabled={fetchingLocation}
                     className="btn-secondary px-3 whitespace-nowrap"
                   >
-                    {fetchingLocation ? '📍...' : '📍 Current'}
+                    {fetchingLocation ? '📍...' : '📍'}
                   </button>
                 </div>
                 <p className="text-xs text-snack-muted mt-1">
-                  💡 Type address and coordinates will be fetched automatically
+                  💡 Click "🔍 Find" to get coordinates, or use current location
                 </p>
               </div>
               
@@ -331,11 +399,8 @@ export default function AddReviewPage() {
                 }
                 // Auto-geocode if coordinates are missing
                 if (!place.lat || !place.lng) {
-                  await handleGeocodeAddress()
-                  // Check again after geocoding
-                  if (!place.lat || !place.lng) {
-                    setError('Could not find coordinates for this address'); return
-                  }
+                  setError('Please click "🔍 Find" to get coordinates first')
+                  return
                 }
               } else if (!place.placeId) {
                 setError('Place ID is required'); return
