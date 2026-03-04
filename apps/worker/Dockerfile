@@ -1,7 +1,7 @@
 FROM node:20-alpine AS base
 
-# sharp requires build tools on Alpine
-RUN apk add --no-cache python3 make g++ vips-dev
+# sharp + Prisma require build tools and OpenSSL on Alpine
+RUN apk add --no-cache python3 make g++ vips-dev openssl
 
 RUN npm install -g pnpm@9
 

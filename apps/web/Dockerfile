@@ -1,7 +1,7 @@
 FROM node:20-alpine AS base
 
-# argon2 needs build tools
-RUN apk add --no-cache python3 make g++
+# argon2 + Prisma need build tools and OpenSSL
+RUN apk add --no-cache python3 make g++ openssl
 
 RUN npm install -g pnpm@9
 
@@ -21,6 +21,7 @@ RUN pnpm install
 # ─── Source ───────────────────────────────────────────────────────────────────
 COPY packages/ packages/
 COPY apps/web/ apps/web/
+RUN mkdir -p /app/apps/web/public
 
 # Prisma generate (needs schema path)
 RUN pnpm --filter @snackspot/db generate
@@ -34,14 +35,25 @@ ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_MINIO_PUBLIC_URL=$NEXT_PUBLIC_MINIO_PUBLIC_URL
 ENV NEXT_PUBLIC_MINIO_BUCKET=$NEXT_PUBLIC_MINIO_BUCKET
 
-# Build Next.js
-ENV NODE_ENV=production
+# Placeholder server-side env vars needed so Next.js module analysis
+# doesn't throw during build. These are NOT baked into the client bundle
+# (no NEXT_PUBLIC_ prefix). Real values come from docker-compose at runtime.
+ENV NODE_ENV=production \
+    DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder \
+    REDIS_URL=redis://localhost:6379 \
+    MINIO_ENDPOINT=localhost \
+    MINIO_ACCESS_KEY=placeholder-key \
+    MINIO_SECRET_KEY=placeholder-secret-key-min \
+    MINIO_PUBLIC_URL=http://localhost:9000 \
+    JWT_ACCESS_SECRET=placeholder-access-secret-at-least-32-chars-long \
+    JWT_REFRESH_SECRET=placeholder-refresh-secret-at-least-32-chars-long
+
 RUN pnpm --filter web build
 
 # ─── Runtime (standalone) ─────────────────────────────────────────────────────
 FROM node:20-alpine AS runner
 
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache python3 make g++ openssl
 
 WORKDIR /app
 
