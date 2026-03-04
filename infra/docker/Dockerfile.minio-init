@@ -1,0 +1,9 @@
+FROM python:3.11-alpine
+
+RUN pip install --no-cache-dir boto3
+
+COPY init-minio.py /init-minio.py
+
+RUN chmod +x /init-minio.py
+
+CMD ["python3", "/init-minio.py"]
