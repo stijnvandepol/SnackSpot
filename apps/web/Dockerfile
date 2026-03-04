@@ -8,7 +8,7 @@ RUN npm install -g pnpm@9
 WORKDIR /app
 
 # ─── Dependencies ─────────────────────────────────────────────────────────────
-COPY pnpm-workspace.yaml package.json ./
+COPY pnpm-workspace.yaml package.json .npmrc ./
 COPY packages/db/package.json packages/db/
 COPY packages/db/prisma packages/db/prisma/
 COPY packages/shared/package.json packages/shared/
