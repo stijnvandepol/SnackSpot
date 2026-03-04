@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
   // Security headers
   async headers() {
     const isProd = process.env.NODE_ENV === 'production'
+    const minioEndpoint = process.env.MINIO_ENDPOINT ?? 'localhost'
+    const minioPort = process.env.MINIO_PORT ?? '9000'
+    
     return [
       {
         source: '/(.*)',
@@ -33,9 +36,9 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // unsafe-eval needed by Next.js dev
               "style-src 'self' 'unsafe-inline'",
-              `img-src 'self' data: blob: http://${process.env.MINIO_ENDPOINT ?? 'localhost'}:${process.env.MINIO_PORT ?? '9000'}`,
+              `img-src 'self' data: blob: http://${minioEndpoint}:${minioPort} http://192.168.*:${minioPort}`,
               "font-src 'self'",
-              "connect-src 'self'",
+              `connect-src 'self' http://${minioEndpoint}:${minioPort} http://192.168.*:${minioPort} https://nominatim.openstreetmap.org`,
               "frame-ancestors 'none'",
             ].join('; '),
           },

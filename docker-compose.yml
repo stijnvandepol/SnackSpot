@@ -52,8 +52,8 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin123}
-      # CORS configuration for direct browser uploads
-      MINIO_API_CORS_ALLOW_ORIGIN: "http://localhost:8080,http://localhost:3000,http://127.0.0.1:8080"
+      # CORS configuration for direct browser uploads (including mobile)
+      MINIO_API_CORS_ALLOW_ORIGIN: "http://localhost:8080,http://localhost:3000,http://127.0.0.1:8080,http://192.168.1.186:8080"
     ports:
       - "9000:9000"
       - "9001:9001"

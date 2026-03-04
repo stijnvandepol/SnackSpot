@@ -283,7 +283,8 @@ export default function AddReviewPage() {
     const remaining = 5 - photos.length
     const toUpload = Array.from(files).slice(0, remaining)
 
-    for (const file of toUpload) {
+    // Upload all photos in parallel for better performance
+    const uploadPromises = toUpload.map(async (file) => {
       const previewUrl = URL.createObjectURL(file)
       const id = crypto.randomUUID()
 
@@ -291,16 +292,31 @@ export default function AddReviewPage() {
 
       try {
         // 1. Initiate
+        console.log(`[Upload] Initiating upload for ${file.name} (${(file.size / 1024).toFixed(1)}KB)`)
         const initRes = await fetch('/api/v1/photos/initiate-upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
           body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
         })
-        if (!initRes.ok) throw new Error('Failed to initiate upload')
+        if (!initRes.ok) {
+          const errorData = await initRes.json().catch(() => ({ error: 'Unknown error' }))
+          throw new Error(`Initiate failed: ${errorData.error || initRes.statusText}`)
+        }
         const { data: initData } = await initRes.json()
+        console.log(`[Upload] Got upload URL, uploading to MinIO...`)
 
         // 2. PUT directly to MinIO
-        await fetch(initData.uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } })
+        const uploadStartTime = Date.now()
+        const putRes = await fetch(initData.uploadUrl, { 
+          method: 'PUT', 
+          body: file, 
+          headers: { 'Content-Type': file.type } 
+        })
+        if (!putRes.ok) {
+          throw new Error(`MinIO upload failed: ${putRes.status} ${putRes.statusText}`)
+        }
+        const uploadDuration = ((Date.now() - uploadStartTime) / 1000).toFixed(1)
+        console.log(`[Upload] Upload completed in ${uploadDuration}s, confirming...`)
 
         // 3. Confirm
         setPhotos((prev) => prev.map((p) => p.photoId === id ? { ...p, photoId: initData.photoId, status: 'confirming' } : p))
@@ -310,7 +326,11 @@ export default function AddReviewPage() {
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
           body: JSON.stringify({ photoId: initData.photoId }),
         })
-        if (!confirmRes.ok) throw new Error('Failed to confirm upload')
+        if (!confirmRes.ok) {
+          const errorData = await confirmRes.json().catch(() => ({ error: 'Unknown error' }))
+          throw new Error(`Confirm failed: ${errorData.error || confirmRes.statusText}`)
+        }
+        console.log(`[Upload] ✓ ${file.name} uploaded successfully`)
 
         setPhotos((prev) =>
           prev.map((p) => p.photoId === id || p.photoId === initData.photoId
@@ -319,9 +339,13 @@ export default function AddReviewPage() {
           ),
         )
       } catch (err) {
+        console.error(`[Upload] ✗ ${file.name} failed:`, err)
         setPhotos((prev) => prev.map((p) => p.photoId === id ? { ...p, status: 'error' } : p))
       }
-    }
+    })
+
+    // Wait for all uploads to complete
+    await Promise.all(uploadPromises)
   }
 
   const handleSubmit = async () => {
