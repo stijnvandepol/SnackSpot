@@ -38,7 +38,7 @@ function Stars({ value, onChange }: { value: number; onChange: (v: number) => vo
 }
 
 export default function AddReviewPage() {
-  const { user, accessToken } = useAuth()
+  const { user, accessToken, loading } = useAuth()
   const router = useRouter()
   const [step, setStep] = useState<Step>('place')
   const [place, setPlace] = useState<PlaceForm>({
@@ -51,6 +51,8 @@ export default function AddReviewPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  if (loading) return null
 
   if (!user) {
     return (
