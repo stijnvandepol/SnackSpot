@@ -38,8 +38,7 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
   if (error) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <p className="text-5xl mb-4">😕</p>
-        <p className="font-semibold text-gray-700">{error}</p>
+        <p className="font-semibold text-snack-text">{error}</p>
         <Link href="/feed" className="btn-primary mt-4 inline-block">Back to Feed</Link>
       </div>
     )
@@ -50,41 +49,41 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
       {!place ? (
         <div className="space-y-4 animate-pulse">
           <div className="h-8 bg-gray-200 rounded-xl w-2/3" />
-          <div className="h-5 bg-gray-100 rounded-xl w-1/2" />
+          <div className="h-5 bg-snack-surface rounded-xl w-1/2" />
         </div>
       ) : (
         <>
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">{place.name}</h1>
-            <p className="text-sm text-gray-500 mt-1">{place.address}</p>
+            <h1 className="text-2xl font-heading font-bold text-snack-text">{place.name}</h1>
+            <p className="text-sm text-snack-muted mt-1">{place.address}</p>
 
             <div className="flex items-center gap-4 mt-3 flex-wrap">
               {place.avg_rating !== null && (
                 <div className="flex items-center gap-1.5">
-                  <span className="text-amber-400">{'★'.repeat(Math.round(place.avg_rating ?? 0))}</span>
-                  <span className="font-semibold text-gray-800">{place.avg_rating?.toFixed(1)}</span>
+                  <span className="text-snack-rating">{'★'.repeat(Math.round(place.avg_rating ?? 0))}</span>
+                  <span className="font-semibold text-snack-text">{place.avg_rating?.toFixed(1)}</span>
                 </div>
               )}
-              <span className="text-sm text-gray-500">{place.review_count} {place.review_count === 1 ? 'review' : 'reviews'}</span>
+              <span className="text-sm text-snack-muted">{place.review_count} {place.review_count === 1 ? 'review' : 'reviews'}</span>
               <a
                 href={`https://www.google.com/maps?q=${place.lat},${place.lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-amber-600 hover:underline"
+                className="text-sm text-snack-primary hover:underline"
               >
-                📍 Open in Maps
+                Open in maps
               </a>
             </div>
           </div>
 
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-800">Reviews</h2>
+            <h2 className="font-heading font-semibold text-snack-text">Reviews</h2>
             <div className="flex gap-1">
               {(['new', 'top'] as const).map((s) => (
                 <button
                   key={s}
                   onClick={() => setSort(s)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${sort === s ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${sort === s ? 'bg-snack-primary text-white' : 'bg-snack-surface text-snack-muted hover:opacity-90'}`}
                 >
                   {s === 'new' ? 'Newest' : 'Top'}
                 </button>
@@ -98,12 +97,11 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
 
           {loading ? (
             <div className="space-y-4">
-              {[...Array(3)].map((_, i) => <div key={i} className="card h-32 animate-pulse bg-gray-100" />)}
+              {[...Array(3)].map((_, i) => <div key={i} className="card h-32 animate-pulse bg-snack-surface" />)}
             </div>
           ) : reviews.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-4xl mb-3">📝</p>
-              <p className="text-gray-500 text-sm">No reviews yet. Be the first!</p>
+              <p className="text-snack-muted text-sm">No reviews yet. Be the first!</p>
             </div>
           ) : (
             <div className="space-y-4">

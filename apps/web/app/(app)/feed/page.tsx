@@ -59,23 +59,23 @@ export default function FeedPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">🍟 Latest Reviews</h1>
+      <div className="mb-6 space-y-1">
+        <h1 className="text-2xl md:text-3xl font-heading font-bold text-snack-text">Home Feed</h1>
+        <p className="text-sm text-snack-muted">Discover snack posts near you — photo first, fast scroll.</p>
       </div>
 
       {initial && loading && (
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="card h-48 animate-pulse bg-gray-100" />
+            <div key={i} className="card h-56 animate-pulse bg-snack-surface" />
           ))}
         </div>
       )}
 
       {!initial && reviews.length === 0 && (
         <div className="text-center py-20">
-          <p className="text-5xl mb-4">🍽️</p>
-          <p className="text-gray-500">No reviews yet – be the first!</p>
-          <a href="/add-review" className="btn-primary mt-4 inline-block">Add a Review</a>
+          <p className="text-snack-muted">No posts available yet.</p>
+          <a href="/add-review" className="btn-primary mt-4 inline-block">Create first post</a>
         </div>
       )}
 
@@ -90,12 +90,12 @@ export default function FeedPage() {
 
       {loading && !initial && (
         <div className="flex justify-center py-6">
-          <div className="h-6 w-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+          <div className="h-6 w-6 border-2 border-snack-primary border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
       {!hasMore && reviews.length > 0 && (
-        <p className="text-center text-sm text-gray-400 py-6">You've seen it all! 🎉</p>
+        <p className="text-center text-sm text-snack-muted py-6">End of feed.</p>
       )}
     </div>
   )

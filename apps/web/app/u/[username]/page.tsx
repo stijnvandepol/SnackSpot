@@ -44,8 +44,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   if (error) return (
     <div className="mx-auto max-w-lg px-4 py-16 text-center">
-      <p className="text-5xl mb-4">😕</p>
-      <p className="font-semibold text-gray-700">{error}</p>
+      <p className="font-semibold text-snack-text">{error}</p>
       <Link href="/feed" className="btn-primary mt-4 inline-block">Back to Feed</Link>
     </div>
   )
@@ -54,26 +53,25 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
     <div className="mx-auto max-w-2xl px-4 py-6">
       {loading ? (
         <div className="animate-pulse space-y-4">
-          <div className="h-20 bg-gray-100 rounded-2xl" />
+          <div className="h-20 bg-snack-surface rounded-2xl" />
         </div>
       ) : profile ? (
         <>
           <div className="card p-6 mb-6 flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-2xl uppercase flex-shrink-0">
+            <div className="h-16 w-16 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-bold text-2xl uppercase flex-shrink-0">
               {(profile.displayName ?? profile.username)[0]}
             </div>
             <div>
-              <h1 className="font-bold text-xl text-gray-900">{profile.displayName ?? profile.username}</h1>
-              <p className="text-sm text-gray-500">@{profile.username}</p>
-              <p className="text-xs text-gray-400 mt-1">{reviews.length} reviews</p>
+              <h1 className="font-heading font-bold text-xl text-snack-text">{profile.displayName ?? profile.username}</h1>
+              <p className="text-sm text-snack-muted">@{profile.username}</p>
+              <p className="text-xs text-snack-muted mt-1">{reviews.length} reviews</p>
             </div>
           </div>
 
-          <h2 className="font-semibold text-gray-800 mb-4">Reviews</h2>
+          <h2 className="font-heading font-semibold text-snack-text mb-4">Reviews</h2>
           {reviews.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-4xl mb-3">📝</p>
-              <p className="text-gray-500 text-sm">No reviews yet.</p>
+              <p className="text-snack-muted text-sm">No reviews yet.</p>
             </div>
           ) : (
             <div className="space-y-4">

@@ -49,8 +49,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
   if (error) return (
     <div className="mx-auto max-w-lg px-4 py-16 text-center">
-      <p className="text-5xl mb-4">😕</p>
-      <p className="text-gray-700 font-semibold">{error}</p>
+      <p className="text-snack-text font-semibold">{error}</p>
       <Link href="/feed" className="btn-primary mt-4 inline-block">Back to Feed</Link>
     </div>
   )
@@ -58,9 +57,9 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   if (!review) return (
     <div className="mx-auto max-w-lg px-4 py-6 animate-pulse space-y-4">
       <div className="h-8 bg-gray-200 rounded-xl w-2/3" />
-      <div className="h-48 bg-gray-100 rounded-2xl" />
-      <div className="h-4 bg-gray-100 rounded w-full" />
-      <div className="h-4 bg-gray-100 rounded w-4/5" />
+      <div className="h-48 bg-snack-surface rounded-2xl" />
+      <div className="h-4 bg-snack-surface rounded w-full" />
+      <div className="h-4 bg-snack-surface rounded w-4/5" />
     </div>
   )
 
@@ -75,7 +74,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
           {photos.map((rp) => {
             const url = photoUrl(rp.photo.variants)
             return url ? (
-              <div key={rp.photo.id} className="aspect-square rounded-2xl overflow-hidden bg-gray-100">
+              <div key={rp.photo.id} className="aspect-square rounded-2xl overflow-hidden bg-snack-surface">
                 <img src={url} alt="" className="h-full w-full object-cover" />
               </div>
             ) : null
@@ -87,26 +86,26 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
       <div className="card p-5 space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div>
-            {review.dishName && <p className="font-bold text-lg text-gray-900">{review.dishName}</p>}
-            <Link href={`/place/${review.place.id}`} className="text-sm text-amber-600 hover:underline">
+            {review.dishName && <p className="font-heading font-bold text-lg text-snack-text">{review.dishName}</p>}
+            <Link href={`/place/${review.place.id}`} className="text-sm text-snack-primary hover:underline">
               {review.place.name}
             </Link>
           </div>
-          <div className="text-amber-400 text-lg flex-shrink-0">
-            {'★'.repeat(review.rating)}<span className="text-gray-200">{'★'.repeat(5 - review.rating)}</span>
+          <div className="text-snack-rating text-lg flex-shrink-0">
+            {'★'.repeat(review.rating)}<span className="text-[#e0e0e0]">{'★'.repeat(5 - review.rating)}</span>
           </div>
         </div>
 
-        <p className="text-gray-700 whitespace-pre-line">{review.text}</p>
+        <p className="text-snack-muted whitespace-pre-line">{review.text}</p>
 
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+        <div className="flex items-center justify-between pt-2 border-t border-[#ededed]">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-semibold text-xs uppercase">
+            <div className="h-8 w-8 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-xs uppercase">
               {(review.user.displayName ?? review.user.username)[0]}
             </div>
-            <span className="text-sm text-gray-600">{review.user.displayName ?? review.user.username}</span>
+            <span className="text-sm text-snack-muted">{review.user.displayName ?? review.user.username}</span>
           </div>
-          <time className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</time>
+          <time className="text-xs text-snack-muted">{new Date(review.createdAt).toLocaleDateString()}</time>
         </div>
       </div>
 
@@ -130,8 +129,8 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
       {/* Report section */}
       {user && !isOwner && !reported && (
         <details className="text-sm">
-          <summary className="cursor-pointer text-gray-400 hover:text-gray-600">🚩 Report this review</summary>
-          <div className="mt-3 space-y-2 pl-2 border-l-2 border-gray-100">
+          <summary className="cursor-pointer text-snack-muted hover:text-snack-text">Report this review</summary>
+          <div className="mt-3 space-y-2 pl-2 border-l-2 border-[#ececec]">
             <textarea
               className="input text-sm min-h-[80px]"
               placeholder="Describe the issue…"

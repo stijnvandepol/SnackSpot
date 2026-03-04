@@ -25,12 +25,15 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-b from-snack-surface to-white flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-4xl mb-2">🍟</h1>
-          <h2 className="text-2xl font-bold text-gray-900">Join SnackSpot</h2>
-          <p className="text-sm text-gray-500 mt-1">Create your free account</p>
+          <div className="mb-3 text-2xl font-heading font-bold">
+            <span className="text-snack-primary">Snack</span>
+            <span className="text-snack-accent">Spot</span>
+          </div>
+          <h2 className="text-2xl font-heading font-bold text-snack-text">Join SnackSpot</h2>
+          <p className="text-sm text-snack-muted mt-1">Create your free account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">
@@ -47,7 +50,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="label" htmlFor="username">Username * <span className="text-gray-400 font-normal">(letters, numbers, _)</span></label>
+            <label className="label" htmlFor="username">Username * <span className="text-snack-muted font-normal">(letters, numbers, _)</span></label>
             <input id="username" type="text" className="input" placeholder="snacklover42"
               value={form.username} onChange={update('username')} required minLength={3} maxLength={30}
               pattern="^[a-zA-Z0-9_]+$" autoComplete="username" />
@@ -60,7 +63,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="label" htmlFor="password">Password * <span className="text-gray-400 font-normal">(min 8 chars, 1 uppercase, 1 number)</span></label>
+            <label className="label" htmlFor="password">Password * <span className="text-snack-muted font-normal">(min 8 chars, 1 uppercase, 1 number)</span></label>
             <input id="password" type="password" className="input" placeholder="••••••••"
               value={form.password} onChange={update('password')} required minLength={8}
               autoComplete="new-password" />
@@ -71,9 +74,9 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <p className="text-center mt-6 text-sm text-gray-500">
+        <p className="text-center mt-6 text-sm text-snack-muted">
           Already have an account?{' '}
-          <Link href="/auth/login" className="text-amber-600 font-medium hover:underline">Log in</Link>
+          <Link href="/auth/login" className="text-snack-primary font-medium hover:underline">Log in</Link>
         </p>
       </div>
     </div>

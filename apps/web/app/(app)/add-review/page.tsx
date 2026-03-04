@@ -27,7 +27,7 @@ function Stars({ value, onChange }: { value: number; onChange: (v: number) => vo
         <button
           key={s}
           type="button"
-          className={`text-4xl transition-transform hover:scale-110 ${s <= value ? 'text-amber-400' : 'text-gray-200'}`}
+          className={`text-4xl transition-transform hover:scale-110 ${s <= value ? 'text-snack-rating' : 'text-[#dfdfdf]'}`}
           onClick={() => onChange(s)}
         >
           ★
@@ -55,8 +55,7 @@ export default function AddReviewPage() {
   if (!user) {
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <p className="text-5xl mb-4">🔒</p>
-        <p className="font-semibold text-gray-700">Please log in to add a review.</p>
+        <p className="font-semibold text-snack-text">Please log in to add a review.</p>
         <a href="/auth/login" className="btn-primary mt-4 inline-block">Log in</a>
       </div>
     )
@@ -153,18 +152,18 @@ export default function AddReviewPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">🍽️ Add Review</h1>
+      <h1 className="text-2xl font-heading font-bold text-snack-text mb-6">Create Post</h1>
 
       {/* Step indicators */}
       <div className="flex items-center gap-2 mb-8">
         {(['place', 'review', 'photos'] as Step[]).map((s, i) => (
           <div key={s} className="flex items-center gap-2">
             <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold ${
-              step === s ? 'bg-amber-500 text-white' : i < ['place','review','photos'].indexOf(step) ? 'bg-green-400 text-white' : 'bg-gray-200 text-gray-500'
+              step === s ? 'bg-snack-primary text-white' : i < ['place','review','photos'].indexOf(step) ? 'bg-snack-accent text-snack-text' : 'bg-snack-surface text-snack-muted'
             }`}>
               {i + 1}
             </div>
-            {i < 2 && <div className="flex-1 h-0.5 bg-gray-200 w-8" />}
+            {i < 2 && <div className="flex-1 h-0.5 bg-[#e6e6e6] w-8" />}
           </div>
         ))}
       </div>
@@ -175,13 +174,13 @@ export default function AddReviewPage() {
           <div className="flex gap-2">
             <button
               onClick={() => setPlace((p) => ({ ...p, mode: 'new' }))}
-              className={`flex-1 py-2 rounded-xl text-sm font-medium border transition ${place.mode === 'new' ? 'border-amber-500 bg-amber-50 text-amber-700' : 'border-gray-200 text-gray-600'}`}
+              className={`flex-1 py-2 rounded-xl text-sm font-medium border transition ${place.mode === 'new' ? 'border-snack-primary bg-snack-surface text-snack-primary' : 'border-[#e4e4e4] text-snack-muted'}`}
             >
               New place
             </button>
             <button
               onClick={() => setPlace((p) => ({ ...p, mode: 'existing' }))}
-              className={`flex-1 py-2 rounded-xl text-sm font-medium border transition ${place.mode === 'existing' ? 'border-amber-500 bg-amber-50 text-amber-700' : 'border-gray-200 text-gray-600'}`}
+              className={`flex-1 py-2 rounded-xl text-sm font-medium border transition ${place.mode === 'existing' ? 'border-snack-primary bg-snack-surface text-snack-primary' : 'border-[#e4e4e4] text-snack-muted'}`}
             >
               Existing place
             </button>
@@ -207,13 +206,13 @@ export default function AddReviewPage() {
                   <input className="input" type="number" step="any" placeholder="4.9041" value={place.lng} onChange={(e) => setPlace((p) => ({ ...p, lng: e.target.value }))} />
                 </div>
               </div>
-              <p className="text-xs text-gray-400">💡 Tip: right-click in Google Maps to copy coordinates.</p>
+              <p className="text-xs text-snack-muted">💡 Tip: right-click in Google Maps to copy coordinates.</p>
             </>
           ) : (
             <div>
               <label className="label">Place ID</label>
               <input className="input" placeholder="Paste a place ID" value={place.placeId ?? ''} onChange={(e) => setPlace((p) => ({ ...p, placeId: e.target.value }))} />
-              <p className="text-xs text-gray-400 mt-1">You can find the ID in the URL on a place page: /place/&lt;id&gt;</p>
+              <p className="text-xs text-snack-muted mt-1">You can find the ID in the URL on a place page: /place/&lt;id&gt;</p>
             </div>
           )}
 
@@ -249,7 +248,7 @@ export default function AddReviewPage() {
             <input className="input" placeholder="e.g. Stroopwafel, Herring" value={dishName} onChange={(e) => setDishName(e.target.value)} maxLength={100} />
           </div>
           <div>
-            <label className="label">Your review * <span className="text-gray-400 font-normal">({text.length}/2000)</span></label>
+            <label className="label">Your review * <span className="text-snack-muted font-normal">({text.length}/2000)</span></label>
             <textarea
               className="input min-h-[140px] resize-none"
               placeholder="Tell people what you loved (or didn't)…"
@@ -281,25 +280,25 @@ export default function AddReviewPage() {
       {/* Step 3: Photos */}
       {step === 'photos' && (
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">Add up to 5 photos (optional).</p>
+          <p className="text-sm text-snack-muted">Add up to 5 photos (optional).</p>
 
           <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={(e) => handleFileSelect(e.target.files)} />
 
           {photos.length < 5 && (
             <button className="btn-secondary w-full" onClick={() => fileInputRef.current?.click()}>
-              📷 Add Photos ({photos.length}/5)
+              Add photos ({photos.length}/5)
             </button>
           )}
 
           {photos.length > 0 && (
             <div className="grid grid-cols-3 gap-2">
               {photos.map((p) => (
-                <div key={p.photoId} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100">
+                <div key={p.photoId} className="relative aspect-square rounded-xl overflow-hidden bg-snack-surface">
                   <img src={p.previewUrl} alt="" className="h-full w-full object-cover" />
                   <div className={`absolute inset-0 flex items-center justify-center ${p.status !== 'ready' ? 'bg-black/40' : 'opacity-0'}`}>
                     {p.status === 'uploading' || p.status === 'confirming'
                       ? <div className="h-6 w-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      : p.status === 'error' && <span className="text-white text-2xl">❌</span>
+                      : p.status === 'error' && <span className="text-white text-sm font-semibold">Error</span>
                     }
                   </div>
                   <button

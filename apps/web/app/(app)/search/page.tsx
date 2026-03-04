@@ -1,19 +1,17 @@
 'use client'
 import { useCallback, useState } from 'react'
 import { PlaceCard } from '@/components/place-card'
-import { ReviewCard } from '@/components/review-card'
-import { useSearchParams, useRouter } from 'next/navigation'
 
 interface Place {
   id: string; name: string; address: string; avg_rating: number | null; review_count: number
 }
 
 export default function SearchPage() {
-  const router = useRouter()
   const [q, setQ] = useState('')
   const [places, setPlaces] = useState<Place[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const filters = ['Trending', 'Best rated', 'Nearby', 'Newest', 'Budget friendly']
 
   const search = useCallback(async (query: string) => {
     if (!query.trim()) return
@@ -38,7 +36,20 @@ export default function SearchPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">🔍 Search</h1>
+      <div className="mb-5 space-y-1">
+        <h1 className="text-2xl md:text-3xl font-heading font-bold text-snack-text">Explore</h1>
+        <p className="text-sm text-snack-muted">Find trending, top rated, newest and nearby snack spots.</p>
+      </div>
+
+      <div className="mb-4 overflow-x-auto">
+        <div className="flex gap-2 min-w-max">
+          {filters.map((filter) => (
+            <span key={filter} className="rounded-full bg-snack-surface px-3 py-1.5 text-xs font-medium text-snack-muted">
+              {filter}
+            </span>
+          ))}
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="flex gap-2 mb-6">
         <input
@@ -57,22 +68,20 @@ export default function SearchPage() {
       {loading && (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="card h-20 animate-pulse bg-gray-100" />
+            <div key={i} className="card h-20 animate-pulse bg-snack-surface" />
           ))}
         </div>
       )}
 
       {!loading && searched && places.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-5xl mb-3">🤷</p>
-          <p className="text-gray-500">No results for &ldquo;{q}&rdquo;</p>
+          <p className="text-snack-muted">No results for &ldquo;{q}&rdquo;.</p>
         </div>
       )}
 
       {!searched && (
         <div className="text-center py-16">
-          <p className="text-5xl mb-3">🍔</p>
-          <p className="text-gray-500">Search for a place or dish name.</p>
+          <p className="text-snack-muted">Search for a place or dish name.</p>
         </div>
       )}
 

@@ -1,6 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
-import { env } from '@/lib/env'
 
 interface ReviewCardProps {
   review: {
@@ -27,9 +25,9 @@ function timeAgo(dateInput: Date | string): string {
 
 function Stars({ rating }: { rating: number }) {
   return (
-    <span className="text-amber-400 text-sm">
+    <span className="text-snack-rating text-sm">
       {'★'.repeat(rating)}
-      <span className="text-gray-200">{'★'.repeat(5 - rating)}</span>
+      <span className="text-[#e0e0e0]">{'★'.repeat(5 - rating)}</span>
     </span>
   )
 }
@@ -52,11 +50,12 @@ export function ReviewCard({ review, showPlace = true }: ReviewCardProps) {
     <Link href={`/review/${review.id}`} className="block">
       <article className="card overflow-hidden transition hover:shadow-md">
         {thumb && (
-          <div className="relative h-48 w-full bg-gray-100">
+          <div className="relative h-64 w-full bg-snack-surface md:h-72">
             <img
               src={thumb}
               alt={review.dishName ?? 'Review photo'}
               className="h-full w-full object-cover"
+              loading="lazy"
             />
           </div>
         )}
@@ -64,27 +63,27 @@ export function ReviewCard({ review, showPlace = true }: ReviewCardProps) {
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               {review.dishName && (
-                <p className="font-semibold text-gray-900 truncate">{review.dishName}</p>
+                <p className="font-semibold text-snack-text truncate">{review.dishName}</p>
               )}
               {showPlace && review.place && (
-                <p className="text-xs text-gray-500 truncate">{review.place.name}</p>
+                <p className="text-xs text-snack-muted truncate">{review.place.name}</p>
               )}
             </div>
             <Stars rating={review.rating} />
           </div>
 
-          <p className="text-sm text-gray-700 line-clamp-3">{review.text}</p>
+          <p className="text-sm text-snack-muted line-clamp-3">{review.text}</p>
 
           <div className="flex items-center justify-between pt-1">
             <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-semibold text-xs uppercase flex-shrink-0">
+              <div className="h-7 w-7 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-xs uppercase flex-shrink-0">
                 {(review.user.displayName ?? review.user.username)[0]}
               </div>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-snack-muted">
                 {review.user.displayName ?? review.user.username}
               </span>
             </div>
-            <time className="text-xs text-gray-400">{timeAgo(review.createdAt)}</time>
+            <time className="text-xs text-snack-muted">{timeAgo(review.createdAt)}</time>
           </div>
         </div>
       </article>

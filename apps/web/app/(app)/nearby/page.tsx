@@ -74,18 +74,21 @@ export default function NearbyPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">📍 Nearby Snacks</h1>
+      <div className="mb-6 space-y-1">
+        <h1 className="text-2xl md:text-3xl font-heading font-bold text-snack-text">Map View</h1>
+        <p className="text-sm text-snack-muted">Discover snack locations around you and open each location page.</p>
+      </div>
 
       {/* Controls */}
       <div className="card p-4 mb-6 space-y-4">
         <button onClick={useMyLocation} className="btn-primary w-full" disabled={loading}>
-          {loading ? 'Searching…' : '📍 Use My Location'}
+          {loading ? 'Searching…' : 'Use current location'}
         </button>
 
         <div className="relative flex items-center gap-2">
-          <div className="flex-1 h-px bg-gray-200" />
-          <span className="text-xs text-gray-400 flex-shrink-0">or enter manually</span>
-          <div className="flex-1 h-px bg-gray-200" />
+          <div className="flex-1 h-px bg-[#e5e5e5]" />
+          <span className="text-xs text-snack-muted flex-shrink-0">or enter manually</span>
+          <div className="flex-1 h-px bg-[#e5e5e5]" />
         </div>
 
         <div className="flex gap-2">
@@ -110,7 +113,7 @@ export default function NearbyPage() {
 
         <div>
           <label className="label">
-            Radius: <span className="font-semibold text-amber-600">{radius >= 1000 ? `${radius / 1000} km` : `${radius} m`}</span>
+            Radius: <span className="font-semibold text-snack-primary">{radius >= 1000 ? `${radius / 1000} km` : `${radius} m`}</span>
           </label>
           <input
             type="range"
@@ -119,9 +122,9 @@ export default function NearbyPage() {
             step={200}
             value={radius}
             onChange={(e) => setRadius(Number(e.target.value))}
-            className="w-full accent-amber-500"
+            className="w-full accent-[var(--snack-primary)]"
           />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
+          <div className="flex justify-between text-xs text-snack-muted mt-1">
             <span>200 m</span><span>20 km</span>
           </div>
         </div>
@@ -132,24 +135,22 @@ export default function NearbyPage() {
       {/* Results */}
       {!position && !loading && (
         <div className="text-center py-16">
-          <p className="text-5xl mb-3">🗺️</p>
-          <p className="text-gray-500">Choose your location to discover nearby spots.</p>
+          <p className="text-snack-muted">Choose your location to discover nearby spots.</p>
         </div>
       )}
 
       {loading && (
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="card h-20 animate-pulse bg-gray-100" />
+            <div key={i} className="card h-20 animate-pulse bg-snack-surface" />
           ))}
         </div>
       )}
 
       {!loading && position && places.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-5xl mb-3">🔍</p>
-          <p className="text-gray-500">No spots found within {radius >= 1000 ? `${radius / 1000} km` : `${radius} m`}.</p>
-          <p className="text-sm text-gray-400 mt-1">Try increasing the radius.</p>
+          <p className="text-snack-muted">No spots found within {radius >= 1000 ? `${radius / 1000} km` : `${radius} m`}.</p>
+          <p className="text-sm text-snack-muted mt-1">Try increasing the radius.</p>
         </div>
       )}
 

@@ -29,8 +29,7 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <p className="text-5xl mb-4">🔒</p>
-        <p className="font-semibold text-gray-700">Log in to view your profile.</p>
+        <p className="font-semibold text-snack-text">Log in to view your profile.</p>
         <a href="/auth/login" className="btn-primary mt-4 inline-block">Log in</a>
       </div>
     )
@@ -38,17 +37,18 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <div className="card p-6 mb-6 flex items-center gap-4">
-        <div className="h-16 w-16 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-2xl uppercase flex-shrink-0">
+      <div className="card p-6 mb-4 flex items-center gap-4">
+        <div className="h-16 w-16 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-bold text-2xl uppercase flex-shrink-0">
           {(user.displayName ?? user.username)[0]}
         </div>
         <div className="min-w-0">
-          <h1 className="font-bold text-xl text-gray-900">{user.displayName ?? user.username}</h1>
-          <p className="text-sm text-gray-500">@{user.username}</p>
+          <h1 className="font-heading font-bold text-xl text-snack-text">{user.displayName ?? user.username}</h1>
+          <p className="text-sm text-snack-muted">@{user.username}</p>
+          <p className="text-xs text-snack-muted mt-1">Snack hunter & reviewer</p>
           <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${
             user.role === 'ADMIN' ? 'bg-red-100 text-red-700'
             : user.role === 'MODERATOR' ? 'bg-purple-100 text-purple-700'
-            : 'bg-gray-100 text-gray-600'
+            : 'bg-snack-surface text-snack-muted'
           }`}>
             {user.role}
           </span>
@@ -63,20 +63,34 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <h2 className="font-semibold text-lg text-gray-800 mb-4">My Reviews</h2>
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="card p-3 text-center">
+          <p className="text-lg font-bold text-snack-text">{reviews.length}</p>
+          <p className="text-xs text-snack-muted">Posts</p>
+        </div>
+        <div className="card p-3 text-center">
+          <p className="text-lg font-bold text-snack-text">0</p>
+          <p className="text-xs text-snack-muted">Liked</p>
+        </div>
+        <div className="card p-3 text-center">
+          <p className="text-lg font-bold text-snack-text">{reviews.length >= 5 ? 1 : 0}</p>
+          <p className="text-xs text-snack-muted">Badges</p>
+        </div>
+      </div>
+
+      <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">My Posts</h2>
 
       {loading && (
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="card h-32 animate-pulse bg-gray-100" />
+            <div key={i} className="card h-32 animate-pulse bg-snack-surface" />
           ))}
         </div>
       )}
 
       {!loading && reviews.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-4xl mb-3">📝</p>
-          <p className="text-gray-500 text-sm">You haven't written any reviews yet.</p>
+          <p className="text-snack-muted text-sm">You haven't written any reviews yet.</p>
           <a href="/add-review" className="btn-primary mt-4 inline-block">Add your first review</a>
         </div>
       )}

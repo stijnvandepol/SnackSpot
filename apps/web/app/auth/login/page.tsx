@@ -26,12 +26,15 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-b from-snack-surface to-white flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-4xl mb-2">🍟</h1>
-          <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
-          <p className="text-sm text-gray-500 mt-1">Log in to your SnackSpot account</p>
+          <div className="mb-3 text-2xl font-heading font-bold">
+            <span className="text-snack-primary">Snack</span>
+            <span className="text-snack-accent">Spot</span>
+          </div>
+          <h2 className="text-2xl font-heading font-bold text-snack-text">Welcome back</h2>
+          <p className="text-sm text-snack-muted mt-1">Log in to your SnackSpot account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">
@@ -75,11 +78,11 @@ export default function LoginPage() {
         </form>
 
         <div className="text-center mt-6 space-y-2 text-sm">
-          <p className="text-gray-500">
+          <p className="text-snack-muted">
             Don&apos;t have an account?{' '}
-            <Link href="/auth/register" className="text-amber-600 font-medium hover:underline">Sign up</Link>
+            <Link href="/auth/register" className="text-snack-primary font-medium hover:underline">Sign up</Link>
           </p>
-          <Link href="/auth/forgot-password" className="text-gray-400 hover:text-gray-600">
+          <Link href="/auth/forgot-password" className="text-snack-muted hover:text-snack-text">
             Forgot password?
           </Link>
         </div>
