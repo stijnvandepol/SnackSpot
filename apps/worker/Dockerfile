@@ -16,7 +16,7 @@ COPY packages/ui/package.json packages/ui/
 COPY apps/worker/package.json apps/worker/
 COPY tsconfig.base.json ./
 
-RUN pnpm install
+RUN pnpm install && pnpm store prune && rm -rf /root/.cache/pnpm
 
 # ─── Source ──────────────────────────────────────────────────────────────────
 COPY packages/ packages/
