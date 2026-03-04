@@ -1,5 +1,6 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { ReviewCard } from '@/components/review-card'
 
 interface Review {
@@ -75,7 +76,7 @@ export default function FeedPage() {
       {!initial && reviews.length === 0 && (
         <div className="text-center py-20">
           <p className="text-snack-muted">No posts available yet.</p>
-          <a href="/add-review" className="btn-primary mt-4 inline-block">Create first post</a>
+          <Link href="/add-review" className="btn-primary mt-4 inline-block">Create first post</Link>
         </div>
       )}
 
