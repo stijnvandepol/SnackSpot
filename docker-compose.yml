@@ -1,5 +1,3 @@
-version: '3.9'
-
 # ─── Shared env ───────────────────────────────────────────────────────────────
 x-common-env: &common-env
   DATABASE_URL: ${DATABASE_URL:-postgresql://snackspot:snackspot@db:5432/snackspot}
