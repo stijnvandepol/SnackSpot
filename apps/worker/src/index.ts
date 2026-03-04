@@ -34,7 +34,7 @@ function requireEnv(name: string): string {
 }
 
 const REDIS_URL     = requireEnv('REDIS_URL')
-const DATABASE_URL  = requireEnv('DATABASE_URL')
+requireEnv('DATABASE_URL') // ensures Prisma has it at startup
 const MINIO_ENDPOINT  = requireEnv('MINIO_ENDPOINT')
 const MINIO_PORT      = parseInt(process.env.MINIO_PORT ?? '9000', 10)
 const MINIO_USE_SSL   = process.env.MINIO_USE_SSL === 'true'

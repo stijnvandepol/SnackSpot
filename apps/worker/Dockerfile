@@ -26,7 +26,7 @@ COPY apps/worker/ apps/worker/
 RUN pnpm --filter @snackspot/db generate
 
 # Build TypeScript
-RUN cd apps/worker && npx tsc
+RUN pnpm --filter worker build
 
 # ─── Runtime ────────────────────────────────────────────────────────────────
 ENV NODE_ENV=production
