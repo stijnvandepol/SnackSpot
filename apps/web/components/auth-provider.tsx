@@ -62,25 +62,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // On mount: try to refresh (restores session from httpOnly cookie)
   useEffect(() => {
-    refreshToken()
-      .then(async (ok) => {
-        if (ok) {
+    const restoreSession = async () => {
+      const ok = await refreshToken()
+      if (ok && tokenRef.current) {
+        try {
           const res = await fetch('/api/v1/auth/me', {
+            credentials: 'include',
             headers: { Authorization: `Bearer ${tokenRef.current}` },
           })
           if (res.ok) {
             const { data } = await res.json()
             setUser(data)
           }
+        } catch (e) {
+          console.error('Failed to fetch user:', e)
         }
-      })
-      .finally(() => setLoading(false))
-  }, [refreshToken])
+      }
+    }
+    restoreSession().finally(() => setLoading(false))
+  }, [])
 
   // Proactively refresh 2 min before expiry (access token = 15 min)
   useEffect(() => {
     if (!accessToken) return
-    const timer = setTimeout(refreshToken, 13 * 60 * 1000)
+    const timer = setTimeout(() => refreshToken(), 13 * 60 * 1000)
     return () => clearTimeout(timer)
   }, [accessToken, refreshToken])
 
