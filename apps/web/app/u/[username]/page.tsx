@@ -4,13 +4,13 @@ import { ReviewCard } from '@/components/review-card'
 import Link from 'next/link'
 
 interface UserProfile {
-  id: string; username: string; displayName: string | null; avatarKey: string | null; role: string; createdAt: string
+  id: string; username: string; avatarKey: string | null; role: string; createdAt: string
   _count: { reviews: number; favorites: number }
 }
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null; createdAt: string; status: string
-  user: { id: string; username: string; displayName?: string | null; avatarKey?: string | null; role: string }
+  user: { id: string; username: string; avatarKey?: string | null; role: string }
   place: { id: string; name: string; address: string }
   reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
 }
@@ -34,7 +34,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           setError('User not found')
         } else if (userReviews.length > 0) {
           const u = userReviews[0].user
-          setProfile({ id: u.id, username: u.username, displayName: u.displayName ?? null, avatarKey: u.avatarKey ?? null, role: u.role, createdAt: '', _count: { reviews: userReviews.length, favorites: 0 } })
+          setProfile({ id: u.id, username: u.username, avatarKey: u.avatarKey ?? null, role: u.role, createdAt: '', _count: { reviews: userReviews.length, favorites: 0 } })
           setReviews(userReviews)
         }
       })
@@ -59,10 +59,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         <>
           <div className="card p-6 mb-6 flex items-center gap-4">
             <div className="h-16 w-16 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-bold text-2xl uppercase flex-shrink-0">
-              {(profile.displayName ?? profile.username)[0]}
+              {profile.username[0]}
             </div>
             <div>
-              <h1 className="font-heading font-bold text-xl text-snack-text">{profile.displayName ?? profile.username}</h1>
+              <h1 className="font-heading font-bold text-xl text-snack-text">{profile.username}</h1>
               <p className="text-sm text-snack-muted">@{profile.username}</p>
               <p className="text-xs text-snack-muted mt-1">{reviews.length} reviews</p>
             </div>

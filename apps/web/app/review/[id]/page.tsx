@@ -14,7 +14,7 @@ function photoUrl(variants: Record<string, string>): string | null {
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null
   status: string; createdAt: string; updatedAt: string
-  user: { id: string; username: string; displayName?: string | null; role: string }
+  user: { id: string; username: string; role: string }
   place: { id: string; name: string; address: string }
   reviewPhotos: Array<{ sortOrder: number; photo: { id: string; variants: Record<string, string> } }>
 }
@@ -101,9 +101,9 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
         <div className="flex items-center justify-between pt-2 border-t border-[#ededed]">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-xs uppercase">
-              {(review.user.displayName ?? review.user.username)[0]}
+              {review.user.username[0]}
             </div>
-            <span className="text-sm text-snack-muted">{review.user.displayName ?? review.user.username}</span>
+            <span className="text-sm text-snack-muted">{review.user.username}</span>
           </div>
           <time className="text-xs text-snack-muted">{new Date(review.createdAt).toLocaleDateString()}</time>
         </div>

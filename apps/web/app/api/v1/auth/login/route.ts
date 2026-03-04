@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   try {
     const user = await prisma.user.findUnique({
       where: { email: body.email },
-      select: { id: true, email: true, username: true, passwordHash: true, role: true, bannedAt: true, displayName: true },
+      select: { id: true, email: true, username: true, passwordHash: true, role: true, bannedAt: true },
     })
 
     // Constant-time compare (same timing whether user exists or not)

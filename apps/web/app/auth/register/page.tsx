@@ -7,7 +7,7 @@ import { useAuth } from '@/components/auth-provider'
 export default function RegisterPage() {
   const { register } = useAuth()
   const router = useRouter()
-  const [form, setForm] = useState({ email: '', username: '', password: '', displayName: '' })
+  const [form, setForm] = useState({ email: '', username: '', password: '' })
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -63,12 +63,6 @@ export default function RegisterPage() {
             <input id="username" type="text" className="input" placeholder="snacklover42"
               value={form.username} onChange={update('username')} required minLength={3} maxLength={30}
               pattern="^[a-zA-Z0-9_]+$" autoComplete="username" />
-          </div>
-
-          <div>
-            <label className="label" htmlFor="displayName">Display name</label>
-            <input id="displayName" type="text" className="input" placeholder="Your name (optional)"
-              value={form.displayName} onChange={update('displayName')} maxLength={60} />
           </div>
 
           <div>

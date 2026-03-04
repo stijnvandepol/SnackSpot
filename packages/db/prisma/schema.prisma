@@ -53,7 +53,6 @@ model User {
   username     String    @unique
   passwordHash String    @map("password_hash")
   role         Role      @default(USER)
-  displayName  String?   @map("display_name")
   avatarKey    String?   @map("avatar_key")
   bannedAt     DateTime? @map("banned_at")
   createdAt    DateTime  @default(now()) @map("created_at")

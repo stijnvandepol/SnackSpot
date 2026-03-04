@@ -29,7 +29,7 @@ export async function GET(
         status: true,
         createdAt: true,
         updatedAt: true,
-        user: { select: { id: true, username: true, displayName: true, avatarKey: true, role: true } },
+        user: { select: { id: true, username: true, avatarKey: true, role: true } },
         place: { select: { id: true, name: true, address: true } },
         reviewPhotos: {
           orderBy: { sortOrder: 'asc' },

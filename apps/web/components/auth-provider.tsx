@@ -5,7 +5,6 @@ export interface AuthUser {
   id: string
   email: string
   username: string
-  displayName: string | null
   avatarKey: string | null
   role: string
 }
@@ -19,7 +18,6 @@ interface AuthCtx {
     email: string
     username: string
     password: string
-    displayName?: string
   }): Promise<{ ok: boolean; error?: string }>
   logout(): Promise<void>
   refreshToken(): Promise<boolean>
@@ -105,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   const register = useCallback(
-    async (data: { email: string; username: string; password: string; displayName?: string }) => {
+    async (data: { email: string; username: string; password: string }) => {
       const res = await fetch('/api/v1/auth/register', {
         method: 'POST',
         credentials: 'include',

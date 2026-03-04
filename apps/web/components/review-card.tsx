@@ -7,7 +7,7 @@ interface ReviewCardProps {
     text: string
     dishName?: string | null
     createdAt: Date | string
-    user: { id: string; username: string; displayName?: string | null; avatarKey?: string | null }
+    user: { id: string; username: string; avatarKey?: string | null }
     place?: { id: string; name: string; address: string }
     reviewPhotos?: Array<{ photo: { id: string; variants: Record<string, string> } }>
   }
@@ -77,10 +77,10 @@ export function ReviewCard({ review, showPlace = true }: ReviewCardProps) {
           <div className="flex items-center justify-between pt-1">
             <div className="flex items-center gap-2">
               <div className="h-7 w-7 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-xs uppercase flex-shrink-0">
-                {(review.user.displayName ?? review.user.username)[0]}
+                {review.user.username[0]}
               </div>
               <span className="text-xs text-snack-muted">
-                {review.user.displayName ?? review.user.username}
+                {review.user.username}
               </span>
             </div>
             <time className="text-xs text-snack-muted">{timeAgo(review.createdAt)}</time>

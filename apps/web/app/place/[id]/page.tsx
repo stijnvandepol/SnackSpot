@@ -7,7 +7,7 @@ import Link from 'next/link'
 interface Place { id: string; name: string; address: string; lat: number; lng: number; avg_rating: number | null; review_count: number }
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null; createdAt: string; status: string
-  user: { id: string; username: string; displayName?: string | null; avatarKey?: string | null; role: string }
+  user: { id: string; username: string; avatarKey?: string | null; role: string }
   reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
 }
 

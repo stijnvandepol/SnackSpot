@@ -49,10 +49,12 @@ export function BottomNav() {
                 }`}
               >
                 {l.accent ? (
-                  <span className="flex h-12 w-12 items-center justify-center -mt-5">
-                    <svg viewBox="0 0 16 20" fill="none" className="h-8 w-6 text-snack-primary drop-shadow-sm" aria-hidden="true">
+                  <span className="flex h-16 w-16 items-center justify-center -mt-3 relative">
+                    <svg viewBox="0 0 16 20" fill="none" className="h-12 w-10 text-snack-primary drop-shadow-sm" aria-hidden="true">
                       <path d="M8 19c2.6-3.5 6-7.5 6-11a6 6 0 1 0-12 0c0 3.5 3.4 7.5 6 11Z" fill="currentColor"/>
-                      <circle cx="8" cy="8" r="2.25" fill="white"/>
+                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" className="absolute h-6 w-6 top-2/5 left-1/2 -translate-x-1/2 -translate-y-1/2" aria-hidden="true">
+                      <path d="M12 5v14M5 12h14"/>
                     </svg>
                   </span>
                 ) : (

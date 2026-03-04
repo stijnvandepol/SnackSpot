@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null; createdAt: string; status: string
-  user: { id: string; username: string; displayName?: string | null; avatarKey?: string | null; role: string }
+  user: { id: string; username: string; avatarKey?: string | null; role: string }
   place: { id: string; name: string; address: string }
   reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
 }
@@ -39,10 +39,10 @@ export default function ProfilePage() {
     <div className="mx-auto max-w-2xl px-4 py-6">
       <div className="card p-6 mb-4 flex items-center gap-4">
         <div className="h-16 w-16 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-bold text-2xl uppercase flex-shrink-0">
-          {(user.displayName ?? user.username)[0]}
+          {user.username[0]}
         </div>
         <div className="min-w-0">
-          <h1 className="font-heading font-bold text-xl text-snack-text">{user.displayName ?? user.username}</h1>
+          <h1 className="font-heading font-bold text-xl text-snack-text">{user.username}</h1>
           <p className="text-sm text-snack-muted">@{user.username}</p>
           <p className="text-xs text-snack-muted mt-1">Snack hunter & reviewer</p>
           <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${

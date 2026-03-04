@@ -9,7 +9,7 @@ interface Review {
   dishName?: string | null
   createdAt: string
   status: string
-  user: { id: string; username: string; displayName?: string | null; avatarKey?: string | null; role: string }
+  user: { id: string; username: string; avatarKey?: string | null; role: string }
   place: { id: string; name: string; address: string }
   reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
 }

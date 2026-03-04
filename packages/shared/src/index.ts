@@ -24,7 +24,6 @@ export const RegisterSchema = z.object({
     .max(128)
     .regex(/[A-Z]/, 'Must contain an uppercase letter')
     .regex(/[0-9]/, 'Must contain a number'),
-  displayName: z.string().min(1).max(60).optional(),
 })
 
 export const LoginSchema = z.object({
@@ -138,7 +137,6 @@ export interface PaginatedResponse<T> {
 export interface UserPublic {
   id: string
   username: string
-  displayName: string | null
   avatarKey: string | null
   role: string
   createdAt: string

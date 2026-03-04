@@ -41,7 +41,7 @@ export async function GET(
         dishName: true,
         status: true,
         createdAt: true,
-        user: { select: { id: true, username: true, displayName: true, avatarKey: true, role: true } },
+        user: { select: { id: true, username: true, avatarKey: true, role: true } },
         reviewPhotos: {
           orderBy: { sortOrder: 'asc' },
           select: { photo: { select: { id: true, variants: true } } },
