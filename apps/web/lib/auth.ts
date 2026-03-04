@@ -32,7 +32,8 @@ export async function verifyPassword(hash: string, password: string): Promise<bo
 
 export function signAccessToken(payload: Omit<AccessTokenPayload, 'iat' | 'exp'>): string {
   return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
-    expiresIn: env.JWT_ACCESS_EXPIRES_IN as string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expiresIn: env.JWT_ACCESS_EXPIRES_IN as any,
     subject: payload.sub,
   })
 }
