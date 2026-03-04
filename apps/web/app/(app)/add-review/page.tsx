@@ -50,7 +50,95 @@ export default function AddReviewPage() {
   const [photos, setPhotos] = useState<UploadedPhoto[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fetchingLocation, setFetchingLocation] = useState(false)
+  const [geocoding, setGeocoding] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Get current location and reverse geocode to address
+  const handleUseCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by your browser')
+      return
+    }
+    
+    setFetchingLocation(true)
+    setError(null)
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude
+        const lng = position.coords.longitude
+        
+        try {
+          // Reverse geocode: coordinates -> address
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
+            { headers: { 'User-Agent': 'SnackSpot/1.0' } }
+          )
+          const data = await res.json()
+          
+          if (data.address) {
+            const addr = data.address
+            const street = addr.road || addr.street || ''
+            const houseNumber = addr.house_number || ''
+            const city = addr.city || addr.town || addr.village || ''
+            const addressStr = [street, houseNumber, city].filter(Boolean).join(', ')
+            
+            setPlace((p) => ({
+              ...p,
+              address: addressStr || data.display_name,
+              lat: lat.toString(),
+              lng: lng.toString(),
+            }))
+          }
+        } catch (e) {
+          console.error('Reverse geocoding failed:', e)
+          setError('Could not fetch address. Please enter manually.')
+          setPlace((p) => ({ ...p, lat: lat.toString(), lng: lng.toString() }))
+        } finally {
+          setFetchingLocation(false)
+        }
+      },
+      (err) => {
+        setError(`Location error: ${err.message}`)
+        setFetchingLocation(false)
+      }
+    )
+  }
+
+  // Geocode address to get coordinates
+  const handleGeocodeAddress = async () => {
+    if (!place.address) {
+      setError('Please enter an address first')
+      return
+    }
+    
+    setGeocoding(true)
+    setError(null)
+    
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(place.address)}&format=json&addressdetails=1&limit=1`,
+        { headers: { 'User-Agent': 'SnackSpot/1.0' } }
+      )
+      const data = await res.json()
+      
+      if (data && data.length > 0) {
+        setPlace((p) => ({
+          ...p,
+          lat: data[0].lat,
+          lng: data[0].lon,
+        }))
+      } else {
+        setError('Address not found. Please check the address.')
+      }
+    } catch (e) {
+      console.error('Geocoding failed:', e)
+      setError('Could not find coordinates for this address')
+    } finally {
+      setGeocoding(false)
+    }
+  }
 
   if (loading) return null
 
@@ -194,21 +282,36 @@ export default function AddReviewPage() {
                 <label className="label">Place name *</label>
                 <input className="input" placeholder="e.g. Café Stroopwafel" value={place.name} onChange={(e) => setPlace((p) => ({ ...p, name: e.target.value }))} />
               </div>
+              
               <div>
                 <label className="label">Address *</label>
-                <input className="input" placeholder="Street, City" value={place.address} onChange={(e) => setPlace((p) => ({ ...p, address: e.target.value }))} />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="label">Latitude *</label>
-                  <input className="input" type="number" step="any" placeholder="52.3676" value={place.lat} onChange={(e) => setPlace((p) => ({ ...p, lat: e.target.value }))} />
+                <div className="flex gap-2">
+                  <input 
+                    className="input flex-1" 
+                    placeholder="Street, City" 
+                    value={place.address} 
+                    onChange={(e) => setPlace((p) => ({ ...p, address: e.target.value }))} 
+                    onBlur={handleGeocodeAddress}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleUseCurrentLocation}
+                    disabled={fetchingLocation}
+                    className="btn-secondary px-3 whitespace-nowrap"
+                  >
+                    {fetchingLocation ? '📍...' : '📍 Current'}
+                  </button>
                 </div>
-                <div>
-                  <label className="label">Longitude *</label>
-                  <input className="input" type="number" step="any" placeholder="4.9041" value={place.lng} onChange={(e) => setPlace((p) => ({ ...p, lng: e.target.value }))} />
-                </div>
+                <p className="text-xs text-snack-muted mt-1">
+                  💡 Type address and coordinates will be fetched automatically
+                </p>
               </div>
-              <p className="text-xs text-snack-muted">💡 Tip: right-click in Google Maps to copy coordinates.</p>
+              
+              {place.lat && place.lng && (
+                <div className="px-3 py-2 bg-snack-surface rounded-lg text-xs text-snack-muted">
+                  📍 Coordinates: {parseFloat(place.lat).toFixed(4)}, {parseFloat(place.lng).toFixed(4)}
+                </div>
+              )}
             </>
           ) : (
             <div>
@@ -220,10 +323,19 @@ export default function AddReviewPage() {
 
           <button
             className="btn-primary w-full mt-2"
-            onClick={() => {
+            disabled={geocoding || fetchingLocation}
+            onClick={async () => {
               if (place.mode === 'new') {
-                if (!place.name || !place.address || !place.lat || !place.lng) {
-                  setError('All place fields are required'); return
+                if (!place.name || !place.address) {
+                  setError('Place name and address are required'); return
+                }
+                // Auto-geocode if coordinates are missing
+                if (!place.lat || !place.lng) {
+                  await handleGeocodeAddress()
+                  // Check again after geocoding
+                  if (!place.lat || !place.lng) {
+                    setError('Could not find coordinates for this address'); return
+                  }
                 }
               } else if (!place.placeId) {
                 setError('Place ID is required'); return
@@ -232,7 +344,7 @@ export default function AddReviewPage() {
               setStep('review')
             }}
           >
-            Next: Write Review →
+            {geocoding || fetchingLocation ? 'Loading...' : 'Next: Write Review →'}
           </button>
           {error && <p className="text-sm text-red-500">{error}</p>}
         </div>
