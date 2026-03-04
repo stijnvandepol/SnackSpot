@@ -47,17 +47,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   const refreshToken = useCallback(async (): Promise<boolean> => {
-    const res = await fetch('/api/v1/auth/refresh', { method: 'POST', credentials: 'include' })
-    if (!res.ok) {
-      setUser(null)
-      setAccessToken(null)
-      tokenRef.current = null
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 15000) // 15 sec timeout
+      
+      const res = await fetch('/api/v1/auth/refresh', { 
+        method: 'POST', 
+        credentials: 'include',
+        signal: controller.signal,
+      })
+      clearTimeout(timeout)
+      
+      if (!res.ok) {
+        // 401 = token expired, 403 = banned. Only then logout.
+        if (res.status === 401 || res.status === 403) {
+          console.error('[AUTH] Refresh failed:', res.status, res.statusText)
+          setUser(null)
+          setAccessToken(null)
+          tokenRef.current = null
+        } else {
+          console.warn('[AUTH] Refresh returned non-auth error:', res.status)
+        }
+        return false
+      }
+      const { data } = await res.json()
+      tokenRef.current = data.access_token
+      setAccessToken(data.access_token)
+      return true
+    } catch (e) {
+      console.error('[AUTH] Refresh error:', e)
+      // Don't logout on network errors - just fail gracefully
       return false
     }
-    const { data } = await res.json()
-    tokenRef.current = data.access_token
-    setAccessToken(data.access_token)
-    return true
   }, [])
 
   // On mount: try to refresh (restores session from httpOnly cookie)
@@ -73,13 +94,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (res.ok) {
             const { data } = await res.json()
             setUser(data)
+            console.debug('[AUTH] Session restored')
+          } else {
+            console.warn('[AUTH] /auth/me failed:', res.status)
           }
         } catch (e) {
-          console.error('Failed to fetch user:', e)
+          console.error('[AUTH] Failed to fetch user:', e)
         }
       }
+      setLoading(false)
     }
-    restoreSession().finally(() => setLoading(false))
+    restoreSession()
   }, [])
 
   // Proactively refresh 2 min before expiry (access token = 15 min)
