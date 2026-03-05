@@ -48,6 +48,7 @@ export default function ProfilePage() {
   const [stats, setStats] = useState<StatsData | null>(null)
   const [selectedBadge, setSelectedBadge] = useState<BadgeRow | null>(null)
   const [loading, setLoading] = useState(false)
+  const maxWeeklyPosts = Math.max(1, ...(stats?.weeklyActivity.map((week) => week.posts) ?? [0]))
 
   useEffect(() => {
     if (!user || !accessToken) return
@@ -148,8 +149,8 @@ export default function ProfilePage() {
               {stats.weeklyActivity.map((week) => (
                 <div
                   key={week.weekStart}
-                  className="bg-snack-primary/70 rounded-sm flex-1"
-                  style={{ height: `${Math.max(8, week.posts * 10)}px` }}
+                  className={`rounded-sm flex-1 ${week.posts > 0 ? 'bg-snack-primary/70' : 'bg-snack-surface'}`}
+                  style={{ height: `${week.posts > 0 ? Math.max(8, Math.round((week.posts / maxWeeklyPosts) * 48)) : 4}px` }}
                   title={`${new Date(week.weekStart).toLocaleDateString()}: ${week.posts}`}
                 />
               ))}
