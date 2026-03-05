@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ReviewCard } from '@/components/review-card'
+import { useAuth } from '@/components/auth-provider'
 
 interface Review {
   id: string
@@ -10,12 +11,15 @@ interface Review {
   dishName?: string | null
   createdAt: string
   status: string
+  likeCount?: number
+  likedByMe?: boolean
   user: { id: string; username: string; avatarKey?: string | null; role: string }
   place: { id: string; name: string; address: string }
   reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
 }
 
 export default function FeedPage() {
+  const { accessToken } = useAuth()
   const [reviews, setReviews] = useState<Review[]>([])
   const [cursor, setCursor] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
@@ -36,7 +40,9 @@ export default function FeedPage() {
 
     try {
       const url = `/api/v1/feed?limit=15${cursor ? `&cursor=${cursor}` : ''}`
-      const res = await fetch(url)
+      const res = await fetch(url, {
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+      })
       if (!res.ok) throw new Error('Failed to load feed')
       const json = await res.json()
       setReviews((prev) => {
@@ -56,7 +62,7 @@ export default function FeedPage() {
       setLoading(false)
       setInitial(false)
     }
-  }, [hasMore, cursor])
+  }, [hasMore, cursor, accessToken])
 
   // Initial load
   useEffect(() => {

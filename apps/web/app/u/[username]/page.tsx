@@ -2,6 +2,7 @@
 import { use, useEffect, useState } from 'react'
 import { ReviewCard } from '@/components/review-card'
 import Link from 'next/link'
+import { useAuth } from '@/components/auth-provider'
 
 interface UserProfile {
   id: string
@@ -19,6 +20,8 @@ interface Review {
   dishName?: string | null
   createdAt: string
   status: string
+  likeCount?: number
+  likedByMe?: boolean
   user: { id: string; username: string; avatarKey?: string | null; role: string }
   place: { id: string; name: string; address: string }
   reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
@@ -26,6 +29,7 @@ interface Review {
 
 export default function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = use(params)
+  const { accessToken } = useAuth()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
@@ -35,7 +39,9 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
     setLoading(true)
     Promise.all([
       fetch(`/api/v1/users/${encodeURIComponent(username)}`),
-      fetch(`/api/v1/users/${encodeURIComponent(username)}/reviews?limit=50`),
+      fetch(`/api/v1/users/${encodeURIComponent(username)}/reviews?limit=50`, {
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+      }),
     ])
       .then(async ([profileRes, reviewsRes]) => {
         const profileJson = await profileRes.json()
@@ -51,7 +57,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       })
       .catch(() => setError('Failed to load profile'))
       .finally(() => setLoading(false))
-  }, [username])
+  }, [username, accessToken])
 
   if (error) return (
     <div className="mx-auto max-w-lg px-4 py-16 text-center">

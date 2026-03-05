@@ -3,16 +3,19 @@ import { useEffect, useState } from 'react'
 import { use } from 'react'
 import { ReviewCard } from '@/components/review-card'
 import Link from 'next/link'
+import { useAuth } from '@/components/auth-provider'
 
 interface Place { id: string; name: string; address: string; lat: number; lng: number; avg_rating: number | null; review_count: number }
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null; createdAt: string; status: string
+  likeCount?: number; likedByMe?: boolean
   user: { id: string; username: string; avatarKey?: string | null; role: string }
   reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
 }
 
 export default function PlacePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const { accessToken } = useAuth()
   const [place, setPlace] = useState<Place | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [sort, setSort] = useState<'new' | 'top'>('new')
@@ -29,11 +32,13 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
   useEffect(() => {
     if (!place) return
     setLoading(true)
-    fetch(`/api/v1/places/${id}/reviews?sort=${sort}&limit=20`)
+    fetch(`/api/v1/places/${id}/reviews?sort=${sort}&limit=20`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+    })
       .then((r) => r.json())
       .then((json) => setReviews(json.data?.data ?? []))
       .finally(() => setLoading(false))
-  }, [place, sort, id])
+  }, [place, sort, id, accessToken])
 
   if (error) {
     return (

@@ -43,9 +43,11 @@ export async function GET(
         status: true,
         createdAt: true,
         _count: { select: { reviewLikes: true } },
-        reviewLikes: auth
-          ? { where: { userId: auth.sub }, select: { userId: true }, take: 1 }
-          : false,
+        reviewLikes: {
+          where: { userId: auth?.sub ?? '__no_user__' },
+          select: { userId: true },
+          take: 1,
+        },
         user: { select: { id: true, username: true, avatarKey: true, role: true } },
         reviewPhotos: {
           orderBy: { sortOrder: 'asc' },
@@ -59,7 +61,7 @@ export async function GET(
     const withLikes = items.map((item) => ({
       ...item,
       likeCount: item._count.reviewLikes,
-      likedByMe: auth ? item.reviewLikes.length > 0 : false,
+      likedByMe: item.reviewLikes.length > 0,
       _count: undefined,
       reviewLikes: undefined,
     }))

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null; createdAt: string; status: string
+  likeCount?: number; likedByMe?: boolean
   user: { id: string; username: string; avatarKey?: string | null; role: string }
   place: { id: string; name: string; address: string }
   reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>

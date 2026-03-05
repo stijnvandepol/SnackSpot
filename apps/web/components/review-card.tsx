@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { photoVariantUrl } from '@/lib/photo-url'
+import { ReviewLikeButton } from '@/components/review-like-button'
 
 interface ReviewCardProps {
   review: {
@@ -10,6 +11,8 @@ interface ReviewCardProps {
     createdAt: Date | string
     user: { id: string; username: string; avatarKey?: string | null }
     place?: { id: string; name: string; address: string }
+    likeCount?: number
+    likedByMe?: boolean
     reviewPhotos?: Array<{ photo: { id: string; variants: Record<string, string> } }>
   }
   showPlace?: boolean
@@ -40,8 +43,8 @@ export function ReviewCard({ review, showPlace = true }: ReviewCardProps) {
       .find((url): url is string => Boolean(url)) ?? null
 
   return (
-    <Link href={`/review/${review.id}`} className="block">
-      <article className="card overflow-hidden transition hover:shadow-md">
+    <article className="card overflow-hidden transition hover:shadow-md">
+      <Link href={`/review/${review.id}`} className="block">
         {thumb && (
           <div className="relative h-64 w-full bg-snack-surface md:h-72">
             <img
@@ -79,7 +82,14 @@ export function ReviewCard({ review, showPlace = true }: ReviewCardProps) {
             <time className="text-xs text-snack-muted">{timeAgo(review.createdAt)}</time>
           </div>
         </div>
-      </article>
-    </Link>
+      </Link>
+      <div className="px-4 pb-4 -mt-1 flex justify-end">
+        <ReviewLikeButton
+          reviewId={review.id}
+          initialLikeCount={review.likeCount ?? 0}
+          initialLikedByMe={Boolean(review.likedByMe)}
+        />
+      </div>
+    </article>
   )
 }
