@@ -31,19 +31,20 @@ interface UploadedPhoto {
   status: 'uploading' | 'confirming' | 'ready' | 'error'
 }
 
-const MIME_ALIASES: Record<string, 'image/jpeg' | 'image/png' | 'image/webp' | 'image/heic'> = {
+const MIME_ALIASES: Record<string, 'image/jpeg' | 'image/png' | 'image/webp' | 'image/avif' | 'image/heic'> = {
   'image/jpeg': 'image/jpeg',
   'image/jpg': 'image/jpeg',
   'image/pjpeg': 'image/jpeg',
   'image/png': 'image/png',
   'image/webp': 'image/webp',
+  'image/avif': 'image/avif',
   'image/heic': 'image/heic',
   'image/heif': 'image/heic',
   'image/heic-sequence': 'image/heic',
   'image/heif-sequence': 'image/heic',
 }
 
-function normalizeUploadMime(file: File): 'image/jpeg' | 'image/png' | 'image/webp' | 'image/heic' | null {
+function normalizeUploadMime(file: File): 'image/jpeg' | 'image/png' | 'image/webp' | 'image/avif' | 'image/heic' | null {
   const rawType = (file.type || '').trim().toLowerCase()
   if (rawType in MIME_ALIASES) return MIME_ALIASES[rawType]
 
@@ -51,6 +52,7 @@ function normalizeUploadMime(file: File): 'image/jpeg' | 'image/png' | 'image/we
   if (name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'image/jpeg'
   if (name.endsWith('.png')) return 'image/png'
   if (name.endsWith('.webp')) return 'image/webp'
+  if (name.endsWith('.avif')) return 'image/avif'
   if (name.endsWith('.heic') || name.endsWith('.heif')) return 'image/heic'
 
   return null
@@ -317,7 +319,7 @@ export default function AddReviewPage() {
     for (const file of toUpload) {
       const normalizedMime = normalizeUploadMime(file)
       if (!normalizedMime) {
-        setError(`Unsupported image type for ${file.name || 'selected file'}. Use JPG, PNG, WEBP or HEIC.`)
+        setError(`Unsupported image type for ${file.name || 'selected file'}. Use JPG, PNG, WEBP, AVIF or HEIC.`)
         continue
       }
 
@@ -692,7 +694,7 @@ export default function AddReviewPage() {
             id="review-photo-input"
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
+            accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif"
             multiple
             className="sr-only"
             onChange={(e) => {
@@ -702,9 +704,13 @@ export default function AddReviewPage() {
           />
 
           {photos.length < 5 && (
-            <label htmlFor="review-photo-input" className="btn-secondary w-full cursor-pointer text-center">
+            <button
+              type="button"
+              className="btn-secondary w-full cursor-pointer text-center"
+              onClick={() => fileInputRef.current?.click()}
+            >
               Add photos ({photos.length}/5)
-            </label>
+            </button>
           )}
 
           {photos.length > 0 && (

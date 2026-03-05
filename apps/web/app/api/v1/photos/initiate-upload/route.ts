@@ -11,6 +11,7 @@ const ALLOWED_MIMES = new Set([
   'image/jpeg',
   'image/png',
   'image/webp',
+  'image/avif',
   'image/heic',
   'image/heif',
   'image/heic-sequence',
@@ -40,6 +41,7 @@ export async function POST(req: NextRequest) {
 
     const ext = body.contentType === 'image/png' ? 'png'
       : body.contentType === 'image/webp' ? 'webp'
+      : body.contentType === 'image/avif' ? 'avif'
       : body.contentType.startsWith('image/hei') ? 'heic'
       : 'jpg'
 
