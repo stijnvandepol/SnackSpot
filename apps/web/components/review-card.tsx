@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { photoVariantUrl } from '@/lib/photo-url'
 
 interface ReviewCardProps {
   review: {
@@ -32,19 +33,11 @@ function Stars({ rating }: { rating: number }) {
   )
 }
 
-const MINIO_PUBLIC = process.env.NEXT_PUBLIC_MINIO_PUBLIC_URL ?? 'http://localhost:9000'
-const BUCKET = process.env.NEXT_PUBLIC_MINIO_BUCKET ?? 'snackspot'
-
-function photoUrl(variants: Record<string, string>): string | null {
-  const key = variants?.thumb ?? variants?.medium ?? variants?.large ?? null
-  if (!key) return null
-  return `${MINIO_PUBLIC}/${BUCKET}/${key}`
-}
-
 export function ReviewCard({ review, showPlace = true }: ReviewCardProps) {
-  const thumb = review.reviewPhotos?.[0]
-    ? photoUrl(review.reviewPhotos[0].photo.variants as Record<string, string>)
-    : null
+  const thumb =
+    review.reviewPhotos
+      ?.map((rp) => photoVariantUrl(rp.photo.variants as Record<string, string>))
+      .find((url): url is string => Boolean(url)) ?? null
 
   return (
     <Link href={`/review/${review.id}`} className="block">

@@ -45,10 +45,18 @@ export async function POST(req: NextRequest) {
     if (body.photoIds.length > 0) {
       const photos = await prisma.photo.findMany({
         where: { id: { in: body.photoIds }, uploaderId: auth.sub },
-        select: { id: true, reviewPhotos: { select: { reviewId: true }, take: 1 } },
+        select: {
+          id: true,
+          moderationStatus: true,
+          reviewPhotos: { select: { reviewId: true }, take: 1 },
+        },
       })
       if (photos.length !== body.photoIds.length) {
         return err('One or more photo IDs are invalid', 422)
+      }
+      const notConfirmed = photos.filter((p) => p.moderationStatus === 'PENDING')
+      if (notConfirmed.length > 0) {
+        return err('One or more photos are not uploaded yet - please wait for upload confirmation', 409)
       }
       const alreadyUsed = photos.filter((p) => p.reviewPhotos.length > 0)
       if (alreadyUsed.length > 0) {

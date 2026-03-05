@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth-provider'
 import Link from 'next/link'
+import { photoVariantUrl } from '@/lib/photo-url'
 
 interface Report {
   id: string; targetType: string; reason: string; status: string; createdAt: string
@@ -9,9 +10,6 @@ interface Report {
   review: { id: string; text: string; status: string; user: { id: string; username: string } } | null
   photo: { id: string; variants: Record<string, string>; moderationStatus: string } | null
 }
-
-const MINIO_PUBLIC = process.env.NEXT_PUBLIC_MINIO_PUBLIC_URL ?? 'http://localhost:9000'
-const BUCKET = process.env.NEXT_PUBLIC_MINIO_BUCKET ?? 'snackspot'
 
 export default function ModerationPage() {
   const { user, accessToken } = useAuth()
@@ -103,7 +101,11 @@ export default function ModerationPage() {
             {report.photo && (
               <div className="flex items-center gap-3">
                 {report.photo.variants?.thumb && (
-                  <img src={`${MINIO_PUBLIC}/${BUCKET}/${report.photo.variants.thumb}`} alt="" className="h-16 w-16 rounded-lg object-cover" />
+                  <img
+                    src={photoVariantUrl(report.photo.variants, ['thumb']) ?? undefined}
+                    alt=""
+                    className="h-16 w-16 rounded-lg object-cover"
+                  />
                 )}
                 <p className="text-sm text-gray-500">Moderation: {report.photo.moderationStatus}</p>
               </div>

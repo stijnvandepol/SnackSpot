@@ -2,14 +2,7 @@
 import { use, useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth-provider'
 import Link from 'next/link'
-
-const MINIO_PUBLIC = process.env.NEXT_PUBLIC_MINIO_PUBLIC_URL ?? 'http://localhost:9000'
-const BUCKET = process.env.NEXT_PUBLIC_MINIO_BUCKET ?? 'snackspot'
-
-function photoUrl(variants: Record<string, string>): string | null {
-  const key = variants?.large ?? variants?.medium ?? variants?.thumb ?? null
-  return key ? `${MINIO_PUBLIC}/${BUCKET}/${key}` : null
-}
+import { photoVariantUrl } from '@/lib/photo-url'
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null
@@ -78,7 +71,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
       {photos.length > 0 && (
         <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(photos.length, 3)}, 1fr)` }}>
           {photos.map((rp) => {
-            const url = photoUrl(rp.photo.variants)
+            const url = photoVariantUrl(rp.photo.variants, ['large', 'medium', 'thumb'])
             return url ? (
               <div key={rp.photo.id} className="aspect-square rounded-2xl overflow-hidden bg-snack-surface">
                 <img src={url} alt="" className="h-full w-full object-cover" />

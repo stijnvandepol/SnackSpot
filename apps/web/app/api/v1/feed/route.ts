@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
         user: { select: { id: true, username: true, avatarKey: true, role: true } },
         place: { select: { id: true, name: true, address: true } },
         reviewPhotos: {
-          take: 1,
+          take: 5,
           orderBy: { sortOrder: 'asc' },
           select: {
             photo: { select: { id: true, variants: true } },
