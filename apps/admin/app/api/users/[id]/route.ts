@@ -23,7 +23,11 @@ export async function GET(req: NextRequest, { params }: Params) {
         updatedAt: true,
         _count: {
           select: {
-            reviews: true,
+            reviews: {
+              where: {
+                status: { not: 'DELETED' },
+              },
+            },
             reviewLikes: true,
             favorites: true,
           },

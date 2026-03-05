@@ -1,6 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import { ok, err, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
+import { ReviewStatus } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   const auth = requireAuth(req)
@@ -16,7 +17,16 @@ export async function GET(req: NextRequest) {
         avatarKey: true,
         role: true,
         createdAt: true,
-        _count: { select: { reviews: true, favorites: true } },
+        _count: {
+          select: {
+            reviews: {
+              where: {
+                status: { not: ReviewStatus.DELETED },
+              },
+            },
+            favorites: true,
+          },
+        },
       },
     })
     if (!user) return err('User not found', 404)
