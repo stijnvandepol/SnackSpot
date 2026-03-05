@@ -61,6 +61,13 @@ function normalizeUploadMime(file: File): 'image/jpeg' | 'image/png' | 'image/we
   return null
 }
 
+function createTempPhotoId(): string {
+  if (typeof globalThis.crypto !== 'undefined' && typeof globalThis.crypto.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID()
+  }
+  return `tmp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+}
+
 function Stars({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
     <div className="flex gap-1">
@@ -327,7 +334,7 @@ export default function AddReviewPage() {
       }
 
       const previewUrl = URL.createObjectURL(file)
-      const tempId = crypto.randomUUID()
+      const tempId = createTempPhotoId()
       // realId starts as the temp UUID and gets updated to the DB photo ID after initiate-upload.
       // This allows the catch block to always find the correct photo entry regardless of when the error occurs.
       let realId = tempId
@@ -713,13 +720,12 @@ export default function AddReviewPage() {
           />
 
           {photos.length < 5 && (
-            <button
-              type="button"
-              className="btn-secondary w-full cursor-pointer text-center"
-              onClick={() => fileInputRef.current?.click()}
+            <label
+              htmlFor="review-photo-input"
+              className="btn-secondary block w-full cursor-pointer text-center"
             >
               Add photos ({photos.length}/5)
-            </button>
+            </label>
           )}
 
           {photos.length > 0 && (
