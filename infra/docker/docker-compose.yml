@@ -7,6 +7,7 @@ x-common-env: &common-env
   MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required}
   MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required}
   MINIO_BUCKET: ${MINIO_BUCKET:-snackspot}
+  MINIO_REGION: ${MINIO_REGION:-us-east-1}
   MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?MINIO_PUBLIC_URL is required}
   TRUST_PROXY: ${TRUST_PROXY:-true}
 
@@ -48,10 +49,10 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required}
-      MINIO_API_CORS_ALLOW_ORIGIN: "http://localhost:8080,http://localhost:3000,http://127.0.0.1:8080"
+      MINIO_API_CORS_ALLOW_ORIGIN: ${MINIO_CORS_ORIGINS:-http://localhost:8080,http://localhost:3000,http://127.0.0.1:8080}
     ports:
-      - "127.0.0.1:9000:9000"
-      - "127.0.0.1:9001:9001"
+      - "9000:9000"
+      - "9001:9001"
     volumes:
       - miniodata:/data
     healthcheck:
@@ -93,7 +94,7 @@ services:
     restart: unless-stopped
     init: true
     ports:
-      - "127.0.0.1:8080:3000"
+      - "8080:3000"
     environment:
       <<: *common-env
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}

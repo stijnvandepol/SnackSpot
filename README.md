@@ -52,6 +52,9 @@ docker compose -f infra/docker/docker-compose.yml logs -f web migrate
 
 The app is now available at **http://localhost:8080**
 
+The Docker ports are published on all interfaces (`0.0.0.0`) so the app can also be reached from your LAN via:
+**http://<your-host-lan-ip>:8080**
+
 ---
 
 ## Default ports
@@ -63,6 +66,24 @@ The app is now available at **http://localhost:8080**
 | MinIO Console | 9001 | http://localhost:9001 |
 | PostgreSQL | (internal) | `db:5432` inside Docker network |
 | Redis | (internal) | `redis:6379` inside Docker network |
+
+---
+
+## LAN / Cloudflared setup
+
+For access from other devices (LAN) or public access through Cloudflare Tunnel, set these values in `.env`:
+
+```env
+NEXT_PUBLIC_APP_URL=https://app.example.com
+MINIO_PUBLIC_URL=https://storage.example.com
+CORS_ORIGINS=https://app.example.com,http://192.168.1.50:8080
+MINIO_CORS_ORIGINS=https://app.example.com,http://192.168.1.50:8080
+```
+
+Notes:
+- `CORS_ORIGINS` controls which browser origins may call `/api/*`.
+- `MINIO_CORS_ORIGINS` controls which browser origins may upload directly to MinIO using presigned URLs.
+- If you only tunnel the web app and not MinIO, photo uploads will fail (uploads are direct-to-MinIO by design).
 
 ---
 
