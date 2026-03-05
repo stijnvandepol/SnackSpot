@@ -305,7 +305,11 @@ export default function AddReviewPage() {
   }
 
   const handleFileSelect = async (files: FileList | null) => {
-    if (!files || !accessToken) return
+    if (!files) return
+    if (!accessToken) {
+      setError('Your session is not ready yet. Please wait a moment and try again.')
+      return
+    }
     const remaining = 5 - photos.length
     const toUpload = Array.from(files).slice(0, remaining)
 
@@ -341,11 +345,19 @@ export default function AddReviewPage() {
         let uploaded = false
         const uploadStartTime = Date.now()
         try {
-          const putRes = await fetch(initData.uploadUrl, {
-            method: 'PUT',
-            body: file,
-            headers: { 'Content-Type': normalizedMime },
-          })
+          const controller = new AbortController()
+          const timeout = setTimeout(() => controller.abort(), 12000)
+          let putRes: Response
+          try {
+            putRes = await fetch(initData.uploadUrl, {
+              method: 'PUT',
+              body: file,
+              headers: { 'Content-Type': normalizedMime },
+              signal: controller.signal,
+            })
+          } finally {
+            clearTimeout(timeout)
+          }
           if (putRes.ok) {
             uploaded = true
           } else if (isDev) {
@@ -677,18 +689,22 @@ export default function AddReviewPage() {
           <p className="text-sm text-snack-muted">Add up to 5 photos (optional).</p>
 
           <input
+            id="review-photo-input"
             ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
             multiple
-            className="hidden"
-            onChange={(e) => handleFileSelect(e.target.files)}
+            className="sr-only"
+            onChange={(e) => {
+              void handleFileSelect(e.target.files)
+              e.currentTarget.value = ''
+            }}
           />
 
           {photos.length < 5 && (
-            <button className="btn-secondary w-full" onClick={() => fileInputRef.current?.click()}>
+            <label htmlFor="review-photo-input" className="btn-secondary w-full cursor-pointer text-center">
               Add photos ({photos.length}/5)
-            </button>
+            </label>
           )}
 
           {photos.length > 0 && (
