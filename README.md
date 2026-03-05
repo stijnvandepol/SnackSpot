@@ -77,12 +77,12 @@ For access from other devices (LAN) or public access through Cloudflare Tunnel, 
 NEXT_PUBLIC_APP_URL=https://app.example.com
 MINIO_PUBLIC_URL=https://storage.example.com
 CORS_ORIGINS=https://app.example.com,http://192.168.1.50:8080
-MINIO_CORS_ORIGINS=https://app.example.com,http://192.168.1.50:8080
+MINIO_CORS_ORIGINS=*
 ```
 
 Notes:
 - `CORS_ORIGINS` controls which browser origins may call `/api/*`.
-- `MINIO_CORS_ORIGINS` controls which browser origins may upload directly to MinIO using presigned URLs.
+- `MINIO_CORS_ORIGINS` controls which browser origins may upload directly to MinIO using presigned URLs (`*` avoids hostname/domain mismatch).
 - If you only tunnel the web app and not MinIO, photo uploads will fail (uploads are direct-to-MinIO by design).
 
 ---

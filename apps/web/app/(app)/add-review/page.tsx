@@ -341,6 +341,13 @@ export default function AddReviewPage() {
         )
       } catch (err) {
         console.error(`[Upload] ✗ ${file.name} failed:`, err)
+        const msg =
+          err instanceof Error && /Failed to fetch|NetworkError|CORS|Mixed Content/i.test(err.message)
+            ? 'Upload blocked by browser (CORS/HTTPS mismatch). Check MINIO_PUBLIC_URL and MINIO_CORS_ORIGINS.'
+            : err instanceof Error
+              ? err.message
+              : 'Photo upload failed'
+        setError(msg)
         setPhotos((prev) => prev.map((p) => p.photoId === id ? { ...p, status: 'error' } : p))
       }
     })
