@@ -141,6 +141,7 @@ ensure_env() {
   ensure_env_key MINIO_IMAGE "minio/minio:latest"
   ensure_env_key JWT_ACCESS_EXPIRES_IN "15m"
   ensure_env_key JWT_REFRESH_EXPIRES_DAYS "7"
+  ensure_env_key AUTH_COOKIE_SECURE "false"
   ensure_env_key NODE_ENV "production"
   ensure_env_key TRUST_PROXY "true"
   ensure_env_key NEXT_PUBLIC_APP_URL "http://localhost:8080"

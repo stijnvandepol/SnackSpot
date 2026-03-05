@@ -69,24 +69,31 @@ export function refreshTokenExpiresAt(): Date {
 
 export const REFRESH_COOKIE = 'snackspot_rt'
 
+function shouldUseSecureCookie(): boolean {
+  if (typeof env.AUTH_COOKIE_SECURE === 'boolean') return env.AUTH_COOKIE_SECURE
+  return env.NODE_ENV === 'production'
+}
+
 export function buildSetCookie(token: string, expires: Date): string {
-  const isProd = env.NODE_ENV === 'production'
+  const secure = shouldUseSecureCookie()
   return [
     `${REFRESH_COOKIE}=${token}`,
     `Expires=${expires.toUTCString()}`,
     'Path=/',
     'HttpOnly',
     'SameSite=Strict',
-    ...(isProd ? ['Secure'] : []),
+    ...(secure ? ['Secure'] : []),
   ].join('; ')
 }
 
 export function buildClearCookie(): string {
+  const secure = shouldUseSecureCookie()
   return [
     `${REFRESH_COOKIE}=`,
     'Expires=Thu, 01 Jan 1970 00:00:00 GMT',
     'Path=/',
     'HttpOnly',
     'SameSite=Strict',
+    ...(secure ? ['Secure'] : []),
   ].join('; ')
 }

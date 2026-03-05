@@ -28,8 +28,13 @@ export async function POST(req: NextRequest) {
       include: { user: { select: { id: true, email: true, username: true, role: true, bannedAt: true } } },
     })
 
-    if (!stored || stored.expiresAt < new Date()) {
-      // Expired or not found – clear cookie
+    if (!stored) {
+      // Can happen during refresh-token rotation races (multi-tab / concurrent requests).
+      // Avoid clearing cookie here to prevent accidental logout when a newer cookie exists.
+      return err('Refresh token invalid', 401)
+    }
+
+    if (stored.expiresAt < new Date()) {
       const res = err('Refresh token expired', 401)
       res.headers.set('Set-Cookie', buildClearCookie())
       return res

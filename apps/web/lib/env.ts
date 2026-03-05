@@ -25,6 +25,10 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(32),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_DAYS: z.coerce.number().int().positive().default(7),
+  AUTH_COOKIE_SECURE: z
+    .string()
+    .optional()
+    .transform((v) => v === undefined ? undefined : v === 'true'),
 
   CORS_ORIGINS: z.string().default('http://localhost:8080'),
 

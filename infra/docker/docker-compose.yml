@@ -9,6 +9,7 @@ x-common-env: &common-env
   MINIO_BUCKET: ${MINIO_BUCKET:-snackspot}
   MINIO_REGION: ${MINIO_REGION:-us-east-1}
   MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?MINIO_PUBLIC_URL is required}
+  AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
   TRUST_PROXY: ${TRUST_PROXY:-true}
 
 services:

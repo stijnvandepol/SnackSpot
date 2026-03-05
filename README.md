@@ -100,11 +100,13 @@ NEXT_PUBLIC_APP_URL=https://app.example.com
 MINIO_PUBLIC_URL=https://storage.example.com
 CORS_ORIGINS=https://app.example.com,http://192.168.1.50:8080
 MINIO_CORS_ORIGINS=*
+AUTH_COOKIE_SECURE=true
 ```
 
 Notes:
 - `CORS_ORIGINS` controls which browser origins may call `/api/*`.
 - `MINIO_CORS_ORIGINS` controls which browser origins may upload directly to MinIO using presigned URLs (`*` avoids hostname/domain mismatch).
+- Set `AUTH_COOKIE_SECURE=true` for HTTPS domains (Cloudflared/public). Use `false` only for local HTTP/LAN testing.
 - If you only tunnel the web app and not MinIO, photo uploads will fail (uploads are direct-to-MinIO by design).
 
 ---
@@ -268,7 +270,7 @@ Client          API              MinIO           Worker
 - **CSP / security headers** set by Next.js config on every response
 - **CORS** locked to `CORS_ORIGINS` env var
 - **Proxy trust** is explicit via `TRUST_PROXY=true` (required for correct IP rate limiting behind reverse proxies)
-- **Cookies** are `HttpOnly; SameSite=Strict; Secure` (Secure in production)
+- **Cookies** are `HttpOnly; SameSite=Strict`; `Secure` is controlled by `AUTH_COOKIE_SECURE`
 - **RBAC**: owner-only edits, mod/admin moderation actions, admin-only bans
 
 ---

@@ -39,19 +39,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const tokenRef = useRef<string | null>(null)
 
   const refreshToken = useCallback(async (): Promise<boolean> => {
+    const doRefresh = async () =>
+      fetch('/api/v1/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      })
+
     try {
       const controller = new AbortController()
       const timeout = setTimeout(() => controller.abort(), 15000) // 15 sec timeout
-      
-      const res = await fetch('/api/v1/auth/refresh', { 
-        method: 'POST', 
+
+      const res = await fetch('/api/v1/auth/refresh', {
+        method: 'POST',
         credentials: 'include',
         signal: controller.signal,
       })
       clearTimeout(timeout)
-      
+
       if (!res.ok) {
-        // 401 = token expired, 403 = banned. Only then logout.
+        // 401 can be a token-rotation race. Retry once before logging out.
+        if (res.status === 401) {
+          await new Promise((resolve) => setTimeout(resolve, 250))
+          const retryRes = await doRefresh()
+          if (retryRes.ok) {
+            const { data } = await retryRes.json()
+            tokenRef.current = data.access_token
+            setAccessToken(data.access_token)
+            return true
+          }
+        }
+
+        // 401/403 after retry = auth session really invalid.
         if (res.status === 401 || res.status === 403) {
           if (isDev) console.error('[AUTH] Refresh failed:', res.status, res.statusText)
           setUser(null)
