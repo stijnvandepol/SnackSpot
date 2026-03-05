@@ -19,6 +19,7 @@ const envSchema = z.object({
   MINIO_SECRET_KEY: z.string().min(1),
   MINIO_BUCKET: z.string().min(1).default('snackspot'),
   MINIO_PUBLIC_URL: z.string().url(),
+  MINIO_REGION: z.string().min(1).default('us-east-1'),
 
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),

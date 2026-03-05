@@ -11,6 +11,31 @@ export const minioClient = new Minio.Client({
 })
 
 export const BUCKET = env.MINIO_BUCKET
+const publicMinioClient = createPublicMinioClient()
+
+function createPublicMinioClient(): Minio.Client {
+  const publicUrl = new URL(env.MINIO_PUBLIC_URL)
+  if (publicUrl.pathname && publicUrl.pathname !== '/') {
+    throw new Error('MINIO_PUBLIC_URL may not include a path; use root origin only')
+  }
+
+  const port =
+    publicUrl.port.length > 0
+      ? Number.parseInt(publicUrl.port, 10)
+      : publicUrl.protocol === 'https:'
+        ? 443
+        : 80
+
+  return new Minio.Client({
+    endPoint: publicUrl.hostname,
+    port,
+    useSSL: publicUrl.protocol === 'https:',
+    // Keep signing fully local (no bucket region lookup against public host).
+    region: env.MINIO_REGION,
+    accessKey: env.MINIO_ACCESS_KEY,
+    secretKey: env.MINIO_SECRET_KEY,
+  })
+}
 
 let _bucketInit: Promise<void> | null = null
 
@@ -49,13 +74,8 @@ async function ensureBucketInternal(): Promise<void> {
 
 /** Generate a presigned PUT URL for direct browser upload */
 export async function presignedPut(key: string, expirySeconds = 300): Promise<string> {
-  // Generate presigned URL against the internal MinIO endpoint
-  const internalUrl = await minioClient.presignedPutObject(BUCKET, key, expirySeconds)
-
-  // Replace the internal host with the public URL so the browser can reach it
-  const publicBase = env.MINIO_PUBLIC_URL
-  const internalBase = `http${env.MINIO_USE_SSL ? 's' : ''}://${env.MINIO_ENDPOINT}:${env.MINIO_PORT}`
-  return internalUrl.replace(internalBase, publicBase)
+  // Sign against the browser-reachable public endpoint so signature and host match.
+  return publicMinioClient.presignedPutObject(BUCKET, key, expirySeconds)
 }
 
 export interface ObjectInfo {
