@@ -15,6 +15,7 @@ Commands:
   update    Pull latest git changes, refresh images, rebuild stack
   stop      Stop stack
   logs      Follow logs (all services or pass SERVICE=<name>)
+  clean-db  Stop stack and remove Postgres data volume (pgdata)
 EOF
 }
 
@@ -168,6 +169,39 @@ update_stack() {
   echo "App updated and restarted."
 }
 
+find_db_volumes() {
+  docker volume ls \
+    --filter label=com.docker.compose.volume=pgdata \
+    --format '{{.Name}}'
+}
+
+clean_db_volume() {
+  echo "⚠️  This will permanently delete all database data (Postgres volume)."
+  if [[ "${FORCE:-0}" != "1" ]]; then
+    read -r -p "Type DELETE to continue: " confirm
+    if [[ "${confirm}" != "DELETE" ]]; then
+      echo "Cancelled."
+      exit 1
+    fi
+  fi
+
+  compose down --remove-orphans
+
+  local removed=0
+  while IFS= read -r volume_name; do
+    [[ -z "${volume_name}" ]] && continue
+    docker volume rm "${volume_name}" >/dev/null
+    echo "Removed DB volume: ${volume_name}"
+    removed=1
+  done < <(find_db_volumes)
+
+  if [[ "${removed}" -eq 0 ]]; then
+    echo "No Postgres compose volume found (pgdata)."
+  else
+    echo "Database cleaned. Start again with: ./scripts/manage.sh start"
+  fi
+}
+
 main() {
   local cmd="${1:-start}"
   require_cmd docker
@@ -190,6 +224,9 @@ main() {
       else
         compose logs -f
       fi
+      ;;
+    clean-db)
+      clean_db_volume
       ;;
     *)
       usage
