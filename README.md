@@ -222,6 +222,7 @@ DELETE /api/v1/reviews/:id      – soft-delete (owner or mod/admin)
 ```
 POST /api/v1/photos/initiate-upload   – get presigned PUT URL
 POST /api/v1/photos/confirm-upload    – verify upload, enqueue processing
+POST /api/v1/photos/upload-fallback   – same-origin fallback upload when direct browser→MinIO is blocked
 ```
 
 ### Moderation (MODERATOR / ADMIN)

@@ -306,16 +306,38 @@ export default function AddReviewPage() {
         const { data: initData } = await initRes.json()
         if (isDev) console.log(`[Upload] Got upload URL, uploading to MinIO...`)
 
-        // 2. PUT directly to MinIO
+        // 2. PUT directly to MinIO (preferred path)
+        let uploaded = false
         const uploadStartTime = Date.now()
-        const putRes = await fetch(initData.uploadUrl, { 
-          method: 'PUT', 
-          body: file, 
-          headers: { 'Content-Type': file.type } 
-        })
-        if (!putRes.ok) {
-          throw new Error(`MinIO upload failed: ${putRes.status} ${putRes.statusText}`)
+        try {
+          const putRes = await fetch(initData.uploadUrl, {
+            method: 'PUT',
+            body: file,
+            headers: { 'Content-Type': file.type },
+          })
+          if (putRes.ok) {
+            uploaded = true
+          } else if (isDev) {
+            console.warn(`[Upload] Direct MinIO upload failed: ${putRes.status} ${putRes.statusText}; trying fallback`)
+          }
+        } catch (directErr) {
+          if (isDev) console.warn('[Upload] Direct MinIO upload blocked; trying fallback', directErr)
         }
+
+        // Fallback path: upload through same-origin API to avoid browser CORS/mixed-content issues.
+        if (!uploaded) {
+          const fallbackRes = await fetch(`/api/v1/photos/upload-fallback?photoId=${encodeURIComponent(initData.photoId)}`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': file.type },
+            body: file,
+          })
+          if (!fallbackRes.ok) {
+            const fallbackErr = await fallbackRes.json().catch(() => ({ error: fallbackRes.statusText }))
+            throw new Error(`Upload fallback failed: ${fallbackErr.error || fallbackRes.statusText}`)
+          }
+          uploaded = true
+        }
+
         const uploadDuration = ((Date.now() - uploadStartTime) / 1000).toFixed(1)
         if (isDev) console.log(`[Upload] Upload completed in ${uploadDuration}s, confirming...`)
 
