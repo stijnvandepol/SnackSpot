@@ -61,7 +61,7 @@ export default function DashboardPage() {
                   <div className="text-4xl">{stat.icon}</div>
                 </div>
                 {stat.value > 0 && (
-                  <p className="text-xs text-blue-600 mt-2">→ Bekijken</p>
+                  <p className="text-xs text-orange-600 mt-2">→ Bekijken</p>
                 )}
               </a>
             ) : (
@@ -82,8 +82,8 @@ export default function DashboardPage() {
         <p className="text-gray-600 mb-4">
           Gebruik het menu aan de linkerkant om gebruikers, restaurants en reviews te beheren.
         </p>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800">
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+          <p className="text-sm text-orange-900">
             <strong>💡 Tip:</strong> Dit admin panel draait op een aparte poort (3001) voor extra beveiliging.
             Zorg ervoor dat deze poort alleen toegankelijk is voor admins via je firewall/reverse proxy.
           </p>

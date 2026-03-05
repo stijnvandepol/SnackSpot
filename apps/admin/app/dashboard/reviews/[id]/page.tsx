@@ -57,7 +57,7 @@ export default function ReviewDetailsPage({ params }: { params: { id: string } }
               <p className="text-sm text-gray-600 mb-1">Gebruiker</p>
               <Link
                 href={`/dashboard/users/${review.user.id}`}
-                className="text-blue-600 hover:text-blue-800 font-medium"
+                className="text-orange-600 hover:text-orange-700 font-medium"
               >
                 @{review.user.username}
               </Link>

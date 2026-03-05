@@ -38,16 +38,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-100 via-amber-50 to-white">
       <div className="card max-w-md w-full mx-4">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">🍕 SnackSpot</h1>
-          <p className="text-gray-600">Admin Panel</p>
+          <h1 className="text-3xl font-bold mb-2">🍕 SnackSpot</h1>
+          <p className="text-slate-500">Admin Panel</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
               {error}
             </div>
           )}
@@ -84,8 +84,8 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800">
+        <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+          <p className="text-sm text-orange-900">
             <strong>⚠️ Let op:</strong> Dit admin panel is alleen toegankelijk voor gebruikers met ADMIN rol.
           </p>
         </div>

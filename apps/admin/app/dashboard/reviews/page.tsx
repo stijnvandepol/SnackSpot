@@ -141,7 +141,7 @@ export default function ReviewsPage() {
                     <div className="flex items-center gap-2 mb-2">
                       <Link
                         href={`/dashboard/users/${review.user.id}`}
-                        className="font-semibold text-blue-600 hover:text-blue-800"
+                        className="font-semibold text-orange-600 hover:text-orange-700"
                       >
                         @{review.user.username}
                       </Link>
@@ -209,7 +209,7 @@ export default function ReviewsPage() {
                   </button>
                   <Link
                     href={`/dashboard/reviews/${review.id}`}
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium ml-auto"
+                    className="text-orange-600 hover:text-orange-700 text-sm font-medium ml-auto"
                   >
                     Details
                   </Link>

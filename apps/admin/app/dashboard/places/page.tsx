@@ -208,7 +208,7 @@ export default function PlacesPage() {
                       <div className="flex gap-2">
                         <Link
                           href={`/dashboard/places/${place.id}`}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          className="text-orange-600 hover:text-orange-700 text-sm font-medium"
                         >
                           Bewerk
                         </Link>

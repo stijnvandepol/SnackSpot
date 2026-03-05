@@ -47,7 +47,7 @@ export default function DashboardLayout({
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Laden...</p>
         </div>
       </div>
@@ -65,10 +65,10 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <div className="w-64 bg-gray-900 text-white flex flex-col">
-        <div className="p-6 border-b border-gray-800">
+      <div className="w-64 bg-slate-950 text-white flex flex-col">
+        <div className="p-6 border-b border-slate-800">
           <h1 className="text-xl font-bold">🍕 SnackSpot</h1>
-          <p className="text-sm text-gray-400 mt-1">Admin Panel</p>
+          <p className="text-sm text-slate-400 mt-1">Admin Panel</p>
         </div>
 
         <nav className="flex-1 p-4">
@@ -79,8 +79,8 @@ export default function DashboardLayout({
                   href={item.href}
                   className={`block px-4 py-3 rounded-lg transition-colors ${
                     pathname === item.href
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800'
+                      ? 'bg-orange-500 text-white'
+                      : 'text-slate-300 hover:bg-slate-800'
                   }`}
                 >
                   {item.label}
@@ -90,15 +90,15 @@ export default function DashboardLayout({
           </ul>
         </nav>
 
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-slate-800">
           <div className="mb-3">
-            <p className="text-sm text-gray-400">Ingelogd als:</p>
+            <p className="text-sm text-slate-400">Ingelogd als:</p>
             <p className="font-medium">{user?.username}</p>
-            <p className="text-xs text-gray-500">{user?.email}</p>
+            <p className="text-xs text-slate-500">{user?.email}</p>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+            className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded-xl transition-colors"
           >
             Uitloggen
           </button>

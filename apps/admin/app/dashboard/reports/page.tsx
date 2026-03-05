@@ -101,7 +101,7 @@ export default function ReportsPage() {
   const getTypeBadgeColor = (type: string) => {
     switch (type) {
       case 'REVIEW':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-orange-100 text-orange-800'
       case 'PHOTO':
         return 'bg-purple-100 text-purple-800'
       case 'USER':
@@ -180,7 +180,7 @@ export default function ReportsPage() {
                       <strong>Gemeld door:</strong>{' '}
                       <Link
                         href={`/dashboard/users/${report.reporter.id}`}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-orange-600 hover:text-orange-700"
                       >
                         @{report.reporter.username}
                       </Link>
@@ -199,7 +199,7 @@ export default function ReportsPage() {
                       <div className="flex items-center gap-2 mb-2">
                         <Link
                           href={`/dashboard/users/${report.review.user.id}`}
-                          className="text-blue-600 hover:text-blue-800 font-medium"
+                          className="text-orange-600 hover:text-orange-700 font-medium"
                         >
                           @{report.review.user.username}
                         </Link>
