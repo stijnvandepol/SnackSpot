@@ -3,10 +3,12 @@ import { use, useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth-provider'
 import Link from 'next/link'
 import { photoVariantUrl } from '@/lib/photo-url'
+import { ReviewLikeButton } from '@/components/review-like-button'
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null
   status: string; createdAt: string; updatedAt: string
+  likeCount?: number; likedByMe?: boolean
   user: { id: string; username: string; role: string }
   place: { id: string; name: string; address: string }
   reviewPhotos: Array<{ sortOrder: number; photo: { id: string; variants: Record<string, string> } }>
@@ -22,11 +24,13 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const [reported, setReported] = useState(false)
 
   useEffect(() => {
-    fetch(`/api/v1/reviews/${id}`)
+    fetch(`/api/v1/reviews/${id}`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+    })
       .then((r) => r.json())
       .then((json) => json.data ? setReview(json.data) : setError('Review not found'))
       .catch(() => setError('Failed to load review'))
-  }, [id])
+  }, [id, accessToken])
 
   const submitReport = async () => {
     if (!accessToken || !reportReason.trim()) return
@@ -96,6 +100,14 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
         </div>
 
         <p className="text-snack-muted whitespace-pre-line">{review.text}</p>
+
+        <div className="pt-1">
+          <ReviewLikeButton
+            reviewId={review.id}
+            initialLikeCount={review.likeCount ?? 0}
+            initialLikedByMe={Boolean(review.likedByMe)}
+          />
+        </div>
 
         <div className="flex items-center justify-between pt-2 border-t border-[#ededed]">
           <div className="flex items-center gap-2">

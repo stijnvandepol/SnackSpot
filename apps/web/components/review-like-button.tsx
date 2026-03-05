@@ -43,8 +43,8 @@ export function ReviewLikeButton({
       setLikeCount(data.likeCount)
       setLikedByMe(data.likedByMe)
     } catch {
-      setLikedByMe((prev) => !prev)
-      setLikeCount((prev) => Math.max(0, prev + (nextLiked ? -1 : 1)))
+      setLikedByMe((prev: boolean) => !prev)
+      setLikeCount((prev: number) => Math.max(0, prev + (nextLiked ? -1 : 1)))
     } finally {
       setLoading(false)
     }

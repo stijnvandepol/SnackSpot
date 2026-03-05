@@ -10,7 +10,7 @@ async function getLikeState(reviewId: string, userId?: string) {
       ? prisma.reviewLike.findUnique({
           where: { userId_reviewId: { userId, reviewId } },
           select: { userId: true },
-        }).then((row) => Boolean(row))
+        }).then((row: { userId: string } | null) => Boolean(row))
       : Promise.resolve(false),
   ])
 
