@@ -1,6 +1,6 @@
 import { type NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
-import { ok, err, serverError } from '@/lib/api-helpers'
+import { ok, err, serverError, withPublicCache } from '@/lib/api-helpers'
 
 export async function GET(
   _req: NextRequest,
@@ -38,7 +38,7 @@ export async function GET(
 
     if (!place) return err('Place not found', 404)
 
-    return ok(place)
+    return withPublicCache(ok(place), 30, 120)
   } catch (e) {
     return serverError('places/[id]', e)
   }

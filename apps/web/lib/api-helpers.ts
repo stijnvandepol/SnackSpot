@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { verifyAccessToken, type AccessTokenPayload } from './auth'
 import type { Role } from '@prisma/client'
 import { logger } from './logger'
+import { env } from './env'
 
 // ─── Standard response builders ──────────────────────────────────────────────
 
@@ -15,6 +16,16 @@ export function created<T>(data: T): Response {
 
 export function noContent(): Response {
   return new Response(null, { status: 204 })
+}
+
+export function withPublicCache(res: Response, maxAgeSeconds = 15, staleWhileRevalidateSeconds = 60): Response {
+  res.headers.set('Cache-Control', `public, max-age=${maxAgeSeconds}, stale-while-revalidate=${staleWhileRevalidateSeconds}`)
+  return res
+}
+
+export function withNoStore(res: Response): Response {
+  res.headers.set('Cache-Control', 'no-store')
+  return res
 }
 
 export function err(message: string, status: number, details?: unknown): Response {
@@ -72,7 +83,19 @@ export async function parseBody<T>(
 ): Promise<T | Response> {
   let raw: unknown
   try {
-    raw = await req.json()
+    const contentLengthRaw = req.headers.get('content-length')
+    if (contentLengthRaw) {
+      const contentLength = Number.parseInt(contentLengthRaw, 10)
+      if (Number.isFinite(contentLength) && contentLength > env.MAX_JSON_BODY_BYTES) {
+        return err(`Request body too large - max ${env.MAX_JSON_BODY_BYTES} bytes`, 413)
+      }
+    }
+
+    const text = await req.text()
+    if (text.length > env.MAX_JSON_BODY_BYTES) {
+      return err(`Request body too large - max ${env.MAX_JSON_BODY_BYTES} bytes`, 413)
+    }
+    raw = JSON.parse(text)
   } catch {
     return err('Invalid JSON body', 400)
   }
@@ -101,6 +124,25 @@ export function parseQuery<T>(
 export function serverError(context: string, error: unknown): Response {
   logger.error({ err: error, context }, 'Internal server error')
   return err('Internal server error', 500)
+}
+
+export function requireSameOrigin(req: NextRequest): Response | null {
+  const origin = req.headers.get('origin')
+  if (!origin) return null
+
+  let originUrl: URL
+  try {
+    originUrl = new URL(origin)
+  } catch {
+    return err('Invalid Origin header', 400)
+  }
+
+  const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host')
+  if (!host) return err('Missing host header', 400)
+
+  const allowed = originUrl.host === host
+  if (!allowed) return err('Cross-site request blocked', 403)
+  return null
 }
 
 /** Type guard: is the value a Response (i.e., an error early-return)? */

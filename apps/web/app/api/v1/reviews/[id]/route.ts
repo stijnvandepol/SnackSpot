@@ -10,6 +10,7 @@ import {
   getAuthPayload,
   serverError,
   isResponse,
+  withNoStore,
 } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
 import { normalizeRatings } from '@/lib/ratings'
@@ -61,7 +62,7 @@ export async function GET(
       if (!isOwner && !isMod) return err('Review not found', 404)
     }
 
-    return ok({
+    return withNoStore(ok({
       ...review,
       likeCount: review._count.reviewLikes,
       likedByMe: auth ? review.reviewLikes.length > 0 : false,
@@ -74,7 +75,7 @@ export async function GET(
       overallRating: Number(review.ratingOverall),
       _count: undefined,
       reviewLikes: undefined,
-    })
+    }))
   } catch (e) {
     return serverError('reviews/[id] GET', e)
   }
@@ -92,6 +93,8 @@ export async function PATCH(
   if (isResponse(body)) return body
 
   try {
+    const normalized = body.ratings ? normalizeRatings(body.ratings) : null
+
     const review = await prisma.review.findUnique({
       where: { id },
       select: { userId: true, status: true },
@@ -106,12 +109,12 @@ export async function PATCH(
       data: {
         ...(body.ratings
           ? {
-              rating: Math.round(normalizeRatings(body.ratings).overall),
-              ratingTaste: normalizeRatings(body.ratings).taste,
-              ratingValue: normalizeRatings(body.ratings).value,
-              ratingPortion: normalizeRatings(body.ratings).portion,
-              ratingService: normalizeRatings(body.ratings).service,
-              ratingOverall: normalizeRatings(body.ratings).overall,
+              rating: Math.round(normalized!.overall),
+              ratingTaste: normalized!.taste,
+              ratingValue: normalized!.value,
+              ratingPortion: normalized!.portion,
+              ratingService: normalized!.service,
+              ratingOverall: normalized!.overall,
             }
           : body.rating !== undefined
             ? {

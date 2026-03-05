@@ -31,6 +31,8 @@ const envSchema = z.object({
     .transform((v) => v === undefined ? undefined : v === 'true'),
 
   CORS_ORIGINS: z.string().default('http://localhost:8080'),
+  ALLOWED_HOSTS: z.string().optional(),
+  MAX_JSON_BODY_BYTES: z.coerce.number().int().positive().default(256 * 1024),
 
   MAX_FILE_SIZE_BYTES: z.coerce.number().int().positive().default(10 * 1024 * 1024),
   MAX_PHOTOS_PER_REVIEW: z.coerce.number().int().positive().default(5),

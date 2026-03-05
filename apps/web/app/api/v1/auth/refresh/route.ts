@@ -9,7 +9,7 @@ import {
   buildClearCookie,
   REFRESH_COOKIE,
 } from '@/lib/auth'
-import { ok, err, serverError } from '@/lib/api-helpers'
+import { ok, err, serverError, requireSameOrigin, withNoStore } from '@/lib/api-helpers'
 
 function getRefreshToken(req: NextRequest): string | null {
   const cookieHeader = req.headers.get('cookie') ?? ''
@@ -18,6 +18,9 @@ function getRefreshToken(req: NextRequest): string | null {
 }
 
 export async function POST(req: NextRequest) {
+  const sameOrigin = requireSameOrigin(req)
+  if (sameOrigin) return sameOrigin
+
   const rawToken = getRefreshToken(req)
   if (!rawToken) return err('No refresh token', 401)
 
@@ -63,7 +66,7 @@ export async function POST(req: NextRequest) {
       role: stored.user.role,
     })
 
-    const response = ok({ access_token: accessToken })
+    const response = withNoStore(ok({ access_token: accessToken }))
     response.headers.set('Set-Cookie', buildSetCookie(newRaw, expiresAt))
     return response
   } catch (e) {

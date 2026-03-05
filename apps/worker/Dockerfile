@@ -40,4 +40,7 @@ COPY --from=builder --chown=app:app /app/packages/db/prisma ./packages/db/prisma
 
 USER app
 
+HEALTHCHECK --interval=30s --timeout=8s --start-period=20s --retries=3 \
+  CMD node -e "const Redis=require('ioredis');const r=new Redis(process.env.REDIS_URL);r.ping().then(()=>r.quit()).then(()=>process.exit(0)).catch(()=>process.exit(1))"
+
 CMD ["node", "apps/worker/dist/index.js"]

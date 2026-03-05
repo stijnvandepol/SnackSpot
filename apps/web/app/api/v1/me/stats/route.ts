@@ -1,6 +1,6 @@
 import { type NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
-import { ok, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
+import { ok, requireAuth, serverError, isResponse, withNoStore } from '@/lib/api-helpers'
 
 function toDateKey(value: Date): string {
   const y = value.getUTCFullYear()
@@ -97,26 +97,26 @@ export async function GET(req: NextRequest) {
       `,
     ])
 
-    const days = activeDaysRows.map((row) => toDateKey(new Date(row.day)))
+    const days = activeDaysRows.map((row: (typeof activeDaysRows)[number]) => toDateKey(new Date(row.day)))
     const streak = computeStreaks(days)
 
-    return ok({
+    return withNoStore(ok({
       totalPosts,
       totalLikesReceived: likesRows[0]?.count ?? 0,
       totalCommentsReceived: null,
       uniqueLocationsVisited: uniqueLocationsRows[0]?.count ?? 0,
       averageOverallRatingGiven: avgOverallRows[0]?.avg ?? null,
-      topLocations: topLocationsRows.map((row) => ({
+      topLocations: topLocationsRows.map((row: (typeof topLocationsRows)[number]) => ({
         id: row.place_id,
         name: row.place_name,
         posts: row.count,
       })),
-      weeklyActivity: weeklyRows.map((row) => ({
+      weeklyActivity: weeklyRows.map((row: (typeof weeklyRows)[number]) => ({
         weekStart: new Date(row.week).toISOString(),
         posts: row.posts,
       })),
       streak,
-    })
+    }))
   } catch (e) {
     return serverError('me/stats GET', e)
   }

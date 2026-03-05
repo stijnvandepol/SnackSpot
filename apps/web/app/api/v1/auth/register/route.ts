@@ -9,10 +9,13 @@ import {
   refreshTokenExpiresAt,
   buildSetCookie,
 } from '@/lib/auth'
-import { created, err, parseBody, serverError, isResponse } from '@/lib/api-helpers'
+import { created, err, parseBody, serverError, isResponse, requireSameOrigin, withNoStore } from '@/lib/api-helpers'
 import { rateLimitIP, getClientIP } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
+  const sameOrigin = requireSameOrigin(req)
+  if (sameOrigin) return sameOrigin
+
   // Rate limit: 5 registrations per hour per IP
   const ip = getClientIP(req)
   const rl = await rateLimitIP(ip, 'register', 5, 3600)
@@ -53,7 +56,7 @@ export async function POST(req: NextRequest) {
       data: { userId: user.id, tokenHash: hashRefreshToken(rawRefresh), expiresAt },
     })
 
-    const response = created({ user, access_token: accessToken })
+    const response = withNoStore(created({ user, access_token: accessToken }))
     response.headers.set('Set-Cookie', buildSetCookie(rawRefresh, expiresAt))
     return response
   } catch (e) {

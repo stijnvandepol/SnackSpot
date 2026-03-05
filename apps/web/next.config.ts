@@ -2,8 +2,11 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  compress: true,
+  reactStrictMode: true,
 
   images: {
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: (() => {
       const bucket = process.env.MINIO_BUCKET ?? 'snackspot'
       const internal = {

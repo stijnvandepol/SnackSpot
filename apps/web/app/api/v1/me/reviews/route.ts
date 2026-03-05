@@ -1,7 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
-import { ok, parseQuery, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
+import { ok, parseQuery, requireAuth, serverError, isResponse, withNoStore } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
 
 const MeReviewsQuerySchema = z.object({
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
     }))
     const nextCursor = hasMore ? encodeURIComponent(items.at(-1)!.createdAt.toISOString()) : null
 
-    return ok({ data: withLikes, pagination: { nextCursor, hasMore } })
+    return withNoStore(ok({ data: withLikes, pagination: { nextCursor, hasMore } }))
   } catch (e) {
     return serverError('me/reviews', e)
   }

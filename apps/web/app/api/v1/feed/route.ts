@@ -1,7 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
-import { ok, parseQuery, serverError, isResponse, getAuthPayload } from '@/lib/api-helpers'
+import { ok, parseQuery, serverError, isResponse, getAuthPayload, withNoStore, withPublicCache } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
 
 const FeedQuerySchema = z.object({
@@ -97,7 +97,8 @@ export async function GET(req: NextRequest) {
       ? encodeURIComponent(`${items.at(-1)!.createdAt.toISOString()}|${items.at(-1)!.id}`)
       : null
 
-    return ok({ data: withLikes, pagination: { nextCursor, hasMore } })
+    const res = ok({ data: withLikes, pagination: { nextCursor, hasMore } })
+    return auth ? withNoStore(res) : withPublicCache(res, 10, 30)
   } catch (e) {
     return serverError('feed', e)
   }

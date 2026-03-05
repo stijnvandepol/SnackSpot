@@ -1,7 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { ReviewsQuerySchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
-import { ok, parseQuery, serverError, isResponse, getAuthPayload } from '@/lib/api-helpers'
+import { ok, parseQuery, serverError, isResponse, getAuthPayload, withNoStore, withPublicCache } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
 
 export async function GET(
@@ -81,7 +81,8 @@ export async function GET(
       ? encodeURIComponent(items.at(-1)!.createdAt.toISOString())
       : null
 
-    return ok({ data: withLikes, pagination: { nextCursor, hasMore } })
+    const res = ok({ data: withLikes, pagination: { nextCursor, hasMore } })
+    return auth ? withNoStore(res) : withPublicCache(res, 15, 60)
   } catch (e) {
     return serverError('places/[id]/reviews', e)
   }

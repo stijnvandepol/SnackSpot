@@ -1,7 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { PlaceSearchSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
-import { ok, parseQuery, serverError, isResponse } from '@/lib/api-helpers'
+import { ok, parseQuery, serverError, isResponse, withPublicCache } from '@/lib/api-helpers'
 import { Prisma } from '@prisma/client'
 
 type PlaceRow = {
@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
         `
       }
 
-      return ok({ data: rows, pagination: { nextCursor: null, hasMore: false } })
+      return withPublicCache(ok({ data: rows, pagination: { nextCursor: null, hasMore: false } }), 15, 60)
     }
 
     // ── Text-only search ───────────────────────────────────────────────────
@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
         ) DESC
         LIMIT ${query.limit}
       `
-      return ok({ data: places, pagination: { nextCursor: null, hasMore: false } })
+      return withPublicCache(ok({ data: places, pagination: { nextCursor: null, hasMore: false } }), 30, 120)
     }
 
     // ── No filters – most-reviewed places ─────────────────────────────────
@@ -107,7 +107,7 @@ export async function GET(req: NextRequest) {
       ORDER BY review_count DESC, avg_rating DESC NULLS LAST
       LIMIT ${query.limit}
     `
-    return ok({ data: places, pagination: { nextCursor: null, hasMore: false } })
+    return withPublicCache(ok({ data: places, pagination: { nextCursor: null, hasMore: false } }), 30, 120)
   } catch (e) {
     return serverError('places/search', e)
   }

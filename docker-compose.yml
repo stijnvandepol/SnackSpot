@@ -95,6 +95,7 @@ services:
     restart: unless-stopped
     init: true
     ports:
+      # Keep LAN-reachable for internal users + Cloudflare tunnel host on another machine.
       - "8080:3000"
     environment:
       <<: *common-env
@@ -128,8 +129,10 @@ services:
     read_only: true
     tmpfs:
       - /tmp
+      - /app/apps/web/.next/cache
     mem_limit: 768m
     cpus: 1.0
+    pids_limit: 256
     networks: [snackspot]
 
   worker:
@@ -166,6 +169,7 @@ services:
       - /tmp
     mem_limit: 768m
     cpus: 1.0
+    pids_limit: 256
     networks: [snackspot]
 
 networks:

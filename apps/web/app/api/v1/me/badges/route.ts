@@ -1,6 +1,6 @@
 import { type NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
-import { ok, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
+import { ok, requireAuth, serverError, isResponse, withNoStore } from '@/lib/api-helpers'
 import { recalculateUserBadges } from '@/lib/badge-service'
 
 export async function GET(req: NextRequest) {
@@ -32,10 +32,10 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    const earned = rows.filter((r) => Boolean(r.earnedAt))
-    const inProgress = rows.filter((r) => !r.earnedAt)
+    const earned = rows.filter((r: (typeof rows)[number]) => Boolean(r.earnedAt))
+    const inProgress = rows.filter((r: (typeof rows)[number]) => !r.earnedAt)
 
-    return ok({ earned, inProgress })
+    return withNoStore(ok({ earned, inProgress }))
   } catch (e) {
     return serverError('me/badges GET', e)
   }

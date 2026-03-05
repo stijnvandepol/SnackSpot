@@ -1,6 +1,6 @@
 import { type NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
-import { ok, err, serverError } from '@/lib/api-helpers'
+import { ok, err, serverError, withPublicCache } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
 
 export async function GET(
@@ -21,13 +21,13 @@ export async function GET(
       prisma.favorite.count({ where: { userId: user.id } }),
     ])
 
-    return ok({
+    return withPublicCache(ok({
       ...user,
       _count: {
         reviews: reviewCount,
         favorites: favoritesCount,
       },
-    })
+    }), 30, 120)
   } catch (e) {
     return serverError('users/[username]', e)
   }
