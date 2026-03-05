@@ -9,9 +9,21 @@ const poppins = Poppins({ subsets: ['latin'], weight: ['500', '600', '700'], var
 export const metadata: Metadata = {
   title: { default: 'SnackSpot', template: '%s | SnackSpot' },
   description: 'Discover and share the best snacks and meals near you.',
+  manifest: '/manifest.webmanifest',
   themeColor: '#F97316',
   viewport: { width: 'device-width', initialScale: 1, viewportFit: 'cover' },
-  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'SnackSpot' },
+  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Snack Spot' },
+  openGraph: {
+    title: 'SnackSpot',
+    description: 'Discover and share the best snacks and meals near you.',
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SnackSpot',
+    description: 'Discover and share the best snacks and meals near you.',
+    images: ['/twitter-image'],
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
