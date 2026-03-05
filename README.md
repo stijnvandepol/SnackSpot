@@ -41,7 +41,6 @@ cp .env.example .env
 
 # 3. Generate strong JWT secrets (Linux/macOS):
 openssl rand -hex 64
-openssl rand -hex 64
 # Paste these values into JWT_ACCESS_SECRET and JWT_REFRESH_SECRET in .env
 
 # 4. Build and start all services (db, redis, minio, migrate, web, worker)
