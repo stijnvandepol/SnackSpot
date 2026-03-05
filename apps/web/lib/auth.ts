@@ -34,7 +34,7 @@ export async function verifyPassword(hash: string, password: string): Promise<bo
 // ─── JWT access token ────────────────────────────────────────────────────────
 
 export function signAccessToken(payload: Omit<AccessTokenPayload, 'iat' | 'exp'>): string {
-  const expiresIn: jwt.SignOptions['expiresIn'] = env.JWT_ACCESS_EXPIRES_IN
+  const expiresIn = env.JWT_ACCESS_EXPIRES_IN as jwt.SignOptions['expiresIn']
   return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
     algorithm: 'HS256',
     issuer: JWT_ISSUER,
