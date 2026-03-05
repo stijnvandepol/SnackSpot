@@ -69,7 +69,12 @@ export async function POST(req: NextRequest) {
     const authHeader = req.headers.get('authorization')
     await requireAdmin(authHeader)
 
-    const { email, username, password, role } = await req.json()
+    const { email, username, password, role } = (await req.json()) as {
+      email: string
+      username: string
+      password: string
+      role?: 'USER' | 'ADMIN'
+    }
 
     // Validate input
     if (!email || !username || !password) {

@@ -64,7 +64,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const authHeader = req.headers.get('authorization')
     await requireAdmin(authHeader)
 
-    const body = await req.json()
+    const body = (await req.json()) as {
+      name?: string
+      address?: string
+      lat?: number
+      lng?: number
+    }
     const { name, address, lat, lng } = body
 
     if (lat !== undefined && lng !== undefined) {

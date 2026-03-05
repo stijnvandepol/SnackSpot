@@ -71,7 +71,12 @@ export async function POST(req: NextRequest) {
     const authHeader = req.headers.get('authorization')
     await requireAdmin(authHeader)
 
-    const { name, address, lat, lng } = await req.json()
+    const { name, address, lat, lng } = (await req.json()) as {
+      name: string
+      address: string
+      lat: number
+      lng: number
+    }
 
     if (!name || !address || lat === undefined || lng === undefined) {
       return NextResponse.json(

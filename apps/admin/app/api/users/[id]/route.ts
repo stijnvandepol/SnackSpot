@@ -53,7 +53,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const authHeader = req.headers.get('authorization')
     await requireAdmin(authHeader)
 
-    const body = await req.json()
+    const body = (await req.json()) as {
+      email?: string
+      username?: string
+      role?: 'USER' | 'ADMIN'
+      bannedAt?: string | null
+    }
     const { email, username, role, bannedAt } = body
 
     const updateData: any = {}

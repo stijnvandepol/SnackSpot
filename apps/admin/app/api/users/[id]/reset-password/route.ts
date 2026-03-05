@@ -11,7 +11,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     const authHeader = req.headers.get('authorization')
     await requireAdmin(authHeader)
 
-    const { password } = await req.json()
+    const { password } = (await req.json()) as { password: string }
 
     if (!password || password.length < 8) {
       return NextResponse.json(

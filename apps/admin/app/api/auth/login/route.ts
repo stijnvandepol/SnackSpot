@@ -6,7 +6,7 @@ import { env } from '@/lib/env'
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json()
+    const { email, password } = (await req.json()) as { email: string; password: string }
 
     // Find user
     const user = await db.user.findUnique({

@@ -1,6 +1,5 @@
-import type { NextConfig } from 'next'
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   output: 'standalone',
   compress: true,
   reactStrictMode: true,
@@ -10,7 +9,7 @@ const nextConfig: NextConfig = {
     remotePatterns: (() => {
       const bucket = process.env.MINIO_BUCKET ?? 'snackspot'
       const internal = {
-        protocol: 'http' as const,
+        protocol: 'http',
         hostname: process.env.MINIO_ENDPOINT ?? 'localhost',
         port: process.env.MINIO_PORT ?? '9000',
         pathname: `/${bucket}/**`,
@@ -21,7 +20,7 @@ const nextConfig: NextConfig = {
         return [
           internal,
           {
-            protocol: publicUrl.protocol.replace(':', '') as 'http' | 'https',
+            protocol: publicUrl.protocol.replace(':', ''),
             hostname: publicUrl.hostname,
             port: publicUrl.port || undefined,
             pathname: `/${bucket}/**`,
@@ -33,7 +32,6 @@ const nextConfig: NextConfig = {
     })(),
   },
 
-  // Security headers
   async headers() {
     const isProd = process.env.NODE_ENV === 'production'
     const minioEndpoint = process.env.MINIO_ENDPOINT ?? 'localhost'
@@ -79,10 +77,8 @@ const nextConfig: NextConfig = {
     ]
   },
 
-  // Disable powered-by header
   poweredByHeader: false,
 
-  // Webpack: ignore argon2 native build warning
   webpack(config) {
     config.externals = [...(config.externals ?? []), { argon2: 'commonjs argon2' }]
     return config

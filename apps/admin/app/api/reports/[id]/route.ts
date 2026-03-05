@@ -53,7 +53,7 @@ export async function GET(req: NextRequest, { params }: Params) {
           select: {
             id: true,
             moderationStatus: true,
-            uploadedById: true,
+            uploaderId: true,
             createdAt: true,
           },
         },
@@ -82,7 +82,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const authHeader = req.headers.get('authorization')
     const admin = await requireAdmin(authHeader)
 
-    const { status, action, targetId } = await req.json()
+    const { status, action, targetId } = (await req.json()) as {
+      status?: 'OPEN' | 'RESOLVED' | 'DISMISSED'
+      action?: 'HIDE_REVIEW' | 'DELETE_REVIEW' | 'DELETE_PHOTO' | 'DISMISS'
+      targetId?: string
+    }
 
     // Update report status
     if (status && ['OPEN', 'RESOLVED', 'DISMISSED'].includes(status)) {
@@ -162,10 +166,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       }
 
       // Log the moderation action
+      const actionType = action === 'DISMISS' ? 'DISMISS_REPORT' : action
+
       await db.moderationAction.create({
         data: {
           moderatorId: admin.sub,
-          actionType: action,
+          actionType,
           targetType: report.targetType,
           targetId: targetId,
         },

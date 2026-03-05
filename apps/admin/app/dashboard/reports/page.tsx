@@ -20,7 +20,7 @@ interface Report {
   photo: {
     id: string
     moderationStatus: string
-    uploadedById: string
+    uploaderId: string
   } | null
 }
 

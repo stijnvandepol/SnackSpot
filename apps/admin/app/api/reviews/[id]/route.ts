@@ -69,7 +69,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const authHeader = req.headers.get('authorization')
     await requireAdmin(authHeader)
 
-    const { status } = await req.json()
+    const { status } = (await req.json()) as { status: 'PUBLISHED' | 'HIDDEN' | 'DELETED' }
 
     if (!['PUBLISHED', 'HIDDEN', 'DELETED'].includes(status)) {
       return NextResponse.json(

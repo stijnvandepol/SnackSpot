@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
             select: {
               id: true,
               moderationStatus: true,
-              uploadedById: true,
+              uploaderId: true,
             },
           },
         },
