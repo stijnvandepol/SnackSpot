@@ -19,8 +19,6 @@ export default function NearbyPage() {
   const [geoError, setGeoError] = useState<string | null>(null)
   const [radius, setRadius] = useState(3000)
   const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null)
-  const [manualLat, setManualLat] = useState('')
-  const [manualLng, setManualLng] = useState('')
 
   const search = useCallback(
     async (lat: number, lng: number, r: number) => {
@@ -59,14 +57,6 @@ export default function NearbyPage() {
     )
   }
 
-  const searchManual = () => {
-    const lat = parseFloat(manualLat)
-    const lng = parseFloat(manualLng)
-    if (isNaN(lat) || isNaN(lng)) return
-    setPosition({ lat, lng })
-    search(lat, lng, radius)
-  }
-
   // Re-search when radius changes
   useEffect(() => {
     if (position) search(position.lat, position.lng, radius)
@@ -84,32 +74,6 @@ export default function NearbyPage() {
         <button onClick={useMyLocation} className="btn-primary w-full" disabled={loading}>
           {loading ? 'Searching…' : 'Use current location'}
         </button>
-
-        <div className="relative flex items-center gap-2">
-          <div className="flex-1 h-px bg-[#e5e5e5]" />
-          <span className="text-xs text-snack-muted flex-shrink-0">or enter manually</span>
-          <div className="flex-1 h-px bg-[#e5e5e5]" />
-        </div>
-
-        <div className="flex gap-2">
-          <input
-            type="number"
-            placeholder="Latitude"
-            value={manualLat}
-            onChange={(e) => setManualLat(e.target.value)}
-            className="input"
-            step="any"
-          />
-          <input
-            type="number"
-            placeholder="Longitude"
-            value={manualLng}
-            onChange={(e) => setManualLng(e.target.value)}
-            className="input"
-            step="any"
-          />
-          <button onClick={searchManual} className="btn-secondary flex-shrink-0">Go</button>
-        </div>
 
         <div>
           <label className="label">
