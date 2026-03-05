@@ -118,20 +118,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
       // Execute the action based on type
       switch (action) {
-        case 'HIDE_REVIEW':
-          if (report.reviewId) {
-            await db.review.update({
-              where: { id: report.reviewId },
-              data: { status: 'HIDDEN' },
-            })
-            await db.report.update({
-              where: { id: params.id },
-              data: { status: 'RESOLVED' },
-            })
-          }
-          break
-
         case 'DELETE_REVIEW':
+        case 'HIDE_REVIEW':
           if (report.reviewId) {
             await db.review.update({
               where: { id: report.reviewId },
@@ -166,7 +154,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       }
 
       // Log the moderation action
-      const actionType = action === 'DISMISS' ? 'DISMISS_REPORT' : action
+      const actionType =
+        action === 'DISMISS'
+          ? 'DISMISS_REPORT'
+          : action === 'HIDE_REVIEW'
+            ? 'DELETE_REVIEW'
+            : action
 
       await db.moderationAction.create({
         data: {

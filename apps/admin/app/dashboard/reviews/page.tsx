@@ -185,14 +185,6 @@ export default function ReviewsPage() {
                       Publiceer
                     </button>
                   )}
-                  {review.status !== 'HIDDEN' && (
-                    <button
-                      onClick={() => handleChangeStatus(review.id, 'HIDDEN')}
-                      className="text-yellow-600 hover:text-yellow-800 text-sm font-medium"
-                    >
-                      Verberg
-                    </button>
-                  )}
                   {review.status !== 'DELETED' && (
                     <button
                       onClick={() => handleChangeStatus(review.id, 'DELETED')}

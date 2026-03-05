@@ -239,20 +239,12 @@ export default function ReportsPage() {
                   {report.status === 'OPEN' && (
                     <div className="flex gap-2 pt-4 border-t">
                       {report.review && (
-                        <>
-                          <button
-                            onClick={() => handleAction(report.id, 'HIDE_REVIEW', report.review!.id)}
-                            className="text-yellow-600 hover:text-yellow-800 text-sm font-medium"
-                          >
-                            Verberg review
-                          </button>
-                          <button
-                            onClick={() => handleAction(report.id, 'DELETE_REVIEW', report.review!.id)}
-                            className="text-red-600 hover:text-red-800 text-sm font-medium"
-                          >
-                            Verwijder review
-                          </button>
-                        </>
+                        <button
+                          onClick={() => handleAction(report.id, 'DELETE_REVIEW', report.review!.id)}
+                          className="text-red-600 hover:text-red-800 text-sm font-medium"
+                        >
+                          Soft Delete review
+                        </button>
                       )}
                       {report.photo && (
                         <button
