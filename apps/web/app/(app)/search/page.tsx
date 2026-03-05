@@ -70,8 +70,8 @@ export default function SearchPage() {
       {!searched && (
         <div className="mb-6">
           <div className="mb-3">
-            <h2 className="text-lg font-heading font-semibold text-snack-text">Uitgelichte restaurants</h2>
-            <p className="text-xs text-snack-muted">Recent nieuwe reviews toegevoegd</p>
+            <h2 className="text-lg font-heading font-semibold text-snack-text">Recent activity</h2>
+            <p className="text-xs text-snack-muted">Recently added reviews</p>
           </div>
 
           {featuredLoading ? (
