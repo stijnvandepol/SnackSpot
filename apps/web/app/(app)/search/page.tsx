@@ -11,7 +11,6 @@ export default function SearchPage() {
   const [places, setPlaces] = useState<Place[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
-  const filters = ['Trending', 'Best rated', 'Nearby', 'Newest', 'Budget friendly']
 
   const search = useCallback(async (query: string) => {
     if (!query.trim()) return
@@ -38,17 +37,7 @@ export default function SearchPage() {
     <div className="mx-auto max-w-2xl px-4 py-6">
       <div className="mb-5 space-y-1">
         <h1 className="text-2xl md:text-3xl font-heading font-bold text-snack-text">Explore</h1>
-        <p className="text-sm text-snack-muted">Find trending, top rated, newest and nearby snack spots.</p>
-      </div>
-
-      <div className="mb-4 overflow-x-auto">
-        <div className="flex gap-2 min-w-max">
-          {filters.map((filter) => (
-            <span key={filter} className="rounded-full bg-snack-surface px-3 py-1.5 text-xs font-medium text-snack-muted">
-              {filter}
-            </span>
-          ))}
-        </div>
+        <p className="text-sm text-snack-muted">Search for snack spots and dishes.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex gap-2 mb-6">
