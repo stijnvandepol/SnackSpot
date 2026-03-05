@@ -4,7 +4,15 @@ import { env } from '@/lib/env'
 import { BUCKET, minioClient } from '@/lib/minio'
 import { ok, err, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
 
-const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic'])
+const ALLOWED_MIMES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+  'image/heic-sequence',
+  'image/heif-sequence',
+])
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)

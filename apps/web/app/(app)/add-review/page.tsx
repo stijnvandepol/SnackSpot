@@ -31,6 +31,31 @@ interface UploadedPhoto {
   status: 'uploading' | 'confirming' | 'ready' | 'error'
 }
 
+const MIME_ALIASES: Record<string, 'image/jpeg' | 'image/png' | 'image/webp' | 'image/heic'> = {
+  'image/jpeg': 'image/jpeg',
+  'image/jpg': 'image/jpeg',
+  'image/pjpeg': 'image/jpeg',
+  'image/png': 'image/png',
+  'image/webp': 'image/webp',
+  'image/heic': 'image/heic',
+  'image/heif': 'image/heic',
+  'image/heic-sequence': 'image/heic',
+  'image/heif-sequence': 'image/heic',
+}
+
+function normalizeUploadMime(file: File): 'image/jpeg' | 'image/png' | 'image/webp' | 'image/heic' | null {
+  const rawType = (file.type || '').trim().toLowerCase()
+  if (rawType in MIME_ALIASES) return MIME_ALIASES[rawType]
+
+  const name = (file.name || '').toLowerCase()
+  if (name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'image/jpeg'
+  if (name.endsWith('.png')) return 'image/png'
+  if (name.endsWith('.webp')) return 'image/webp'
+  if (name.endsWith('.heic') || name.endsWith('.heif')) return 'image/heic'
+
+  return null
+}
+
 function Stars({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
     <div className="flex gap-1">
@@ -284,8 +309,14 @@ export default function AddReviewPage() {
     const remaining = 5 - photos.length
     const toUpload = Array.from(files).slice(0, remaining)
 
-    // Upload all photos in parallel for better performance
-    const uploadPromises = toUpload.map(async (file) => {
+    // Upload sequentially for better reliability on mobile browsers.
+    for (const file of toUpload) {
+      const normalizedMime = normalizeUploadMime(file)
+      if (!normalizedMime) {
+        setError(`Unsupported image type for ${file.name || 'selected file'}. Use JPG, PNG, WEBP or HEIC.`)
+        continue
+      }
+
       const previewUrl = URL.createObjectURL(file)
       const id = crypto.randomUUID()
 
@@ -297,7 +328,7 @@ export default function AddReviewPage() {
         const initRes = await fetch('/api/v1/photos/initiate-upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-          body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
+          body: JSON.stringify({ filename: file.name, contentType: normalizedMime, size: file.size }),
         })
         if (!initRes.ok) {
           const errorData = await initRes.json().catch(() => ({ error: 'Unknown error' }))
@@ -313,7 +344,7 @@ export default function AddReviewPage() {
           const putRes = await fetch(initData.uploadUrl, {
             method: 'PUT',
             body: file,
-            headers: { 'Content-Type': file.type },
+            headers: { 'Content-Type': normalizedMime },
           })
           if (putRes.ok) {
             uploaded = true
@@ -328,7 +359,7 @@ export default function AddReviewPage() {
         if (!uploaded) {
           const fallbackRes = await fetch(`/api/v1/photos/upload-fallback?photoId=${encodeURIComponent(initData.photoId)}`, {
             method: 'POST',
-            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': file.type },
+            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': normalizedMime },
             body: file,
           })
           if (!fallbackRes.ok) {
@@ -372,10 +403,7 @@ export default function AddReviewPage() {
         setError(msg)
         setPhotos((prev) => prev.map((p) => p.photoId === id ? { ...p, status: 'error' } : p))
       }
-    })
-
-    // Wait for all uploads to complete
-    await Promise.all(uploadPromises)
+    }
   }
 
   const handleSubmit = async () => {
@@ -648,7 +676,14 @@ export default function AddReviewPage() {
         <div className="space-y-4">
           <p className="text-sm text-snack-muted">Add up to 5 photos (optional).</p>
 
-          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={(e) => handleFileSelect(e.target.files)} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
+            multiple
+            className="hidden"
+            onChange={(e) => handleFileSelect(e.target.files)}
+          />
 
           {photos.length < 5 && (
             <button className="btn-secondary w-full" onClick={() => fileInputRef.current?.click()}>

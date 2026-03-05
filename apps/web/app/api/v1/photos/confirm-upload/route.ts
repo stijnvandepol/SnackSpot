@@ -7,7 +7,15 @@ import type { PhotoJob } from '@/lib/queue'
 import { env } from '@/lib/env'
 import { ok, err, parseBody, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
 
-const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic'])
+const ALLOWED_MIMES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+  'image/heic-sequence',
+  'image/heif-sequence',
+])
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)

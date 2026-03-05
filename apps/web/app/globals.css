@@ -102,6 +102,15 @@
   }
 }
 
+/* Prevent iOS Safari auto-zoom on form focus */
+@media (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
 /* Bottom nav safe area */
 .pb-nav {
   padding-bottom: calc(4.5rem + var(--safe-area-inset-bottom));

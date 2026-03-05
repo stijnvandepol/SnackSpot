@@ -77,7 +77,15 @@ export const ReviewsQuerySchema = z.object({
 
 export const InitiateUploadSchema = z.object({
   filename: z.string().min(1).max(255),
-  contentType: z.enum(['image/jpeg', 'image/png', 'image/webp', 'image/heic']),
+  contentType: z.enum([
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/heic',
+    'image/heif',
+    'image/heic-sequence',
+    'image/heif-sequence',
+  ]),
   size: z.number().int().positive(),
 })
 

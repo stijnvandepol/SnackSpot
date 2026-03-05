@@ -9,19 +9,42 @@ const FeedQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),
 })
 
+function parseCursor(cursorRaw?: string): { createdAt: Date; id: string | null } | null {
+  if (!cursorRaw) return null
+
+  try {
+    const decoded = decodeURIComponent(cursorRaw)
+    const [ts, id] = decoded.split('|')
+    const createdAt = new Date(ts)
+    if (Number.isNaN(createdAt.getTime())) return null
+    return { createdAt, id: id || null }
+  } catch {
+    return null
+  }
+}
+
 export async function GET(req: NextRequest) {
   const query = parseQuery(req, FeedQuerySchema)
   if (isResponse(query)) return query
 
   try {
+    const cursor = parseCursor(query.cursor)
+
     const reviews = await prisma.review.findMany({
       where: {
         status: ReviewStatus.PUBLISHED,
-        ...(query.cursor
-          ? { createdAt: { lt: new Date(decodeURIComponent(query.cursor)) } }
+        ...(cursor
+          ? cursor.id
+            ? {
+                OR: [
+                  { createdAt: { lt: cursor.createdAt } },
+                  { createdAt: cursor.createdAt, id: { lt: cursor.id } },
+                ],
+              }
+            : { createdAt: { lt: cursor.createdAt } }
           : {}),
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: query.limit + 1,
       select: {
         id: true,
@@ -44,7 +67,9 @@ export async function GET(req: NextRequest) {
 
     const hasMore = reviews.length > query.limit
     const items = hasMore ? reviews.slice(0, query.limit) : reviews
-    const nextCursor = hasMore ? encodeURIComponent(items.at(-1)!.createdAt.toISOString()) : null
+    const nextCursor = hasMore
+      ? encodeURIComponent(`${items.at(-1)!.createdAt.toISOString()}|${items.at(-1)!.id}`)
+      : null
 
     return ok({ data: items, pagination: { nextCursor, hasMore } })
   } catch (e) {

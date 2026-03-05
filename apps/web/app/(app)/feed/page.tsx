@@ -22,25 +22,41 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(false)
   const [initial, setInitial] = useState(true)
   const sentinel = useRef<HTMLDivElement>(null)
+  const inFlightRef = useRef(false)
+  const requestedCursorsRef = useRef<Set<string>>(new Set())
 
   const loadMore = useCallback(async () => {
-    if (loading || !hasMore) return
+    if (!hasMore || inFlightRef.current) return
+    const cursorKey = cursor ?? '__initial__'
+    if (requestedCursorsRef.current.has(cursorKey)) return
+
+    requestedCursorsRef.current.add(cursorKey)
+    inFlightRef.current = true
     setLoading(true)
+
     try {
       const url = `/api/v1/feed?limit=15${cursor ? `&cursor=${cursor}` : ''}`
       const res = await fetch(url)
       if (!res.ok) throw new Error('Failed to load feed')
       const json = await res.json()
-      setReviews((prev) => [...prev, ...json.data.data])
+      setReviews((prev) => {
+        const byId = new Map(prev.map((r) => [r.id, r]))
+        for (const item of json.data.data as Review[]) {
+          byId.set(item.id, item)
+        }
+        return Array.from(byId.values())
+      })
       setCursor(json.data.pagination.nextCursor)
       setHasMore(json.data.pagination.hasMore)
     } catch (err) {
+      requestedCursorsRef.current.delete(cursorKey)
       console.error(err)
     } finally {
+      inFlightRef.current = false
       setLoading(false)
       setInitial(false)
     }
-  }, [loading, hasMore, cursor])
+  }, [hasMore, cursor])
 
   // Initial load
   useEffect(() => {
