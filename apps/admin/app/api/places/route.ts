@@ -24,7 +24,11 @@ export async function GET(req: NextRequest) {
     }
 
     if (withoutReviews) {
-      where.reviews = { none: {} }
+      where.reviews = {
+        none: {
+          status: { not: 'DELETED' },
+        },
+      }
     }
 
     const [places, total] = await Promise.all([
@@ -37,7 +41,11 @@ export async function GET(req: NextRequest) {
           createdAt: true,
           _count: {
             select: {
-              reviews: true,
+              reviews: {
+                where: {
+                  status: { not: 'DELETED' },
+                },
+              },
             },
           },
         },
@@ -128,7 +136,11 @@ export async function DELETE(req: NextRequest) {
 
     const result = await db.place.deleteMany({
       where: {
-        reviews: { none: {} },
+        reviews: {
+          none: {
+            status: { not: 'DELETED' },
+          },
+        },
       },
     })
 
