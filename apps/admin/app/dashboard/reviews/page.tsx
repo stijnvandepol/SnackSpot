@@ -123,7 +123,6 @@ export default function ReviewsPage() {
           >
             <option value="">Alle statussen</option>
             <option value="PUBLISHED">Gepubliceerd</option>
-            <option value="HIDDEN">Verborgen</option>
             <option value="DELETED">Verwijderd</option>
           </select>
         </div>

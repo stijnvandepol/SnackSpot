@@ -31,7 +31,11 @@ export async function GET(req: NextRequest) {
       }),
       db.place.count({
         where: {
-          reviews: { none: {} },
+          reviews: {
+            none: {
+              status: { not: 'DELETED' },
+            },
+          },
         },
       }),
       db.report.count({
