@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 
@@ -106,7 +106,6 @@ export default function AddReviewPage() {
   const [geocoding, setGeocoding] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const autoLocateAttemptedRef = useRef(false)
 
   // Search for existing places
   const handleSearchPlaces = async (query: string) => {
@@ -256,11 +255,6 @@ export default function AddReviewPage() {
       return // Don't geocode very short text
     }
     
-    // Skip if we already have valid coordinates
-    if (place.lat && place.lng && !isNaN(parseFloat(place.lat)) && !isNaN(parseFloat(place.lng))) {
-      return
-    }
-    
     setGeocoding(true)
     setError(null)
     
@@ -300,22 +294,11 @@ export default function AddReviewPage() {
       }
     } catch (e) {
       console.error('Geocoding error:', e)
-      setError(`Could not geocode address: ${e instanceof Error ? e.message : 'Unknown error'}. You can continue without coordinates.`)
+      setError(`Could not pin address: ${e instanceof Error ? e.message : 'Unknown error'}. Try again or use current location.`)
     } finally {
       setGeocoding(false)
     }
   }
-
-  useEffect(() => {
-    if (step !== 'place' || place.mode !== 'new') {
-      autoLocateAttemptedRef.current = false
-      return
-    }
-    if (autoLocateAttemptedRef.current || (place.lat && place.lng)) return
-
-    autoLocateAttemptedRef.current = true
-    void handleUseCurrentLocation()
-  }, [step, place.mode, place.lat, place.lng])
 
   if (loading) return null
 
@@ -612,7 +595,21 @@ export default function AddReviewPage() {
                     placeholder="Street, City" 
                     value={place.address} 
                     onChange={(e) => setPlace((p) => ({ ...p, address: e.target.value }))} 
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        void handleGeocodeAddress()
+                      }
+                    }}
                   />
+                  <button
+                    type="button"
+                    onClick={handleGeocodeAddress}
+                    disabled={geocoding || !place.address}
+                    className="btn-secondary px-3 whitespace-nowrap"
+                  >
+                    {geocoding ? 'Pin...' : 'Pin'}
+                  </button>
                   <button
                     type="button"
                     onClick={handleUseCurrentLocation}
@@ -623,7 +620,7 @@ export default function AddReviewPage() {
                   </button>
                 </div>
                 <p className="text-xs text-snack-muted mt-1">
-                  📍 Location is required and is filled from your current position.
+                  Type an address and press Enter/Pin, or use your current location.
                 </p>
               </div>
               
@@ -649,8 +646,7 @@ export default function AddReviewPage() {
                   setError('Place name and address are required'); return
                 }
                 if (!place.lat || !place.lng) {
-                  void handleUseCurrentLocation()
-                  setError('Please allow location access and use your current location first')
+                  setError('Please pin the address (Enter/Pin) or use your current location first')
                   return
                 }
               }
