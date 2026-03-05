@@ -104,7 +104,11 @@ export default function FeedPage() {
 
       <div className="space-y-4">
         {reviews.map((r) => (
-          <ReviewCard key={r.id} review={r} />
+          <ReviewCard
+            key={r.id}
+            review={r}
+            photoVariantPreference={['medium', 'large', 'thumb']}
+          />
         ))}
       </div>
 

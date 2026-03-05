@@ -18,6 +18,7 @@ interface ReviewCardProps {
     reviewPhotos?: Array<{ photo: { id: string; variants: Record<string, string> } }>
   }
   showPlace?: boolean
+  photoVariantPreference?: ReadonlyArray<'thumb' | 'medium' | 'large'>
 }
 
 function timeAgo(dateInput: Date | string): string {
@@ -38,10 +39,14 @@ function Stars({ rating }: { rating: number }) {
   )
 }
 
-export function ReviewCard({ review, showPlace = true }: ReviewCardProps) {
+export function ReviewCard({
+  review,
+  showPlace = true,
+  photoVariantPreference = ['thumb', 'medium', 'large'],
+}: ReviewCardProps) {
   const thumb =
     review.reviewPhotos
-      ?.map((rp) => photoVariantUrl(rp.photo.variants as Record<string, string>))
+      ?.map((rp) => photoVariantUrl(rp.photo.variants as Record<string, string>, photoVariantPreference))
       .find((url): url is string => Boolean(url)) ?? null
 
   return (
