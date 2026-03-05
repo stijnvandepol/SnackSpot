@@ -23,47 +23,81 @@ export async function GET(req: NextRequest) {
 
       if (query.q) {
         rows = await prisma.$queryRaw<PlaceRow[]>`
+          WITH candidates AS (
+            SELECT
+              p.id,
+              p.name,
+              p.address,
+              p.location,
+              ST_Distance(p.location, ST_SetSRID(ST_MakePoint(${query.lng}, ${query.lat}), 4326)::geography) AS distance_m
+            FROM places p
+            WHERE ST_DWithin(
+              p.location,
+              ST_SetSRID(ST_MakePoint(${query.lng}, ${query.lat}), 4326)::geography,
+              ${query.radius}
+            )
+            AND (
+              to_tsvector('english', p.name || ' ' || p.address) @@ plainto_tsquery('english', ${query.q})
+              OR p.name ILIKE ${'%' + query.q + '%'}
+            )
+            ORDER BY distance_m
+            LIMIT ${query.limit}
+          )
           SELECT
-            p.id, p.name, p.address,
-            ST_Y(p.location::geometry) AS lat,
-            ST_X(p.location::geometry) AS lng,
-            ST_Distance(p.location, ST_SetSRID(ST_MakePoint(${query.lng}, ${query.lat}), 4326)::geography) AS distance_m,
-            ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
-            COUNT(r.id)::int AS review_count
-          FROM places p
-          LEFT JOIN reviews r ON r.place_id = p.id AND r.status = 'PUBLISHED'
-          WHERE ST_DWithin(
-            p.location,
-            ST_SetSRID(ST_MakePoint(${query.lng}, ${query.lat}), 4326)::geography,
-            ${query.radius}
-          )
-          AND (
-            to_tsvector('english', p.name || ' ' || p.address) @@ plainto_tsquery('english', ${query.q})
-            OR p.name ILIKE ${'%' + query.q + '%'}
-          )
-          GROUP BY p.id, p.name, p.address, p.location
-          ORDER BY distance_m
-          LIMIT ${query.limit}
+            c.id,
+            c.name,
+            c.address,
+            ST_Y(c.location::geometry) AS lat,
+            ST_X(c.location::geometry) AS lng,
+            c.distance_m,
+            rs.avg_rating,
+            rs.review_count
+          FROM candidates c
+          LEFT JOIN LATERAL (
+            SELECT
+              ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
+              COUNT(r.id)::int AS review_count
+            FROM reviews r
+            WHERE r.place_id = c.id AND r.status = 'PUBLISHED'
+          ) rs ON TRUE
+          ORDER BY c.distance_m
         `
       } else {
         rows = await prisma.$queryRaw<PlaceRow[]>`
-          SELECT
-            p.id, p.name, p.address,
-            ST_Y(p.location::geometry) AS lat,
-            ST_X(p.location::geometry) AS lng,
-            ST_Distance(p.location, ST_SetSRID(ST_MakePoint(${query.lng}, ${query.lat}), 4326)::geography) AS distance_m,
-            ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
-            COUNT(r.id)::int AS review_count
-          FROM places p
-          LEFT JOIN reviews r ON r.place_id = p.id AND r.status = 'PUBLISHED'
-          WHERE ST_DWithin(
-            p.location,
-            ST_SetSRID(ST_MakePoint(${query.lng}, ${query.lat}), 4326)::geography,
-            ${query.radius}
+          WITH candidates AS (
+            SELECT
+              p.id,
+              p.name,
+              p.address,
+              p.location,
+              ST_Distance(p.location, ST_SetSRID(ST_MakePoint(${query.lng}, ${query.lat}), 4326)::geography) AS distance_m
+            FROM places p
+            WHERE ST_DWithin(
+              p.location,
+              ST_SetSRID(ST_MakePoint(${query.lng}, ${query.lat}), 4326)::geography,
+              ${query.radius}
+            )
+            ORDER BY distance_m
+            LIMIT ${query.limit}
           )
-          GROUP BY p.id, p.name, p.address, p.location
-          ORDER BY distance_m
-          LIMIT ${query.limit}
+          SELECT
+            c.id,
+            c.name,
+            c.address,
+            ST_Y(c.location::geometry) AS lat,
+            ST_X(c.location::geometry) AS lng,
+            c.distance_m,
+            rs.avg_rating,
+            rs.review_count
+          FROM candidates c
+          LEFT JOIN LATERAL (
+            SELECT
+              ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
+              COUNT(r.id)::int AS review_count
+            FROM reviews r
+            WHERE r.place_id = c.id AND r.status = 'PUBLISHED'
+          ) rs ON TRUE
+          ORDER BY c.distance_m
         `
       }
 
@@ -73,22 +107,39 @@ export async function GET(req: NextRequest) {
     // ── Text-only search ───────────────────────────────────────────────────
     if (query.q) {
       const places = await prisma.$queryRaw<PlaceRow[]>`
+        WITH candidates AS (
+          SELECT
+            p.id,
+            p.name,
+            p.address,
+            p.location,
+            ts_rank(
+              to_tsvector('english', p.name || ' ' || p.address),
+              plainto_tsquery('english', ${query.q})
+            ) AS rank
+          FROM places p
+          WHERE to_tsvector('english', p.name || ' ' || p.address) @@ plainto_tsquery('english', ${query.q})
+             OR p.name ILIKE ${'%' + query.q + '%'}
+          ORDER BY rank DESC
+          LIMIT ${query.limit}
+        )
         SELECT
-          p.id, p.name, p.address,
-          ST_Y(p.location::geometry) AS lat,
-          ST_X(p.location::geometry) AS lng,
-          ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
-          COUNT(r.id)::int AS review_count
-        FROM places p
-        LEFT JOIN reviews r ON r.place_id = p.id AND r.status = 'PUBLISHED'
-        WHERE to_tsvector('english', p.name || ' ' || p.address) @@ plainto_tsquery('english', ${query.q})
-           OR p.name ILIKE ${'%' + query.q + '%'}
-        GROUP BY p.id, p.name, p.address, p.location
-        ORDER BY ts_rank(
-          to_tsvector('english', p.name || ' ' || p.address),
-          plainto_tsquery('english', ${query.q})
-        ) DESC
-        LIMIT ${query.limit}
+          c.id,
+          c.name,
+          c.address,
+          ST_Y(c.location::geometry) AS lat,
+          ST_X(c.location::geometry) AS lng,
+          rs.avg_rating,
+          rs.review_count
+        FROM candidates c
+        LEFT JOIN LATERAL (
+          SELECT
+            ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
+            COUNT(r.id)::int AS review_count
+          FROM reviews r
+          WHERE r.place_id = c.id AND r.status = 'PUBLISHED'
+        ) rs ON TRUE
+        ORDER BY c.rank DESC
       `
       return withPublicCache(ok({ data: places, pagination: { nextCursor: null, hasMore: false } }), 30, 120)
     }

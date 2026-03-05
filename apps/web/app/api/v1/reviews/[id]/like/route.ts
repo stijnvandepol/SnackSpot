@@ -51,7 +51,7 @@ export async function POST(
   try {
     const review = await prisma.review.findUnique({
       where: { id },
-      select: { id: true, status: true },
+      select: { id: true, status: true, userId: true },
     })
     if (!review || review.status !== ReviewStatus.PUBLISHED) return err('Review not found', 404)
 
@@ -60,7 +60,7 @@ export async function POST(
       skipDuplicates: true,
     })
 
-    await recalculateUserBadges(review.userId)
+    await recalculateUserBadges(review.userId, { criteriaTypes: ['LIKES_RECEIVED_COUNT'] })
 
     const state = await getLikeState(id, auth.sub)
     return ok(state)
@@ -89,7 +89,7 @@ export async function DELETE(
       where: { userId: auth.sub, reviewId: id },
     })
 
-    await recalculateUserBadges(review.userId)
+    await recalculateUserBadges(review.userId, { criteriaTypes: ['LIKES_RECEIVED_COUNT'] })
 
     const state = await getLikeState(id, auth.sub)
     return ok(state)

@@ -137,6 +137,12 @@ model Review {
   @@index([createdAt(sort: Desc)])
   @@index([placeId, createdAt(sort: Desc)])
   @@index([userId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([userId, status, createdAt(sort: Desc)])
+  @@index([placeId, status, createdAt(sort: Desc)])
+  @@index([placeId, status, rating(sort: Desc), createdAt(sort: Desc)])
+  @@index([userId, status, placeId])
+  @@index([userId, status, id])
   @@map("reviews")
 }
 
@@ -171,6 +177,7 @@ model UserBadge {
 
   @@id([userId, badgeId])
   @@index([userId, earnedAt])
+  @@index([userId, earnedAt(sort: Desc), createdAt])
   @@map("user_badges")
 }
 
@@ -184,6 +191,7 @@ model ReviewLike {
 
   @@id([userId, reviewId])
   @@index([reviewId, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
   @@map("review_likes")
 }
 
@@ -213,6 +221,7 @@ model ReviewPhoto {
   photo  Photo  @relation(fields: [photoId], references: [id], onDelete: Cascade)
 
   @@id([reviewId, photoId])
+  @@index([reviewId, sortOrder])
   @@map("review_photos")
 }
 
@@ -242,6 +251,7 @@ model Report {
   review   Review? @relation(fields: [reviewId], references: [id], onDelete: SetNull)
   photo    Photo?  @relation(fields: [photoId], references: [id], onDelete: SetNull)
 
+  @@index([status, createdAt(sort: Desc)])
   @@map("reports")
 }
 

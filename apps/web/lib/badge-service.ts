@@ -8,6 +8,10 @@ interface ActivitySnapshot {
   likesReceivedCount: number
 }
 
+interface RecalculateOptions {
+  criteriaTypes?: BadgeCriteriaType[]
+}
+
 async function getActivitySnapshot(userId: string): Promise<ActivitySnapshot> {
   const [postsCount, uniqueLocationsRows, activeDaysRows, likesReceivedRows] = await Promise.all([
     prisma.review.count({ where: { userId, status: 'PUBLISHED' } }),
@@ -52,19 +56,30 @@ export function progressForCriteria(criteriaType: BadgeCriteriaType, snapshot: A
   }
 }
 
-export async function recalculateUserBadges(userId: string): Promise<void> {
+export async function recalculateUserBadges(userId: string, options?: RecalculateOptions): Promise<void> {
+  const criteriaFilter = options?.criteriaTypes?.length
+    ? { in: options.criteriaTypes }
+    : undefined
+
   const [snapshot, badges, existingRows] = await Promise.all([
     getActivitySnapshot(userId),
-    prisma.badge.findMany({ where: { isActive: true } }),
-    prisma.userBadge.findMany({ where: { userId } }),
+    prisma.badge.findMany({ where: { isActive: true, ...(criteriaFilter ? { criteriaType: criteriaFilter } : {}) } }),
+    prisma.userBadge.findMany({
+      where: {
+        userId,
+        ...(criteriaFilter ? { badge: { criteriaType: criteriaFilter } } : {}),
+      },
+    }),
   ])
 
   if (badges.length === 0) return
 
-  const existingByBadgeId = new Map(existingRows.map((row) => [row.badgeId, row]))
+  const existingByBadgeId = new Map<string, { earnedAt: Date | null }>(
+    existingRows.map((row: { badgeId: string; earnedAt: Date | null }) => [row.badgeId, { earnedAt: row.earnedAt }]),
+  )
 
   await prisma.$transaction(
-    badges.map((badge) => {
+    badges.map((badge: { id: string; criteriaType: BadgeCriteriaType; criteriaValue: number }) => {
       const progress = progressForCriteria(badge.criteriaType, snapshot)
       const existing = existingByBadgeId.get(badge.id)
       const earnedAt = progress >= badge.criteriaValue
