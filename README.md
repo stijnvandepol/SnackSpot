@@ -55,6 +55,28 @@ The app is now available at **http://localhost:8080**
 The Docker ports are published on all interfaces (`0.0.0.0`) so the app can also be reached from your LAN via:
 **http://<your-host-lan-ip>:8080**
 
+### Linux helper script
+
+You can use the helper script to start/update the app and auto-manage `.env`:
+
+```bash
+chmod +x scripts/manage.sh
+
+# Creates .env automatically (if missing) and starts the stack
+./scripts/manage.sh start
+
+# Pull latest code + images, then rebuild and restart
+./scripts/manage.sh update
+
+# Follow logs (or: SERVICE=web ./scripts/manage.sh logs)
+./scripts/manage.sh logs
+
+# Stop stack
+./scripts/manage.sh stop
+```
+
+If `.env` already exists, the script keeps your existing values and only adds missing fields.
+
 ---
 
 ## Default ports
