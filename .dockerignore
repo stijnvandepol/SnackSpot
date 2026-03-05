@@ -1,0 +1,25 @@
+.git
+.gitignore
+.gitattributes
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Node / build artifacts
+**/node_modules
+**/.next
+**/dist
+**/out
+**/*.tsbuildinfo
+.pnpm-store
+
+# Logs and local data
+*.log
+data
+
+# Editor / OS noise
+.DS_Store
+.idea
+.vscode

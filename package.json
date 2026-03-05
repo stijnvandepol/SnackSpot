@@ -2,6 +2,7 @@
   "name": "snackspot",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@9.15.4",
   "scripts": {
     "dev": "pnpm --filter web dev",
     "build": "pnpm run db:generate && pnpm --filter web build",

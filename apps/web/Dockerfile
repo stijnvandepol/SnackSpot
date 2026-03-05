@@ -2,7 +2,7 @@ FROM node:20-alpine AS base
 
 # argon2 + Prisma need build tools and OpenSSL
 RUN apk add --no-cache python3 make g++ openssl
-RUN npm install -g pnpm@9
+RUN npm install -g pnpm@9.15.4
 
 WORKDIR /app
 

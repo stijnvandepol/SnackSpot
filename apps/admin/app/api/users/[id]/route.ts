@@ -41,7 +41,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     return NextResponse.json({ user })
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message || 'Error fetching user' },
+      { error: 'Error fetching user' },
       { status: 500 }
     )
   }
@@ -96,7 +96,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       )
     }
     return NextResponse.json(
-      { error: error.message || 'Error updating user' },
+      { error: 'Error updating user' },
       { status: 500 }
     )
   }
@@ -129,7 +129,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       )
     }
     return NextResponse.json(
-      { error: error.message || 'Error deleting user' },
+      { error: 'Error deleting user' },
       { status: 500 }
     )
   }

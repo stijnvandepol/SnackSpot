@@ -41,7 +41,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       )
     }
     return NextResponse.json(
-      { error: error.message || 'Error resetting password' },
+      { error: 'Error resetting password' },
       { status: 500 }
     )
   }

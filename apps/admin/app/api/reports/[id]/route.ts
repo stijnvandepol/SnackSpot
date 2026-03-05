@@ -70,7 +70,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     return NextResponse.json({ report })
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message || 'Error fetching report' },
+      { error: 'Error fetching report' },
       { status: 500 }
     )
   }
@@ -192,7 +192,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       )
     }
     return NextResponse.json(
-      { error: error.message || 'Error updating report' },
+      { error: 'Error updating report' },
       { status: 500 }
     )
   }
@@ -217,7 +217,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       )
     }
     return NextResponse.json(
-      { error: error.message || 'Error deleting report' },
+      { error: 'Error deleting report' },
       { status: 500 }
     )
   }

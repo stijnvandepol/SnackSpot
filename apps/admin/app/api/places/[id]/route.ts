@@ -52,7 +52,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     return NextResponse.json({ place })
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message || 'Error fetching place' },
+      { error: 'Error fetching place' },
       { status: 500 }
     )
   }
@@ -115,7 +115,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       )
     }
     return NextResponse.json(
-      { error: error.message || 'Error updating place' },
+      { error: 'Error updating place' },
       { status: 500 }
     )
   }
@@ -140,7 +140,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       )
     }
     return NextResponse.json(
-      { error: error.message || 'Error deleting place' },
+      { error: 'Error deleting place' },
       { status: 500 }
     )
   }

@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     })
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message || 'Error fetching users' },
+      { error: 'Error fetching users' },
       { status: 500 }
     )
   }
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
       )
     }
     return NextResponse.json(
-      { error: error.message || 'Error creating user' },
+      { error: 'Error creating user' },
       { status: 500 }
     )
   }

@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
     })
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message || 'Error fetching places' },
+      { error: 'Error fetching places' },
       { status: 500 }
     )
   }
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ place }, { status: 201 })
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message || 'Error creating place' },
+      { error: 'Error creating place' },
       { status: 500 }
     )
   }
@@ -138,7 +138,7 @@ export async function DELETE(req: NextRequest) {
     })
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message || 'Error deleting places' },
+      { error: 'Error deleting places' },
       { status: 500 }
     )
   }

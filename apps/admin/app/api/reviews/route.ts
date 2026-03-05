@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
     })
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message || 'Error fetching reviews' },
+      { error: 'Error fetching reviews' },
       { status: 500 }
     )
   }

@@ -57,7 +57,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     return NextResponse.json({ review })
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message || 'Error fetching review' },
+      { error: 'Error fetching review' },
       { status: 500 }
     )
   }
@@ -96,7 +96,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       )
     }
     return NextResponse.json(
-      { error: error.message || 'Error updating review' },
+      { error: 'Error updating review' },
       { status: 500 }
     )
   }
@@ -121,7 +121,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       )
     }
     return NextResponse.json(
-      { error: error.message || 'Error deleting review' },
+      { error: 'Error deleting review' },
       { status: 500 }
     )
   }

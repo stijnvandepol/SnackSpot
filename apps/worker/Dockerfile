@@ -2,7 +2,7 @@ FROM node:20-alpine AS builder
 
 # sharp + Prisma require build toolchain on Alpine
 RUN apk add --no-cache python3 make g++ vips-dev openssl
-RUN npm install -g pnpm@9
+RUN npm install -g pnpm@9.15.4
 
 WORKDIR /app
 

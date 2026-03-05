@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { LoginSchema } from '@snackspot/shared'
 import { db } from '@/lib/db'
 import argon2 from 'argon2'
 import jwt from 'jsonwebtoken'
@@ -6,7 +7,15 @@ import { env } from '@/lib/env'
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = (await req.json()) as { email: string; password: string }
+    const body = await req.json().catch(() => null)
+    const parsed = LoginSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Ongeldige request body' },
+        { status: 422 }
+      )
+    }
+    const { email, password } = parsed.data
 
     // Find user
     const user = await db.user.findUnique({
@@ -20,18 +29,10 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    if (!user) {
+    if (!user || user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Ongeldige inloggegevens' },
         { status: 401 }
-      )
-    }
-
-    // Check if user is admin
-    if (user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Alleen admins hebben toegang tot het admin panel' },
-        { status: 403 }
       )
     }
 
@@ -71,7 +72,6 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Login error:', error)
     return NextResponse.json(
       { error: 'Er is een fout opgetreden' },
       { status: 500 }
