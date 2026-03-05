@@ -35,7 +35,10 @@ const MIME_ALIASES: Record<string, 'image/jpeg' | 'image/png' | 'image/webp' | '
   'image/jpeg': 'image/jpeg',
   'image/jpg': 'image/jpeg',
   'image/pjpeg': 'image/jpeg',
+  'image/x-jpeg': 'image/jpeg',
+  'image/jfif': 'image/jpeg',
   'image/png': 'image/png',
+  'image/x-png': 'image/png',
   'image/webp': 'image/webp',
   'image/avif': 'image/avif',
   'image/heic': 'image/heic',
@@ -324,9 +327,12 @@ export default function AddReviewPage() {
       }
 
       const previewUrl = URL.createObjectURL(file)
-      const id = crypto.randomUUID()
+      const tempId = crypto.randomUUID()
+      // realId starts as the temp UUID and gets updated to the DB photo ID after initiate-upload.
+      // This allows the catch block to always find the correct photo entry regardless of when the error occurs.
+      let realId = tempId
 
-      setPhotos((prev) => [...prev, { photoId: id, previewUrl, status: 'uploading' }])
+      setPhotos((prev) => [...prev, { photoId: tempId, previewUrl, status: 'uploading' }])
 
       try {
         // 1. Initiate
@@ -341,6 +347,7 @@ export default function AddReviewPage() {
           throw new Error(`Initiate failed: ${errorData.error || initRes.statusText}`)
         }
         const { data: initData } = await initRes.json()
+        realId = initData.photoId
         if (isDev) console.log(`[Upload] Got upload URL, uploading to MinIO...`)
 
         // 2. PUT directly to MinIO (preferred path)
@@ -348,7 +355,7 @@ export default function AddReviewPage() {
         const uploadStartTime = Date.now()
         try {
           const controller = new AbortController()
-          const timeout = setTimeout(() => controller.abort(), 12000)
+          const timeout = setTimeout(() => controller.abort(), 5000)
           let putRes: Response
           try {
             putRes = await fetch(initData.uploadUrl, {
@@ -387,12 +394,12 @@ export default function AddReviewPage() {
         if (isDev) console.log(`[Upload] Upload completed in ${uploadDuration}s, confirming...`)
 
         // 3. Confirm
-        setPhotos((prev) => prev.map((p) => p.photoId === id ? { ...p, photoId: initData.photoId, status: 'confirming' } : p))
+        setPhotos((prev) => prev.map((p) => p.photoId === tempId ? { ...p, photoId: realId, status: 'confirming' } : p))
 
         const confirmRes = await fetch('/api/v1/photos/confirm-upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-          body: JSON.stringify({ photoId: initData.photoId }),
+          body: JSON.stringify({ photoId: realId }),
         })
         if (!confirmRes.ok) {
           const errorData = await confirmRes.json().catch(() => ({ error: 'Unknown error' }))
@@ -401,8 +408,8 @@ export default function AddReviewPage() {
         if (isDev) console.log(`[Upload] ✓ ${file.name} uploaded successfully`)
 
         setPhotos((prev) =>
-          prev.map((p) => p.photoId === id || p.photoId === initData.photoId
-            ? { ...p, photoId: initData.photoId, status: 'ready' }
+          prev.map((p) => p.photoId === tempId || p.photoId === realId
+            ? { ...p, photoId: realId, status: 'ready' }
             : p,
           ),
         )
@@ -415,7 +422,9 @@ export default function AddReviewPage() {
               ? err.message
               : 'Photo upload failed'
         setError(msg)
-        setPhotos((prev) => prev.map((p) => p.photoId === id ? { ...p, status: 'error' } : p))
+        // Match on both tempId and realId: before initiate-upload the photo still has tempId,
+        // after it has realId. Using both ensures the error state is always set correctly.
+        setPhotos((prev) => prev.map((p) => (p.photoId === tempId || p.photoId === realId) ? { ...p, status: 'error' } : p))
       }
     }
   }
