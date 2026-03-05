@@ -7,9 +7,6 @@ CREATE INDEX IF NOT EXISTS reviews_place_status_rating_created_idx
 CREATE INDEX IF NOT EXISTS reviews_user_status_place_idx
   ON reviews (user_id, status, place_id);
 
-CREATE INDEX IF NOT EXISTS reviews_user_status_date_idx
-  ON reviews (user_id, status, (DATE(created_at)));
-
 CREATE INDEX IF NOT EXISTS reviews_user_status_id_idx
   ON reviews (user_id, status, id);
 
@@ -23,7 +20,6 @@ CREATE INDEX IF NOT EXISTS user_badges_user_earned_created_idx
 -- DROP INDEX IF EXISTS reports_status_created_at_idx;
 -- DROP INDEX IF EXISTS reviews_place_status_rating_created_idx;
 -- DROP INDEX IF EXISTS reviews_user_status_place_idx;
--- DROP INDEX IF EXISTS reviews_user_status_date_idx;
 -- DROP INDEX IF EXISTS reviews_user_status_id_idx;
 -- DROP INDEX IF EXISTS review_photos_review_sort_idx;
 -- DROP INDEX IF EXISTS user_badges_user_earned_created_idx;
