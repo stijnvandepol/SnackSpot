@@ -7,10 +7,24 @@ import { useAuth } from '@/components/auth-provider'
 interface ReviewEditData {
   id: string
   rating: number
+  ratings?: {
+    taste: number
+    value: number
+    portion: number
+    service: number | null
+  }
+  overallRating?: number
   text: string
   dishName?: string | null
   user: { id: string; username: string }
   place: { id: string; name: string; address: string }
+}
+
+interface RatingDraft {
+  taste: number
+  value: number
+  portion: number
+  service: number | null
 }
 
 function RatingPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
@@ -40,7 +54,12 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
   const { user, accessToken, loading } = useAuth()
 
   const [review, setReview] = useState<ReviewEditData | null>(null)
-  const [rating, setRating] = useState(0)
+  const [ratings, setRatings] = useState<RatingDraft>({
+    taste: 3,
+    value: 3,
+    portion: 3,
+    service: null,
+  })
   const [dishName, setDishName] = useState('')
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
@@ -59,7 +78,12 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
 
         const data = json.data as ReviewEditData
         setReview(data)
-        setRating(data.rating)
+        setRatings({
+          taste: data.ratings?.taste ?? data.rating,
+          value: data.ratings?.value ?? data.rating,
+          portion: data.ratings?.portion ?? data.rating,
+          service: data.ratings?.service ?? null,
+        })
         setDishName(data.dishName ?? '')
         setText(data.text)
         setPageLoading(false)
@@ -108,8 +132,12 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
   }
 
   const submit = async () => {
-    if (rating < 1 || rating > 5) {
-      setError('Choose a rating from 1 to 5')
+    if (ratings.taste < 1 || ratings.taste > 5 || ratings.value < 1 || ratings.value > 5 || ratings.portion < 1 || ratings.portion > 5) {
+      setError('Choose ratings from 1 to 5')
+      return
+    }
+    if (ratings.service !== null && (ratings.service < 1 || ratings.service > 5)) {
+      setError('Service rating must be between 1 and 5')
       return
     }
     if (text.trim().length < 10) {
@@ -128,7 +156,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          rating,
+          ratings,
           text: text.trim(),
           dishName: dishName.trim() || undefined,
         }),
@@ -163,8 +191,32 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
       </div>
 
       <div className="space-y-2">
-        <label className="label">Rating</label>
-        <RatingPicker value={rating} onChange={setRating} />
+        <label className="label">Taste</label>
+        <RatingPicker value={ratings.taste} onChange={(v) => setRatings((prev) => ({ ...prev, taste: v }))} />
+      </div>
+
+      <div className="space-y-2">
+        <label className="label">Value for money</label>
+        <RatingPicker value={ratings.value} onChange={(v) => setRatings((prev) => ({ ...prev, value: v }))} />
+      </div>
+
+      <div className="space-y-2">
+        <label className="label">Portion size</label>
+        <RatingPicker value={ratings.portion} onChange={(v) => setRatings((prev) => ({ ...prev, portion: v }))} />
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <label className="label">Service <span className="text-snack-muted font-normal">(optional)</span></label>
+          <button
+            type="button"
+            className="text-xs text-snack-muted hover:text-snack-text"
+            onClick={() => setRatings((prev) => ({ ...prev, service: null }))}
+          >
+            Clear
+          </button>
+        </div>
+        <RatingPicker value={ratings.service ?? 0} onChange={(v) => setRatings((prev) => ({ ...prev, service: v }))} />
       </div>
 
       <div className="space-y-2">
