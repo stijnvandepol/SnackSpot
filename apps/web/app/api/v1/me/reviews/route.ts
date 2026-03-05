@@ -32,6 +32,8 @@ export async function GET(req: NextRequest) {
         dishName: true,
         status: true,
         createdAt: true,
+        _count: { select: { reviewLikes: true } },
+        reviewLikes: { where: { userId: auth.sub }, select: { userId: true }, take: 1 },
         user: { select: { id: true, username: true, avatarKey: true, role: true } },
         place: { select: { id: true, name: true, address: true } },
         reviewPhotos: {
@@ -43,9 +45,16 @@ export async function GET(req: NextRequest) {
 
     const hasMore = reviews.length > query.limit
     const items = hasMore ? reviews.slice(0, query.limit) : reviews
+    const withLikes = items.map((item) => ({
+      ...item,
+      likeCount: item._count.reviewLikes,
+      likedByMe: item.reviewLikes.length > 0,
+      _count: undefined,
+      reviewLikes: undefined,
+    }))
     const nextCursor = hasMore ? encodeURIComponent(items.at(-1)!.createdAt.toISOString()) : null
 
-    return ok({ data: items, pagination: { nextCursor, hasMore } })
+    return ok({ data: withLikes, pagination: { nextCursor, hasMore } })
   } catch (e) {
     return serverError('me/reviews', e)
   }

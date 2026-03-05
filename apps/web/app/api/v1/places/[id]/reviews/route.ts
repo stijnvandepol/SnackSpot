@@ -1,7 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { ReviewsQuerySchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
-import { ok, parseQuery, serverError, isResponse } from '@/lib/api-helpers'
+import { ok, parseQuery, serverError, isResponse, getAuthPayload } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
 
 export async function GET(
@@ -9,6 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id: placeId } = await params
+  const auth = getAuthPayload(req)
   const query = parseQuery(req, ReviewsQuerySchema)
   if (isResponse(query)) return query
 
@@ -41,6 +42,10 @@ export async function GET(
         dishName: true,
         status: true,
         createdAt: true,
+        _count: { select: { reviewLikes: true } },
+        reviewLikes: auth
+          ? { where: { userId: auth.sub }, select: { userId: true }, take: 1 }
+          : false,
         user: { select: { id: true, username: true, avatarKey: true, role: true } },
         reviewPhotos: {
           orderBy: { sortOrder: 'asc' },
@@ -51,11 +56,18 @@ export async function GET(
 
     const hasMore = reviews.length > query.limit
     const items = hasMore ? reviews.slice(0, query.limit) : reviews
+    const withLikes = items.map((item) => ({
+      ...item,
+      likeCount: item._count.reviewLikes,
+      likedByMe: auth ? item.reviewLikes.length > 0 : false,
+      _count: undefined,
+      reviewLikes: undefined,
+    }))
     const nextCursor = !isTop && hasMore
       ? encodeURIComponent(items.at(-1)!.createdAt.toISOString())
       : null
 
-    return ok({ data: items, pagination: { nextCursor, hasMore } })
+    return ok({ data: withLikes, pagination: { nextCursor, hasMore } })
   } catch (e) {
     return serverError('places/[id]/reviews', e)
   }

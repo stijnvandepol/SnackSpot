@@ -1,7 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
-import { ok, parseQuery, serverError, isResponse } from '@/lib/api-helpers'
+import { ok, parseQuery, serverError, isResponse, getAuthPayload } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
 
 const FeedQuerySchema = z.object({
@@ -24,6 +24,7 @@ function parseCursor(cursorRaw?: string): { createdAt: Date; id: string | null }
 }
 
 export async function GET(req: NextRequest) {
+  const auth = getAuthPayload(req)
   const query = parseQuery(req, FeedQuerySchema)
   if (isResponse(query)) return query
 
@@ -55,6 +56,14 @@ export async function GET(req: NextRequest) {
         createdAt: true,
         user: { select: { id: true, username: true, avatarKey: true, role: true } },
         place: { select: { id: true, name: true, address: true } },
+        _count: { select: { reviewLikes: true } },
+        reviewLikes: auth
+          ? {
+              where: { userId: auth.sub },
+              select: { userId: true },
+              take: 1,
+            }
+          : false,
         reviewPhotos: {
           take: 5,
           orderBy: { sortOrder: 'asc' },
@@ -67,11 +76,18 @@ export async function GET(req: NextRequest) {
 
     const hasMore = reviews.length > query.limit
     const items = hasMore ? reviews.slice(0, query.limit) : reviews
+    const withLikes = items.map((item) => ({
+      ...item,
+      likeCount: item._count.reviewLikes,
+      likedByMe: auth ? item.reviewLikes.length > 0 : false,
+      _count: undefined,
+      reviewLikes: undefined,
+    }))
     const nextCursor = hasMore
       ? encodeURIComponent(`${items.at(-1)!.createdAt.toISOString()}|${items.at(-1)!.id}`)
       : null
 
-    return ok({ data: items, pagination: { nextCursor, hasMore } })
+    return ok({ data: withLikes, pagination: { nextCursor, hasMore } })
   } catch (e) {
     return serverError('feed', e)
   }

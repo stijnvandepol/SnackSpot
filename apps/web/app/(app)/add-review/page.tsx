@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 
@@ -106,6 +106,7 @@ export default function AddReviewPage() {
   const [geocoding, setGeocoding] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const autoLocateAttemptedRef = useRef(false)
 
   // Search for existing places
   const handleSearchPlaces = async (query: string) => {
@@ -304,6 +305,17 @@ export default function AddReviewPage() {
       setGeocoding(false)
     }
   }
+
+  useEffect(() => {
+    if (step !== 'place' || place.mode !== 'new') {
+      autoLocateAttemptedRef.current = false
+      return
+    }
+    if (autoLocateAttemptedRef.current || (place.lat && place.lng)) return
+
+    autoLocateAttemptedRef.current = true
+    void handleUseCurrentLocation()
+  }, [step, place.mode, place.lat, place.lng])
 
   if (loading) return null
 
@@ -603,23 +615,15 @@ export default function AddReviewPage() {
                   />
                   <button
                     type="button"
-                    onClick={handleGeocodeAddress}
-                    disabled={geocoding || !place.address}
-                    className="btn-secondary px-3 whitespace-nowrap"
-                  >
-                    {geocoding ? '🔍...' : '🔍 Find'}
-                  </button>
-                  <button
-                    type="button"
                     onClick={handleUseCurrentLocation}
                     disabled={fetchingLocation}
                     className="btn-secondary px-3 whitespace-nowrap"
                   >
-                    {fetchingLocation ? '📍...' : '📍'}
+                    {fetchingLocation ? '📍...' : 'Use current location'}
                   </button>
                 </div>
                 <p className="text-xs text-snack-muted mt-1">
-                  💡 Click "🔍 Find" to get coordinates, or use current location
+                  📍 Location is required and is filled from your current position.
                 </p>
               </div>
               
@@ -644,9 +648,9 @@ export default function AddReviewPage() {
                 if (!place.name || !place.address) {
                   setError('Place name and address are required'); return
                 }
-                // Auto-geocode if coordinates are missing
                 if (!place.lat || !place.lng) {
-                  setError('Please click "🔍 Find" to get coordinates first')
+                  void handleUseCurrentLocation()
+                  setError('Please allow location access and use your current location first')
                   return
                 }
               }

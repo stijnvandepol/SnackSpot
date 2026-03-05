@@ -18,6 +18,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params
+  const auth = getAuthPayload(req)
 
   try {
     const review = await prisma.review.findUnique({
@@ -30,8 +31,14 @@ export async function GET(
         status: true,
         createdAt: true,
         updatedAt: true,
+        _count: { select: { reviewLikes: true } },
         user: { select: { id: true, username: true, avatarKey: true, role: true } },
         place: { select: { id: true, name: true, address: true } },
+        reviewLikes: {
+          where: auth ? { userId: auth.sub } : { userId: '__no_user__' },
+          select: { userId: true },
+          take: 1,
+        },
         reviewPhotos: {
           orderBy: { sortOrder: 'asc' },
           select: { sortOrder: true, photo: { select: { id: true, variants: true } } },
@@ -42,13 +49,18 @@ export async function GET(
     if (!review) return err('Review not found', 404)
     if (review.status === ReviewStatus.DELETED) return err('Review not found', 404)
     if (review.status === ReviewStatus.HIDDEN) {
-      const auth = getAuthPayload(req)
       const isOwner = auth?.sub === review.user.id
       const isMod = auth?.role === 'MODERATOR' || auth?.role === 'ADMIN'
       if (!isOwner && !isMod) return err('Review not found', 404)
     }
 
-    return ok(review)
+    return ok({
+      ...review,
+      likeCount: review._count.reviewLikes,
+      likedByMe: auth ? review.reviewLikes.length > 0 : false,
+      _count: undefined,
+      reviewLikes: undefined,
+    })
   } catch (e) {
     return serverError('reviews/[id] GET', e)
   }
