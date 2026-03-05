@@ -51,6 +51,7 @@ function Stars({ value, onChange }: { value: number; onChange: (v: number) => vo
 export default function AddReviewPage() {
   const { user, accessToken, loading } = useAuth()
   const router = useRouter()
+  const isDev = process.env.NODE_ENV !== 'production'
   const [step, setStep] = useState<Step>('place')
   const [place, setPlace] = useState<PlaceForm>({
     mode: 'existing', name: '', address: '', lat: '', lng: '',
@@ -135,7 +136,7 @@ export default function AddReviewPage() {
         const lat = position.coords.latitude
         const lng = position.coords.longitude
         
-        console.log('Current position:', lat, lng)
+        if (isDev) console.log('Current position:', lat, lng)
         
         try {
           // Add small delay to respect Nominatim usage policy
@@ -157,7 +158,7 @@ export default function AddReviewPage() {
           }
           
           const data = await res.json()
-          console.log('Reverse geocoding result:', data)
+          if (isDev) console.log('Reverse geocoding result:', data)
           
           if (data.address) {
             const addr = data.address
@@ -244,7 +245,7 @@ export default function AddReviewPage() {
       }
       
       const data = await res.json()
-      console.log('Geocoding results:', data)
+      if (isDev) console.log('Geocoding results:', data)
       
       if (data && data.length > 0) {
         const result = data[0]
@@ -254,9 +255,9 @@ export default function AddReviewPage() {
           lng: result.lon,
           address: result.display_name || p.address, // Update with full formatted address
         }))
-        console.log('Coordinates found:', result.lat, result.lon)
+        if (isDev) console.log('Coordinates found:', result.lat, result.lon)
       } else {
-        console.warn('No results for address:', place.address)
+        if (isDev) console.warn('No results for address:', place.address)
         setError('Address not found. Try a more specific address (e.g., "Dam 1, Amsterdam")')
       }
     } catch (e) {
@@ -292,7 +293,7 @@ export default function AddReviewPage() {
 
       try {
         // 1. Initiate
-        console.log(`[Upload] Initiating upload for ${file.name} (${(file.size / 1024).toFixed(1)}KB)`)
+        if (isDev) console.log(`[Upload] Initiating upload for ${file.name} (${(file.size / 1024).toFixed(1)}KB)`)
         const initRes = await fetch('/api/v1/photos/initiate-upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
@@ -303,7 +304,7 @@ export default function AddReviewPage() {
           throw new Error(`Initiate failed: ${errorData.error || initRes.statusText}`)
         }
         const { data: initData } = await initRes.json()
-        console.log(`[Upload] Got upload URL, uploading to MinIO...`)
+        if (isDev) console.log(`[Upload] Got upload URL, uploading to MinIO...`)
 
         // 2. PUT directly to MinIO
         const uploadStartTime = Date.now()
@@ -316,7 +317,7 @@ export default function AddReviewPage() {
           throw new Error(`MinIO upload failed: ${putRes.status} ${putRes.statusText}`)
         }
         const uploadDuration = ((Date.now() - uploadStartTime) / 1000).toFixed(1)
-        console.log(`[Upload] Upload completed in ${uploadDuration}s, confirming...`)
+        if (isDev) console.log(`[Upload] Upload completed in ${uploadDuration}s, confirming...`)
 
         // 3. Confirm
         setPhotos((prev) => prev.map((p) => p.photoId === id ? { ...p, photoId: initData.photoId, status: 'confirming' } : p))
@@ -330,7 +331,7 @@ export default function AddReviewPage() {
           const errorData = await confirmRes.json().catch(() => ({ error: 'Unknown error' }))
           throw new Error(`Confirm failed: ${errorData.error || confirmRes.statusText}`)
         }
-        console.log(`[Upload] ✓ ${file.name} uploaded successfully`)
+        if (isDev) console.log(`[Upload] ✓ ${file.name} uploaded successfully`)
 
         setPhotos((prev) =>
           prev.map((p) => p.photoId === id || p.photoId === initData.photoId
@@ -665,3 +666,4 @@ export default function AddReviewPage() {
     </div>
   )
 }
+

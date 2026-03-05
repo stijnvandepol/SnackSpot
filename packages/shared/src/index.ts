@@ -52,7 +52,7 @@ export const PlaceSearchSchema = z.object({
 // ─── Review schemas ──────────────────────────────────────────────────────────
 
 export const CreateReviewSchema = z.object({
-  placeId: z.string().cuid().optional(),
+  placeId: z.string().min(1).optional(),
   place: CreatePlaceSchema.optional(),
   rating: z.number().int().min(1).max(5),
   text: z.string().min(10).max(2000),
@@ -89,7 +89,7 @@ export const ConfirmUploadSchema = z.object({
 // ─── Report schemas ──────────────────────────────────────────────────────────
 
 export const CreateReportSchema = z.object({
-  targetType: z.enum(['REVIEW', 'PHOTO', 'USER']),
+  targetType: z.enum(['REVIEW', 'PHOTO']),
   reviewId: z.string().optional(),
   photoId: z.string().optional(),
   reason: z.string().min(5).max(500),
@@ -107,7 +107,7 @@ export const ModerationActionSchema = z.object({
     'UNBAN_USER',
     'DISMISS_REPORT',
   ]),
-  targetType: z.string(),
+  targetType: z.enum(['REVIEW', 'PHOTO', 'USER', 'REPORT']),
   targetId: z.string(),
   reportId: z.string().optional(),
   note: z.string().max(500).optional(),

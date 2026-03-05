@@ -9,7 +9,7 @@ import {
   refreshTokenExpiresAt,
   buildSetCookie,
 } from '@/lib/auth'
-import { ok, created, err, parseBody, serverError, isResponse } from '@/lib/api-helpers'
+import { created, err, parseBody, serverError, isResponse } from '@/lib/api-helpers'
 import { rateLimitIP, getClientIP } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
@@ -30,8 +30,7 @@ export async function POST(req: NextRequest) {
       select: { email: true, username: true },
     })
     if (conflict) {
-      if (conflict.email === body.email) return err('Email already registered', 409)
-      return err('Username already taken', 409)
+      return err('Email or username already taken', 409)
     }
 
     const passwordHash = await hashPassword(body.password)

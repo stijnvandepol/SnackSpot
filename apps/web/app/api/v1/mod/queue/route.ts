@@ -2,6 +2,7 @@ import { type NextRequest } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { ok, parseQuery, requireRole, serverError, isResponse } from '@/lib/api-helpers'
+import { ReportStatus } from '@prisma/client'
 
 const QueueQuerySchema = z.object({
   status: z.enum(['OPEN', 'RESOLVED', 'DISMISSED']).default('OPEN'),
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
   try {
     const reports = await prisma.report.findMany({
       where: {
-        status: query.status as any,
+        status: query.status as ReportStatus,
         ...(query.cursor ? { createdAt: { lt: new Date(decodeURIComponent(query.cursor)) } } : {}),
       },
       orderBy: { createdAt: 'desc' },

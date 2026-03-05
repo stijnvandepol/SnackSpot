@@ -7,13 +7,14 @@ import {
   err,
   parseBody,
   requireAuth,
+  getAuthPayload,
   serverError,
   isResponse,
 } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params
@@ -33,13 +34,19 @@ export async function GET(
         place: { select: { id: true, name: true, address: true } },
         reviewPhotos: {
           orderBy: { sortOrder: 'asc' },
-          select: { sortOrder: true, photo: { select: { id: true, variants: true, metadata: true } } },
+          select: { sortOrder: true, photo: { select: { id: true, variants: true } } },
         },
       },
     })
 
     if (!review) return err('Review not found', 404)
     if (review.status === ReviewStatus.DELETED) return err('Review not found', 404)
+    if (review.status === ReviewStatus.HIDDEN) {
+      const auth = getAuthPayload(req)
+      const isOwner = auth?.sub === review.user.id
+      const isMod = auth?.role === 'MODERATOR' || auth?.role === 'ADMIN'
+      if (!isOwner && !isMod) return err('Review not found', 404)
+    }
 
     return ok(review)
   } catch (e) {

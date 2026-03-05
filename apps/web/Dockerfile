@@ -2,12 +2,11 @@ FROM node:20-alpine AS base
 
 # argon2 + Prisma need build tools and OpenSSL
 RUN apk add --no-cache python3 make g++ openssl
-
 RUN npm install -g pnpm@9
 
 WORKDIR /app
 
-# ─── Dependencies ─────────────────────────────────────────────────────────────
+# Dependencies
 COPY pnpm-workspace.yaml package.json .npmrc ./
 COPY packages/db/package.json packages/db/
 COPY packages/db/prisma packages/db/prisma/
@@ -18,16 +17,14 @@ COPY tsconfig.base.json ./
 
 RUN pnpm install && pnpm store prune && rm -rf /root/.cache/pnpm
 
-# ─── Source ───────────────────────────────────────────────────────────────────
+# Source
 COPY packages/ packages/
 COPY apps/web/ apps/web/
 RUN mkdir -p /app/apps/web/public
 
-# Prisma generate (needs schema path)
 RUN pnpm --filter @snackspot/db generate
 
-# Expose env vars needed at build time (Next.js NEXT_PUBLIC_*)
-# These are baked in at build time; set them via docker-compose build args
+# Build-time public vars
 ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
 ARG NEXT_PUBLIC_MINIO_PUBLIC_URL=http://localhost:9000
 ARG NEXT_PUBLIC_MINIO_BUCKET=snackspot
@@ -35,9 +32,7 @@ ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_MINIO_PUBLIC_URL=$NEXT_PUBLIC_MINIO_PUBLIC_URL
 ENV NEXT_PUBLIC_MINIO_BUCKET=$NEXT_PUBLIC_MINIO_BUCKET
 
-# Placeholder server-side env vars needed so Next.js module analysis
-# doesn't throw during build. These are NOT baked into the client bundle
-# (no NEXT_PUBLIC_ prefix). Real values come from docker-compose at runtime.
+# Placeholder server-side env vars for Next.js build analysis.
 ENV NODE_ENV=production \
     DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder \
     REDIS_URL=redis://localhost:6379 \
@@ -50,19 +45,22 @@ ENV NODE_ENV=production \
 
 RUN pnpm --filter web build
 
-# ─── Runtime (standalone) ─────────────────────────────────────────────────────
 FROM node:20-alpine AS runner
 
-RUN apk add --no-cache python3 make g++ openssl
+RUN apk add --no-cache openssl \
+  && addgroup -S app \
+  && adduser -S -G app app
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000
 
-COPY --from=base /app/apps/web/.next/standalone ./
-COPY --from=base /app/apps/web/.next/static     ./apps/web/.next/static
-COPY --from=base /app/apps/web/public           ./apps/web/public
+COPY --from=base --chown=app:app /app/apps/web/.next/standalone ./
+COPY --from=base --chown=app:app /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=base --chown=app:app /app/apps/web/public ./apps/web/public
+
+USER app
 
 EXPOSE 3000
 

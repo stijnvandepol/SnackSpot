@@ -1,17 +1,20 @@
 FROM node:20-alpine
 
-RUN apk add --no-cache openssl
-
-RUN npm install -g pnpm@9
+RUN apk add --no-cache openssl \
+  && npm install -g pnpm@9 \
+  && addgroup -S app \
+  && adduser -S -G app app
 
 WORKDIR /app
 
-COPY pnpm-workspace.yaml package.json ./
+COPY pnpm-workspace.yaml package.json .npmrc ./
 COPY packages/db/package.json packages/db/
 COPY tsconfig.base.json ./
 
 RUN pnpm install --filter @snackspot/db && pnpm store prune && rm -rf /root/.cache/pnpm
 
 COPY packages/db packages/db/
+
+USER app
 
 CMD ["node", "packages/db/scripts/migrate.mjs"]

@@ -1,4 +1,5 @@
 import { redis } from './redis'
+import { env } from './env'
 
 export interface RateLimitResult {
   allowed: boolean
@@ -45,8 +46,15 @@ export function rateLimitUser(userId: string, action: string, limit: number, win
   return rateLimit(`rl:user:${action}:${userId}`, limit, windowSeconds)
 }
 
-/** Extract real IP from request (trusts X-Forwarded-For behind reverse proxy) */
+/** Extract client IP. Trust proxy headers only when explicitly configured. */
 export function getClientIP(req: Request): string {
-  const xff = (req as any).headers?.get?.('x-forwarded-for') ?? ''
-  return (xff ? xff.split(',')[0].trim() : null) ?? '127.0.0.1'
+  if (env.TRUST_PROXY) {
+    const xRealIp = req.headers.get('x-real-ip')?.trim()
+    if (xRealIp) return xRealIp
+
+    const xff = req.headers.get('x-forwarded-for') ?? ''
+    const firstForwarded = xff.split(',')[0]?.trim()
+    if (firstForwarded) return firstForwarded
+  }
+  return '127.0.0.1'
 }

@@ -1,13 +1,18 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const CORS_ORIGINS = (process.env.CORS_ORIGINS ?? 'http://localhost:3000').split(',').map((s) => s.trim())
+const CORS_ORIGINS = (process.env.CORS_ORIGINS ?? 'http://localhost:8080')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
 
 function corsHeaders(origin: string | null, isPreflight: boolean): Headers {
   const headers = new Headers()
-  const allowed = origin && CORS_ORIGINS.includes(origin) ? origin : CORS_ORIGINS[0]
-  headers.set('Access-Control-Allow-Origin', allowed)
-  headers.set('Access-Control-Allow-Credentials', 'true')
+  const allowed = origin && CORS_ORIGINS.includes(origin) ? origin : null
+  if (allowed) {
+    headers.set('Access-Control-Allow-Origin', allowed)
+    headers.set('Access-Control-Allow-Credentials', 'true')
+  }
   if (isPreflight) {
     headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
     headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
@@ -21,6 +26,10 @@ export function middleware(req: NextRequest) {
 
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
+    const allowed = origin && CORS_ORIGINS.includes(origin)
+    if (!allowed) {
+      return new Response(null, { status: 403 })
+    }
     return new Response(null, { status: 204, headers: corsHeaders(origin, true) })
   }
 

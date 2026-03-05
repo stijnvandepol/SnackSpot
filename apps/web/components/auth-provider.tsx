@@ -32,19 +32,11 @@ export function useAuth(): AuthCtx {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const isDev = process.env.NODE_ENV !== 'production'
   const [user, setUser] = useState<AuthUser | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const tokenRef = useRef<string | null>(null)
-
-  const apiFetch = useCallback(
-    async (path: string, init?: RequestInit): Promise<Response> => {
-      const headers = new Headers(init?.headers)
-      if (tokenRef.current) headers.set('Authorization', `Bearer ${tokenRef.current}`)
-      return fetch(`/api/v1${path}`, { ...init, credentials: 'include', headers })
-    },
-    [],
-  )
 
   const refreshToken = useCallback(async (): Promise<boolean> => {
     try {
@@ -61,12 +53,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!res.ok) {
         // 401 = token expired, 403 = banned. Only then logout.
         if (res.status === 401 || res.status === 403) {
-          console.error('[AUTH] Refresh failed:', res.status, res.statusText)
+          if (isDev) console.error('[AUTH] Refresh failed:', res.status, res.statusText)
           setUser(null)
           setAccessToken(null)
           tokenRef.current = null
         } else {
-          console.warn('[AUTH] Refresh returned non-auth error:', res.status)
+          if (isDev) console.warn('[AUTH] Refresh returned non-auth error:', res.status)
         }
         return false
       }
@@ -75,11 +67,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAccessToken(data.access_token)
       return true
     } catch (e) {
-      console.error('[AUTH] Refresh error:', e)
+      if (isDev) console.error('[AUTH] Refresh error:', e)
       // Don't logout on network errors - just fail gracefully
       return false
     }
-  }, [])
+  }, [isDev])
 
   // On mount: try to refresh (restores session from httpOnly cookie)
   useEffect(() => {
@@ -94,18 +86,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (res.ok) {
             const { data } = await res.json()
             setUser(data)
-            console.debug('[AUTH] Session restored')
+            if (isDev) console.debug('[AUTH] Session restored')
           } else {
-            console.warn('[AUTH] /auth/me failed:', res.status)
+            if (isDev) console.warn('[AUTH] /auth/me failed:', res.status)
           }
         } catch (e) {
-          console.error('[AUTH] Failed to fetch user:', e)
+          if (isDev) console.error('[AUTH] Failed to fetch user:', e)
         }
       }
       setLoading(false)
     }
     restoreSession()
-  }, [])
+  }, [isDev, refreshToken])
 
   // Proactively refresh 2 min before expiry (access token = 15 min)
   useEffect(() => {

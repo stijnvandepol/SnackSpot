@@ -1,17 +1,12 @@
 #!/usr/bin/env node
 /**
- * Seed script – creates demo data for local development.
+ * Seed script - creates demo data for local development.
  * Run after migrations: pnpm --filter @snackspot/db seed
  */
 import pg from 'pg'
-import { createHash, randomBytes } from 'node:crypto'
-import { promisify } from 'node:util'
 
-// We use plain SHA-256 for the seed password (argon2 needs native module).
 // In production the API hashes with argon2id.
-// For the seed we create a known test hash: argon2id hash of "password123"
-// Pre-generated with argon2id: $argon2id$v=19$m=65536,t=3,p=4$...
-// Use a bcrypt-style placeholder – real password is "Password1!"
+// Seed users use a fixed argon2id hash for "Password1!".
 const DEMO_PASSWORD_HASH =
   '$argon2id$v=19$m=65536,t=3,p=4$c2FsdHNhbHRzYWx0c2FsdA$RpMBYBpWDg1mCmMEKiRHOg'
 
@@ -22,18 +17,16 @@ async function main() {
   await client.connect()
 
   try {
-    // Admin user
     await client.query(`
-      INSERT INTO users (id, email, username, password_hash, role, display_name)
+      INSERT INTO users (id, email, username, password_hash, role)
       VALUES
-        ('user_admin_01', 'admin@snackspot.local', 'admin', $1, 'ADMIN', 'SnackSpot Admin'),
-        ('user_mod_01',   'mod@snackspot.local',   'mod',   $1, 'MODERATOR', 'Moderator Mo'),
-        ('user_test_01',  'alice@example.com',     'alice', $1, 'USER', 'Alice Eats'),
-        ('user_test_02',  'bob@example.com',       'bob',   $1, 'USER', 'Bob Bites')
+        ('user_admin_01', 'admin@snackspot.local', 'admin', $1, 'ADMIN'),
+        ('user_mod_01',   'mod@snackspot.local',   'mod',   $1, 'MODERATOR'),
+        ('user_test_01',  'alice@example.com',     'alice', $1, 'USER'),
+        ('user_test_02',  'bob@example.com',       'bob',   $1, 'USER')
       ON CONFLICT (id) DO NOTHING
     `, [DEMO_PASSWORD_HASH])
 
-    // Places (Amsterdam coords as example)
     await client.query(`
       INSERT INTO places (id, name, address, location)
       VALUES
@@ -46,7 +39,6 @@ async function main() {
       ON CONFLICT (id) DO NOTHING
     `)
 
-    // Reviews
     await client.query(`
       INSERT INTO reviews (id, user_id, place_id, rating, text, dish_name, status)
       VALUES

@@ -2,7 +2,7 @@ import { type NextRequest } from 'next/server'
 import { ModerationActionSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
 import { ok, err, parseBody, requireRole, serverError, isResponse } from '@/lib/api-helpers'
-import { ReviewStatus, PhotoModerationStatus } from '@prisma/client'
+import { ReviewStatus, PhotoModerationStatus, ReportStatus, ModerationActionType } from '@prisma/client'
 
 export async function POST(req: NextRequest) {
   const auth = requireRole(req, 'MODERATOR')
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         if (!body.reportId) return err('reportId required to dismiss a report', 422)
         await prisma.report.update({
           where: { id: body.reportId },
-          data: { status: 'DISMISSED' },
+          data: { status: ReportStatus.DISMISSED },
         })
         break
 
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     if (body.reportId && body.action !== 'DISMISS_REPORT') {
       await prisma.report.update({
         where: { id: body.reportId },
-        data: { status: 'RESOLVED' },
+        data: { status: ReportStatus.RESOLVED },
       }).catch(() => undefined)
     }
 
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     await prisma.moderationAction.create({
       data: {
         moderatorId: auth.sub,
-        actionType: body.action as any,
+        actionType: body.action as ModerationActionType,
         targetType: body.targetType,
         targetId: body.targetId,
         note: body.note,

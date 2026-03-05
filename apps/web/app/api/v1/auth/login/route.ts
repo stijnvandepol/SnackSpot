@@ -3,6 +3,7 @@ import { LoginSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
 import {
   verifyPassword,
+  hashPassword,
   signAccessToken,
   generateRefreshToken,
   hashRefreshToken,
@@ -29,8 +30,10 @@ export async function POST(req: NextRequest) {
       select: { id: true, email: true, username: true, passwordHash: true, role: true, bannedAt: true },
     })
 
-    // Constant-time compare (same timing whether user exists or not)
-    const passwordOk = user ? await verifyPassword(user.passwordHash, body.password) : false
+    // Make username enumeration harder by spending similar CPU even when user does not exist.
+    const passwordOk = user
+      ? await verifyPassword(user.passwordHash, body.password)
+      : await hashPassword(body.password).then(() => false)
 
     if (!user || !passwordOk) {
       return err('Invalid email or password', 401)

@@ -13,7 +13,7 @@ import { Worker, type Job } from 'bullmq'
 import Redis from 'ioredis'
 import * as Minio from 'minio'
 import sharp from 'sharp'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, PhotoModerationStatus } from '@prisma/client'
 import pino from 'pino'
 
 // ─── Logger ──────────────────────────────────────────────────────────────────
@@ -33,6 +33,13 @@ function requireEnv(name: string): string {
   return v
 }
 
+function positiveIntFromEnv(name: string, fallback: number): number {
+  const raw = process.env[name]
+  if (!raw) return fallback
+  const parsed = Number.parseInt(raw, 10)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
+
 const REDIS_URL     = requireEnv('REDIS_URL')
 requireEnv('DATABASE_URL') // ensures Prisma has it at startup
 const MINIO_ENDPOINT  = requireEnv('MINIO_ENDPOINT')
@@ -42,6 +49,8 @@ const MINIO_ACCESS_KEY = requireEnv('MINIO_ACCESS_KEY')
 const MINIO_SECRET_KEY = requireEnv('MINIO_SECRET_KEY')
 const BUCKET          = process.env.MINIO_BUCKET ?? 'snackspot'
 const QUEUE_NAME      = 'photo-processing'
+const MAX_ORIGINAL_BYTES = positiveIntFromEnv('MAX_FILE_SIZE_BYTES', 10 * 1024 * 1024)
+const MAX_INPUT_PIXELS = positiveIntFromEnv('MAX_INPUT_PIXELS', 40_000_000)
 
 // ─── Clients ─────────────────────────────────────────────────────────────────
 
@@ -94,6 +103,12 @@ async function processPhoto(job: Job<PhotoJob>): Promise<void> {
 
   jobLog.info('Processing photo')
 
+  // Reject oversized objects before loading them into memory.
+  const stat = await minio.statObject(BUCKET, storageKey)
+  if (stat.size > MAX_ORIGINAL_BYTES) {
+    throw new Error(`Original too large: ${stat.size} bytes`)
+  }
+
   // 1. Download original
   let originalBuffer: Buffer
   try {
@@ -104,7 +119,7 @@ async function processPhoto(job: Job<PhotoJob>): Promise<void> {
   }
 
   // 2. Probe original metadata (before any transform)
-  const meta = await sharp(originalBuffer).metadata()
+  const meta = await sharp(originalBuffer, { limitInputPixels: MAX_INPUT_PIXELS }).metadata()
   const originalWidth  = meta.width ?? 0
   const originalHeight = meta.height ?? 0
   const originalSize   = originalBuffer.length
@@ -121,7 +136,7 @@ async function processPhoto(job: Job<PhotoJob>): Promise<void> {
   for (const variant of VARIANTS) {
     const destKey = `variants/${uuid}/${variant.name}.webp`
 
-    const outputBuffer = await sharp(originalBuffer)
+    const outputBuffer = await sharp(originalBuffer, { limitInputPixels: MAX_INPUT_PIXELS })
       .rotate() // auto-rotate from EXIF
       .resize({ width: variant.width, withoutEnlargement: true })
       .withMetadata({}) // strips all EXIF by default then only keeps necessary
@@ -145,7 +160,7 @@ async function processPhoto(job: Job<PhotoJob>): Promise<void> {
         originalSize,
         contentType: meta.format ?? 'unknown',
       },
-      moderationStatus: 'APPROVED',
+      moderationStatus: PhotoModerationStatus.APPROVED,
       processedAt: new Date(),
     },
   })
@@ -166,6 +181,17 @@ worker.on('completed', (job) => {
 
 worker.on('failed', (job, err) => {
   log.error({ jobId: job?.id, photoId: job?.data.photoId, err }, 'Job failed')
+  if (!job) return
+
+  const maxAttempts = job.opts.attempts ?? 1
+  if (job.attemptsMade >= maxAttempts) {
+    void prisma.photo.update({
+      where: { id: job.data.photoId },
+      data: { moderationStatus: PhotoModerationStatus.REJECTED },
+    }).catch((updateErr) => {
+      log.error({ photoId: job.data.photoId, err: updateErr }, 'Failed to set photo status to REJECTED')
+    })
+  }
 })
 
 worker.on('error', (err) => {

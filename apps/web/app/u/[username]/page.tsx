@@ -4,12 +4,21 @@ import { ReviewCard } from '@/components/review-card'
 import Link from 'next/link'
 
 interface UserProfile {
-  id: string; username: string; avatarKey: string | null; role: string; createdAt: string
+  id: string
+  username: string
+  avatarKey: string | null
+  role: string
+  createdAt: string
   _count: { reviews: number; favorites: number }
 }
 
 interface Review {
-  id: string; rating: number; text: string; dishName?: string | null; createdAt: string; status: string
+  id: string
+  rating: number
+  text: string
+  dishName?: string | null
+  createdAt: string
+  status: string
   user: { id: string; username: string; avatarKey?: string | null; role: string }
   place: { id: string; name: string; address: string }
   reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
@@ -23,20 +32,22 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Fetch user via feed and filter – in a real app there'd be a /api/v1/users/:username endpoint
     setLoading(true)
-    fetch(`/api/v1/feed?limit=50`)
-      .then((r) => r.json())
-      .then((json) => {
-        const feedReviews: Review[] = json.data?.data ?? []
-        const userReviews = feedReviews.filter((r) => r.user.username === username)
-        if (userReviews.length === 0 && feedReviews.length > 0) {
-          setError('User not found')
-        } else if (userReviews.length > 0) {
-          const u = userReviews[0].user
-          setProfile({ id: u.id, username: u.username, avatarKey: u.avatarKey ?? null, role: u.role, createdAt: '', _count: { reviews: userReviews.length, favorites: 0 } })
-          setReviews(userReviews)
+    Promise.all([
+      fetch(`/api/v1/users/${encodeURIComponent(username)}`),
+      fetch(`/api/v1/users/${encodeURIComponent(username)}/reviews?limit=50`),
+    ])
+      .then(async ([profileRes, reviewsRes]) => {
+        const profileJson = await profileRes.json()
+        const reviewsJson = await reviewsRes.json()
+
+        if (!profileRes.ok) {
+          setError(profileJson.error ?? 'User not found')
+          return
         }
+
+        setProfile(profileJson.data)
+        setReviews(reviewsJson.data?.data ?? [])
       })
       .catch(() => setError('Failed to load profile'))
       .finally(() => setLoading(false))
@@ -64,7 +75,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             <div>
               <h1 className="font-heading font-bold text-xl text-snack-text">{profile.username}</h1>
               <p className="text-sm text-snack-muted">@{profile.username}</p>
-              <p className="text-xs text-snack-muted mt-1">{reviews.length} reviews</p>
+              <p className="text-xs text-snack-muted mt-1">{profile._count.reviews} reviews</p>
             </div>
           </div>
 

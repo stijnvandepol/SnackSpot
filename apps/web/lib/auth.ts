@@ -13,6 +13,9 @@ export interface AccessTokenPayload {
   exp?: number
 }
 
+const JWT_ISSUER = 'snackspot'
+const JWT_AUDIENCE = 'snackspot-users'
+
 // ─── Argon2id password hashing ───────────────────────────────────────────────
 
 export async function hashPassword(password: string): Promise<string> {
@@ -31,14 +34,21 @@ export async function verifyPassword(hash: string, password: string): Promise<bo
 // ─── JWT access token ────────────────────────────────────────────────────────
 
 export function signAccessToken(payload: Omit<AccessTokenPayload, 'iat' | 'exp'>): string {
+  const expiresIn: jwt.SignOptions['expiresIn'] = env.JWT_ACCESS_EXPIRES_IN
   return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expiresIn: env.JWT_ACCESS_EXPIRES_IN as any,
+    algorithm: 'HS256',
+    issuer: JWT_ISSUER,
+    audience: JWT_AUDIENCE,
+    expiresIn,
   })
 }
 
 export function verifyAccessToken(token: string): AccessTokenPayload {
-  return jwt.verify(token, env.JWT_ACCESS_SECRET) as AccessTokenPayload
+  return jwt.verify(token, env.JWT_ACCESS_SECRET, {
+    algorithms: ['HS256'],
+    issuer: JWT_ISSUER,
+    audience: JWT_AUDIENCE,
+  }) as AccessTokenPayload
 }
 
 // ─── Refresh token ───────────────────────────────────────────────────────────
@@ -58,18 +68,6 @@ export function refreshTokenExpiresAt(): Date {
 // ─── Cookie helpers ──────────────────────────────────────────────────────────
 
 export const REFRESH_COOKIE = 'snackspot_rt'
-
-export function refreshCookieOptions(expires: Date) {
-  const isProd = env.NODE_ENV === 'production'
-  return [
-    `${REFRESH_COOKIE}=`,
-    `Expires=${expires.toUTCString()}`,
-    'Path=/',
-    'HttpOnly',
-    'SameSite=Strict',
-    ...(isProd ? ['Secure'] : []),
-  ]
-}
 
 export function buildSetCookie(token: string, expires: Date): string {
   const isProd = env.NODE_ENV === 'production'

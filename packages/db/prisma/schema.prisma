@@ -21,6 +21,7 @@ enum ReviewStatus {
 
 enum PhotoModerationStatus {
   PENDING
+  PROCESSING
   APPROVED
   REJECTED
 }
@@ -60,6 +61,7 @@ model User {
 
   reviews           Review[]
   favorites         Favorite[]
+  photos            Photo[]
   reports           Report[]
   moderationActions ModerationAction[]
   refreshTokens     RefreshToken[]
@@ -128,6 +130,7 @@ model Photo {
   createdAt        DateTime              @default(now()) @map("created_at")
 
   reviewPhotos ReviewPhoto[]
+  uploader     User                  @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
   reports      Report[]
 
   @@map("photos")

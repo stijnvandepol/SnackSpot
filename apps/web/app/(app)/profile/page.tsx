@@ -20,9 +20,9 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user || !accessToken) return
     setLoading(true)
-    fetch(`/api/v1/feed?limit=20`, { headers: { Authorization: `Bearer ${accessToken}` } })
+    fetch('/api/v1/me/reviews?limit=20', { headers: { Authorization: `Bearer ${accessToken}` } })
       .then((r) => r.json())
-      .then((json) => setReviews((json.data?.data ?? []).filter((r: Review) => r.user.id === user.id)))
+      .then((json) => setReviews(json.data?.data ?? []))
       .finally(() => setLoading(false))
   }, [user, accessToken])
 

@@ -102,8 +102,8 @@ export default function ModerationPage() {
 
             {report.photo && (
               <div className="flex items-center gap-3">
-                {(report.photo.variants as any)?.thumb && (
-                  <img src={`${MINIO_PUBLIC}/${BUCKET}/${(report.photo.variants as any).thumb}`} alt="" className="h-16 w-16 rounded-lg object-cover" />
+                {report.photo.variants?.thumb && (
+                  <img src={`${MINIO_PUBLIC}/${BUCKET}/${report.photo.variants.thumb}`} alt="" className="h-16 w-16 rounded-lg object-cover" />
                 )}
                 <p className="text-sm text-gray-500">Moderation: {report.photo.moderationStatus}</p>
               </div>

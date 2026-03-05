@@ -34,9 +34,15 @@ git clone <repo> snackspot && cd snackspot
 # 2. Create your env file
 cp .env.example .env
 
-# 3. Generate strong secrets (Linux/macOS):
-sed -i "s/change-me-access-secret-.*/$(openssl rand -hex 64)/" .env
-sed -i "s/change-me-refresh-secret-.*/$(openssl rand -hex 64)/" .env
+# 2b. Set required secrets and passwords
+# - POSTGRES_PASSWORD
+# - MINIO_ACCESS_KEY / MINIO_SECRET_KEY
+# - JWT_ACCESS_SECRET / JWT_REFRESH_SECRET
+
+# 3. Generate strong JWT secrets (Linux/macOS):
+openssl rand -hex 64
+openssl rand -hex 64
+# Paste these values into JWT_ACCESS_SECRET and JWT_REFRESH_SECRET in .env
 
 # 4. Build and start all services (db, redis, minio, migrate, web, worker)
 docker compose -f infra/docker/docker-compose.yml up -d --build
@@ -45,7 +51,7 @@ docker compose -f infra/docker/docker-compose.yml up -d --build
 docker compose -f infra/docker/docker-compose.yml logs -f web migrate
 ```
 
-The app is now available at **http://localhost:3000**
+The app is now available at **http://localhost:8080**
 
 ---
 
@@ -53,7 +59,7 @@ The app is now available at **http://localhost:3000**
 
 | Service | Port | URL |
 |---|---|---|
-| Web app | 3000 | http://localhost:3000 |
+| Web app | 8080 | http://localhost:8080 |
 | MinIO API | 9000 | http://localhost:9000 |
 | MinIO Console | 9001 | http://localhost:9001 |
 | PostgreSQL | (internal) | `db:5432` inside Docker network |
@@ -150,6 +156,7 @@ GET  /api/v1/auth/me         – current user (Bearer)
 ### Feed
 ```
 GET /api/v1/feed?cursor=&limit=   – newest reviews (cursor pagination)
+GET /api/v1/me/reviews?cursor=&limit= – current user's reviews (Bearer)
 ```
 
 ### Places
@@ -177,6 +184,12 @@ POST /api/v1/photos/confirm-upload    – verify upload, enqueue processing
 ```
 GET  /api/v1/mod/queue     – open reports
 POST /api/v1/mod/actions   – hide/delete/ban/dismiss
+```
+
+### Users
+```
+GET /api/v1/users/:username
+GET /api/v1/users/:username/reviews?cursor=&limit=
 ```
 
 ---
@@ -212,6 +225,7 @@ Client          API              MinIO           Worker
 - **EXIF stripping**: Sharp removes all metadata from processed variants
 - **CSP / security headers** set by Next.js config on every response
 - **CORS** locked to `CORS_ORIGINS` env var
+- **Proxy trust** is explicit via `TRUST_PROXY=true` (required for correct IP rate limiting behind reverse proxies)
 - **Cookies** are `HttpOnly; SameSite=Strict; Secure` (Secure in production)
 - **RBAC**: owner-only edits, mod/admin moderation actions, admin-only bans
 

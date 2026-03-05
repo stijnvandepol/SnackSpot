@@ -2,6 +2,10 @@ import { z } from 'zod'
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  TRUST_PROXY: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true'),
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
 
@@ -21,7 +25,7 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_DAYS: z.coerce.number().int().positive().default(7),
 
-  CORS_ORIGINS: z.string().default('http://localhost:3000'),
+  CORS_ORIGINS: z.string().default('http://localhost:8080'),
 
   MAX_FILE_SIZE_BYTES: z.coerce.number().int().positive().default(10 * 1024 * 1024),
   MAX_PHOTOS_PER_REVIEW: z.coerce.number().int().positive().default(5),

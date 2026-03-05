@@ -1,0 +1,1 @@
+ALTER TYPE "PhotoModerationStatus" ADD VALUE IF NOT EXISTS 'PROCESSING';

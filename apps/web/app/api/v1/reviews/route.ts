@@ -1,8 +1,9 @@
 import { type NextRequest } from 'next/server'
 import { CreateReviewSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
+import { env } from '@/lib/env'
 import { created, err, parseBody, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
-import { rateLimitUser, rateLimitIP, getClientIP } from '@/lib/rate-limit'
+import { rateLimitUser } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
@@ -17,6 +18,9 @@ export async function POST(req: NextRequest) {
 
   if (!body.placeId && !body.place) {
     return err('Either placeId or place details are required', 422)
+  }
+  if (body.photoIds.length > env.MAX_PHOTOS_PER_REVIEW) {
+    return err(`Too many photos - max ${env.MAX_PHOTOS_PER_REVIEW}`, 422)
   }
 
   try {

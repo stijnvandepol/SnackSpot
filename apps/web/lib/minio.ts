@@ -12,8 +12,20 @@ export const minioClient = new Minio.Client({
 
 export const BUCKET = env.MINIO_BUCKET
 
-/** Ensure the bucket exists (called on first upload) */
+let _bucketInit: Promise<void> | null = null
+
+/** Ensure the bucket and policy exist; memoized per process. */
 export async function ensureBucket(): Promise<void> {
+  if (!_bucketInit) {
+    _bucketInit = ensureBucketInternal().catch((err) => {
+      _bucketInit = null
+      throw err
+    })
+  }
+  return _bucketInit
+}
+
+async function ensureBucketInternal(): Promise<void> {
   const exists = await minioClient.bucketExists(BUCKET)
   if (!exists) {
     await minioClient.makeBucket(BUCKET, 'us-east-1')
@@ -43,23 +55,28 @@ export async function presignedPut(key: string, expirySeconds = 300): Promise<st
   // Replace the internal host with the public URL so the browser can reach it
   const publicBase = env.MINIO_PUBLIC_URL
   const internalBase = `http${env.MINIO_USE_SSL ? 's' : ''}://${env.MINIO_ENDPOINT}:${env.MINIO_PORT}`
-
-  logger.debug({ internalUrl, internalBase, publicBase }, 'Presigned PUT URL before replacement')
-  
-  const finalUrl = internalUrl.replace(internalBase, publicBase)
-  
-  logger.debug({ finalUrl }, 'Presigned PUT URL after replacement')
-
-  return finalUrl
+  return internalUrl.replace(internalBase, publicBase)
 }
 
-/** Check if an object exists in the bucket */
-export async function objectExists(key: string): Promise<boolean> {
+export interface ObjectInfo {
+  size: number
+  contentType: string | null
+}
+
+/** Read object metadata. Returns null when object does not exist. */
+export async function getObjectInfo(key: string): Promise<ObjectInfo | null> {
   try {
-    await minioClient.statObject(BUCKET, key)
-    return true
+    const stat = await minioClient.statObject(BUCKET, key)
+    const contentType =
+      stat.metaData?.['content-type'] ??
+      stat.metaData?.['Content-Type'] ??
+      null
+    return {
+      size: stat.size,
+      contentType: typeof contentType === 'string' ? contentType : null,
+    }
   } catch {
-    return false
+    return null
   }
 }
 

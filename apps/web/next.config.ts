@@ -4,15 +4,30 @@ const nextConfig: NextConfig = {
   output: 'standalone',
 
   images: {
-    remotePatterns: [
-      {
-        protocol: 'http',
+    remotePatterns: (() => {
+      const bucket = process.env.MINIO_BUCKET ?? 'snackspot'
+      const internal = {
+        protocol: 'http' as const,
         hostname: process.env.MINIO_ENDPOINT ?? 'localhost',
         port: process.env.MINIO_PORT ?? '9000',
-        pathname: `/${process.env.MINIO_BUCKET ?? 'snackspot'}/**`,
-      },
-      // If MinIO is behind nginx in prod, add the public domain here too
-    ],
+        pathname: `/${bucket}/**`,
+      }
+
+      try {
+        const publicUrl = new URL(process.env.MINIO_PUBLIC_URL ?? 'http://localhost:9000')
+        return [
+          internal,
+          {
+            protocol: publicUrl.protocol.replace(':', '') as 'http' | 'https',
+            hostname: publicUrl.hostname,
+            port: publicUrl.port || undefined,
+            pathname: `/${bucket}/**`,
+          },
+        ]
+      } catch {
+        return [internal]
+      }
+    })(),
   },
 
   // Security headers
@@ -20,7 +35,18 @@ const nextConfig: NextConfig = {
     const isProd = process.env.NODE_ENV === 'production'
     const minioEndpoint = process.env.MINIO_ENDPOINT ?? 'localhost'
     const minioPort = process.env.MINIO_PORT ?? '9000'
-    
+    const minioInternalOrigin = `http://${minioEndpoint}:${minioPort}`
+    const minioPublicOrigin = (() => {
+      try {
+        return new URL(process.env.MINIO_PUBLIC_URL ?? minioInternalOrigin).origin
+      } catch {
+        return minioInternalOrigin
+      }
+    })()
+    const scriptSrc = isProd
+      ? "script-src 'self' 'unsafe-inline'"
+      : "script-src 'self' 'unsafe-eval' 'unsafe-inline'"
+
     return [
       {
         source: '/(.*)',
@@ -34,11 +60,11 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // unsafe-eval needed by Next.js dev
+              scriptSrc,
               "style-src 'self' 'unsafe-inline'",
-              `img-src 'self' data: blob: http://${minioEndpoint}:${minioPort} http://192.168.*:${minioPort}`,
+              `img-src 'self' data: blob: ${minioInternalOrigin} ${minioPublicOrigin}`,
               "font-src 'self'",
-              `connect-src 'self' http://${minioEndpoint}:${minioPort} http://192.168.*:${minioPort} https://nominatim.openstreetmap.org`,
+              `connect-src 'self' ${minioInternalOrigin} ${minioPublicOrigin} https://nominatim.openstreetmap.org`,
               "frame-ancestors 'none'",
             ].join('; '),
           },
