@@ -84,10 +84,53 @@ If `.env` already exists, the script keeps your existing values and only adds mi
 | Service | Port | URL |
 |---|---|---|
 | Web app | 8080 | http://localhost:8080 |
+| **Admin Panel** | **3001** | **http://localhost:3001** |
 | MinIO API | 9000 | http://localhost:9000 |
 | MinIO Console | 9001 | http://localhost:9001 |
 | PostgreSQL | (internal) | `db:5432` inside Docker network |
 | Redis | (internal) | `redis:6379` inside Docker network |
+
+---
+
+## 🔐 Admin Panel
+
+SnackSpot includes a separate admin panel for managing users, restaurants, and reviews. The admin panel runs on **port 3001** for security isolation.
+
+### Features
+
+- **User Management**: View, edit, delete users; reset passwords; ban/unban accounts
+- **Restaurant Management**: Create, edit, delete restaurants; bulk delete restaurants without reviews
+- **Review Management**: View, hide, delete reviews; change review status
+- **Reports & Moderation**: Handle reported reviews, photos, and users; resolve or dismiss reports
+- **Dashboard**: Statistics and activity overview with open reports counter
+
+### ⚠️ Security
+
+**IMPORTANT:** The admin panel should be protected:
+- **Recommended:** Use Cloudflare Tunnel + OAuth (see [Cloudflare Setup Guide](apps/admin/CLOUDFLARE_SETUP.md))
+- Block port 3001 from public access using firewall rules
+- Use IP whitelist via reverse proxy (nginx)
+- Access via VPN or SSH tunnel
+- Only grant ADMIN role to trusted users
+
+### Quick Start
+
+1. **Create an admin user** (via database):
+```sql
+-- Connect to database
+psql postgresql://snackspot:password@localhost:5432/snackspot
+
+-- Promote existing user to ADMIN
+UPDATE users SET role = 'ADMIN' WHERE email = 'your-email@example.com';
+```
+
+2. **Access admin panel**:
+   - Navigate to http://localhost:3001
+   - Login with your ADMIN account
+
+### Documentation
+
+See [apps/admin/README.md](apps/admin/README.md) for detailed setup and [apps/admin/SECURITY.md](apps/admin/SECURITY.md) for security configuration.
 
 ---
 

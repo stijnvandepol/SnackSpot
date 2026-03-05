@@ -1,0 +1,218 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/auth'
+import { db } from '@/lib/db'
+
+type Params = { params: { id: string } }
+
+// GET /api/reports/[id] - Get report details
+export async function GET(req: NextRequest, { params }: Params) {
+  try {
+    const authHeader = req.headers.get('authorization')
+    await requireAdmin(authHeader)
+
+    const report = await db.report.findUnique({
+      where: { id: params.id },
+      select: {
+        id: true,
+        targetType: true,
+        reason: true,
+        status: true,
+        createdAt: true,
+        reporter: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
+        review: {
+          select: {
+            id: true,
+            text: true,
+            status: true,
+            rating: true,
+            ratingOverall: true,
+            createdAt: true,
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+              },
+            },
+            place: {
+              select: {
+                id: true,
+                name: true,
+                address: true,
+              },
+            },
+          },
+        },
+        photo: {
+          select: {
+            id: true,
+            moderationStatus: true,
+            uploadedById: true,
+            createdAt: true,
+          },
+        },
+      },
+    })
+
+    if (!report) {
+      return NextResponse.json(
+        { error: 'Report niet gevonden' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({ report })
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message || 'Error fetching report' },
+      { status: 500 }
+    )
+  }
+}
+
+// PATCH /api/reports/[id] - Update report status
+export async function PATCH(req: NextRequest, { params }: Params) {
+  try {
+    const authHeader = req.headers.get('authorization')
+    const admin = await requireAdmin(authHeader)
+
+    const { status, action, targetId } = await req.json()
+
+    // Update report status
+    if (status && ['OPEN', 'RESOLVED', 'DISMISSED'].includes(status)) {
+      const report = await db.report.update({
+        where: { id: params.id },
+        data: { status },
+        select: {
+          id: true,
+          status: true,
+        },
+      })
+
+      return NextResponse.json({ report })
+    }
+
+    // Perform moderation action
+    if (action && targetId) {
+      const report = await db.report.findUnique({
+        where: { id: params.id },
+        select: { targetType: true, reviewId: true, photoId: true },
+      })
+
+      if (!report) {
+        return NextResponse.json(
+          { error: 'Report niet gevonden' },
+          { status: 404 }
+        )
+      }
+
+      // Execute the action based on type
+      switch (action) {
+        case 'HIDE_REVIEW':
+          if (report.reviewId) {
+            await db.review.update({
+              where: { id: report.reviewId },
+              data: { status: 'HIDDEN' },
+            })
+            await db.report.update({
+              where: { id: params.id },
+              data: { status: 'RESOLVED' },
+            })
+          }
+          break
+
+        case 'DELETE_REVIEW':
+          if (report.reviewId) {
+            await db.review.update({
+              where: { id: report.reviewId },
+              data: { status: 'DELETED' },
+            })
+            await db.report.update({
+              where: { id: params.id },
+              data: { status: 'RESOLVED' },
+            })
+          }
+          break
+
+        case 'DELETE_PHOTO':
+          if (report.photoId) {
+            await db.photo.update({
+              where: { id: report.photoId },
+              data: { moderationStatus: 'REJECTED' },
+            })
+            await db.report.update({
+              where: { id: params.id },
+              data: { status: 'RESOLVED' },
+            })
+          }
+          break
+
+        case 'DISMISS':
+          await db.report.update({
+            where: { id: params.id },
+            data: { status: 'DISMISSED' },
+          })
+          break
+      }
+
+      // Log the moderation action
+      await db.moderationAction.create({
+        data: {
+          moderatorId: admin.sub,
+          actionType: action,
+          targetType: report.targetType,
+          targetId: targetId,
+        },
+      })
+
+      return NextResponse.json({ success: true, action })
+    }
+
+    return NextResponse.json(
+      { error: 'Ongeldige request' },
+      { status: 400 }
+    )
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { error: 'Report niet gevonden' },
+        { status: 404 }
+      )
+    }
+    return NextResponse.json(
+      { error: error.message || 'Error updating report' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE /api/reports/[id] - Delete report
+export async function DELETE(req: NextRequest, { params }: Params) {
+  try {
+    const authHeader = req.headers.get('authorization')
+    await requireAdmin(authHeader)
+
+    await db.report.delete({
+      where: { id: params.id },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { error: 'Report niet gevonden' },
+        { status: 404 }
+      )
+    }
+    return NextResponse.json(
+      { error: error.message || 'Error deleting report' },
+      { status: 500 }
+    )
+  }
+}

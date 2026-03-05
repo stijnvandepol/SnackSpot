@@ -135,6 +135,47 @@ services:
     pids_limit: 256
     networks: [snackspot]
 
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+    restart: unless-stopped
+    init: true
+    ports:
+      # Admin panel LAN-accessible for Cloudflare Tunnel + OAuth protection
+      # Bind to 0.0.0.0:3001 to allow access from LAN
+      - "0.0.0.0:3001:3001"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS:-7}
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "const h=process.env.HOSTNAME||'localhost';fetch('http://'+h+':3001',{redirect:'manual'}).then(r=>process.exit(r.status<400?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/apps/admin/.next/cache
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 128
+    networks: [snackspot]
+
   worker:
     build:
       context: .
