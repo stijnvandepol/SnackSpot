@@ -54,14 +54,29 @@ export const PlaceSearchSchema = z.object({
 export const CreateReviewSchema = z.object({
   placeId: z.string().min(1).optional(),
   place: CreatePlaceSchema.optional(),
-  rating: z.number().int().min(1).max(5),
+  rating: z.number().int().min(1).max(5).optional(),
+  ratings: z.object({
+    taste: z.number().int().min(1).max(5),
+    value: z.number().int().min(1).max(5),
+    portion: z.number().int().min(1).max(5),
+    service: z.number().int().min(1).max(5).nullable().optional(),
+  }).optional(),
   text: z.string().min(10).max(2000),
   dishName: z.string().min(1).max(100).optional(),
   photoIds: z.array(z.string()).max(5).default([]),
+}).refine((data) => Boolean(data.rating || data.ratings), {
+  message: 'rating or ratings is required',
+  path: ['ratings'],
 })
 
 export const UpdateReviewSchema = z.object({
   rating: z.number().int().min(1).max(5).optional(),
+  ratings: z.object({
+    taste: z.number().int().min(1).max(5),
+    value: z.number().int().min(1).max(5),
+    portion: z.number().int().min(1).max(5),
+    service: z.number().int().min(1).max(5).nullable().optional(),
+  }).optional(),
   text: z.string().min(10).max(2000).optional(),
   dishName: z.string().min(1).max(100).optional(),
 })

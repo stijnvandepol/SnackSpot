@@ -9,6 +9,8 @@ interface Review {
   id: string; rating: number; text: string; dishName?: string | null
   status: string; createdAt: string; updatedAt: string
   likeCount?: number; likedByMe?: boolean
+  overallRating?: number
+  ratings?: { taste: number; value: number; portion: number; service?: number | null }
   user: { id: string; username: string; role: string }
   place: { id: string; name: string; address: string }
   reviewPhotos: Array<{ sortOrder: number; photo: { id: string; variants: Record<string, string> } }>
@@ -95,9 +97,18 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
             </Link>
           </div>
           <div className="text-snack-rating text-lg flex-shrink-0">
-            {'★'.repeat(review.rating)}<span className="text-[#e0e0e0]">{'★'.repeat(5 - review.rating)}</span>
+            {'★'.repeat(Math.round(review.overallRating ?? review.rating))}
+            <span className="text-[#e0e0e0]">{'★'.repeat(5 - Math.round(review.overallRating ?? review.rating))}</span>
+            <p className="text-xs text-snack-muted text-right mt-0.5">{(review.overallRating ?? review.rating).toFixed(1)}</p>
           </div>
         </div>
+
+        {review.ratings && (
+          <p className="text-xs text-snack-muted">
+            Taste {review.ratings.taste} • Value {review.ratings.value} • Portion {review.ratings.portion}
+            {typeof review.ratings.service === 'number' ? ` • Service ${review.ratings.service}` : ''}
+          </p>
+        )}
 
         <p className="text-snack-muted whitespace-pre-line">{review.text}</p>
 

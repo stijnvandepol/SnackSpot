@@ -4,6 +4,8 @@ import { prisma } from '@/lib/db'
 import { env } from '@/lib/env'
 import { created, err, parseBody, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
 import { rateLimitUser } from '@/lib/rate-limit'
+import { normalizeRatings } from '@/lib/ratings'
+import { recalculateUserBadges } from '@/lib/badge-service'
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
@@ -24,6 +26,15 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const normalizedRatings = body.ratings
+      ? normalizeRatings(body.ratings)
+      : normalizeRatings({
+          taste: body.rating!,
+          value: body.rating!,
+          portion: body.rating!,
+          service: null,
+        })
+
     let placeId = body.placeId
 
     // Create place inline if not provided
@@ -68,7 +79,12 @@ export async function POST(req: NextRequest) {
       data: {
         userId: auth.sub,
         placeId: placeId!,
-        rating: body.rating,
+        rating: Math.round(normalizedRatings.overall),
+        ratingTaste: normalizedRatings.taste,
+        ratingValue: normalizedRatings.value,
+        ratingPortion: normalizedRatings.portion,
+        ratingService: normalizedRatings.service,
+        ratingOverall: normalizedRatings.overall,
         text: body.text,
         dishName: body.dishName,
         reviewPhotos: {
@@ -78,6 +94,11 @@ export async function POST(req: NextRequest) {
       select: {
         id: true,
         rating: true,
+        ratingTaste: true,
+        ratingValue: true,
+        ratingPortion: true,
+        ratingService: true,
+        ratingOverall: true,
         text: true,
         dishName: true,
         status: true,
@@ -90,7 +111,18 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    return created(review)
+    await recalculateUserBadges(auth.sub)
+
+    return created({
+      ...review,
+      ratings: {
+        taste: review.ratingTaste,
+        value: review.ratingValue,
+        portion: review.ratingPortion,
+        service: review.ratingService,
+      },
+      overallRating: Number(review.ratingOverall),
+    })
   } catch (e) {
     return serverError('reviews POST', e)
   }

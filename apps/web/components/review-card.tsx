@@ -9,6 +9,8 @@ interface ReviewCardProps {
     text: string
     dishName?: string | null
     createdAt: Date | string
+    overallRating?: number
+    ratings?: { taste: number; value: number; portion: number; service?: number | null }
     user: { id: string; username: string; avatarKey?: string | null }
     place?: { id: string; name: string; address: string }
     likeCount?: number
@@ -65,8 +67,18 @@ export function ReviewCard({ review, showPlace = true }: ReviewCardProps) {
                 <p className="text-xs text-snack-muted truncate">{review.place.name}</p>
               )}
             </div>
-            <Stars rating={review.rating} />
+            <div className="text-right">
+              <p className="text-sm font-semibold text-snack-text">{(review.overallRating ?? review.rating).toFixed(1)}</p>
+              <Stars rating={Math.round(review.overallRating ?? review.rating)} />
+            </div>
           </div>
+
+          {review.ratings && (
+            <p className="text-xs text-snack-muted">
+              Taste {review.ratings.taste} • Value {review.ratings.value} • Portion {review.ratings.portion}
+              {typeof review.ratings.service === 'number' ? ` • Service ${review.ratings.service}` : ''}
+            </p>
+          )}
 
           <p className="text-sm text-snack-muted line-clamp-3">{review.text}</p>
 

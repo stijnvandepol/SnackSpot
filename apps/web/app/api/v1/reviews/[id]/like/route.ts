@@ -2,6 +2,7 @@ import { type NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import { ok, err, requireAuth, getAuthPayload, serverError, isResponse } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
+import { recalculateUserBadges } from '@/lib/badge-service'
 
 async function getLikeState(reviewId: string, userId?: string) {
   const [likeCount, likedByMe] = await Promise.all([
@@ -26,7 +27,7 @@ export async function GET(
   try {
     const review = await prisma.review.findUnique({
       where: { id },
-      select: { id: true, status: true },
+      select: { id: true, status: true, userId: true },
     })
     if (!review || review.status === ReviewStatus.DELETED) return err('Review not found', 404)
 
@@ -59,6 +60,8 @@ export async function POST(
       skipDuplicates: true,
     })
 
+    await recalculateUserBadges(review.userId)
+
     const state = await getLikeState(id, auth.sub)
     return ok(state)
   } catch (e) {
@@ -76,9 +79,17 @@ export async function DELETE(
   const { id } = await params
 
   try {
+    const review = await prisma.review.findUnique({
+      where: { id },
+      select: { userId: true },
+    })
+    if (!review) return err('Review not found', 404)
+
     await prisma.reviewLike.deleteMany({
       where: { userId: auth.sub, reviewId: id },
     })
+
+    await recalculateUserBadges(review.userId)
 
     const state = await getLikeState(id, auth.sub)
     return ok(state)

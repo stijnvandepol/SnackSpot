@@ -38,6 +38,11 @@ export async function GET(
       select: {
         id: true,
         rating: true,
+        ratingTaste: true,
+        ratingValue: true,
+        ratingPortion: true,
+        ratingService: true,
+        ratingOverall: true,
         text: true,
         dishName: true,
         status: true,
@@ -62,6 +67,13 @@ export async function GET(
       ...item,
       likeCount: item._count.reviewLikes,
       likedByMe: item.reviewLikes.length > 0,
+      ratings: {
+        taste: item.ratingTaste,
+        value: item.ratingValue,
+        portion: item.ratingPortion,
+        service: item.ratingService,
+      },
+      overallRating: Number(item.ratingOverall),
       _count: undefined,
       reviewLikes: undefined,
     }))

@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
             ST_Y(p.location::geometry) AS lat,
             ST_X(p.location::geometry) AS lng,
             ST_Distance(p.location, ST_SetSRID(ST_MakePoint(${query.lng}, ${query.lat}), 4326)::geography) AS distance_m,
-            ROUND(AVG(r.rating)::numeric, 1)::float AS avg_rating,
+            ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
             COUNT(r.id)::int AS review_count
           FROM places p
           LEFT JOIN reviews r ON r.place_id = p.id AND r.status = 'PUBLISHED'
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
             ST_Y(p.location::geometry) AS lat,
             ST_X(p.location::geometry) AS lng,
             ST_Distance(p.location, ST_SetSRID(ST_MakePoint(${query.lng}, ${query.lat}), 4326)::geography) AS distance_m,
-            ROUND(AVG(r.rating)::numeric, 1)::float AS avg_rating,
+            ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
             COUNT(r.id)::int AS review_count
           FROM places p
           LEFT JOIN reviews r ON r.place_id = p.id AND r.status = 'PUBLISHED'
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
           p.id, p.name, p.address,
           ST_Y(p.location::geometry) AS lat,
           ST_X(p.location::geometry) AS lng,
-          ROUND(AVG(r.rating)::numeric, 1)::float AS avg_rating,
+          ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
           COUNT(r.id)::int AS review_count
         FROM places p
         LEFT JOIN reviews r ON r.place_id = p.id AND r.status = 'PUBLISHED'
@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
         p.id, p.name, p.address,
         ST_Y(p.location::geometry) AS lat,
         ST_X(p.location::geometry) AS lng,
-        ROUND(AVG(r.rating)::numeric, 1)::float AS avg_rating,
+        ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
         COUNT(r.id)::int AS review_count
       FROM places p
       LEFT JOIN reviews r ON r.place_id = p.id AND r.status = 'PUBLISHED'

@@ -27,7 +27,7 @@ export async function GET(
         p.address,
         ST_Y(p.location::geometry) AS lat,
         ST_X(p.location::geometry) AS lng,
-        ROUND(AVG(r.rating)::numeric, 1)::float AS avg_rating,
+        ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
         COUNT(r.id)::int AS review_count,
         p.created_at
       FROM places p

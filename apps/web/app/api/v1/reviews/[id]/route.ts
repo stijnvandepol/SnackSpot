@@ -12,6 +12,8 @@ import {
   isResponse,
 } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
+import { normalizeRatings } from '@/lib/ratings'
+import { recalculateUserBadges } from '@/lib/badge-service'
 
 export async function GET(
   req: NextRequest,
@@ -26,6 +28,11 @@ export async function GET(
       select: {
         id: true,
         rating: true,
+        ratingTaste: true,
+        ratingValue: true,
+        ratingPortion: true,
+        ratingService: true,
+        ratingOverall: true,
         text: true,
         dishName: true,
         status: true,
@@ -58,6 +65,13 @@ export async function GET(
       ...review,
       likeCount: review._count.reviewLikes,
       likedByMe: auth ? review.reviewLikes.length > 0 : false,
+      ratings: {
+        taste: review.ratingTaste,
+        value: review.ratingValue,
+        portion: review.ratingPortion,
+        service: review.ratingService,
+      },
+      overallRating: Number(review.ratingOverall),
       _count: undefined,
       reviewLikes: undefined,
     })
@@ -90,13 +104,51 @@ export async function PATCH(
     const updated = await prisma.review.update({
       where: { id },
       data: {
-        ...(body.rating !== undefined && { rating: body.rating }),
+        ...(body.ratings
+          ? {
+              rating: Math.round(normalizeRatings(body.ratings).overall),
+              ratingTaste: normalizeRatings(body.ratings).taste,
+              ratingValue: normalizeRatings(body.ratings).value,
+              ratingPortion: normalizeRatings(body.ratings).portion,
+              ratingService: normalizeRatings(body.ratings).service,
+              ratingOverall: normalizeRatings(body.ratings).overall,
+            }
+          : body.rating !== undefined
+            ? {
+                rating: body.rating,
+                ratingTaste: body.rating,
+                ratingValue: body.rating,
+                ratingPortion: body.rating,
+                ratingService: null,
+                ratingOverall: body.rating,
+              }
+            : {}),
         ...(body.text !== undefined && { text: body.text }),
         ...(body.dishName !== undefined && { dishName: body.dishName }),
       },
-      select: { id: true, rating: true, text: true, dishName: true, updatedAt: true },
+      select: {
+        id: true,
+        rating: true,
+        ratingTaste: true,
+        ratingValue: true,
+        ratingPortion: true,
+        ratingService: true,
+        ratingOverall: true,
+        text: true,
+        dishName: true,
+        updatedAt: true,
+      },
     })
-    return ok(updated)
+    return ok({
+      ...updated,
+      ratings: {
+        taste: updated.ratingTaste,
+        value: updated.ratingValue,
+        portion: updated.ratingPortion,
+        service: updated.ratingService,
+      },
+      overallRating: Number(updated.ratingOverall),
+    })
   } catch (e) {
     return serverError('reviews/[id] PATCH', e)
   }
@@ -126,6 +178,7 @@ export async function DELETE(
       where: { id },
       data: { status: ReviewStatus.DELETED },
     })
+    await recalculateUserBadges(review.userId)
     return noContent()
   } catch (e) {
     return serverError('reviews/[id] DELETE', e)

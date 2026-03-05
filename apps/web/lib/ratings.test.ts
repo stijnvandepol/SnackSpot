@@ -1,0 +1,14 @@
+import { describe, expect, it } from 'vitest'
+import { computeOverallRating } from './ratings'
+
+describe('computeOverallRating', () => {
+  it('computes average without service when service is null', () => {
+    const overall = computeOverallRating({ taste: 5, value: 4, portion: 3, service: null })
+    expect(overall).toBe(4)
+  })
+
+  it('computes average with service when provided', () => {
+    const overall = computeOverallRating({ taste: 5, value: 4, portion: 3, service: 2 })
+    expect(overall).toBe(3.5)
+  })
+})

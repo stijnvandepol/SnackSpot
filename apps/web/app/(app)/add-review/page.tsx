@@ -31,6 +31,13 @@ interface UploadedPhoto {
   status: 'uploading' | 'confirming' | 'ready' | 'error'
 }
 
+interface RatingDraft {
+  taste: number
+  value: number
+  portion: number
+  service: number | null
+}
+
 const MIME_ALIASES: Record<string, 'image/jpeg' | 'image/png' | 'image/webp' | 'image/avif' | 'image/heic'> = {
   'image/jpeg': 'image/jpeg',
   'image/jpg': 'image/jpeg',
@@ -85,6 +92,12 @@ function Stars({ value, onChange }: { value: number; onChange: (v: number) => vo
   )
 }
 
+function computeOverall(ratings: RatingDraft): number {
+  const values = [ratings.taste, ratings.value, ratings.portion]
+  if (typeof ratings.service === 'number') values.push(ratings.service)
+  return Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10
+}
+
 export default function AddReviewPage() {
   const { user, accessToken, loading } = useAuth()
   const router = useRouter()
@@ -96,7 +109,12 @@ export default function AddReviewPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchPlace[]>([])
   const [searching, setSearching] = useState(false)
-  const [rating, setRating] = useState(0)
+  const [ratings, setRatings] = useState<RatingDraft>({
+    taste: 3,
+    value: 3,
+    portion: 3,
+    service: null,
+  })
   const [text, setText] = useState('')
   const [dishName, setDishName] = useState('')
   const [photos, setPhotos] = useState<UploadedPhoto[]>([])
@@ -432,7 +450,6 @@ export default function AddReviewPage() {
   }
 
   const handleSubmit = async () => {
-    if (rating === 0) { setError('Please choose a rating'); return }
     if (text.length < 10) { setError('Review text must be at least 10 characters'); return }
     setError(null)
     setSubmitting(true)
@@ -440,7 +457,7 @@ export default function AddReviewPage() {
     const payload = place.mode === 'existing'
       ? {
           placeId: place.placeId,
-          rating,
+          ratings,
           text,
           dishName: dishName || undefined,
           photoIds: photos.filter((p) => p.status === 'ready').map((p) => p.photoId),
@@ -452,7 +469,7 @@ export default function AddReviewPage() {
             lat: parseFloat(place.lat),
             lng: parseFloat(place.lng),
           },
-          rating,
+          ratings,
           text,
           dishName: dishName || undefined,
           photoIds: photos.filter((p) => p.status === 'ready').map((p) => p.photoId),
@@ -664,8 +681,32 @@ export default function AddReviewPage() {
       {step === 'review' && (
         <div className="space-y-4">
           <div>
-            <label className="label">Rating *</label>
-            <Stars value={rating} onChange={setRating} />
+            <label className="label">Taste *</label>
+            <Stars value={ratings.taste} onChange={(value) => setRatings((prev) => ({ ...prev, taste: value }))} />
+          </div>
+          <div>
+            <label className="label">Value / Price *</label>
+            <Stars value={ratings.value} onChange={(value) => setRatings((prev) => ({ ...prev, value }))} />
+          </div>
+          <div>
+            <label className="label">Portion *</label>
+            <Stars value={ratings.portion} onChange={(value) => setRatings((prev) => ({ ...prev, portion: value }))} />
+          </div>
+          <div>
+            <label className="label">Service (optional)</label>
+            <div className="flex items-center gap-3">
+              <Stars value={ratings.service ?? 0} onChange={(value) => setRatings((prev) => ({ ...prev, service: value }))} />
+              <button
+                type="button"
+                className="btn-secondary text-xs py-1 px-2"
+                onClick={() => setRatings((prev) => ({ ...prev, service: null }))}
+              >
+                Not set
+              </button>
+            </div>
+          </div>
+          <div className="px-3 py-2 bg-snack-surface rounded-lg text-sm text-snack-text">
+            Overall rating: <span className="font-semibold">{computeOverall(ratings).toFixed(1)}</span>
           </div>
           <div>
             <label className="label">Dish name</label>
@@ -689,7 +730,6 @@ export default function AddReviewPage() {
             <button
               className="btn-primary flex-1"
               onClick={() => {
-                if (rating === 0) { setError('Please choose a rating'); return }
                 if (text.length < 10) { setError('Review text must be at least 10 characters'); return }
                 setError(null)
                 setStep('photos')
