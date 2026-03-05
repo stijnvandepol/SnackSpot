@@ -68,6 +68,12 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6 space-y-6">
+      <div className="flex">
+        <Link href="/feed" className="btn-secondary text-sm">
+          Back to Feed
+        </Link>
+      </div>
+
       {/* Photo gallery */}
       {photos.length > 0 && (
         <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(photos.length, 3)}, 1fr)` }}>
