@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { PlaceCard } from '@/components/place-card'
 
 interface Place {
@@ -9,8 +9,21 @@ interface Place {
 export default function SearchPage() {
   const [q, setQ] = useState('')
   const [places, setPlaces] = useState<Place[]>([])
+  const [featuredPlaces, setFeaturedPlaces] = useState<Place[]>([])
+  const [featuredLoading, setFeaturedLoading] = useState(true)
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/v1/places/featured?limit=8')
+      .then((res) => {
+        if (!res.ok) throw new Error('Featured fetch failed')
+        return res.json()
+      })
+      .then((json) => setFeaturedPlaces(json.data?.data ?? []))
+      .catch((err) => console.error(err))
+      .finally(() => setFeaturedLoading(false))
+  }, [])
 
   const search = useCallback(async (query: string) => {
     if (!query.trim()) return
@@ -54,6 +67,34 @@ export default function SearchPage() {
         </button>
       </form>
 
+      {!searched && (
+        <div className="mb-6">
+          <div className="mb-3">
+            <h2 className="text-lg font-heading font-semibold text-snack-text">Uitgelichte restaurants</h2>
+            <p className="text-xs text-snack-muted">Recent nieuwe reviews toegevoegd</p>
+          </div>
+
+          {featuredLoading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="card h-20 animate-pulse bg-snack-surface" />
+              ))}
+            </div>
+          ) : featuredPlaces.length > 0 ? (
+            <div className="space-y-3">
+              {featuredPlaces.map((p) => (
+                <PlaceCard
+                  key={p.id}
+                  place={{ id: p.id, name: p.name, address: p.address, avgRating: p.avg_rating, reviewCount: p.review_count }}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm text-snack-muted">Nog geen recente reviews beschikbaar.</div>
+          )}
+        </div>
+      )}
+
       {loading && (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
@@ -68,7 +109,7 @@ export default function SearchPage() {
         </div>
       )}
 
-      {!searched && (
+      {!searched && featuredPlaces.length === 0 && !featuredLoading && (
         <div className="text-center py-16">
           <p className="text-snack-muted">Search for a place or dish name.</p>
         </div>
