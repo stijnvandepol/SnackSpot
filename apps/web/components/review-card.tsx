@@ -58,7 +58,7 @@ export function ReviewCard({
 
   return (
     <article className="card overflow-hidden transition hover:shadow-md">
-      <Link href={reviewHref} className="block">
+      <Link href={reviewHref} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2 rounded-xl" aria-label={`Open review by ${review.user.username}`}>
         {thumb && (
           <div className="relative h-64 w-full bg-snack-surface md:h-72">
             <img

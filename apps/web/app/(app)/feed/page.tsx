@@ -25,6 +25,7 @@ export default function FeedPage() {
   const [hasMore, setHasMore] = useState(true)
   const [loading, setLoading] = useState(false)
   const [initial, setInitial] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const sentinel = useRef<HTMLDivElement>(null)
   const inFlightRef = useRef(false)
   const requestedCursorsRef = useRef<Set<string>>(new Set())
@@ -37,6 +38,7 @@ export default function FeedPage() {
     requestedCursorsRef.current.add(cursorKey)
     inFlightRef.current = true
     setLoading(true)
+    setError(null)
 
     try {
       const url = `/api/v1/feed?limit=15${cursor ? `&cursor=${cursor}` : ''}`
@@ -57,6 +59,7 @@ export default function FeedPage() {
     } catch (err) {
       requestedCursorsRef.current.delete(cursorKey)
       console.error(err)
+      setError('Could not load feed. Check your connection and try again.')
     } finally {
       inFlightRef.current = false
       setLoading(false)
@@ -99,6 +102,15 @@ export default function FeedPage() {
         <div className="text-center py-20">
           <p className="text-snack-muted">No posts available yet.</p>
           <Link href="/add-review" className="btn-primary mt-4 hidden md:inline-block">Create first post</Link>
+        </div>
+      )}
+
+      {error && (
+        <div className="card p-4 mb-4 border-red-200 bg-red-50/50" role="status" aria-live="polite">
+          <p className="text-sm text-red-700">{error}</p>
+          <button type="button" className="btn-secondary mt-3 text-sm" onClick={() => { void loadMore() }}>
+            Try again
+          </button>
         </div>
       )}
 

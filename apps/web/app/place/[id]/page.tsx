@@ -23,6 +23,7 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
   const [sort, setSort] = useState<'new' | 'top'>('new')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [reviewsError, setReviewsError] = useState<string | null>(null)
   const from = searchParams.get('from')
 
   const backHref = (() => {
@@ -48,11 +49,13 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
   useEffect(() => {
     if (!place) return
     setLoading(true)
+    setReviewsError(null)
     fetch(`/api/v1/places/${id}/reviews?sort=${sort}&limit=20`, {
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
     })
       .then((r) => r.json())
       .then((json) => setReviews(json.data?.data ?? []))
+      .catch(() => setReviewsError('Could not load reviews for this place.'))
       .finally(() => setLoading(false))
   }, [place, sort, id, accessToken])
 
@@ -100,11 +103,18 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-snack-primary hover:underline"
+                aria-label={`Open ${place.name} in maps`}
               >
                 Open in maps
               </a>
             </div>
           </div>
+
+          {reviewsError && (
+            <div className="card p-3 mb-4 border-red-200 bg-red-50/50" role="status" aria-live="polite">
+              <p className="text-sm text-red-700">{reviewsError}</p>
+            </div>
+          )}
 
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading font-semibold text-snack-text">Reviews</h2>

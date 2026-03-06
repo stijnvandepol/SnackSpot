@@ -5,6 +5,13 @@ import { BottomNav } from '@/components/bottom-nav'
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-full flex-col">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:shadow"
+      >
+        Skip to content
+      </a>
+
       {/* Desktop top nav */}
       <TopNav />
 
@@ -27,7 +34,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <main className="flex-1 pb-nav md:pb-0">
+      <main id="main-content" className="flex-1 pb-nav md:pb-0">
         {children}
       </main>
 

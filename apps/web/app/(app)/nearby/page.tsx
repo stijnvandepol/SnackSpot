@@ -17,12 +17,14 @@ export default function NearbyPage() {
   const [places, setPlaces] = useState<Place[]>([])
   const [loading, setLoading] = useState(false)
   const [geoError, setGeoError] = useState<string | null>(null)
+  const [searchError, setSearchError] = useState<string | null>(null)
   const [radius, setRadius] = useState(3000)
   const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null)
 
   const search = useCallback(
     async (lat: number, lng: number, r: number) => {
       setLoading(true)
+      setSearchError(null)
       try {
         const res = await fetch(`/api/v1/places/search?lat=${lat}&lng=${lng}&radius=${r}&limit=30`)
         if (!res.ok) throw new Error('Search failed')
@@ -30,6 +32,7 @@ export default function NearbyPage() {
         setPlaces(json.data.data)
       } catch (err) {
         console.error(err)
+        setSearchError('Could not load nearby places. Try again.')
       } finally {
         setLoading(false)
       }
@@ -99,6 +102,7 @@ export default function NearbyPage() {
             value={radius}
             onChange={(e) => setRadius(Number(e.target.value))}
             className="w-full accent-[var(--snack-primary)]"
+            aria-label="Search radius"
           />
           <div className="flex justify-between text-xs text-snack-muted mt-1">
             <span>200 m</span><span>20 km</span>
@@ -106,6 +110,7 @@ export default function NearbyPage() {
         </div>
 
         {geoError && <p className="text-sm text-red-500">{geoError}</p>}
+        {searchError && <p className="text-sm text-red-500">{searchError}</p>}
 
         {position && (
           <button

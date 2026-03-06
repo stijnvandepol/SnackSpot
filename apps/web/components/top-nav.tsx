@@ -37,6 +37,7 @@ export function TopNav() {
             <Link
               key={l.href}
               href={l.href}
+              aria-current={pathname.startsWith(l.href) ? 'page' : undefined}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
                 pathname.startsWith(l.href)
                   ? 'bg-snack-surface text-snack-primary'
@@ -56,10 +57,11 @@ export function TopNav() {
             <>
               <Link
                 href="/profile"
+                aria-label="Open profile"
                 className="h-9 w-9 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-sm uppercase"
               >
                 {user.avatarKey ? (
-                  <img src={avatarUrl(user.avatarKey) ?? undefined} alt="" className="h-full w-full rounded-full object-cover" />
+                  <img src={avatarUrl(user.avatarKey) ?? undefined} alt="Profile avatar" className="h-full w-full rounded-full object-cover" />
                 ) : (
                   user.username[0]
                 )}

@@ -33,6 +33,11 @@
   * {
     box-sizing: border-box;
   }
+
+  :focus-visible {
+    outline: 2px solid var(--snack-primary);
+    outline-offset: 2px;
+  }
 }
 
 @layer components {
@@ -114,4 +119,13 @@
 /* Bottom nav safe area */
 .pb-nav {
   padding-bottom: calc(4.5rem + var(--safe-area-inset-bottom));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -23,7 +23,7 @@ export function PlaceCard({ place, from }: PlaceCardProps) {
     : `/place/${place.id}`
 
   return (
-    <Link href={href}>
+    <Link href={href} aria-label={`Open place ${place.name}`} className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2">
       <article className="card p-4 transition hover:shadow-md">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">

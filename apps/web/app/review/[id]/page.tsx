@@ -37,10 +37,12 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const [reportReason, setReportReason] = useState('')
   const [reporting, setReporting] = useState(false)
   const [reported, setReported] = useState(false)
+  const [reportError, setReportError] = useState<string | null>(null)
   const [comments, setComments] = useState<CommentItem[]>([])
   const [commentsLoading, setCommentsLoading] = useState(true)
   const [newComment, setNewComment] = useState('')
   const [commentSubmitting, setCommentSubmitting] = useState(false)
+  const [commentError, setCommentError] = useState<string | null>(null)
 
   useEffect(() => {
     Promise.all([
@@ -71,6 +73,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const submitComment = async () => {
     if (!accessToken || !newComment.trim()) return
     setCommentSubmitting(true)
+    setCommentError(null)
     try {
       const res = await fetch(`/api/v1/reviews/${id}/comments`, {
         method: 'POST',
@@ -81,7 +84,10 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
         body: JSON.stringify({ text: newComment.trim() }),
       })
       const json = await res.json().catch(() => ({}))
-      if (!res.ok || !json.data) return
+      if (!res.ok || !json.data) {
+        setCommentError('Could not post comment. Please try again.')
+        return
+      }
       setComments((prev) => [json.data, ...prev])
       setReview((prev) => prev ? { ...prev, commentCount: (prev.commentCount ?? 0) + 1 } : prev)
       setNewComment('')
@@ -92,11 +98,15 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
   const deleteComment = async (commentId: string) => {
     if (!accessToken) return
+    setCommentError(null)
     const res = await fetch(`/api/v1/comments/${commentId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${accessToken}` },
     })
-    if (!res.ok) return
+    if (!res.ok) {
+      setCommentError('Could not delete comment. Please try again.')
+      return
+    }
     setComments((prev) => prev.filter((c) => c.id !== commentId))
     setReview((prev) => prev ? { ...prev, commentCount: Math.max(0, (prev.commentCount ?? 0) - 1) } : prev)
   }
@@ -104,13 +114,19 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const submitReport = async () => {
     if (!accessToken || !reportReason.trim()) return
     setReporting(true)
+    setReportError(null)
     const res = await fetch('/api/v1/reports', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
       body: JSON.stringify({ targetType: 'REVIEW', reviewId: id, reason: reportReason }),
     })
     setReporting(false)
-    if (res.ok) { setReported(true); setReportReason('') }
+    if (res.ok) {
+      setReported(true)
+      setReportReason('')
+    } else {
+      setReportError('Could not submit report. Please try again.')
+    }
   }
 
   if (error) return (
@@ -248,6 +264,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               maxLength={1000}
+              aria-label="Write a comment"
             />
             <div className="flex items-center justify-between">
               <p className="text-xs text-snack-muted">{newComment.length}/1000</p>
@@ -259,6 +276,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
                 {commentSubmitting ? 'Posting...' : 'Post comment'}
               </button>
             </div>
+            {commentError && <p className="text-sm text-red-600" role="status" aria-live="polite">{commentError}</p>}
           </div>
         ) : (
           <p className="text-sm text-snack-muted">
@@ -337,6 +355,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
             <button onClick={submitReport} disabled={reporting || reportReason.length < 5} className="btn-secondary text-sm py-2">
               {reporting ? 'Sending…' : 'Submit report'}
             </button>
+            {reportError && <p className="text-sm text-red-600" role="status" aria-live="polite">{reportError}</p>}
           </div>
         </details>
       )}

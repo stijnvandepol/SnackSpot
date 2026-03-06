@@ -13,6 +13,7 @@ export default function SearchPage() {
   const [featuredLoading, setFeaturedLoading] = useState(true)
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -22,7 +23,10 @@ export default function SearchPage() {
         return res.json()
       })
       .then((json) => setFeaturedPlaces(json.data?.data ?? []))
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err)
+        setError('Could not load recent activity.')
+      })
       .finally(() => setFeaturedLoading(false))
   }, [])
 
@@ -30,6 +34,7 @@ export default function SearchPage() {
     if (!query.trim()) return
     setLoading(true)
     setSearched(true)
+    setError(null)
     try {
       const res = await fetch(`/api/v1/places/search?q=${encodeURIComponent(query)}&limit=30`)
       if (!res.ok) throw new Error('Search failed')
@@ -37,6 +42,7 @@ export default function SearchPage() {
       setPlaces(json.data.data)
     } catch (err) {
       console.error(err)
+      setError('Search failed. Try again in a moment.')
     } finally {
       setLoading(false)
     }
@@ -84,6 +90,7 @@ export default function SearchPage() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           autoFocus
+          aria-label="Search places or dishes"
         />
         {q.length > 0 && (
           <button
@@ -100,9 +107,15 @@ export default function SearchPage() {
           </button>
         )}
         <button type="submit" className="btn-primary flex-shrink-0" disabled={loading}>
-          {loading ? '…' : 'Search'}
+          {loading ? 'Searching...' : 'Search'}
         </button>
       </form>
+
+      {error && (
+        <div className="card p-3 mb-4 border-red-200 bg-red-50/50" role="status" aria-live="polite">
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
 
       {!searched && (
         <div className="mb-6">

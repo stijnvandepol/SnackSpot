@@ -40,6 +40,8 @@ export function BottomNav() {
             <li key={l.href} className="flex-1">
               <Link
                 href={l.href}
+                aria-current={active ? 'page' : undefined}
+                aria-label={l.label}
                 className={`flex flex-col items-center gap-0.5 py-1 text-xs font-medium transition ${
                   l.accent
                     ? 'text-white'
@@ -60,6 +62,7 @@ export function BottomNav() {
                 ) : (
                   <NavIcon name={l.icon} className="h-6 w-6" />
                 )}
+                {l.accent && <span className="sr-only">{l.label}</span>}
                 {!l.accent && <span>{l.label}</span>}
               </Link>
             </li>
