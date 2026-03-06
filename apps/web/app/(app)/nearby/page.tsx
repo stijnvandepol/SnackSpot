@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
 import { PlaceCard } from '@/components/place-card'
+import { PlaceMap } from '@/components/place-map'
 
 interface Place {
   id: string
@@ -123,6 +124,9 @@ export default function NearbyPage() {
           </button>
         )}
       </div>
+
+      {/* Map */}
+      {position && <PlaceMap position={position} places={places} radius={radius} />}
 
       {/* Results */}
       {!position && !loading && (
