@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
+import { UserMentionInput } from '@/components/user-mention-input'
 
 type Step = 'place' | 'review' | 'photos'
 
@@ -116,6 +117,7 @@ export default function AddReviewPage() {
     service: null,
   })
   const [text, setText] = useState('')
+  const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([])
   const [dishName, setDishName] = useState('')
   const [photos, setPhotos] = useState<UploadedPhoto[]>([])
   const [submitting, setSubmitting] = useState(false)
@@ -478,6 +480,7 @@ export default function AddReviewPage() {
           text,
           dishName: dishName || undefined,
           photoIds: photos.filter((p) => p.status === 'ready').map((p) => p.photoId),
+          mentionedUserIds,
         }
       : {
           place: {
@@ -490,6 +493,7 @@ export default function AddReviewPage() {
           text,
           dishName: dishName || undefined,
           photoIds: photos.filter((p) => p.status === 'ready').map((p) => p.photoId),
+          mentionedUserIds,
         }
 
     try {
@@ -731,11 +735,14 @@ export default function AddReviewPage() {
           </div>
           <div>
             <label className="label">Your review * <span className="text-snack-muted font-normal">({text.length}/2000)</span></label>
-            <textarea
-              className="input min-h-[140px] resize-none"
-              placeholder="Tell people what you loved (or didn't)…"
+            <UserMentionInput
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(newText, mentionedIds) => {
+                setText(newText)
+                setMentionedUserIds(mentionedIds)
+              }}
+              placeholder="Tell people what you loved (or didn't)… Use @username to mention someone"
+              className="input min-h-[140px] resize-none"
               maxLength={2000}
             />
           </div>

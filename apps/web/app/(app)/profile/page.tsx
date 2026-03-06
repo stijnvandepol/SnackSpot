@@ -5,6 +5,7 @@ import { ReviewCard } from '@/components/review-card'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
+import { NotificationSettings } from '@/components/notification-settings'
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null; createdAt: string; status: string
@@ -401,6 +402,11 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      <div className="mb-6">
+        <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Notifications</h2>
+        <NotificationSettings />
+      </div>
 
       <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">My Posts</h2>
 

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { ok, err, requireAuth, getAuthPayload, serverError, isResponse } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
 import { recalculateUserBadges } from '@/lib/badge-service'
+import { notifyReviewLike } from '@/lib/notification-service'
 
 async function getLikeState(reviewId: string, userId?: string) {
   const [likeCount, likedByMe] = await Promise.all([
@@ -59,6 +60,9 @@ export async function POST(
       data: [{ userId: auth.sub, reviewId: id }],
       skipDuplicates: true,
     })
+
+    // Notify review owner about the like
+    await notifyReviewLike(id, auth.sub)
 
     await recalculateUserBadges(review.userId, { criteriaTypes: ['LIKES_RECEIVED_COUNT'] })
 

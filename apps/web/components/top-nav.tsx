@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from './auth-provider'
 import { avatarUrl } from '@/lib/avatar'
+import { NotificationBell } from './notification-bell'
 
 export function TopNav() {
   const { user, logout } = useAuth()
@@ -55,6 +56,7 @@ export function TopNav() {
         <div className="flex items-center gap-2">
           {user ? (
             <>
+              <NotificationBell />
               <Link
                 href="/profile"
                 aria-label="Open profile"

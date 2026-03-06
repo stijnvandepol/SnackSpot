@@ -61,6 +61,14 @@ enum BadgeCriteriaType {
   LIKES_RECEIVED_COUNT
 }
 
+enum NotificationType {
+  REVIEW_LIKE
+  REVIEW_COMMENT
+  REVIEW_MENTION
+  COMMENT_MENTION
+  BADGE_EARNED
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
@@ -83,6 +91,12 @@ model User {
   reports           Report[]
   moderationActions ModerationAction[]
   refreshTokens     RefreshToken[]
+  notifications     Notification[]
+  notificationPreferences NotificationPreferences?
+  reviewMentionsReceived ReviewMention[] @relation("MentionedUser")
+  reviewMentionsGiven    ReviewMention[] @relation("MentioningUser")
+  pushSubscriptions PushSubscription[]
+  actorNotifications Notification[] @relation("NotificationActor")
 
   @@map("users")
 }
@@ -137,6 +151,8 @@ model Review {
   comments     Comment[]
   reviewPhotos ReviewPhoto[]
   reports      Report[]
+  mentions     ReviewMention[]
+  notifications Notification[]
 
   @@index([createdAt(sort: Desc)])
   @@index([placeId, createdAt(sort: Desc)])
@@ -209,6 +225,7 @@ model Comment {
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  notifications Notification[]
 
   @@index([reviewId, createdAt(sort: Desc), id(sort: Desc)])
   @@index([userId, createdAt(sort: Desc)])
@@ -287,4 +304,77 @@ model ModerationAction {
   moderator User @relation(fields: [moderatorId], references: [id], onDelete: Cascade)
 
   @@map("moderation_actions")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String           @map("user_id")
+  type      NotificationType
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean          @default(false) @map("is_read")
+  actorId   String?          @map("actor_id")
+  reviewId  String?          @map("review_id")
+  commentId String?          @map("comment_id")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actor   User?    @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+  review  Review?  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, isRead, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model NotificationPreferences {
+  userId         String   @id @map("user_id")
+  emailOnLike    Boolean  @default(true) @map("email_on_like")
+  emailOnComment Boolean  @default(true) @map("email_on_comment")
+  emailOnMention Boolean  @default(true) @map("email_on_mention")
+  emailOnBadge   Boolean  @default(true) @map("email_on_badge")
+  pushOnLike     Boolean  @default(true) @map("push_on_like")
+  pushOnComment  Boolean  @default(true) @map("push_on_comment")
+  pushOnMention  Boolean  @default(true) @map("push_on_mention")
+  pushOnBadge    Boolean  @default(true) @map("push_on_badge")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model ReviewMention {
+  id                String   @id @default(cuid())
+  reviewId          String   @map("review_id")
+  mentionedUserId   String   @map("mentioned_user_id")
+  mentionedByUserId String   @map("mentioned_by_user_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  review         Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  mentionedUser  User   @relation("MentionedUser", fields: [mentionedUserId], references: [id], onDelete: Cascade)
+  mentionedByUser User  @relation("MentioningUser", fields: [mentionedByUserId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, mentionedUserId])
+  @@index([mentionedUserId, createdAt(sort: Desc)])
+  @@map("review_mentions")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  endpoint  String   @unique
+  p256dhKey String   @map("p256dh_key")
+  authKey   String   @map("auth_key")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }

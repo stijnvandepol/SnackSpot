@@ -7,6 +7,7 @@ import { rateLimitUser } from '@/lib/rate-limit'
 import { normalizeRatings } from '@/lib/ratings'
 import { recalculateUserBadges } from '@/lib/badge-service'
 import { normalizeDishName } from '@/lib/text'
+import { notifyMention } from '@/lib/notification-service'
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
@@ -114,6 +115,34 @@ export async function POST(req: NextRequest) {
     })
 
     await recalculateUserBadges(auth.sub)
+
+    // Create mentions and send notifications
+    if (body.mentionedUserIds && body.mentionedUserIds.length > 0) {
+      const uniqueUserIds = [...new Set(body.mentionedUserIds)].filter((id) => id !== auth.sub)
+      
+      // Validate mentioned users exist
+      const validUsers = await prisma.user.findMany({
+        where: { id: { in: uniqueUserIds }, bannedAt: null },
+        select: { id: true },
+      })
+
+      const validUserIds = validUsers.map((u) => u.id)
+      
+      // Create mention records
+      await prisma.reviewMention.createMany({
+        data: validUserIds.map((userId) => ({
+          reviewId: review.id,
+          mentionedUserId: userId,
+          mentionedByUserId: auth.sub,
+        })),
+        skipDuplicates: true,
+      })
+
+      // Send notifications to mentioned users
+      for (const userId of validUserIds) {
+        await notifyMention(userId, review.id, auth.sub)
+      }
+    }
 
     return created({
       ...review,

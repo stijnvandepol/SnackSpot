@@ -14,6 +14,7 @@ import {
 } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
 import { rateLimitUser } from '@/lib/rate-limit'
+import { notifyReviewComment } from '@/lib/notification-service'
 
 export async function GET(
   req: NextRequest,
@@ -105,6 +106,9 @@ export async function POST(
         user: { select: { id: true, username: true, avatarKey: true, role: true } },
       },
     })
+
+    // Notify review owner about the comment
+    await notifyReviewComment(id, comment.id, auth.sub)
 
     return created({
       ...comment,

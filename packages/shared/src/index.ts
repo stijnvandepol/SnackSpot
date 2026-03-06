@@ -64,6 +64,7 @@ export const CreateReviewSchema = z.object({
   text: z.string().min(10).max(2000),
   dishName: z.string().min(1).max(100).optional(),
   photoIds: z.array(z.string()).max(5).default([]),
+  mentionedUserIds: z.array(z.string()).max(10).default([]),
 }).refine((data) => Boolean(data.rating || data.ratings), {
   message: 'rating or ratings is required',
   path: ['ratings'],
