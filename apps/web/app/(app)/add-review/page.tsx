@@ -281,7 +281,7 @@ export default function AddReviewPage() {
       await new Promise(resolve => setTimeout(resolve, 1000))
       
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(place.address)}&format=json&addressdetails=1&limit=3&countrycodes=nl,be`,
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(place.address)}&format=json&addressdetails=1&limit=3&countrycodes=nl,be,de`,
         { 
           headers: { 
             'User-Agent': 'SnackSpot/1.0 (contact@snackspot.app)',
