@@ -2,10 +2,20 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth-provider'
 import { ReviewCard } from '@/components/review-card'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { NotificationSettings } from '@/components/notification-settings'
+import dynamic from 'next/dynamic'
+
+const NotificationsList = dynamic(() => import('@/components/notifications-list').then((mod) => ({ default: mod.NotificationsList })), {
+  ssr: false,
+  loading: () => <div className="space-y-3 flex-1">
+    {[...Array(5)].map((_, i) => (
+      <div key={i} className="card h-16 animate-pulse bg-snack-surface" />
+    ))}
+  </div>,
+})
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null; createdAt: string; status: string
@@ -57,6 +67,8 @@ interface MeProfile {
 export default function ProfilePage() {
   const { user, accessToken, logout, reloadMe } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const tab = searchParams.get('tab') ?? 'posts'
   const [reviews, setReviews] = useState<Review[]>([])
   const [earnedBadges, setEarnedBadges] = useState<BadgeRow[]>([])
   const [inProgressBadges, setInProgressBadges] = useState<BadgeRow[]>([])
@@ -181,9 +193,158 @@ export default function ProfilePage() {
     )
   }
 
-  return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
-      <div className="card p-6 mb-4 flex items-center gap-4">
+  // Mobile Layout
+  if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    return (
+      <div className="md:hidden flex flex-col h-screen max-h-screen overflow-hidden">
+        {/* Header */}
+        <div className="sticky top-0 z-20 bg-white border-b border-[#ececec] px-4 py-4">
+          <div className="flex items-center gap-3 mb-4">
+            <AvatarLightbox
+              avatarKey={meProfile?.avatarKey}
+              username={meProfile?.username ?? user.username}
+              size="md"
+            />
+            <div className="flex-1 min-w-0">
+              <h1 className="font-heading font-bold text-lg text-snack-text truncate">{meProfile?.username ?? user.username}</h1>
+              <p className="text-xs text-snack-muted">@{meProfile?.username ?? user.username}</p>
+            </div>
+            <button
+              onClick={async () => { await logout(); router.push('/auth/login') }}
+              className="btn-secondary text-xs py-1 px-2"
+            >
+              Log out
+            </button>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="flex gap-2 border-b border-[#ececec] -mx-4 px-4 overflow-x-auto">
+            {['posts', 'notifications', 'settings'].map((t) => (
+              <button
+                key={t}
+                onClick={() => router.push(`?tab=${t}`)}
+                className={`py-2 px-3 text-sm font-medium whitespace-nowrap transition border-b-2 ${
+                  tab === t
+                    ? 'border-snack-primary text-snack-primary'
+                    : 'border-transparent text-snack-muted hover:text-snack-text'
+                }`}
+              >
+                {t === 'posts' ? 'Posts' : t === 'notifications' ? 'Meldingen' : 'Settings'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {/* Posts Tab */}
+          {tab === 'posts' && (
+            <>
+              {loading && (
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="card h-32 animate-pulse bg-snack-surface" />
+                  ))}
+                </div>
+              )}
+
+              {!loading && reviews.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-snack-muted text-sm">You haven't written any reviews yet.</p>
+                  <a href="/add-review" className="btn-primary mt-4 inline-block">Add your first review</a>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {reviews.map((r) => <ReviewCard key={r.id} review={r} backContext="profile" />)}
+              </div>
+            </>
+          )}
+
+          {/* Notifications Tab */}
+          {tab === 'notifications' && (
+            <NotificationsList />
+          )}
+
+          {/* Settings Tab */}
+          {tab === 'settings' && (
+            <div className="space-y-4">
+              {/* Profile Settings */}
+              <div className="card p-4">
+                <h3 className="font-heading font-semibold text-snack-text mb-3">Profile Settings</h3>
+                <button
+                  type="button"
+                  className="btn-secondary w-full text-sm mb-3"
+                  onClick={() => setIsEditingProfile((v) => !v)}
+                >
+                  {isEditingProfile ? 'Close' : 'Edit Profile'}
+                </button>
+
+                {isEditingProfile && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <label className="btn-secondary text-xs cursor-pointer">
+                        {avatarUploading ? 'Uploading...' : 'Change picture'}
+                        <input
+                          type="file"
+                          accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif"
+                          className="sr-only"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] ?? null
+                            void handleAvatarUpload(file)
+                            e.currentTarget.value = ''
+                          }}
+                          disabled={avatarUploading}
+                        />
+                      </label>
+                    </div>
+
+                    <div>
+                      <label className="label text-xs">Username</label>
+                      <input
+                        className="input text-sm"
+                        value={editUsername}
+                        onChange={(e) => setEditUsername(e.target.value)}
+                        minLength={3}
+                        maxLength={30}
+                        pattern="^[a-zA-Z0-9_]+$"
+                        disabled={Boolean(meProfile && !meProfile.usernameCanChangeNow)}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="label text-xs">Bio ({editBio.length}/280)</label>
+                      <textarea
+                        className="input min-h-[80px] resize-none text-sm"
+                        value={editBio}
+                        onChange={(e) => setEditBio(e.target.value)}
+                        maxLength={280}
+                        placeholder="Tell people who you are"
+                      />
+                    </div>
+
+                    {profileError && <p className="text-xs text-red-500">{profileError}</p>}
+                    {profileMessage && <p className="text-xs text-green-600">{profileMessage}</p>}
+
+                    <button className="btn-primary w-full text-sm" onClick={handleSaveProfile} disabled={profileSaving || avatarUploading}>
+                      {profileSaving ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Notification Preferences */}
+              <div className="card p-4">
+                <h3 className="font-heading font-semibold text-snack-text mb-3">Notification Preferences</h3>
+                <NotificationSettings />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
         <AvatarLightbox
           avatarKey={meProfile?.avatarKey}
           username={meProfile?.username ?? user.username}
