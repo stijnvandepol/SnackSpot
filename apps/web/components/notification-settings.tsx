@@ -26,7 +26,7 @@ export function NotificationSettings() {
     if (!accessToken) return
 
     // Check if push notifications are supported
-    if ('Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window) {
+    if (typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window) {
       setPushSupported(true)
       setPushPermission(Notification.permission)
     }
@@ -40,7 +40,11 @@ export function NotificationSettings() {
         const json = await res.json()
         if (res.ok && json.data) {
           setPreferences(json.data)
+        } else {
+          console.error('Failed to load notification preferences:', json.error)
         }
+      } catch (error) {
+        console.error('Error loading notification preferences:', error)
       } finally {
         setLoading(false)
       }
@@ -78,7 +82,7 @@ export function NotificationSettings() {
   }
 
   const requestPushPermission = async () => {
-    if (!('Notification' in window)) return
+    if (typeof window === 'undefined' || !('Notification' in window)) return
 
     try {
       const permission = await Notification.requestPermission()

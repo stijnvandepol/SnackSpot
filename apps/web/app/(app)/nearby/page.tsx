@@ -1,7 +1,12 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { PlaceCard } from '@/components/place-card'
-import { PlaceMap } from '@/components/place-map'
+
+const PlaceMap = dynamic(() => import('@/components/place-map').then((mod) => ({ default: mod.PlaceMap })), {
+  ssr: false,
+  loading: () => <div className="w-full h-96 bg-snack-surface rounded-xl animate-pulse border border-[#ececec] mb-6" />,
+})
 
 interface Place {
   id: string

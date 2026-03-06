@@ -49,7 +49,11 @@ export function NotificationBell() {
         if (res.ok && json.data) {
           setNotifications(json.data)
           setUnreadCount(json.unreadCount ?? 0)
+        } else {
+          console.error('Failed to fetch notifications:', json.error)
         }
+      } catch (error) {
+        console.error('Error fetching notifications:', error)
       } finally {
         setLoading(false)
       }
