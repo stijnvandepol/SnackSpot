@@ -5,7 +5,9 @@ export interface AuthUser {
   id: string
   email: string
   username: string
+  bio: string | null
   avatarKey: string | null
+  usernameChangedAt: string | null
   role: string
 }
 
@@ -21,6 +23,7 @@ interface AuthCtx {
   }): Promise<{ ok: boolean; error?: string }>
   logout(): Promise<void>
   refreshToken(): Promise<boolean>
+  reloadMe(): Promise<boolean>
 }
 
 const Ctx = createContext<AuthCtx | null>(null)
@@ -167,8 +170,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }, [])
 
+  const reloadMe = useCallback(async (): Promise<boolean> => {
+    if (!tokenRef.current) return false
+
+    try {
+      const res = await fetch('/api/v1/auth/me', {
+        credentials: 'include',
+        headers: { Authorization: `Bearer ${tokenRef.current}` },
+      })
+      if (!res.ok) return false
+      const { data } = await res.json()
+      setUser(data)
+      return true
+    } catch {
+      return false
+    }
+  }, [])
+
   return (
-    <Ctx.Provider value={{ user, accessToken, loading, login, register, logout, refreshToken }}>
+    <Ctx.Provider value={{ user, accessToken, loading, login, register, logout, refreshToken, reloadMe }}>
       {children}
     </Ctx.Provider>
   )

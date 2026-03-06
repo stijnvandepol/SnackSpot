@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from './auth-provider'
+import { avatarUrl } from '@/lib/avatar'
 
 export function TopNav() {
   const { user, logout } = useAuth()
@@ -57,7 +58,11 @@ export function TopNav() {
                 href={`/u/${user.username}`}
                 className="h-9 w-9 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-sm uppercase"
               >
-                {user.username[0]}
+                {user.avatarKey ? (
+                  <img src={avatarUrl(user.avatarKey) ?? undefined} alt="" className="h-full w-full rounded-full object-cover" />
+                ) : (
+                  user.username[0]
+                )}
               </Link>
               <button onClick={async () => { await logout(); router.push('/auth/login') }} className="btn-ghost text-sm">
                 Log out

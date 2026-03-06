@@ -30,7 +30,17 @@ export async function POST(req: NextRequest) {
   try {
     const user = await prisma.user.findUnique({
       where: { email: body.email },
-      select: { id: true, email: true, username: true, passwordHash: true, role: true, bannedAt: true },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        bio: true,
+        avatarKey: true,
+        usernameChangedAt: true,
+        passwordHash: true,
+        role: true,
+        bannedAt: true,
+      },
     })
 
     // Make username enumeration harder by spending similar CPU even when user does not exist.

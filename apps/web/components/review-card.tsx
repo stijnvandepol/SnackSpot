@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { ReviewLikeButton } from '@/components/review-like-button'
+import { avatarUrl } from '@/lib/avatar'
 
 interface ReviewCardProps {
   review: {
@@ -96,7 +97,11 @@ export function ReviewCard({
           <div className="flex items-center justify-between pt-1">
             <div className="flex items-center gap-2">
               <div className="h-7 w-7 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-xs uppercase flex-shrink-0">
-                {review.user.username[0]}
+                {review.user.avatarKey ? (
+                  <img src={avatarUrl(review.user.avatarKey) ?? undefined} alt="" className="h-full w-full rounded-full object-cover" />
+                ) : (
+                  review.user.username[0]
+                )}
               </div>
               <span className="text-xs text-snack-muted">
                 {review.user.username}

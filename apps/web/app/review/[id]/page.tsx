@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { ReviewLikeButton } from '@/components/review-like-button'
+import { avatarUrl } from '@/lib/avatar'
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null
@@ -12,7 +13,7 @@ interface Review {
   likeCount?: number; likedByMe?: boolean
   overallRating?: number
   ratings?: { taste: number; value: number; portion: number; service?: number | null }
-  user: { id: string; username: string; role: string }
+  user: { id: string; username: string; avatarKey?: string | null; role: string }
   place: { id: string; name: string; address: string }
   reviewPhotos: Array<{ sortOrder: number; photo: { id: string; variants: Record<string, string> } }>
 }
@@ -157,7 +158,11 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
         <div className="flex items-center justify-between pt-2 border-t border-[#ededed]">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-xs uppercase">
-              {review.user.username[0]}
+              {review.user.avatarKey ? (
+                <img src={avatarUrl(review.user.avatarKey) ?? undefined} alt="" className="h-full w-full rounded-full object-cover" />
+              ) : (
+                review.user.username[0]
+              )}
             </div>
             <Link href={`/u/${review.user.username}`} className="text-sm text-snack-muted hover:underline">
               {review.user.username}

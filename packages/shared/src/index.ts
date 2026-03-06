@@ -82,6 +82,17 @@ export const UpdateReviewSchema = z.object({
   photoIds: z.array(z.string()).max(5).optional(),
 })
 
+export const UpdateMeProfileSchema = z.object({
+  username: z
+    .string()
+    .min(3)
+    .max(30)
+    .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers and underscores')
+    .optional(),
+  bio: z.string().max(280).optional(),
+  avatarKey: z.string().max(512).nullable().optional(),
+})
+
 export const ReviewsQuerySchema = z.object({
   sort: z.enum(['new', 'top']).default('new'),
   q: z.string().max(200).optional(),

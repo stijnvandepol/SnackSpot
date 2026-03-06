@@ -4,6 +4,7 @@ import { useAuth } from '@/components/auth-provider'
 import { ReviewCard } from '@/components/review-card'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { avatarUrl } from '@/lib/avatar'
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null; createdAt: string; status: string
@@ -40,13 +41,32 @@ interface StatsData {
   streak: { current: number; best: number }
 }
 
+interface MeProfile {
+  id: string
+  email: string
+  username: string
+  bio: string | null
+  avatarKey: string | null
+  usernameChangedAt: string | null
+  usernameCanChangeNow: boolean
+  nextUsernameChangeAt: string | null
+  role: string
+}
+
 export default function ProfilePage() {
-  const { user, accessToken, logout } = useAuth()
+  const { user, accessToken, logout, reloadMe } = useAuth()
   const router = useRouter()
   const [reviews, setReviews] = useState<Review[]>([])
   const [earnedBadges, setEarnedBadges] = useState<BadgeRow[]>([])
   const [inProgressBadges, setInProgressBadges] = useState<BadgeRow[]>([])
   const [stats, setStats] = useState<StatsData | null>(null)
+  const [meProfile, setMeProfile] = useState<MeProfile | null>(null)
+  const [editUsername, setEditUsername] = useState('')
+  const [editBio, setEditBio] = useState('')
+  const [profileSaving, setProfileSaving] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [profileMessage, setProfileMessage] = useState<string | null>(null)
+  const [profileError, setProfileError] = useState<string | null>(null)
   const [selectedBadge, setSelectedBadge] = useState<BadgeRow | null>(null)
   const [loading, setLoading] = useState(false)
   const maxWeeklyPosts = Math.max(1, ...(stats?.weeklyActivity.map((week) => week.posts) ?? [0]))
@@ -58,18 +78,97 @@ export default function ProfilePage() {
       fetch('/api/v1/me/reviews?limit=20', { headers: { Authorization: `Bearer ${accessToken}` } }),
       fetch('/api/v1/me/badges', { headers: { Authorization: `Bearer ${accessToken}` } }),
       fetch('/api/v1/me/stats', { headers: { Authorization: `Bearer ${accessToken}` } }),
+      fetch('/api/v1/me/profile', { headers: { Authorization: `Bearer ${accessToken}` } }),
     ])
-      .then(async ([reviewsRes, badgesRes, statsRes]) => {
+      .then(async ([reviewsRes, badgesRes, statsRes, profileRes]) => {
         const reviewsJson = await reviewsRes.json()
         const badgesJson = await badgesRes.json()
         const statsJson = await statsRes.json()
+        const profileJson = await profileRes.json()
         setReviews(reviewsJson.data?.data ?? [])
         setEarnedBadges(badgesJson.data?.earned ?? [])
         setInProgressBadges(badgesJson.data?.inProgress ?? [])
         setStats(statsJson.data ?? null)
+
+        if (profileRes.ok && profileJson.data) {
+          setMeProfile(profileJson.data)
+          setEditUsername(profileJson.data.username ?? '')
+          setEditBio(profileJson.data.bio ?? '')
+        }
       })
       .finally(() => setLoading(false))
   }, [user, accessToken])
+
+  const handleAvatarUpload = async (file: File | null) => {
+    if (!file || !accessToken) return
+
+    setAvatarUploading(true)
+    setProfileError(null)
+    setProfileMessage(null)
+
+    try {
+      const res = await fetch('/api/v1/me/avatar', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': file.type || 'application/octet-stream',
+        },
+        body: file,
+      })
+
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setProfileError(json.error ?? 'Avatar upload failed')
+        return
+      }
+
+      setMeProfile((prev) => prev ? { ...prev, avatarKey: json.data.avatarKey } : prev)
+      await reloadMe()
+      setProfileMessage('Profile image updated.')
+    } catch {
+      setProfileError('Avatar upload failed')
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
+
+  const handleSaveProfile = async () => {
+    if (!accessToken || !meProfile) return
+
+    setProfileSaving(true)
+    setProfileError(null)
+    setProfileMessage(null)
+
+    try {
+      const res = await fetch('/api/v1/me/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          username: editUsername.trim(),
+          bio: editBio,
+        }),
+      })
+
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setProfileError(json.error ?? 'Failed to save profile')
+        return
+      }
+
+      setMeProfile(json.data)
+      setEditUsername(json.data.username ?? '')
+      setEditBio(json.data.bio ?? '')
+      await reloadMe()
+      setProfileMessage('Profile updated.')
+    } catch {
+      setProfileError('Failed to save profile')
+    } finally {
+      setProfileSaving(false)
+    }
+  }
 
   if (!user) {
     return (
@@ -83,13 +182,17 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <div className="card p-6 mb-4 flex items-center gap-4">
-        <div className="h-16 w-16 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-bold text-2xl uppercase flex-shrink-0">
-          {user.username[0]}
+        <div className="h-16 w-16 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-bold text-2xl uppercase flex-shrink-0 overflow-hidden">
+          {meProfile?.avatarKey ? (
+            <img src={avatarUrl(meProfile.avatarKey) ?? undefined} alt="" className="h-full w-full object-cover" />
+          ) : (
+            user.username[0]
+          )}
         </div>
         <div className="min-w-0">
-          <h1 className="font-heading font-bold text-xl text-snack-text">{user.username}</h1>
-          <p className="text-sm text-snack-muted">@{user.username}</p>
-          <p className="text-xs text-snack-muted mt-1">Snack hunter & reviewer</p>
+          <h1 className="font-heading font-bold text-xl text-snack-text">{meProfile?.username ?? user.username}</h1>
+          <p className="text-sm text-snack-muted">@{meProfile?.username ?? user.username}</p>
+          <p className="text-xs text-snack-muted mt-1">{meProfile?.bio?.trim() || 'Snack hunter & reviewer'}</p>
           <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${
             user.role === 'ADMIN' ? 'bg-red-100 text-red-700'
             : user.role === 'MODERATOR' ? 'bg-purple-100 text-purple-700'
@@ -106,6 +209,65 @@ export default function ProfilePage() {
             Log out
           </button>
         </div>
+      </div>
+
+      <div className="card p-4 mb-6 space-y-3">
+        <h2 className="font-heading font-semibold text-snack-text">Edit Profile</h2>
+
+        <div className="flex items-center gap-3">
+          <label className="btn-secondary text-sm cursor-pointer">
+            {avatarUploading ? 'Uploading...' : 'Change profile image'}
+            <input
+              type="file"
+              accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif"
+              className="sr-only"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null
+                void handleAvatarUpload(file)
+                e.currentTarget.value = ''
+              }}
+              disabled={avatarUploading}
+            />
+          </label>
+        </div>
+
+        <div>
+          <label className="label">Username</label>
+          <input
+            className="input"
+            value={editUsername}
+            onChange={(e) => setEditUsername(e.target.value)}
+            minLength={3}
+            maxLength={30}
+            pattern="^[a-zA-Z0-9_]+$"
+            disabled={Boolean(meProfile && !meProfile.usernameCanChangeNow)}
+          />
+          <p className="mt-1 text-xs text-snack-muted">
+            {meProfile?.usernameCanChangeNow
+              ? 'You can change your username now.'
+              : meProfile?.nextUsernameChangeAt
+                ? `Username can be changed again after ${new Date(meProfile.nextUsernameChangeAt).toLocaleDateString()}.`
+                : 'Username can be changed once every 30 days.'}
+          </p>
+        </div>
+
+        <div>
+          <label className="label">Bio <span className="text-snack-muted font-normal">({editBio.length}/280)</span></label>
+          <textarea
+            className="input min-h-[100px] resize-none"
+            value={editBio}
+            onChange={(e) => setEditBio(e.target.value)}
+            maxLength={280}
+            placeholder="Tell people who you are and what you love to eat."
+          />
+        </div>
+
+        {profileError && <p className="text-sm text-red-500">{profileError}</p>}
+        {profileMessage && <p className="text-sm text-green-600">{profileMessage}</p>}
+
+        <button className="btn-primary" onClick={handleSaveProfile} disabled={profileSaving || avatarUploading}>
+          {profileSaving ? 'Saving...' : 'Save profile'}
+        </button>
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-6">

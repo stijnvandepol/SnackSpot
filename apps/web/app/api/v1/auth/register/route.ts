@@ -44,7 +44,16 @@ export async function POST(req: NextRequest) {
         username: body.username,
         passwordHash,
       },
-      select: { id: true, email: true, username: true, role: true, createdAt: true },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        bio: true,
+        avatarKey: true,
+        usernameChangedAt: true,
+        role: true,
+        createdAt: true,
+      },
     })
 
     // Issue tokens

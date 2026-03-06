@@ -5,10 +5,12 @@ import Link from 'next/link'
 import { useAuth } from '@/components/auth-provider'
 import { TopNav } from '@/components/top-nav'
 import { BottomNav } from '@/components/bottom-nav'
+import { avatarUrl } from '@/lib/avatar'
 
 interface UserProfile {
   id: string
   username: string
+  bio: string | null
   avatarKey: string | null
   role: string
   createdAt: string
@@ -85,12 +87,17 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             profile ? (
               <>
                 <div className="card p-6 mb-6 flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-bold text-2xl uppercase flex-shrink-0">
-                    {profile.username[0]}
+                  <div className="h-16 w-16 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-bold text-2xl uppercase flex-shrink-0 overflow-hidden">
+                    {profile.avatarKey ? (
+                      <img src={avatarUrl(profile.avatarKey) ?? undefined} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      profile.username[0]
+                    )}
                   </div>
                   <div>
                     <h1 className="font-heading font-bold text-xl text-snack-text">{profile.username}</h1>
                     <p className="text-sm text-snack-muted">@{profile.username}</p>
+                    {profile.bio && <p className="text-xs text-snack-muted mt-1">{profile.bio}</p>}
                     <p className="text-xs text-snack-muted mt-1">{profile._count.reviews} reviews</p>
                   </div>
                 </div>
