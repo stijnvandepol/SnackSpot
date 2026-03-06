@@ -11,11 +11,21 @@ interface Review {
   id: string; rating: number; text: string; dishName?: string | null
   status: string; createdAt: string; updatedAt: string
   likeCount?: number; likedByMe?: boolean
+  commentCount?: number
   overallRating?: number
   ratings?: { taste: number; value: number; portion: number; service?: number | null }
   user: { id: string; username: string; avatarKey?: string | null; role: string }
   place: { id: string; name: string; address: string }
   reviewPhotos: Array<{ sortOrder: number; photo: { id: string; variants: Record<string, string> } }>
+}
+
+interface CommentItem {
+  id: string
+  text: string
+  createdAt: string
+  updatedAt: string
+  user: { id: string; username: string; avatarKey?: string | null; role: string }
+  canDelete: boolean
 }
 
 export default function ReviewPage({ params }: { params: Promise<{ id: string }> }) {
@@ -27,15 +37,69 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const [reportReason, setReportReason] = useState('')
   const [reporting, setReporting] = useState(false)
   const [reported, setReported] = useState(false)
+  const [comments, setComments] = useState<CommentItem[]>([])
+  const [commentsLoading, setCommentsLoading] = useState(true)
+  const [newComment, setNewComment] = useState('')
+  const [commentSubmitting, setCommentSubmitting] = useState(false)
 
   useEffect(() => {
-    fetch(`/api/v1/reviews/${id}`, {
-      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
-    })
-      .then((r) => r.json())
-      .then((json) => json.data ? setReview(json.data) : setError('Review not found'))
+    Promise.all([
+      fetch(`/api/v1/reviews/${id}`, {
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+      }),
+      fetch(`/api/v1/reviews/${id}/comments?limit=50`, {
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+      }),
+    ])
+      .then(async ([reviewRes, commentsRes]) => {
+        const reviewJson = await reviewRes.json().catch(() => ({}))
+        if (reviewRes.ok && reviewJson.data) {
+          setReview(reviewJson.data)
+        } else {
+          setError('Review not found')
+        }
+
+        const commentsJson = await commentsRes.json().catch(() => ({}))
+        if (commentsRes.ok && Array.isArray(commentsJson.data)) {
+          setComments(commentsJson.data)
+        }
+      })
       .catch(() => setError('Failed to load review'))
+      .finally(() => setCommentsLoading(false))
   }, [id, accessToken])
+
+  const submitComment = async () => {
+    if (!accessToken || !newComment.trim()) return
+    setCommentSubmitting(true)
+    try {
+      const res = await fetch(`/api/v1/reviews/${id}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ text: newComment.trim() }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || !json.data) return
+      setComments((prev) => [json.data, ...prev])
+      setReview((prev) => prev ? { ...prev, commentCount: (prev.commentCount ?? 0) + 1 } : prev)
+      setNewComment('')
+    } finally {
+      setCommentSubmitting(false)
+    }
+  }
+
+  const deleteComment = async (commentId: string) => {
+    if (!accessToken) return
+    const res = await fetch(`/api/v1/comments/${commentId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+    if (!res.ok) return
+    setComments((prev) => prev.filter((c) => c.id !== commentId))
+    setReview((prev) => prev ? { ...prev, commentCount: Math.max(0, (prev.commentCount ?? 0) - 1) } : prev)
+  }
 
   const submitReport = async () => {
     if (!accessToken || !reportReason.trim()) return
@@ -153,6 +217,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
             initialLikeCount={review.likeCount ?? 0}
             initialLikedByMe={Boolean(review.likedByMe)}
           />
+          <p className="text-xs text-snack-muted mt-1">{review.commentCount ?? comments.length} comments</p>
         </div>
 
         <div className="flex items-center justify-between pt-2 border-t border-[#ededed]">
@@ -170,6 +235,74 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
           </div>
           <time className="text-xs text-snack-muted">{new Date(review.createdAt).toLocaleDateString()}</time>
         </div>
+      </div>
+
+      <div className="card p-5 space-y-4">
+        <h2 className="font-heading font-semibold text-snack-text">Comments</h2>
+
+        {user ? (
+          <div className="space-y-2">
+            <textarea
+              className="input min-h-[84px] text-sm"
+              placeholder="Write a comment..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              maxLength={1000}
+            />
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-snack-muted">{newComment.length}/1000</p>
+              <button
+                className="btn-primary text-sm"
+                onClick={submitComment}
+                disabled={commentSubmitting || newComment.trim().length < 1}
+              >
+                {commentSubmitting ? 'Posting...' : 'Post comment'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-snack-muted">
+            <Link href="/auth/login" className="text-snack-primary hover:underline">Log in</Link> to comment.
+          </p>
+        )}
+
+        {commentsLoading ? (
+          <p className="text-sm text-snack-muted">Loading comments...</p>
+        ) : comments.length === 0 ? (
+          <p className="text-sm text-snack-muted">No comments yet. Be the first.</p>
+        ) : (
+          <div className="space-y-3">
+            {comments.map((comment) => (
+              <div key={comment.id} className="rounded-xl border border-[#ececec] p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="h-7 w-7 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-xs uppercase overflow-hidden">
+                      {comment.user.avatarKey ? (
+                        <img src={avatarUrl(comment.user.avatarKey) ?? undefined} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        comment.user.username[0]
+                      )}
+                    </div>
+                    <Link href={`/u/${comment.user.username}`} className="text-sm font-medium text-snack-text hover:underline truncate">
+                      {comment.user.username}
+                    </Link>
+                    <time className="text-xs text-snack-muted whitespace-nowrap">{new Date(comment.createdAt).toLocaleDateString()}</time>
+                  </div>
+                  {comment.canDelete && (
+                    <button
+                      type="button"
+                      className="text-xs text-red-600 hover:underline"
+                      onClick={() => void deleteComment(comment.id)}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+                <p className="mt-2 text-sm text-snack-muted whitespace-pre-line">{comment.text}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Owner actions */}

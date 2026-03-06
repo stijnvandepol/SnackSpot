@@ -82,6 +82,10 @@ export const UpdateReviewSchema = z.object({
   photoIds: z.array(z.string()).max(5).optional(),
 })
 
+export const CreateCommentSchema = z.object({
+  text: z.string().min(1).max(1000),
+})
+
 export const UpdateMeProfileSchema = z.object({
   username: z
     .string()

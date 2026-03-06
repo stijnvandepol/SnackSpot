@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CreateReviewSchema, UpdateReviewSchema } from '@snackspot/shared'
+import { CreateCommentSchema, CreateReviewSchema, UpdateReviewSchema } from '@snackspot/shared'
 
 describe('CreateReviewSchema structured ratings', () => {
   it('accepts ratings object', () => {
@@ -29,6 +29,13 @@ describe('UpdateReviewSchema photos', () => {
       text: 'Updated review text with enough characters',
       photoIds: ['photo_1', 'photo_2'],
     })
+    expect(parsed.success).toBe(true)
+  })
+})
+
+describe('CreateCommentSchema', () => {
+  it('accepts a valid comment body', () => {
+    const parsed = CreateCommentSchema.safeParse({ text: 'Helemaal mee eens, top plek.' })
     expect(parsed.success).toBe(true)
   })
 })

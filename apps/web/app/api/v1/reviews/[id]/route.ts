@@ -41,7 +41,7 @@ export async function GET(
         status: true,
         createdAt: true,
         updatedAt: true,
-        _count: { select: { reviewLikes: true } },
+        _count: { select: { reviewLikes: true, comments: true } },
         user: { select: { id: true, username: true, avatarKey: true, role: true } },
         place: { select: { id: true, name: true, address: true } },
         reviewLikes: {
@@ -67,6 +67,7 @@ export async function GET(
     return withNoStore(ok({
       ...review,
       likeCount: review._count.reviewLikes,
+      commentCount: review._count.comments,
       likedByMe: auth ? review.reviewLikes.length > 0 : false,
       ratings: {
         taste: review.ratingTaste,

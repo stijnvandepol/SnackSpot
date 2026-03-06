@@ -75,6 +75,7 @@ model User {
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
   reviews           Review[]
+  comments          Comment[]
   favorites         Favorite[]
   photos            Photo[]
   reviewLikes       ReviewLike[]
@@ -133,6 +134,7 @@ model Review {
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   place        Place         @relation(fields: [placeId], references: [id], onDelete: Cascade)
   reviewLikes  ReviewLike[]
+  comments     Comment[]
   reviewPhotos ReviewPhoto[]
   reports      Report[]
 
@@ -195,6 +197,22 @@ model ReviewLike {
   @@index([reviewId, createdAt(sort: Desc)])
   @@index([userId, createdAt(sort: Desc)])
   @@map("review_likes")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  reviewId  String   @map("review_id")
+  text      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("comments")
 }
 
 model Photo {
