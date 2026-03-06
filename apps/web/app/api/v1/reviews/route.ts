@@ -6,6 +6,7 @@ import { created, err, parseBody, requireAuth, serverError, isResponse } from '@
 import { rateLimitUser } from '@/lib/rate-limit'
 import { normalizeRatings } from '@/lib/ratings'
 import { recalculateUserBadges } from '@/lib/badge-service'
+import { normalizeDishName } from '@/lib/text'
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
@@ -34,6 +35,7 @@ export async function POST(req: NextRequest) {
           portion: body.rating!,
           service: null,
         })
+    const normalizedDishName = normalizeDishName(body.dishName)
 
     let placeId = body.placeId
 
@@ -86,7 +88,7 @@ export async function POST(req: NextRequest) {
         ratingService: normalizedRatings.service,
         ratingOverall: normalizedRatings.overall,
         text: body.text,
-        dishName: body.dishName,
+        dishName: normalizedDishName,
         reviewPhotos: {
           create: body.photoIds.map((photoId, i) => ({ photoId, sortOrder: i })),
         },

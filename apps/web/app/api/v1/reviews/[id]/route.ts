@@ -16,6 +16,7 @@ import {
 import { ReviewStatus } from '@prisma/client'
 import { normalizeRatings } from '@/lib/ratings'
 import { recalculateUserBadges } from '@/lib/badge-service'
+import { normalizeDishName } from '@/lib/text'
 
 export async function GET(
   req: NextRequest,
@@ -95,6 +96,7 @@ export async function PATCH(
 
   try {
     const normalized = body.ratings ? normalizeRatings(body.ratings) : null
+    const normalizedDishName = normalizeDishName(body.dishName)
 
     const review = await prisma.review.findUnique({
       where: { id },
@@ -159,7 +161,7 @@ export async function PATCH(
               }
             : {}),
         ...(body.text !== undefined && { text: body.text }),
-        ...(body.dishName !== undefined && { dishName: body.dishName }),
+        ...(body.dishName !== undefined && { dishName: normalizedDishName }),
         ...(body.photoIds && body.photoIds.length > 0
           ? {
               reviewPhotos: {
