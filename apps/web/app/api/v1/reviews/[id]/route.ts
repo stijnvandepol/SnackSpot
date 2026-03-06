@@ -1,6 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { UpdateReviewSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
+import { env } from '@/lib/env'
 import {
   ok,
   noContent,
@@ -97,12 +98,43 @@ export async function PATCH(
 
     const review = await prisma.review.findUnique({
       where: { id },
-      select: { userId: true, status: true },
+      select: { userId: true, status: true, reviewPhotos: { select: { sortOrder: true } } },
     })
     if (!review || review.status === ReviewStatus.DELETED) return err('Review not found', 404)
 
     // Only the owner can edit
     if (review.userId !== auth.sub) return err('Forbidden', 403)
+
+    if (body.photoIds && body.photoIds.length > 0) {
+      const nextPhotoCount = review.reviewPhotos.length + body.photoIds.length
+      if (nextPhotoCount > env.MAX_PHOTOS_PER_REVIEW) {
+        return err(`Too many photos - max ${env.MAX_PHOTOS_PER_REVIEW}`, 422)
+      }
+
+      const photos = await prisma.photo.findMany({
+        where: { id: { in: body.photoIds }, uploaderId: auth.sub },
+        select: {
+          id: true,
+          moderationStatus: true,
+          reviewPhotos: { select: { reviewId: true }, take: 1 },
+        },
+      })
+      if (photos.length !== body.photoIds.length) {
+        return err('One or more photo IDs are invalid', 422)
+      }
+
+      const notConfirmed = photos.filter((p) => p.moderationStatus === 'PENDING')
+      if (notConfirmed.length > 0) {
+        return err('One or more photos are not uploaded yet - please wait for upload confirmation', 409)
+      }
+
+      const alreadyUsed = photos.filter((p) => p.reviewPhotos.length > 0)
+      if (alreadyUsed.length > 0) {
+        return err('One or more photos are already attached to a review', 409)
+      }
+    }
+
+    const maxSortOrder = review.reviewPhotos.reduce((max, rp) => Math.max(max, rp.sortOrder), -1)
 
     const updated = await prisma.review.update({
       where: { id },
@@ -128,6 +160,13 @@ export async function PATCH(
             : {}),
         ...(body.text !== undefined && { text: body.text }),
         ...(body.dishName !== undefined && { dishName: body.dishName }),
+        ...(body.photoIds && body.photoIds.length > 0
+          ? {
+              reviewPhotos: {
+                create: body.photoIds.map((photoId, i) => ({ photoId, sortOrder: maxSortOrder + i + 1 })),
+              },
+            }
+          : {}),
       },
       select: {
         id: true,

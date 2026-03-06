@@ -79,6 +79,7 @@ export const UpdateReviewSchema = z.object({
   }).optional(),
   text: z.string().min(10).max(2000).optional(),
   dishName: z.string().min(1).max(100).optional(),
+  photoIds: z.array(z.string()).max(5).optional(),
 })
 
 export const ReviewsQuerySchema = z.object({
