@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 
@@ -124,6 +124,13 @@ export default function AddReviewPage() {
   const [geocoding, setGeocoding] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const photosRef = useRef<UploadedPhoto[]>([])
+
+  const revokePreviewUrl = (url: string) => {
+    if (url.startsWith('blob:')) {
+      URL.revokeObjectURL(url)
+    }
+  }
 
   // Search for existing places
   const handleSearchPlaces = async (query: string) => {
@@ -148,6 +155,16 @@ export default function AddReviewPage() {
       setSearching(false)
     }
   }
+
+  useEffect(() => {
+    photosRef.current = photos
+  }, [photos])
+
+  useEffect(() => {
+    return () => {
+      photosRef.current.forEach((photo) => revokePreviewUrl(photo.previewUrl))
+    }
+  }, [])
 
   // Debounced search
   const handleSearchInputChange = (query: string) => {
@@ -781,7 +798,10 @@ export default function AddReviewPage() {
                   </div>
                   <button
                     className="absolute top-1 right-1 h-6 w-6 bg-black/50 rounded-full text-white text-xs flex items-center justify-center"
-                    onClick={() => setPhotos((prev) => prev.filter((x) => x.photoId !== p.photoId))}
+                    onClick={() => {
+                      revokePreviewUrl(p.previewUrl)
+                      setPhotos((prev) => prev.filter((x) => x.photoId !== p.photoId))
+                    }}
                   >
                     ×
                   </button>

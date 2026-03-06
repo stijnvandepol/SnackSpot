@@ -147,6 +147,13 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
   const [pageLoading, setPageLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const photosRef = useRef<UploadedPhoto[]>([])
+
+  const revokePreviewUrl = (url: string) => {
+    if (url.startsWith('blob:')) {
+      URL.revokeObjectURL(url)
+    }
+  }
 
   useEffect(() => {
     fetch(`/api/v1/reviews/${id}`)
@@ -190,6 +197,16 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
         setPageLoading(false)
       })
   }, [id])
+
+  useEffect(() => {
+    photosRef.current = photos
+  }, [photos])
+
+  useEffect(() => {
+    return () => {
+      photosRef.current.forEach((photo) => revokePreviewUrl(photo.previewUrl))
+    }
+  }, [])
 
   if (loading || pageLoading) {
     return (
@@ -527,7 +544,10 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
                   <button
                     type="button"
                     className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-xs text-white"
-                    onClick={() => setPhotos((prev) => prev.filter((x) => x.photoId !== p.photoId))}
+                    onClick={() => {
+                      revokePreviewUrl(p.previewUrl)
+                      setPhotos((prev) => prev.filter((x) => x.photoId !== p.photoId))
+                    }}
                   >
                     ×
                   </button>
