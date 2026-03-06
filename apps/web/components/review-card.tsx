@@ -15,6 +15,7 @@ interface ReviewCardProps {
     user: { id: string; username: string; avatarKey?: string | null }
     place?: { id: string; name: string; address: string }
     likeCount?: number
+    commentCount?: number
     likedByMe?: boolean
     reviewPhotos?: Array<{ photo: { id: string; variants: Record<string, string> } }>
   }
@@ -111,7 +112,10 @@ export function ReviewCard({
           </div>
         </div>
       </Link>
-      <div className="px-4 pb-4 -mt-1 flex justify-end">
+      <div className="px-4 pb-4 -mt-1 flex items-center justify-between gap-3">
+        <span className="text-xs text-snack-muted">
+          {review.commentCount ?? 0} {(review.commentCount ?? 0) === 1 ? 'comment' : 'comments'}
+        </span>
         <ReviewLikeButton
           reviewId={review.id}
           initialLikeCount={review.likeCount ?? 0}

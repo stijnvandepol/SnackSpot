@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
         createdAt: true,
         user: { select: { id: true, username: true, avatarKey: true, role: true } },
         place: { select: { id: true, name: true, address: true } },
-        _count: { select: { reviewLikes: true } },
+        _count: { select: { reviewLikes: true, comments: true } },
         reviewLikes: {
           where: { userId: auth?.sub ?? '__no_user__' },
           select: { userId: true },
@@ -82,6 +82,7 @@ export async function GET(req: NextRequest) {
     const withLikes = items.map((item) => ({
       ...item,
       likeCount: item._count.reviewLikes,
+      commentCount: item._count.comments,
       likedByMe: item.reviewLikes.length > 0,
       ratings: {
         taste: item.ratingTaste,
