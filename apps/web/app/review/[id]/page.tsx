@@ -2,9 +2,9 @@
 import { use, useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth-provider'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { ReviewLikeButton } from '@/components/review-like-button'
-import { BackButton } from '@/components/back-button'
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null
@@ -20,6 +20,7 @@ interface Review {
 export default function ReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const { user, accessToken } = useAuth()
+  const searchParams = useSearchParams()
   const [review, setReview] = useState<Review | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [reportReason, setReportReason] = useState('')
@@ -65,11 +66,45 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
   const photos = review.reviewPhotos.sort((a, b) => a.sortOrder - b.sortOrder)
   const isOwner = user?.id === review.user.id
+  const from = searchParams.get('from')
+
+  const parsedPlaceContext = (() => {
+    if (!from || !from.startsWith('place:')) return null
+    const parts = from.split(':')
+    const placeId = parts[1] ?? ''
+    const encodedOrigin = parts.slice(2).join(':')
+    const origin = encodedOrigin ? decodeURIComponent(encodedOrigin) : 'search'
+    return placeId ? { placeId, origin } : null
+  })()
+
+  const backHref = (() => {
+    if (!from) return '/feed'
+    if (from === 'feed') return '/feed'
+    if (from === 'profile') return '/profile'
+    if (parsedPlaceContext) {
+      return `/place/${encodeURIComponent(parsedPlaceContext.placeId)}?from=${encodeURIComponent(parsedPlaceContext.origin)}`
+    }
+    if (from.startsWith('user:')) {
+      const username = from.slice('user:'.length)
+      return username ? `/u/${encodeURIComponent(username)}` : '/feed'
+    }
+    return '/feed'
+  })()
+
+  const editHref = from
+    ? `/review/${id}/edit?from=${encodeURIComponent(from)}`
+    : `/review/${id}/edit`
+
+  const placeLinkHref = parsedPlaceContext
+    ? `/place/${encodeURIComponent(parsedPlaceContext.placeId)}?from=${encodeURIComponent(parsedPlaceContext.origin)}`
+    : `/place/${review.place.id}?from=feed`
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6 space-y-6">
       <div className="flex items-center gap-2">
-        <BackButton fallbackHref="/feed" label="Back" />
+        <Link href={backHref} className="btn-secondary text-sm">
+          ← Back
+        </Link>
       </div>
 
       {/* Photo gallery */}
@@ -91,7 +126,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
         <div className="flex items-start justify-between gap-2">
           <div>
             {review.dishName && <p className="font-heading font-bold text-lg text-snack-text">{review.dishName}</p>}
-            <Link href={`/place/${review.place.id}`} className="text-sm text-snack-primary hover:underline">
+            <Link href={placeLinkHref} className="text-sm text-snack-primary hover:underline">
               {review.place.name}
             </Link>
           </div>
@@ -135,7 +170,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
       {/* Owner actions */}
       {isOwner && (
         <div className="flex gap-2">
-          <Link href={`/review/${id}/edit`} className="btn-secondary flex-1 text-center text-sm">Edit</Link>
+          <Link href={editHref} className="btn-secondary flex-1 text-center text-sm">Edit</Link>
           <button
             className="btn-secondary flex-1 text-sm text-red-600 hover:bg-red-50"
             onClick={async () => {

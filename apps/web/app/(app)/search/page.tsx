@@ -1,6 +1,5 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
 import { PlaceCard } from '@/components/place-card'
 
 interface Place {
@@ -76,11 +75,6 @@ export default function SearchPage() {
         <p className="text-xs text-snack-muted">Tip: press / to focus search.</p>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-2">
-        <Link href="/feed" className="btn-secondary text-sm py-2">Back to Feed</Link>
-        <Link href="/nearby" className="btn-secondary text-sm py-2">Use Nearby</Link>
-      </div>
-
       <form onSubmit={handleSubmit} className="flex gap-2 mb-6">
         <input
           ref={inputRef}
@@ -129,6 +123,7 @@ export default function SearchPage() {
                 <PlaceCard
                   key={p.id}
                   place={{ id: p.id, name: p.name, address: p.address, avgRating: p.avg_rating, reviewCount: p.review_count }}
+                  from="search"
                 />
               ))}
             </div>
@@ -175,6 +170,7 @@ export default function SearchPage() {
           <PlaceCard
             key={p.id}
             place={{ id: p.id, name: p.name, address: p.address, avgRating: p.avg_rating, reviewCount: p.review_count }}
+            from="search"
           />
         ))}
       </div>

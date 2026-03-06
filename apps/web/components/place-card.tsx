@@ -9,6 +9,7 @@ interface PlaceCardProps {
     reviewCount?: number
     distance?: number
   }
+  from?: string
 }
 
 function formatDistance(meters: number): string {
@@ -16,9 +17,13 @@ function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1)} km`
 }
 
-export function PlaceCard({ place }: PlaceCardProps) {
+export function PlaceCard({ place, from }: PlaceCardProps) {
+  const href = from
+    ? `/place/${place.id}?from=${encodeURIComponent(from)}`
+    : `/place/${place.id}`
+
   return (
-    <Link href={`/place/${place.id}`}>
+    <Link href={href}>
       <article className="card p-4 transition hover:shadow-md">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">

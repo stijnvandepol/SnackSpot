@@ -87,12 +87,6 @@ export default function FeedPage() {
         <p className="text-sm text-snack-muted">Discover snack posts near you — photo first, fast scroll.</p>
       </div>
 
-      <div className="mb-6 hidden md:flex flex-wrap gap-2">
-        <Link href="/add-review" className="btn-primary text-sm py-2">+ New Post</Link>
-        <Link href="/search" className="btn-secondary text-sm py-2">Explore Places</Link>
-        <Link href="/nearby" className="btn-secondary text-sm py-2">Nearby Spots</Link>
-      </div>
-
       {initial && loading && (
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
@@ -114,6 +108,7 @@ export default function FeedPage() {
             key={r.id}
             review={r}
             photoVariantPreference={['medium', 'large', 'thumb']}
+            backContext="feed"
           />
         ))}
       </div>

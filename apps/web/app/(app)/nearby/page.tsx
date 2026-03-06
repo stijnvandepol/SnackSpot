@@ -1,6 +1,5 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
-import Link from 'next/link'
 import { PlaceCard } from '@/components/place-card'
 
 interface Place {
@@ -68,11 +67,6 @@ export default function NearbyPage() {
       <div className="mb-6 space-y-1">
         <h1 className="text-2xl md:text-3xl font-heading font-bold text-snack-text">Map View</h1>
         <p className="text-sm text-snack-muted">Discover snack locations around you and open each location page.</p>
-      </div>
-
-      <div className="mb-4 hidden md:flex flex-wrap gap-2">
-        <Link href="/feed" className="btn-secondary text-sm py-2">Back to Feed</Link>
-        <Link href="/search" className="btn-secondary text-sm py-2">Search by Name</Link>
       </div>
 
       {/* Controls */}
@@ -159,6 +153,7 @@ export default function NearbyPage() {
               reviewCount: p.review_count,
               distance: p.distance_m,
             }}
+            from="nearby"
           />
         ))}
       </div>

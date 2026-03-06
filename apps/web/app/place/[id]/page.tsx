@@ -1,10 +1,10 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { use } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { ReviewCard } from '@/components/review-card'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth-provider'
-import { BackButton } from '@/components/back-button'
 
 interface Place { id: string; name: string; address: string; lat: number; lng: number; avg_rating: number | null; review_count: number }
 interface Review {
@@ -16,12 +16,27 @@ interface Review {
 
 export default function PlacePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const searchParams = useSearchParams()
   const { accessToken } = useAuth()
   const [place, setPlace] = useState<Place | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [sort, setSort] = useState<'new' | 'top'>('new')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const from = searchParams.get('from')
+
+  const backHref = (() => {
+    if (!from) return '/search'
+    if (from === 'search') return '/search'
+    if (from === 'nearby') return '/nearby'
+    if (from === 'feed') return '/feed'
+    if (from === 'profile') return '/profile'
+    if (from.startsWith('user:')) {
+      const username = from.slice('user:'.length)
+      return username ? `/u/${encodeURIComponent(username)}` : '/search'
+    }
+    return '/search'
+  })()
 
   useEffect(() => {
     fetch(`/api/v1/places/${id}`)
@@ -53,7 +68,7 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <div className="mb-4 flex items-center justify-between gap-2">
-        <BackButton fallbackHref="/feed" label="Back" />
+        <Link href={backHref} className="btn-secondary text-sm">← Back</Link>
         {place && (
           <Link href={`/add-review?placeId=${place.id}`} className="btn-primary text-sm">
             + Write Review
@@ -117,7 +132,12 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
           ) : (
             <div className="space-y-4">
               {reviews.map((r) => (
-                <ReviewCard key={r.id} review={{ ...r, place: { id: place.id, name: place.name, address: place.address } }} showPlace={false} />
+                <ReviewCard
+                  key={r.id}
+                  review={{ ...r, place: { id: place.id, name: place.name, address: place.address } }}
+                  showPlace={false}
+                  backContext={`place:${place.id}:${encodeURIComponent(from ?? 'search')}`}
+                />
               ))}
             </div>
           )}

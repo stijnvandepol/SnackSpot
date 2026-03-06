@@ -92,7 +92,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             </div>
           ) : (
             <div className="space-y-4">
-              {reviews.map((r) => <ReviewCard key={r.id} review={r} />)}
+              {reviews.map((r) => <ReviewCard key={r.id} review={r} backContext={`user:${username}`} />)}
             </div>
           )}
         </>

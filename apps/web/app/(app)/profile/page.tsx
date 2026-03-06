@@ -246,7 +246,7 @@ export default function ProfilePage() {
       )}
 
       <div className="space-y-4">
-        {reviews.map((r) => <ReviewCard key={r.id} review={r} />)}
+        {reviews.map((r) => <ReviewCard key={r.id} review={r} backContext="profile" />)}
       </div>
     </div>
   )

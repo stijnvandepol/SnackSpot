@@ -19,6 +19,7 @@ interface ReviewCardProps {
   }
   showPlace?: boolean
   photoVariantPreference?: ReadonlyArray<'thumb' | 'medium' | 'large'>
+  backContext?: string
 }
 
 function timeAgo(dateInput: Date | string): string {
@@ -43,15 +44,20 @@ export function ReviewCard({
   review,
   showPlace = true,
   photoVariantPreference = ['thumb', 'medium', 'large'],
+  backContext,
 }: ReviewCardProps) {
   const thumb =
     review.reviewPhotos
       ?.map((rp) => photoVariantUrl(rp.photo.variants as Record<string, string>, photoVariantPreference))
       .find((url): url is string => Boolean(url)) ?? null
 
+  const reviewHref = backContext
+    ? `/review/${review.id}?from=${encodeURIComponent(backContext)}`
+    : `/review/${review.id}`
+
   return (
     <article className="card overflow-hidden transition hover:shadow-md">
-      <Link href={`/review/${review.id}`} className="block">
+      <Link href={reviewHref} className="block">
         {thumb && (
           <div className="relative h-64 w-full bg-snack-surface md:h-72">
             <img

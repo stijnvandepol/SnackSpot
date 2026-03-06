@@ -1,7 +1,7 @@
 'use client'
 import { use, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { photoVariantUrl } from '@/lib/photo-url'
 
@@ -35,7 +35,7 @@ interface UploadedPhoto {
   status: 'uploading' | 'confirming' | 'ready' | 'error'
 }
 
-type Step = 'review' | 'photos'
+type Step = 'place' | 'review' | 'photos'
 
 const MAX_PHOTOS = 5
 
@@ -100,7 +100,7 @@ function computeOverall(ratings: RatingDraft): number {
 }
 
 function StepIndicators({ step }: { step: Step }) {
-  const steps: Step[] = ['review', 'photos']
+  const steps: Step[] = ['place', 'review', 'photos']
 
   return (
     <div className="mb-8 flex items-center gap-2">
@@ -115,7 +115,7 @@ function StepIndicators({ step }: { step: Step }) {
           }`}>
             {i + 1}
           </div>
-          {i < steps.length - 1 && <div className="h-0.5 w-8 flex-1 bg-[#e6e6e6]" />}
+          {i < steps.length - 1 && <div className="flex-1 h-0.5 bg-[#e6e6e6] w-8" />}
         </div>
       ))}
     </div>
@@ -125,7 +125,12 @@ function StepIndicators({ step }: { step: Step }) {
 export default function EditReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, accessToken, loading } = useAuth()
+  const from = searchParams.get('from')
+  const reviewHref = from
+    ? `/review/${id}?from=${encodeURIComponent(from)}`
+    : `/review/${id}`
 
   const [review, setReview] = useState<ReviewEditData | null>(null)
   const [ratings, setRatings] = useState<RatingDraft>({
@@ -137,7 +142,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
   const [dishName, setDishName] = useState('')
   const [text, setText] = useState('')
   const [photos, setPhotos] = useState<UploadedPhoto[]>([])
-  const [step, setStep] = useState<Step>('review')
+  const [step, setStep] = useState<Step>('place')
   const [saving, setSaving] = useState(false)
   const [pageLoading, setPageLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -218,7 +223,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <p className="font-semibold text-snack-text">You can only edit your own review.</p>
-        <Link href={`/review/${id}`} className="btn-primary mt-4 inline-block">Back to Review</Link>
+        <Link href={reviewHref} className="btn-primary mt-4 inline-block">Back to Review</Link>
       </div>
     )
   }
@@ -269,7 +274,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
         return
       }
 
-      router.push(`/review/${id}`)
+      router.push(reviewHref)
       router.refresh()
     } catch {
       setError('Failed to save changes')
@@ -375,22 +380,35 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6">
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-heading font-bold text-snack-text">Edit Post</h1>
-        <Link href={`/review/${id}`} className="btn-secondary text-sm">Cancel</Link>
-      </div>
+      <h1 className="mb-6 text-2xl font-heading font-bold text-snack-text">Edit Post</h1>
 
-      <p className="mt-1 text-sm text-snack-muted">Update your ratings, text and photos.</p>
+      <StepIndicators step={step} />
 
-      <div className="mt-6 card p-4">
-        <p className="text-sm text-snack-muted">Place</p>
-        <p className="font-semibold text-snack-text">{review.place.name}</p>
-        <p className="mt-1 text-xs text-snack-muted">{review.place.address}</p>
-      </div>
+      {step === 'place' && (
+        <div className="space-y-4">
+          <div className="card p-4">
+            <p className="text-sm text-snack-muted">Place</p>
+            <p className="font-semibold text-snack-text">{review.place.name}</p>
+            <p className="mt-1 text-xs text-snack-muted">{review.place.address}</p>
+          </div>
 
-      <div className="mt-6">
-        <StepIndicators step={step} />
-      </div>
+          <button
+            className="btn-primary mt-2 w-full"
+            onClick={() => {
+              setError(null)
+              setStep('review')
+            }}
+          >
+            Next: Write Review -&gt;
+          </button>
+
+          <Link href={reviewHref} className="btn-secondary block w-full text-center">
+            Cancel
+          </Link>
+
+          {error && <p className="text-sm text-red-500">{error}</p>}
+        </div>
+      )}
 
       {step === 'review' && (
         <div className="space-y-4">
@@ -451,7 +469,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
           {error && <p className="text-sm text-red-500">{error}</p>}
 
           <div className="flex gap-2">
-            <Link href={`/review/${id}`} className="btn-secondary flex-1 text-center">Cancel</Link>
+            <button className="btn-secondary flex-1" onClick={() => setStep('place')}>{"<- Back"}</button>
             <button
               className="btn-primary flex-1"
               onClick={() => {
@@ -463,7 +481,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
                 setStep('photos')
               }}
             >
-              Next: Edit Photos →
+              Next: Add Photos -&gt;
             </button>
           </div>
         </div>
@@ -471,7 +489,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
 
       {step === 'photos' && (
         <div className="space-y-4">
-          <p className="text-sm text-snack-muted">Add, remove or replace photos (max 5).</p>
+          <p className="text-sm text-snack-muted">Add up to 5 photos (optional). Remove any photo with x.</p>
 
           <input
             id="edit-review-photo-input"
@@ -510,7 +528,6 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
                     type="button"
                     className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-xs text-white"
                     onClick={() => setPhotos((prev) => prev.filter((x) => x.photoId !== p.photoId))}
-                    disabled={p.status === 'uploading' || p.status === 'confirming'}
                   >
                     ×
                   </button>
@@ -522,13 +539,13 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
           {error && <p className="text-sm text-red-500">{error}</p>}
 
           <div className="flex gap-2">
-            <button className="btn-secondary flex-1" onClick={() => setStep('review')}>← Back</button>
+            <button className="btn-secondary flex-1" onClick={() => setStep('review')}>{"<- Back"}</button>
             <button
               className="btn-primary flex-1"
               onClick={submit}
               disabled={saving || photos.some((p) => p.status === 'uploading' || p.status === 'confirming')}
             >
-              {saving ? 'Saving…' : '✓ Save Changes'}
+              {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </div>
@@ -536,4 +553,3 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
     </div>
   )
 }
-
