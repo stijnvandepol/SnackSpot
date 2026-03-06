@@ -4,6 +4,7 @@ import { useAuth } from '@/components/auth-provider'
 import Link from 'next/link'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { ReviewLikeButton } from '@/components/review-like-button'
+import { BackButton } from '@/components/back-button'
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null
@@ -67,10 +68,12 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6 space-y-6">
-      <div className="flex">
-        <Link href="/feed" className="btn-secondary text-sm">
-          Back to Feed
-        </Link>
+      <div className="flex items-center justify-between gap-2">
+        <BackButton fallbackHref="/feed" label="Back" />
+        <div className="flex gap-2">
+          <Link href={`/place/${review.place.id}`} className="btn-secondary text-sm">Place</Link>
+          <Link href={`/u/${review.user.username}`} className="btn-secondary text-sm">User</Link>
+        </div>
       </div>
 
       {/* Photo gallery */}

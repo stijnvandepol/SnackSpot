@@ -11,7 +11,7 @@ export function TopNav() {
   const navLinks = [
     { href: '/feed', label: 'Home' },
     { href: '/search', label: 'Explore' },
-    { href: '/nearby', label: 'Map' },
+    { href: '/nearby', label: 'Nearby' },
   ]
 
   return (

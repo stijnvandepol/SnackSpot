@@ -1,5 +1,6 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
 import { PlaceCard } from '@/components/place-card'
 
 interface Place {
@@ -69,6 +70,11 @@ export default function NearbyPage() {
         <p className="text-sm text-snack-muted">Discover snack locations around you and open each location page.</p>
       </div>
 
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Link href="/feed" className="btn-secondary text-sm py-2">Back to Feed</Link>
+        <Link href="/search" className="btn-secondary text-sm py-2">Search by Name</Link>
+      </div>
+
       {/* Controls */}
       <div className="card p-4 mb-6 space-y-4">
         <button onClick={useMyLocation} className="btn-primary w-full" disabled={loading}>
@@ -79,6 +85,18 @@ export default function NearbyPage() {
           <label className="label">
             Radius: <span className="font-semibold text-snack-primary">{radius >= 1000 ? `${radius / 1000} km` : `${radius} m`}</span>
           </label>
+          <div className="mb-2 flex flex-wrap gap-2">
+            {[1000, 3000, 5000, 10000].map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRadius(r)}
+                className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${radius === r ? 'bg-snack-primary text-white' : 'bg-snack-surface text-snack-muted'}`}
+              >
+                {r >= 1000 ? `${r / 1000} km` : `${r} m`}
+              </button>
+            ))}
+          </div>
           <input
             type="range"
             min={200}
@@ -94,6 +112,17 @@ export default function NearbyPage() {
         </div>
 
         {geoError && <p className="text-sm text-red-500">{geoError}</p>}
+
+        {position && (
+          <button
+            type="button"
+            className="btn-secondary w-full"
+            onClick={() => search(position.lat, position.lng, radius)}
+            disabled={loading}
+          >
+            Search this area again
+          </button>
+        )}
       </div>
 
       {/* Results */}

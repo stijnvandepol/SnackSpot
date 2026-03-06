@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { TopNav } from '@/components/top-nav'
 import { BottomNav } from '@/components/bottom-nav'
 
@@ -9,18 +10,26 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile brand bar */}
       <div className="md:hidden sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-[#ececec]">
-        <div className="h-14 px-4 flex items-center font-heading font-bold text-xl leading-none">
-          <span className="text-snack-primary">Snack</span>
-          <span className="text-snack-accent inline-flex items-center">
-            Sp
-            <span className="inline-flex h-[0.95em] w-[0.75em] items-center justify-center align-middle">
-              <svg viewBox="0 0 16 20" fill="none" className="h-[0.95em] w-[0.75em]" aria-hidden="true">
-                <path d="M8 19c2.6-3.5 6-7.5 6-11a6 6 0 1 0-12 0c0 3.5 3.4 7.5 6 11Z" fill="currentColor"/>
-                <circle cx="8" cy="8" r="2.25" fill="white"/>
-              </svg>
+        <div className="h-14 px-4 flex items-center justify-between gap-3">
+          <Link href="/feed" className="font-heading font-bold text-xl leading-none">
+            <span className="text-snack-primary">Snack</span>
+            <span className="text-snack-accent inline-flex items-center">
+              Sp
+              <span className="inline-flex h-[0.95em] w-[0.75em] items-center justify-center align-middle">
+                <svg viewBox="0 0 16 20" fill="none" className="h-[0.95em] w-[0.75em]" aria-hidden="true">
+                  <path d="M8 19c2.6-3.5 6-7.5 6-11a6 6 0 1 0-12 0c0 3.5 3.4 7.5 6 11Z" fill="currentColor"/>
+                  <circle cx="8" cy="8" r="2.25" fill="white"/>
+                </svg>
+              </span>
+              t
             </span>
-            t
-          </span>
+          </Link>
+
+          <div className="flex items-center gap-2 text-xs">
+            <Link href="/search" className="btn-ghost py-1.5 px-2.5">Search</Link>
+            <Link href="/add-review" className="btn-primary py-1.5 px-2.5">Post</Link>
+            <Link href="/profile" className="btn-ghost py-1.5 px-2.5">Me</Link>
+          </div>
         </div>
       </div>
 

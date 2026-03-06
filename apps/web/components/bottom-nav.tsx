@@ -8,7 +8,7 @@ const links = [
   { href: '/feed',       icon: 'home' as IconName, label: 'Home' },
   { href: '/search',     icon: 'search' as IconName, label: 'Explore' },
   { href: '/add-review', icon: 'plus' as IconName, label: 'Post', accent: true },
-  { href: '/nearby',     icon: 'map' as IconName, label: 'Map' },
+  { href: '/nearby',     icon: 'map' as IconName, label: 'Nearby' },
   { href: '/profile',    icon: 'user' as IconName, label: 'Profile' },
 ]
 

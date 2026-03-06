@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth-provider'
 import { ReviewCard } from '@/components/review-card'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null; createdAt: string; status: string
@@ -120,6 +121,12 @@ export default function ProfilePage() {
           <p className="text-lg font-bold text-snack-text">{earnedBadges.length}</p>
           <p className="text-xs text-snack-muted">Badges</p>
         </div>
+      </div>
+
+      <div className="mb-6 flex flex-wrap gap-2">
+        <Link href="/add-review" className="btn-primary text-sm py-2">+ New Post</Link>
+        <Link href={`/u/${user.username}`} className="btn-secondary text-sm py-2">Public Profile</Link>
+        <Link href="/feed" className="btn-secondary text-sm py-2">Back to Feed</Link>
       </div>
 
       {stats && (

@@ -1,5 +1,6 @@
 'use client'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { PlaceCard } from '@/components/place-card'
 
 interface Place {
@@ -13,6 +14,7 @@ export default function SearchPage() {
   const [featuredLoading, setFeaturedLoading] = useState(true)
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetch('/api/v1/places/featured?limit=8')
@@ -46,15 +48,42 @@ export default function SearchPage() {
     search(q)
   }
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === '/' && document.activeElement !== inputRef.current) {
+        event.preventDefault()
+        inputRef.current?.focus()
+      }
+
+      if (event.key === 'Escape' && document.activeElement === inputRef.current) {
+        event.preventDefault()
+        setQ('')
+        setPlaces([])
+        setSearched(false)
+        inputRef.current?.blur()
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <div className="mb-5 space-y-1">
         <h1 className="text-2xl md:text-3xl font-heading font-bold text-snack-text">Explore</h1>
         <p className="text-sm text-snack-muted">Search for snack spots and dishes.</p>
+        <p className="text-xs text-snack-muted">Tip: press / to focus search.</p>
+      </div>
+
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Link href="/feed" className="btn-secondary text-sm py-2">Back to Feed</Link>
+        <Link href="/nearby" className="btn-secondary text-sm py-2">Use Nearby</Link>
       </div>
 
       <form onSubmit={handleSubmit} className="flex gap-2 mb-6">
         <input
+          ref={inputRef}
           type="search"
           className="input flex-1"
           placeholder="Search places, dishes…"
@@ -62,6 +91,20 @@ export default function SearchPage() {
           onChange={(e) => setQ(e.target.value)}
           autoFocus
         />
+        {q.length > 0 && (
+          <button
+            type="button"
+            className="btn-secondary flex-shrink-0"
+            onClick={() => {
+              setQ('')
+              setPlaces([])
+              setSearched(false)
+              inputRef.current?.focus()
+            }}
+          >
+            Clear
+          </button>
+        )}
         <button type="submit" className="btn-primary flex-shrink-0" disabled={loading}>
           {loading ? '…' : 'Search'}
         </button>
@@ -106,6 +149,18 @@ export default function SearchPage() {
       {!loading && searched && places.length === 0 && (
         <div className="text-center py-16">
           <p className="text-snack-muted">No results for &ldquo;{q}&rdquo;.</p>
+          <button
+            type="button"
+            className="btn-secondary mt-3 text-sm"
+            onClick={() => {
+              setQ('')
+              setPlaces([])
+              setSearched(false)
+              inputRef.current?.focus()
+            }}
+          >
+            Try another search
+          </button>
         </div>
       )}
 

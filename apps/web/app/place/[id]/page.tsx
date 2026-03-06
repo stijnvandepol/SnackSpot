@@ -4,6 +4,7 @@ import { use } from 'react'
 import { ReviewCard } from '@/components/review-card'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth-provider'
+import { BackButton } from '@/components/back-button'
 
 interface Place { id: string; name: string; address: string; lat: number; lng: number; avg_rating: number | null; review_count: number }
 interface Review {
@@ -51,6 +52,15 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <BackButton fallbackHref="/feed" label="Back" />
+        {place && (
+          <Link href={`/add-review?placeId=${place.id}`} className="btn-primary text-sm">
+            + Write Review
+          </Link>
+        )}
+      </div>
+
       {!place ? (
         <div className="space-y-4 animate-pulse">
           <div className="h-8 bg-gray-200 rounded-xl w-2/3" />
@@ -95,10 +105,6 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
               ))}
             </div>
           </div>
-
-          <Link href={`/add-review?placeId=${place.id}`} className="btn-primary block text-center mb-6">
-            + Write a Review
-          </Link>
 
           {loading ? (
             <div className="space-y-4">
