@@ -55,7 +55,7 @@ export function TopNav() {
           {user ? (
             <>
               <Link
-                href={`/u/${user.username}`}
+                href="/profile"
                 className="h-9 w-9 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-sm uppercase"
               >
                 {user.avatarKey ? (

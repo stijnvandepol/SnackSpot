@@ -67,6 +67,7 @@ export default function ProfilePage() {
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [profileMessage, setProfileMessage] = useState<string | null>(null)
   const [profileError, setProfileError] = useState<string | null>(null)
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [selectedBadge, setSelectedBadge] = useState<BadgeRow | null>(null)
   const [loading, setLoading] = useState(false)
   const maxWeeklyPosts = Math.max(1, ...(stats?.weeklyActivity.map((week) => week.posts) ?? [0]))
@@ -211,64 +212,77 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="card p-4 mb-6 space-y-3">
-        <h2 className="font-heading font-semibold text-snack-text">Edit Profile</h2>
-
-        <div className="flex items-center gap-3">
-          <label className="btn-secondary text-sm cursor-pointer">
-            {avatarUploading ? 'Uploading...' : 'Change profile image'}
-            <input
-              type="file"
-              accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif"
-              className="sr-only"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null
-                void handleAvatarUpload(file)
-                e.currentTarget.value = ''
-              }}
-              disabled={avatarUploading}
-            />
-          </label>
-        </div>
-
-        <div>
-          <label className="label">Username</label>
-          <input
-            className="input"
-            value={editUsername}
-            onChange={(e) => setEditUsername(e.target.value)}
-            minLength={3}
-            maxLength={30}
-            pattern="^[a-zA-Z0-9_]+$"
-            disabled={Boolean(meProfile && !meProfile.usernameCanChangeNow)}
-          />
-          <p className="mt-1 text-xs text-snack-muted">
-            {meProfile?.usernameCanChangeNow
-              ? 'You can change your username now.'
-              : meProfile?.nextUsernameChangeAt
-                ? `Username can be changed again after ${new Date(meProfile.nextUsernameChangeAt).toLocaleDateString()}.`
-                : 'Username can be changed once every 30 days.'}
-          </p>
-        </div>
-
-        <div>
-          <label className="label">Bio <span className="text-snack-muted font-normal">({editBio.length}/280)</span></label>
-          <textarea
-            className="input min-h-[100px] resize-none"
-            value={editBio}
-            onChange={(e) => setEditBio(e.target.value)}
-            maxLength={280}
-            placeholder="Tell people who you are and what you love to eat."
-          />
-        </div>
-
-        {profileError && <p className="text-sm text-red-500">{profileError}</p>}
-        {profileMessage && <p className="text-sm text-green-600">{profileMessage}</p>}
-
-        <button className="btn-primary" onClick={handleSaveProfile} disabled={profileSaving || avatarUploading}>
-          {profileSaving ? 'Saving...' : 'Save profile'}
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-heading font-semibold text-snack-text">Profile</h2>
+        <button
+          type="button"
+          className="btn-secondary text-sm"
+          onClick={() => setIsEditingProfile((v) => !v)}
+        >
+          {isEditingProfile ? 'Close' : 'Edit Profile'}
         </button>
       </div>
+
+      {isEditingProfile && (
+        <div className="card p-4 mb-6 space-y-3">
+          <h3 className="font-heading font-semibold text-snack-text">Edit Profile</h3>
+
+          <div className="flex items-center gap-3">
+            <label className="btn-secondary text-sm cursor-pointer">
+              {avatarUploading ? 'Uploading...' : 'Change profile image'}
+              <input
+                type="file"
+                accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif"
+                className="sr-only"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null
+                  void handleAvatarUpload(file)
+                  e.currentTarget.value = ''
+                }}
+                disabled={avatarUploading}
+              />
+            </label>
+          </div>
+
+          <div>
+            <label className="label">Username</label>
+            <input
+              className="input"
+              value={editUsername}
+              onChange={(e) => setEditUsername(e.target.value)}
+              minLength={3}
+              maxLength={30}
+              pattern="^[a-zA-Z0-9_]+$"
+              disabled={Boolean(meProfile && !meProfile.usernameCanChangeNow)}
+            />
+            <p className="mt-1 text-xs text-snack-muted">
+              {meProfile?.usernameCanChangeNow
+                ? 'You can change your username now.'
+                : meProfile?.nextUsernameChangeAt
+                  ? `Username can be changed again after ${new Date(meProfile.nextUsernameChangeAt).toLocaleDateString()}.`
+                  : 'Username can be changed once every 30 days.'}
+            </p>
+          </div>
+
+          <div>
+            <label className="label">Bio <span className="text-snack-muted font-normal">({editBio.length}/280)</span></label>
+            <textarea
+              className="input min-h-[100px] resize-none"
+              value={editBio}
+              onChange={(e) => setEditBio(e.target.value)}
+              maxLength={280}
+              placeholder="Tell people who you are and what you love to eat."
+            />
+          </div>
+
+          {profileError && <p className="text-sm text-red-500">{profileError}</p>}
+          {profileMessage && <p className="text-sm text-green-600">{profileMessage}</p>}
+
+          <button className="btn-primary" onClick={handleSaveProfile} disabled={profileSaving || avatarUploading}>
+            {profileSaving ? 'Saving...' : 'Save profile'}
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="card p-3 text-center">
