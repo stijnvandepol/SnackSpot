@@ -299,9 +299,7 @@ export default function ProfilePage() {
       </div>
 
       <div className="mb-6 flex flex-wrap gap-2">
-        <Link href="/add-review" className="btn-primary text-sm py-2 hidden md:inline-flex">+ New Post</Link>
         <Link href={`/u/${user.username}`} className="btn-secondary text-sm py-2">Public Profile</Link>
-        <Link href="/feed" className="btn-secondary text-sm py-2 hidden md:inline-flex">Back to Feed</Link>
       </div>
 
       {stats && (
