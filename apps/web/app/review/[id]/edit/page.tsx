@@ -33,8 +33,9 @@ interface UploadedPhoto {
   photoId: string
   previewUrl: string
   status: 'uploading' | 'confirming' | 'ready' | 'error'
-  source: 'existing' | 'new'
 }
+
+type Step = 'review' | 'photos'
 
 const MAX_PHOTOS = 5
 
@@ -75,22 +76,47 @@ function createTempPhotoId(): string {
   return `tmp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
 }
 
-function RatingPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+function Stars({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
-    <div className="grid grid-cols-5 gap-2">
-      {[1, 2, 3, 4, 5].map((r) => (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((s) => (
         <button
-          key={r}
+          key={s}
           type="button"
-          onClick={() => onChange(r)}
-          className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
-            value === r
-              ? 'border-snack-primary bg-snack-surface text-snack-primary'
-              : 'border-[#e4e4e4] text-snack-muted'
-          }`}
+          className={`text-4xl transition-transform hover:scale-110 ${s <= value ? 'text-snack-rating' : 'text-[#dfdfdf]'}`}
+          onClick={() => onChange(s)}
         >
-          {r}
+          ★
         </button>
+      ))}
+    </div>
+  )
+}
+
+function computeOverall(ratings: RatingDraft): number {
+  const values = [ratings.taste, ratings.value, ratings.portion]
+  if (typeof ratings.service === 'number') values.push(ratings.service)
+  return Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10
+}
+
+function StepIndicators({ step }: { step: Step }) {
+  const steps: Step[] = ['review', 'photos']
+
+  return (
+    <div className="mb-8 flex items-center gap-2">
+      {steps.map((s, i) => (
+        <div key={s} className="flex items-center gap-2">
+          <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
+            step === s
+              ? 'bg-snack-primary text-white'
+              : i < steps.indexOf(step)
+                ? 'bg-snack-accent text-snack-text'
+                : 'bg-snack-surface text-snack-muted'
+          }`}>
+            {i + 1}
+          </div>
+          {i < steps.length - 1 && <div className="h-0.5 w-8 flex-1 bg-[#e6e6e6]" />}
+        </div>
       ))}
     </div>
   )
@@ -111,6 +137,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
   const [dishName, setDishName] = useState('')
   const [text, setText] = useState('')
   const [photos, setPhotos] = useState<UploadedPhoto[]>([])
+  const [step, setStep] = useState<Step>('review')
   const [saving, setSaving] = useState(false)
   const [pageLoading, setPageLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -146,7 +173,6 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
               photoId: rp.photo.id,
               previewUrl,
               status: 'ready',
-              source: 'existing',
             })
             return acc
           }, [])
@@ -218,8 +244,8 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
     setSaving(true)
     setError(null)
 
-    const newPhotoIds = photos
-      .filter((p) => p.source === 'new' && p.status === 'ready')
+    const photoIds = photos
+      .filter((p) => p.status === 'ready')
       .map((p) => p.photoId)
 
     try {
@@ -233,7 +259,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
           ratings,
           text: text.trim(),
           dishName: dishName.trim() || undefined,
-          photoIds: newPhotoIds,
+          photoIds,
         }),
       })
 
@@ -273,7 +299,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
       const tempId = createTempPhotoId()
       let realId = tempId
 
-      setPhotos((prev) => [...prev, { photoId: tempId, previewUrl, status: 'uploading', source: 'new' }])
+      setPhotos((prev) => [...prev, { photoId: tempId, previewUrl, status: 'uploading' }])
 
       try {
         const initRes = await fetch('/api/v1/photos/initiate-upload', {
@@ -348,132 +374,165 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6 space-y-5">
+    <div className="mx-auto max-w-lg px-4 py-6">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-heading font-bold text-snack-text">Edit Review</h1>
+        <h1 className="text-2xl font-heading font-bold text-snack-text">Edit Post</h1>
         <Link href={`/review/${id}`} className="btn-secondary text-sm">Cancel</Link>
       </div>
 
-      <div className="card p-4">
+      <p className="mt-1 text-sm text-snack-muted">Update your ratings, text and photos.</p>
+
+      <div className="mt-6 card p-4">
         <p className="text-sm text-snack-muted">Place</p>
         <p className="font-semibold text-snack-text">{review.place.name}</p>
-        <p className="text-xs text-snack-muted mt-1">{review.place.address}</p>
+        <p className="mt-1 text-xs text-snack-muted">{review.place.address}</p>
       </div>
 
-      <div className="space-y-2">
-        <label className="label">Taste</label>
-        <RatingPicker value={ratings.taste} onChange={(v) => setRatings((prev) => ({ ...prev, taste: v }))} />
+      <div className="mt-6">
+        <StepIndicators step={step} />
       </div>
 
-      <div className="space-y-2">
-        <label className="label">Value for money</label>
-        <RatingPicker value={ratings.value} onChange={(v) => setRatings((prev) => ({ ...prev, value: v }))} />
-      </div>
+      {step === 'review' && (
+        <div className="space-y-4">
+          <div>
+            <label className="label">Taste *</label>
+            <Stars value={ratings.taste} onChange={(value) => setRatings((prev) => ({ ...prev, taste: value }))} />
+          </div>
 
-      <div className="space-y-2">
-        <label className="label">Portion size</label>
-        <RatingPicker value={ratings.portion} onChange={(v) => setRatings((prev) => ({ ...prev, portion: v }))} />
-      </div>
+          <div>
+            <label className="label">Value / Price *</label>
+            <Stars value={ratings.value} onChange={(value) => setRatings((prev) => ({ ...prev, value: value }))} />
+          </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <label className="label">Service <span className="text-snack-muted font-normal">(optional)</span></label>
-          <button
-            type="button"
-            className="text-xs text-snack-muted hover:text-snack-text"
-            onClick={() => setRatings((prev) => ({ ...prev, service: null }))}
-          >
-            Clear
-          </button>
+          <div>
+            <label className="label">Portion *</label>
+            <Stars value={ratings.portion} onChange={(value) => setRatings((prev) => ({ ...prev, portion: value }))} />
+          </div>
+
+          <div>
+            <label className="label">Service (optional)</label>
+            <div className="flex items-center gap-3">
+              <Stars value={ratings.service ?? 0} onChange={(value) => setRatings((prev) => ({ ...prev, service: value }))} />
+              <button
+                type="button"
+                className="btn-secondary px-2 py-1 text-xs"
+                onClick={() => setRatings((prev) => ({ ...prev, service: null }))}
+              >
+                Not set
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-snack-surface px-3 py-2 text-sm text-snack-text">
+            Overall rating: <span className="font-semibold">{computeOverall(ratings).toFixed(1)}</span>
+          </div>
+
+          <div>
+            <label className="label">Dish name</label>
+            <input
+              className="input"
+              placeholder="e.g. Stroopwafel, Currywurst"
+              value={dishName}
+              onChange={(e) => setDishName(e.target.value)}
+              maxLength={100}
+            />
+          </div>
+
+          <div>
+            <label className="label">Your review * <span className="text-snack-muted font-normal">({text.length}/2000)</span></label>
+            <textarea
+              className="input min-h-[140px] resize-none"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              maxLength={2000}
+            />
+          </div>
+
+          {error && <p className="text-sm text-red-500">{error}</p>}
+
+          <div className="flex gap-2">
+            <Link href={`/review/${id}`} className="btn-secondary flex-1 text-center">Cancel</Link>
+            <button
+              className="btn-primary flex-1"
+              onClick={() => {
+                if (text.trim().length < 10) {
+                  setError('Review text must be at least 10 characters')
+                  return
+                }
+                setError(null)
+                setStep('photos')
+              }}
+            >
+              Next: Edit Photos →
+            </button>
+          </div>
         </div>
-        <RatingPicker value={ratings.service ?? 0} onChange={(v) => setRatings((prev) => ({ ...prev, service: v }))} />
-      </div>
+      )}
 
-      <div className="space-y-2">
-        <label className="label">Dish name</label>
-        <input
-          className="input"
-          value={dishName}
-          onChange={(e) => setDishName(e.target.value)}
-          placeholder="Optional dish name"
-          maxLength={100}
-        />
-      </div>
+      {step === 'photos' && (
+        <div className="space-y-4">
+          <p className="text-sm text-snack-muted">Add, remove or replace photos (max 5).</p>
 
-      <div className="space-y-2">
-        <label className="label">
-          Review text <span className="text-snack-muted font-normal">({text.length}/2000)</span>
-        </label>
-        <textarea
-          className="input min-h-[160px] resize-none"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          maxLength={2000}
-        />
-      </div>
+          <input
+            id="edit-review-photo-input"
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif"
+            multiple
+            className="sr-only"
+            onChange={(e) => {
+              void handleFileSelect(e.target.files)
+              e.currentTarget.value = ''
+            }}
+          />
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label className="label">Photos</label>
-          <span className="text-xs text-snack-muted">{photos.length}/{MAX_PHOTOS}</span>
-        </div>
+          {photos.length < MAX_PHOTOS && (
+            <label
+              htmlFor="edit-review-photo-input"
+              className="btn-secondary block w-full cursor-pointer text-center"
+            >
+              Add photos ({photos.length}/{MAX_PHOTOS})
+            </label>
+          )}
 
-        <input
-          id="edit-review-photo-input"
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif"
-          multiple
-          className="sr-only"
-          onChange={(e) => {
-            void handleFileSelect(e.target.files)
-            e.currentTarget.value = ''
-          }}
-        />
-
-        {photos.length < MAX_PHOTOS && (
-          <label
-            htmlFor="edit-review-photo-input"
-            className="btn-secondary block w-full cursor-pointer text-center"
-          >
-            Add photos
-          </label>
-        )}
-
-        {photos.length > 0 && (
-          <div className="grid grid-cols-3 gap-2">
-            {photos.map((p) => (
-              <div key={`${p.source}-${p.photoId}`} className="relative aspect-square overflow-hidden rounded-xl bg-snack-surface">
-                <img src={p.previewUrl} alt="" className="h-full w-full object-cover" />
-                <div className={`absolute inset-0 flex items-center justify-center ${p.status !== 'ready' ? 'bg-black/40' : 'opacity-0'}`}>
-                  {p.status === 'uploading' || p.status === 'confirming'
-                    ? <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    : p.status === 'error' && <span className="text-sm font-semibold text-white">Error</span>
-                  }
-                </div>
-                {p.source === 'new' && (
+          {photos.length > 0 && (
+            <div className="grid grid-cols-3 gap-2">
+              {photos.map((p) => (
+                <div key={p.photoId} className="relative aspect-square overflow-hidden rounded-xl bg-snack-surface">
+                  <img src={p.previewUrl} alt="" className="h-full w-full object-cover" />
+                  <div className={`absolute inset-0 flex items-center justify-center ${p.status !== 'ready' ? 'bg-black/40' : 'opacity-0'}`}>
+                    {p.status === 'uploading' || p.status === 'confirming'
+                      ? <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      : p.status === 'error' && <span className="text-sm font-semibold text-white">Error</span>
+                    }
+                  </div>
                   <button
+                    type="button"
                     className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-xs text-white"
                     onClick={() => setPhotos((prev) => prev.filter((x) => x.photoId !== p.photoId))}
+                    disabled={p.status === 'uploading' || p.status === 'confirming'}
                   >
                     ×
                   </button>
-                )}
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {error && <p className="text-sm text-red-500">{error}</p>}
+
+          <div className="flex gap-2">
+            <button className="btn-secondary flex-1" onClick={() => setStep('review')}>← Back</button>
+            <button
+              className="btn-primary flex-1"
+              onClick={submit}
+              disabled={saving || photos.some((p) => p.status === 'uploading' || p.status === 'confirming')}
+            >
+              {saving ? 'Saving…' : '✓ Save Changes'}
+            </button>
           </div>
-        )}
-      </div>
-
-      {error && <p className="text-sm text-red-500">{error}</p>}
-
-      <button
-        className="btn-primary w-full"
-        onClick={submit}
-        disabled={saving || photos.some((p) => p.status === 'uploading' || p.status === 'confirming')}
-      >
-        {saving ? 'Saving...' : 'Save Changes'}
-      </button>
+        </div>
+      )}
     </div>
   )
 }

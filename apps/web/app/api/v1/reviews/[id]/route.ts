@@ -97,46 +97,53 @@ export async function PATCH(
   try {
     const normalized = body.ratings ? normalizeRatings(body.ratings) : null
     const normalizedDishName = normalizeDishName(body.dishName)
+    const nextPhotoIds = body.photoIds ?? null
 
     const review = await prisma.review.findUnique({
       where: { id },
-      select: { userId: true, status: true, reviewPhotos: { select: { sortOrder: true } } },
+      select: { userId: true, status: true },
     })
     if (!review || review.status === ReviewStatus.DELETED) return err('Review not found', 404)
 
     // Only the owner can edit
     if (review.userId !== auth.sub) return err('Forbidden', 403)
 
-    if (body.photoIds && body.photoIds.length > 0) {
-      const nextPhotoCount = review.reviewPhotos.length + body.photoIds.length
-      if (nextPhotoCount > env.MAX_PHOTOS_PER_REVIEW) {
+    if (nextPhotoIds !== null) {
+      if (nextPhotoIds.length > env.MAX_PHOTOS_PER_REVIEW) {
         return err(`Too many photos - max ${env.MAX_PHOTOS_PER_REVIEW}`, 422)
       }
 
-      const photos = await prisma.photo.findMany({
-        where: { id: { in: body.photoIds }, uploaderId: auth.sub },
-        select: {
-          id: true,
-          moderationStatus: true,
-          reviewPhotos: { select: { reviewId: true }, take: 1 },
-        },
-      })
-      if (photos.length !== body.photoIds.length) {
-        return err('One or more photo IDs are invalid', 422)
+      const dedupedPhotoIds = Array.from(new Set(nextPhotoIds))
+      if (dedupedPhotoIds.length !== nextPhotoIds.length) {
+        return err('Duplicate photo IDs are not allowed', 422)
       }
 
-      const notConfirmed = photos.filter((p) => p.moderationStatus === 'PENDING')
-      if (notConfirmed.length > 0) {
-        return err('One or more photos are not uploaded yet - please wait for upload confirmation', 409)
-      }
+      if (dedupedPhotoIds.length > 0) {
+        const photos = await prisma.photo.findMany({
+          where: { id: { in: dedupedPhotoIds }, uploaderId: auth.sub },
+          select: {
+            id: true,
+            moderationStatus: true,
+            reviewPhotos: { select: { reviewId: true }, take: 1 },
+          },
+        })
+        if (photos.length !== dedupedPhotoIds.length) {
+          return err('One or more photo IDs are invalid', 422)
+        }
 
-      const alreadyUsed = photos.filter((p) => p.reviewPhotos.length > 0)
-      if (alreadyUsed.length > 0) {
-        return err('One or more photos are already attached to a review', 409)
+        const notConfirmed = photos.filter((p) => p.moderationStatus === 'PENDING')
+        if (notConfirmed.length > 0) {
+          return err('One or more photos are not uploaded yet - please wait for upload confirmation', 409)
+        }
+
+        const attachedElsewhere = photos.filter(
+          (p) => p.reviewPhotos.length > 0 && p.reviewPhotos[0].reviewId !== id,
+        )
+        if (attachedElsewhere.length > 0) {
+          return err('One or more photos are already attached to another review', 409)
+        }
       }
     }
-
-    const maxSortOrder = review.reviewPhotos.reduce((max, rp) => Math.max(max, rp.sortOrder), -1)
 
     const updated = await prisma.review.update({
       where: { id },
@@ -162,10 +169,15 @@ export async function PATCH(
             : {}),
         ...(body.text !== undefined && { text: body.text }),
         ...(body.dishName !== undefined && { dishName: normalizedDishName }),
-        ...(body.photoIds && body.photoIds.length > 0
+        ...(nextPhotoIds !== null
           ? {
               reviewPhotos: {
-                create: body.photoIds.map((photoId, i) => ({ photoId, sortOrder: maxSortOrder + i + 1 })),
+                deleteMany: {},
+                ...(nextPhotoIds.length > 0
+                  ? {
+                      create: nextPhotoIds.map((photoId, i) => ({ photoId, sortOrder: i })),
+                    }
+                  : {}),
               },
             }
           : {}),
