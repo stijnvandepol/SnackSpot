@@ -4,7 +4,7 @@ import { useAuth } from '@/components/auth-provider'
 import { ReviewCard } from '@/components/review-card'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { avatarUrl } from '@/lib/avatar'
+import { AvatarLightbox } from '@/components/avatar-lightbox'
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null; createdAt: string; status: string
@@ -183,13 +183,11 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <div className="card p-6 mb-4 flex items-center gap-4">
-        <div className="h-16 w-16 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-bold text-2xl uppercase flex-shrink-0 overflow-hidden">
-          {meProfile?.avatarKey ? (
-            <img src={avatarUrl(meProfile.avatarKey) ?? undefined} alt="" className="h-full w-full object-cover" />
-          ) : (
-            user.username[0]
-          )}
-        </div>
+        <AvatarLightbox
+          avatarKey={meProfile?.avatarKey}
+          username={meProfile?.username ?? user.username}
+          size="lg"
+        />
         <div className="min-w-0">
           <h1 className="font-heading font-bold text-xl text-snack-text">{meProfile?.username ?? user.username}</h1>
           <p className="text-sm text-snack-muted">@{meProfile?.username ?? user.username}</p>

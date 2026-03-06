@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { ReviewLikeButton } from '@/components/review-like-button'
-import { avatarUrl } from '@/lib/avatar'
+import { ImageLightbox } from '@/components/image-lightbox'
+import { AvatarLightbox } from '@/components/avatar-lightbox'
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null
@@ -192,10 +193,17 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
       {photos.length > 0 && (
         <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(photos.length, 3)}, 1fr)` }}>
           {photos.map((rp) => {
-            const url = photoVariantUrl(rp.photo.variants, ['large', 'medium', 'thumb'])
-            return url ? (
+            const thumbnail = photoVariantUrl(rp.photo.variants, ['medium', 'thumb'])
+            const fullSize = photoVariantUrl(rp.photo.variants, ['large', 'medium'])
+            return thumbnail && fullSize ? (
               <div key={rp.photo.id} className="aspect-square rounded-2xl overflow-hidden bg-snack-surface">
-                <img src={url} alt="" className="h-full w-full object-cover" />
+                <ImageLightbox
+                  src={fullSize}
+                  thumbnail={thumbnail}
+                  alt={review.dishName ?? 'Review photo'}
+                  className="h-full w-full object-cover"
+                  thumbnailClassName="cursor-zoom-in block w-full h-full"
+                />
               </div>
             ) : null
           })}
@@ -238,13 +246,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
         <div className="flex items-center justify-between pt-2 border-t border-[#ededed]">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-xs uppercase">
-              {review.user.avatarKey ? (
-                <img src={avatarUrl(review.user.avatarKey) ?? undefined} alt="" className="h-full w-full rounded-full object-cover" />
-              ) : (
-                review.user.username[0]
-              )}
-            </div>
+            <AvatarLightbox avatarKey={review.user.avatarKey} username={review.user.username} size="md" />
             <Link href={`/u/${review.user.username}`} className="text-sm text-snack-muted hover:underline">
               {review.user.username}
             </Link>
@@ -294,13 +296,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
               <div key={comment.id} className="rounded-xl border border-[#ececec] p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="h-7 w-7 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-xs uppercase overflow-hidden">
-                      {comment.user.avatarKey ? (
-                        <img src={avatarUrl(comment.user.avatarKey) ?? undefined} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        comment.user.username[0]
-                      )}
-                    </div>
+                    <AvatarLightbox avatarKey={comment.user.avatarKey} username={comment.user.username} size="sm" />
                     <Link href={`/u/${comment.user.username}`} className="text-sm font-medium text-snack-text hover:underline truncate">
                       {comment.user.username}
                     </Link>
