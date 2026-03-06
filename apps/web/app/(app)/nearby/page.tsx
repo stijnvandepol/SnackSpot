@@ -70,7 +70,7 @@ export default function NearbyPage() {
         <p className="text-sm text-snack-muted">Discover snack locations around you and open each location page.</p>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-4 hidden md:flex flex-wrap gap-2">
         <Link href="/feed" className="btn-secondary text-sm py-2">Back to Feed</Link>
         <Link href="/search" className="btn-secondary text-sm py-2">Search by Name</Link>
       </div>

@@ -124,9 +124,9 @@ export default function ProfilePage() {
       </div>
 
       <div className="mb-6 flex flex-wrap gap-2">
-        <Link href="/add-review" className="btn-primary text-sm py-2">+ New Post</Link>
+        <Link href="/add-review" className="btn-primary text-sm py-2 hidden md:inline-flex">+ New Post</Link>
         <Link href={`/u/${user.username}`} className="btn-secondary text-sm py-2">Public Profile</Link>
-        <Link href="/feed" className="btn-secondary text-sm py-2">Back to Feed</Link>
+        <Link href="/feed" className="btn-secondary text-sm py-2 hidden md:inline-flex">Back to Feed</Link>
       </div>
 
       {stats && (
@@ -241,7 +241,7 @@ export default function ProfilePage() {
       {!loading && reviews.length === 0 && (
         <div className="text-center py-12">
           <p className="text-snack-muted text-sm">You haven't written any reviews yet.</p>
-          <a href="/add-review" className="btn-primary mt-4 inline-block">Add your first review</a>
+          <a href="/add-review" className="btn-primary mt-4 hidden md:inline-block">Add your first review</a>
         </div>
       )}
 

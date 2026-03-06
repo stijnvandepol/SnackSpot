@@ -10,7 +10,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile brand bar */}
       <div className="md:hidden sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-[#ececec]">
-        <div className="h-14 px-4 flex items-center justify-between gap-3">
+        <div className="h-14 px-4 flex items-center">
           <Link href="/feed" className="font-heading font-bold text-xl leading-none">
             <span className="text-snack-primary">Snack</span>
             <span className="text-snack-accent inline-flex items-center">
@@ -24,12 +24,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               t
             </span>
           </Link>
-
-          <div className="flex items-center gap-2 text-xs">
-            <Link href="/search" className="btn-ghost py-1.5 px-2.5">Search</Link>
-            <Link href="/add-review" className="btn-primary py-1.5 px-2.5">Post</Link>
-            <Link href="/profile" className="btn-ghost py-1.5 px-2.5">Me</Link>
-          </div>
         </div>
       </div>
 

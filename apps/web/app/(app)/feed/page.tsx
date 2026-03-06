@@ -87,7 +87,7 @@ export default function FeedPage() {
         <p className="text-sm text-snack-muted">Discover snack posts near you — photo first, fast scroll.</p>
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="mb-6 hidden md:flex flex-wrap gap-2">
         <Link href="/add-review" className="btn-primary text-sm py-2">+ New Post</Link>
         <Link href="/search" className="btn-secondary text-sm py-2">Explore Places</Link>
         <Link href="/nearby" className="btn-secondary text-sm py-2">Nearby Spots</Link>
@@ -104,7 +104,7 @@ export default function FeedPage() {
       {!initial && reviews.length === 0 && (
         <div className="text-center py-20">
           <p className="text-snack-muted">No posts available yet.</p>
-          <Link href="/add-review" className="btn-primary mt-4 inline-block">Create first post</Link>
+          <Link href="/add-review" className="btn-primary mt-4 hidden md:inline-block">Create first post</Link>
         </div>
       )}
 

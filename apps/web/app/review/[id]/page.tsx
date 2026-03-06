@@ -68,12 +68,8 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6 space-y-6">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2">
         <BackButton fallbackHref="/feed" label="Back" />
-        <div className="flex gap-2">
-          <Link href={`/place/${review.place.id}`} className="btn-secondary text-sm">Place</Link>
-          <Link href={`/u/${review.user.username}`} className="btn-secondary text-sm">User</Link>
-        </div>
       </div>
 
       {/* Photo gallery */}
@@ -128,7 +124,9 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
             <div className="h-8 w-8 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-xs uppercase">
               {review.user.username[0]}
             </div>
-            <span className="text-sm text-snack-muted">{review.user.username}</span>
+            <Link href={`/u/${review.user.username}`} className="text-sm text-snack-muted hover:underline">
+              {review.user.username}
+            </Link>
           </div>
           <time className="text-xs text-snack-muted">{new Date(review.createdAt).toLocaleDateString()}</time>
         </div>
