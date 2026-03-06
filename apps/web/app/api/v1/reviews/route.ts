@@ -23,6 +23,9 @@ export async function POST(req: NextRequest) {
   if (!body.placeId && !body.place) {
     return err('Either placeId or place details are required', 422)
   }
+  if (body.photoIds.length === 0) {
+    return err('At least one photo is required', 422)
+  }
   if (body.photoIds.length > env.MAX_PHOTOS_PER_REVIEW) {
     return err(`Too many photos - max ${env.MAX_PHOTOS_PER_REVIEW}`, 422)
   }

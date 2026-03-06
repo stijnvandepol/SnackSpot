@@ -469,6 +469,8 @@ export default function AddReviewPage() {
   }
 
   const handleSubmit = async () => {
+    const readyPhotos = photos.filter((p) => p.status === 'ready')
+    if (readyPhotos.length === 0) { setError('At least one photo is required'); return }
     if (text.length < 10) { setError('Review text must be at least 10 characters'); return }
     setError(null)
     setSubmitting(true)
@@ -817,6 +819,16 @@ export default function AddReviewPage() {
             </div>
           )}
 
+          {photos.filter((p) => p.status === 'ready').length === 0 && photos.length > 0 && (
+            <p className="text-xs text-snack-muted">Waiting for photos to upload...</p>
+          )}
+
+          {photos.length === 0 && (
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-center">
+              <p className="text-sm text-blue-900 font-medium">At least one photo is required</p>
+            </div>
+          )}
+
           {error && <p className="text-sm text-red-500">{error}</p>}
 
           <div className="flex gap-2">
@@ -824,7 +836,7 @@ export default function AddReviewPage() {
             <button
               className="btn-primary flex-1"
               onClick={handleSubmit}
-              disabled={submitting || photos.some((p) => p.status === 'uploading' || p.status === 'confirming')}
+              disabled={submitting || photos.filter((p) => p.status === 'ready').length === 0 || photos.some((p) => p.status === 'uploading' || p.status === 'confirming')}
             >
               {submitting ? 'Submitting…' : '✓ Submit Review'}
             </button>
