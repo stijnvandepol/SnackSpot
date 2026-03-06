@@ -136,22 +136,22 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
         })
         setDishName(data.dishName ?? '')
         setText(data.text)
-        setPhotos(
-          data.reviewPhotos
-            .sort((a, b) => a.sortOrder - b.sortOrder)
-            .map((rp) => {
-              const previewUrl = photoVariantUrl(rp.photo.variants, ['medium', 'thumb'])
-              return previewUrl
-                ? {
-                    photoId: rp.photo.id,
-                    previewUrl,
-                    status: 'ready' as const,
-                    source: 'existing' as const,
-                  }
-                : null
+        const existingPhotos = data.reviewPhotos
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .reduce<UploadedPhoto[]>((acc, rp) => {
+            const previewUrl = photoVariantUrl(rp.photo.variants, ['medium', 'thumb'])
+            if (!previewUrl) return acc
+
+            acc.push({
+              photoId: rp.photo.id,
+              previewUrl,
+              status: 'ready',
+              source: 'existing',
             })
-            .filter((p): p is UploadedPhoto => Boolean(p)),
-        )
+            return acc
+          }, [])
+
+        setPhotos(existingPhotos)
         setPageLoading(false)
       })
       .catch(() => {
