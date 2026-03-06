@@ -345,6 +345,10 @@ export default function ProfilePage() {
     )
   }
 
+  // Desktop Layout
+  return (
+    <div className="hidden md:block mx-auto max-w-2xl px-4 py-6">
+      <div className="card p-6 mb-4 flex items-center gap-4">
         <AvatarLightbox
           avatarKey={meProfile?.avatarKey}
           username={meProfile?.username ?? user.username}
