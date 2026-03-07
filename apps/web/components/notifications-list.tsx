@@ -29,14 +29,19 @@ function timeAgo(dateInput: Date | string): string {
   return new Date(date).toLocaleDateString()
 }
 
-export function NotificationsList() {
+function NotificationsList() {
   const { user, accessToken } = useAuth()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
-    if (!user || !accessToken) return
+    if (!user || !accessToken) {
+      setLoading(false)
+      setNotifications([])
+      setUnreadCount(0)
+      return
+    }
 
     const fetchNotifications = async () => {
       setLoading(true)
@@ -46,11 +51,25 @@ export function NotificationsList() {
         })
         const json = await res.json()
         if (res.ok && json.data) {
-          setNotifications(json.data)
-          setUnreadCount(json.unreadCount ?? 0)
+          const nested = json.data as { data?: unknown; unreadCount?: unknown }
+          const parsedNotifications = Array.isArray(nested.data)
+            ? nested.data
+            : Array.isArray(json.data)
+              ? json.data
+              : []
+          const parsedUnreadCountRaw = nested.unreadCount ?? json.unreadCount
+          const parsedUnreadCount = typeof parsedUnreadCountRaw === 'number' ? parsedUnreadCountRaw : 0
+
+          setNotifications(parsedNotifications as Notification[])
+          setUnreadCount(parsedUnreadCount)
+        } else {
+          setNotifications([])
+          setUnreadCount(0)
         }
       } catch (error) {
         console.error('Error fetching notifications:', error)
+        setNotifications([])
+        setUnreadCount(0)
       } finally {
         setLoading(false)
       }
@@ -148,6 +167,8 @@ export function NotificationsList() {
     </div>
   )
 }
+
+export default NotificationsList
 
 function NotificationRow({ notification }: { notification: Notification }) {
   return (

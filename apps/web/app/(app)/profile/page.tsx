@@ -8,7 +8,7 @@ import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { NotificationSettings } from '@/components/notification-settings'
 import dynamic from 'next/dynamic'
 
-const NotificationsList = dynamic(() => import('@/components/notifications-list').then((mod) => mod.NotificationsList), {
+const NotificationsList = dynamic(() => import('@/components/notifications-list'), {
   ssr: false,
   loading: () => <div className="space-y-3 flex-1">
     {[...Array(5)].map((_, i) => (
@@ -220,9 +220,9 @@ function ProfileContent() {
           {/* Tab Navigation */}
           <div className="flex gap-2 border-b border-[#ececec] -mx-4 px-4 overflow-x-auto">
             {['posts', 'notifications', 'settings'].map((t) => (
-              <button
+              <Link
                 key={t}
-                onClick={() => router.push(`?tab=${t}`)}
+                href={`/profile?tab=${t}`}
                 className={`py-2 px-3 text-sm font-medium whitespace-nowrap transition border-b-2 ${
                   tab === t
                     ? 'border-snack-primary text-snack-primary'
@@ -230,7 +230,7 @@ function ProfileContent() {
                 }`}
               >
                 {t === 'posts' ? 'Posts' : t === 'notifications' ? 'Meldingen' : 'Settings'}
-              </button>
+              </Link>
             ))}
           </div>
         </div>
