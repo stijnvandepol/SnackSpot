@@ -67,6 +67,8 @@ enum NotificationType {
   REVIEW_MENTION
   COMMENT_MENTION
   BADGE_EARNED
+
+  @@map("notification_type")
 }
 
 model User {
