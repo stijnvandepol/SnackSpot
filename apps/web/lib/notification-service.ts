@@ -18,9 +18,11 @@ export async function createNotification(params: CreateNotificationParams) {
   try {
     // Don't notify users about their own actions
     if (params.userId === params.actorId) {
+      logger.info({ params }, 'Skipping notification: actor is same as recipient')
       return null
     }
 
+    logger.info({ params }, 'Creating notification')
     const notification = await prisma.notification.create({
       data: {
         userId: params.userId,
@@ -33,6 +35,7 @@ export async function createNotification(params: CreateNotificationParams) {
         commentId: params.commentId,
       },
     })
+    logger.info({ notificationId: notification.id, userId: params.userId }, 'Notification created successfully')
 
     // Check user preferences and send push notification if enabled
     const preferences = await prisma.notificationPreferences.findUnique({
@@ -160,6 +163,7 @@ export async function notifyReviewComment(reviewId: string, commentId: string, a
 
 export async function notifyMention(mentionedUserId: string, reviewId: string, actorId: string) {
   try {
+    logger.info({ mentionedUserId, reviewId, actorId }, 'notifyMention called')
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
       select: {
@@ -168,7 +172,10 @@ export async function notifyMention(mentionedUserId: string, reviewId: string, a
       },
     })
 
-    if (!review) return null
+    if (!review) {
+      logger.warn({ reviewId }, 'Review not found for mention notification')
+      return null
+    }
 
     const actor = await prisma.user.findUnique({
       where: { id: actorId },

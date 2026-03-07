@@ -142,6 +142,8 @@ export async function POST(req: NextRequest) {
       ]),
     ].filter((id) => id !== auth.sub)
 
+    console.log('[REVIEW POST] Mentions:', { mentionedUsernames, mentionedUsersByUsername, bodyMentionedUserIds: body.mentionedUserIds, finalMentionedUserIds: mentionedUserIds })
+
     if (mentionedUserIds.length > 0) {
       const validUsers = await prisma.user.findMany({
         where: { id: { in: mentionedUserIds }, bannedAt: null },
@@ -149,6 +151,8 @@ export async function POST(req: NextRequest) {
       })
 
       const validUserIds = validUsers.map((u) => u.id)
+
+      console.log('[REVIEW POST] Valid users for mentions:', validUserIds)
 
       await prisma.reviewMention.createMany({
         data: validUserIds.map((userId) => ({
@@ -159,7 +163,10 @@ export async function POST(req: NextRequest) {
         skipDuplicates: true,
       })
 
+      console.log('[REVIEW POST] ReviewMention records created, now sending notifications')
+
       for (const userId of validUserIds) {
+        console.log('[REVIEW POST] Calling notifyMention for userId:', userId)
         await notifyMention(userId, review.id, auth.sub)
       }
     }
