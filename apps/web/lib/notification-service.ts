@@ -38,12 +38,17 @@ export async function createNotification(params: CreateNotificationParams) {
     logger.info({ notificationId: notification.id, userId: params.userId }, 'Notification created successfully')
 
     // Check user preferences and send push notification if enabled
-    const preferences = await prisma.notificationPreferences.findUnique({
-      where: { userId: params.userId },
-    })
+    try {
+      const preferences = await prisma.notificationPreferences.findUnique({
+        where: { userId: params.userId },
+      })
 
-    if (preferences && shouldSendPush(params.type, preferences)) {
-      await sendPushNotification(params.userId, notification)
+      if (preferences && shouldSendPush(params.type, preferences)) {
+        await sendPushNotification(params.userId, notification)
+      }
+    } catch (prefError) {
+      logger.error({ error: prefError, userId: params.userId }, 'Failed to check notification preferences')
+      // Continue anyway - notification was created successfully
     }
 
     return notification
@@ -92,6 +97,7 @@ async function sendPushNotification(userId: string, notification: { title: strin
 
 export async function notifyReviewLike(reviewId: string, actorId: string) {
   try {
+    logger.info({ reviewId, actorId }, 'notifyReviewLike called')
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
       select: {
@@ -101,7 +107,15 @@ export async function notifyReviewLike(reviewId: string, actorId: string) {
       },
     })
 
-    if (!review) return null
+    if (!review) {
+      logger.warn({ reviewId }, 'Review not found for like notification')
+      return null
+    }
+
+    if (review.userId === actorId) {
+      logger.info({ reviewId, actorId }, 'Skipping like notification: user liked their own review')
+      return null
+    }
 
     const actor = await prisma.user.findUnique({
       where: { id: actorId },
@@ -127,6 +141,7 @@ export async function notifyReviewLike(reviewId: string, actorId: string) {
 
 export async function notifyReviewComment(reviewId: string, commentId: string, actorId: string) {
   try {
+    logger.info({ reviewId, commentId, actorId }, 'notifyReviewComment called')
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
       select: {
@@ -136,7 +151,15 @@ export async function notifyReviewComment(reviewId: string, commentId: string, a
       },
     })
 
-    if (!review) return null
+    if (!review) {
+      logger.warn({ reviewId }, 'Review not found for comment notification')
+      return null
+    }
+
+    if (review.userId === actorId) {
+      logger.info({ reviewId, actorId }, 'Skipping comment notification: user commented on their own review')
+      return null
+    }
 
     const actor = await prisma.user.findUnique({
       where: { id: actorId },
