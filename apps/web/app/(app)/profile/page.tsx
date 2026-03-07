@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useAuth } from '@/components/auth-provider'
 import { ReviewCard } from '@/components/review-card'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -64,7 +64,7 @@ interface MeProfile {
   role: string
 }
 
-export default function ProfilePage() {
+function ProfileContent() {
   const { user, accessToken, logout, reloadMe } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -592,5 +592,19 @@ export default function ProfilePage() {
         {reviews.map((r) => <ReviewCard key={r.id} review={r} backContext="profile" />)}
       </div>
     </div>
+  )
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
+        <div className="card h-32 animate-pulse bg-snack-surface" />
+        <div className="card h-64 animate-pulse bg-snack-surface" />
+        <div className="card h-48 animate-pulse bg-snack-surface" />
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
   )
 }
