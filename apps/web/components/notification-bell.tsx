@@ -37,7 +37,12 @@ export function NotificationBell() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!user || !accessToken) return
+    if (!user || !accessToken) {
+      setNotifications([])
+      setUnreadCount(0)
+      setLoading(false)
+      return
+    }
 
     const fetchNotifications = async () => {
       setLoading(true)
@@ -47,13 +52,26 @@ export function NotificationBell() {
         })
         const json = await res.json()
         if (res.ok && json.data) {
-          setNotifications(json.data)
-          setUnreadCount(json.unreadCount ?? 0)
+          const nested = json.data as { data?: unknown; unreadCount?: unknown }
+          const parsedNotifications = Array.isArray(nested.data)
+            ? nested.data
+            : Array.isArray(json.data)
+              ? json.data
+              : []
+          const parsedUnreadCountRaw = nested.unreadCount ?? json.unreadCount
+          const parsedUnreadCount = typeof parsedUnreadCountRaw === 'number' ? parsedUnreadCountRaw : 0
+
+          setNotifications(parsedNotifications as Notification[])
+          setUnreadCount(parsedUnreadCount)
         } else {
           console.error('Failed to fetch notifications:', json.error)
+          setNotifications([])
+          setUnreadCount(0)
         }
       } catch (error) {
         console.error('Error fetching notifications:', error)
+        setNotifications([])
+        setUnreadCount(0)
       } finally {
         setLoading(false)
       }
