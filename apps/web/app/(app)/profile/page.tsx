@@ -8,7 +8,7 @@ import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { NotificationSettings } from '@/components/notification-settings'
 import dynamic from 'next/dynamic'
 
-const NotificationsList = dynamic(() => import('@/components/notifications-list').then((mod) => ({ default: mod.NotificationsList })), {
+const NotificationsList = dynamic(() => import('@/components/notifications-list').then((mod) => mod.NotificationsList), {
   ssr: false,
   loading: () => <div className="space-y-3 flex-1">
     {[...Array(5)].map((_, i) => (
@@ -568,6 +568,11 @@ function ProfileContent() {
 
       <div className="mb-6">
         <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Notifications</h2>
+        <NotificationsList />
+      </div>
+
+      <div className="mb-6">
+        <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Notification Settings</h2>
         <NotificationSettings />
       </div>
 
