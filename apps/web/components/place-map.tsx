@@ -1,6 +1,7 @@
 'use client'
+import { useEffect } from 'react'
 import Link from 'next/link'
-import { Map, MapMarker, MarkerContent, MarkerPopup, MapControls } from '@/components/ui/map'
+import { Map, MapMarker, MarkerContent, MarkerPopup, MapControls, useMap } from '@/components/ui/map'
 
 interface Place {
   id: string
@@ -17,6 +18,35 @@ interface PlaceMapProps {
   position: { lat: number; lng: number }
   places: Place[]
   radius: number
+}
+
+function FitBounds({ position, places }: { position: { lat: number; lng: number }; places: Place[] }) {
+  const { map, isLoaded } = useMap()
+
+  useEffect(() => {
+    if (!map || !isLoaded) return
+
+    const allPoints = [
+      [position.lng, position.lat] as [number, number],
+      ...places.map((p) => [p.lng, p.lat] as [number, number]),
+    ]
+
+    if (allPoints.length === 1) {
+      map.flyTo({ center: allPoints[0], zoom: 14, duration: 800 })
+      return
+    }
+
+    const lngs = allPoints.map((p) => p[0])
+    const lats = allPoints.map((p) => p[1])
+    const bounds: [[number, number], [number, number]] = [
+      [Math.min(...lngs), Math.min(...lats)],
+      [Math.max(...lngs), Math.max(...lats)],
+    ]
+
+    map.fitBounds(bounds, { padding: 60, maxZoom: 15, duration: 800 })
+  }, [map, isLoaded, places, position])
+
+  return null
 }
 
 function formatDistance(meters: number): string {
@@ -92,6 +122,7 @@ export function PlaceMap({ position, places, radius }: PlaceMapProps) {
           </MapMarker>
         ))}
 
+        <FitBounds position={position} places={places} />
         <MapControls showZoom showCompass position="top-right" />
       </Map>
     </div>
