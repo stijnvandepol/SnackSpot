@@ -229,7 +229,7 @@ function ProfileContent() {
                     : 'border-transparent text-snack-muted hover:text-snack-text'
                 }`}
               >
-                {t === 'posts' ? 'Posts' : t === 'notifications' ? 'Meldingen' : 'Settings'}
+                {t === 'posts' ? 'Posts' : t === 'notifications' ? 'Notifications' : 'Settings'}
               </Link>
             ))}
           </div>
@@ -347,8 +347,8 @@ function ProfileContent() {
 
   // Desktop Layout
   return (
-    <div className="hidden md:block mx-auto max-w-2xl px-4 py-6">
-      <div className="card p-6 mb-4 flex items-center gap-4">
+    <div className="hidden md:block mx-auto max-w-2xl px-4 py-6 space-y-6">
+      <div className="card p-6 flex items-center gap-4">
         <AvatarLightbox
           avatarKey={meProfile?.avatarKey}
           username={meProfile?.username ?? user.username}
@@ -376,226 +376,252 @@ function ProfileContent() {
         </div>
       </div>
 
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-heading font-semibold text-snack-text">Profile</h2>
-        <button
-          type="button"
-          className="btn-secondary text-sm"
-          onClick={() => setIsEditingProfile((v) => !v)}
-        >
-          {isEditingProfile ? 'Close' : 'Edit Profile'}
-        </button>
+      <div className="flex gap-2 border-b border-[#ececec] overflow-x-auto">
+        {['posts', 'notifications', 'settings'].map((t) => (
+          <Link
+            key={t}
+            href={`/profile?tab=${t}`}
+            className={`py-3 px-4 text-sm font-medium whitespace-nowrap transition border-b-2 ${
+              tab === t
+                ? 'border-snack-primary text-snack-primary'
+                : 'border-transparent text-snack-muted hover:text-snack-text'
+            }`}
+          >
+            {t === 'posts' ? 'Posts' : t === 'notifications' ? 'Notifications' : 'Settings'}
+          </Link>
+        ))}
       </div>
 
-      {isEditingProfile && (
-        <div className="card p-4 mb-6 space-y-3">
-          <h3 className="font-heading font-semibold text-snack-text">Edit Profile</h3>
+      {tab === 'posts' && (
+        <>
+          <h2 className="font-heading font-semibold text-lg text-snack-text">My Posts</h2>
 
-          <div className="flex items-center gap-3">
-            <label className="btn-secondary text-sm cursor-pointer">
-              {avatarUploading ? 'Uploading...' : 'Change profile image'}
-              <input
-                type="file"
-                accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif"
-                className="sr-only"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] ?? null
-                  void handleAvatarUpload(file)
-                  e.currentTarget.value = ''
-                }}
-                disabled={avatarUploading}
-              />
-            </label>
-          </div>
-
-          <div>
-            <label className="label">Username</label>
-            <input
-              className="input"
-              value={editUsername}
-              onChange={(e) => setEditUsername(e.target.value)}
-              minLength={3}
-              maxLength={30}
-              pattern="^[a-zA-Z0-9_]+$"
-              disabled={Boolean(meProfile && !meProfile.usernameCanChangeNow)}
-            />
-            <p className="mt-1 text-xs text-snack-muted">
-              {meProfile?.usernameCanChangeNow
-                ? 'You can change your username now.'
-                : meProfile?.nextUsernameChangeAt
-                  ? `Username can be changed again after ${new Date(meProfile.nextUsernameChangeAt).toLocaleDateString()}.`
-                  : 'Username can be changed once every 30 days.'}
-            </p>
-          </div>
-
-          <div>
-            <label className="label">Bio <span className="text-snack-muted font-normal">({editBio.length}/280)</span></label>
-            <textarea
-              className="input min-h-[100px] resize-none"
-              value={editBio}
-              onChange={(e) => setEditBio(e.target.value)}
-              maxLength={280}
-              placeholder="Tell people who you are and what you love to eat."
-            />
-          </div>
-
-          {profileError && <p className="text-sm text-red-500">{profileError}</p>}
-          {profileMessage && <p className="text-sm text-green-600">{profileMessage}</p>}
-
-          <button className="btn-primary" onClick={handleSaveProfile} disabled={profileSaving || avatarUploading}>
-            {profileSaving ? 'Saving...' : 'Save profile'}
-          </button>
-        </div>
-      )}
-
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="card p-3 text-center">
-          <p className="text-lg font-bold text-snack-text">{stats?.totalPosts ?? reviews.length}</p>
-          <p className="text-xs text-snack-muted">Posts</p>
-        </div>
-        <div className="card p-3 text-center">
-          <p className="text-lg font-bold text-snack-text">{stats?.totalLikesReceived ?? 0}</p>
-          <p className="text-xs text-snack-muted">Likes received</p>
-        </div>
-        <div className="card p-3 text-center">
-          <p className="text-lg font-bold text-snack-text">{earnedBadges.length}</p>
-          <p className="text-xs text-snack-muted">Badges</p>
-        </div>
-      </div>
-
-      <div className="mb-6 flex flex-wrap gap-2">
-        <Link href={`/u/${user.username}`} className="btn-secondary text-sm py-2">Public Profile</Link>
-      </div>
-
-      {stats && (
-        <div className="card p-4 mb-6">
-          <h2 className="font-heading font-semibold text-snack-text mb-3">My Stats</h2>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <p className="text-snack-muted">Unique locations</p>
-              <p className="font-semibold text-snack-text">{stats.uniqueLocationsVisited}</p>
-            </div>
-            <div>
-              <p className="text-snack-muted">Avg overall given</p>
-              <p className="font-semibold text-snack-text">{stats.averageOverallRatingGiven?.toFixed(1) ?? '—'}</p>
-            </div>
-            <div>
-              <p className="text-snack-muted">Current streak</p>
-              <p className="font-semibold text-snack-text">{stats.streak.current} days</p>
-            </div>
-            <div>
-              <p className="text-snack-muted">Best streak</p>
-              <p className="font-semibold text-snack-text">{stats.streak.best} days</p>
-            </div>
-          </div>
-          <div className="mt-3">
-            <p className="text-xs text-snack-muted mb-1">Last 8 weeks</p>
-            <div className="flex items-end gap-1 h-12">
-              {stats.weeklyActivity.map((week) => (
-                <div
-                  key={week.weekStart}
-                  className={`rounded-sm flex-1 ${week.posts > 0 ? 'bg-snack-primary/70' : 'bg-snack-surface'}`}
-                  style={{ height: `${week.posts > 0 ? Math.max(8, Math.round((week.posts / maxWeeklyPosts) * 48)) : 4}px` }}
-                  title={`${new Date(week.weekStart).toLocaleDateString()}: ${week.posts}`}
-                />
+          {loading && (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="card h-32 animate-pulse bg-snack-surface" />
               ))}
             </div>
+          )}
+
+          {!loading && reviews.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-snack-muted text-sm">You haven't written any reviews yet.</p>
+              <a href="/add-review" className="btn-primary mt-4 hidden md:inline-block">Add your first review</a>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {reviews.map((r) => <ReviewCard key={r.id} review={r} backContext="profile" />)}
           </div>
-        </div>
+        </>
       )}
 
-      <div className="card p-4 mb-6">
-        <h2 className="font-heading font-semibold text-snack-text mb-3">Badges</h2>
-        {earnedBadges.length === 0 && inProgressBadges.length === 0 ? (
-          <p className="text-sm text-snack-muted">No badge progress yet.</p>
-        ) : (
-          <>
-            {earnedBadges.length > 0 && (
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                {earnedBadges.map((row) => (
-                  <button
-                    key={row.badge.id}
-                    type="button"
-                    onClick={() => setSelectedBadge(row)}
-                    className="text-left border border-snack-border rounded-xl p-2"
-                  >
-                    <p className="text-sm font-semibold text-snack-text">{row.badge.name}</p>
-                    <p className="text-xs text-snack-muted">{row.badge.tier}</p>
-                  </button>
-                ))}
-              </div>
-            )}
-            {inProgressBadges.length > 0 && (
-              <div className="space-y-2">
-                {inProgressBadges.map((row) => {
-                  const pct = Math.min(100, Math.round((row.progressCurrent / Math.max(1, row.progressTarget)) * 100))
-                  return (
-                    <button
-                      key={row.badge.id}
-                      type="button"
-                      onClick={() => setSelectedBadge(row)}
-                      className="w-full text-left"
-                    >
-                      <div className="flex justify-between text-xs text-snack-muted mb-1">
-                        <span>{row.badge.name}</span>
-                        <span>{row.progressCurrent}/{row.progressTarget}</span>
-                      </div>
-                      <div className="h-2 bg-snack-surface rounded-full overflow-hidden">
-                        <div className="h-full bg-snack-primary" style={{ width: `${pct}%` }} />
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      {tab === 'notifications' && (
+        <>
+          <h2 className="font-heading font-semibold text-lg text-snack-text">Notifications</h2>
+          <NotificationsList />
+        </>
+      )}
 
-      {selectedBadge && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-end sm:items-center justify-center p-4" onClick={() => setSelectedBadge(null)}>
-          <div className="w-full max-w-sm card p-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-heading font-semibold text-snack-text">{selectedBadge.badge.name}</h3>
-            <p className="text-xs text-snack-muted mt-1">Tier: {selectedBadge.badge.tier}</p>
-            <p className="text-sm text-snack-muted mt-2">{selectedBadge.badge.description}</p>
-            <p className="text-sm text-snack-text mt-3">
-              Progress: {selectedBadge.progressCurrent}/{selectedBadge.progressTarget}
-            </p>
-            <button className="btn-secondary w-full mt-4" onClick={() => setSelectedBadge(null)}>Close</button>
+      {tab === 'settings' && (
+        <>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-heading font-semibold text-snack-text">Profile</h2>
+            <button
+              type="button"
+              className="btn-secondary text-sm"
+              onClick={() => setIsEditingProfile((v) => !v)}
+            >
+              {isEditingProfile ? 'Close' : 'Edit Profile'}
+            </button>
           </div>
-        </div>
+
+          {isEditingProfile && (
+            <div className="card p-4 mb-6 space-y-3">
+              <h3 className="font-heading font-semibold text-snack-text">Edit Profile</h3>
+
+              <div className="flex items-center gap-3">
+                <label className="btn-secondary text-sm cursor-pointer">
+                  {avatarUploading ? 'Uploading...' : 'Change profile image'}
+                  <input
+                    type="file"
+                    accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif"
+                    className="sr-only"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null
+                      void handleAvatarUpload(file)
+                      e.currentTarget.value = ''
+                    }}
+                    disabled={avatarUploading}
+                  />
+                </label>
+              </div>
+
+              <div>
+                <label className="label">Username</label>
+                <input
+                  className="input"
+                  value={editUsername}
+                  onChange={(e) => setEditUsername(e.target.value)}
+                  minLength={3}
+                  maxLength={30}
+                  pattern="^[a-zA-Z0-9_]+$"
+                  disabled={Boolean(meProfile && !meProfile.usernameCanChangeNow)}
+                />
+                <p className="mt-1 text-xs text-snack-muted">
+                  {meProfile?.usernameCanChangeNow
+                    ? 'You can change your username now.'
+                    : meProfile?.nextUsernameChangeAt
+                      ? `Username can be changed again after ${new Date(meProfile.nextUsernameChangeAt).toLocaleDateString()}.`
+                      : 'Username can be changed once every 30 days.'}
+                </p>
+              </div>
+
+              <div>
+                <label className="label">Bio <span className="text-snack-muted font-normal">({editBio.length}/280)</span></label>
+                <textarea
+                  className="input min-h-[100px] resize-none"
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  maxLength={280}
+                  placeholder="Tell people who you are and what you love to eat."
+                />
+              </div>
+
+              {profileError && <p className="text-sm text-red-500">{profileError}</p>}
+              {profileMessage && <p className="text-sm text-green-600">{profileMessage}</p>}
+
+              <button className="btn-primary" onClick={handleSaveProfile} disabled={profileSaving || avatarUploading}>
+                {profileSaving ? 'Saving...' : 'Save profile'}
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="card p-3 text-center">
+              <p className="text-lg font-bold text-snack-text">{stats?.totalPosts ?? reviews.length}</p>
+              <p className="text-xs text-snack-muted">Posts</p>
+            </div>
+            <div className="card p-3 text-center">
+              <p className="text-lg font-bold text-snack-text">{stats?.totalLikesReceived ?? 0}</p>
+              <p className="text-xs text-snack-muted">Likes received</p>
+            </div>
+            <div className="card p-3 text-center">
+              <p className="text-lg font-bold text-snack-text">{earnedBadges.length}</p>
+              <p className="text-xs text-snack-muted">Badges</p>
+            </div>
+          </div>
+
+          <div className="mb-6 flex flex-wrap gap-2">
+            <Link href={`/u/${user.username}`} className="btn-secondary text-sm py-2">Public Profile</Link>
+          </div>
+
+          {stats && (
+            <div className="card p-4 mb-6">
+              <h2 className="font-heading font-semibold text-snack-text mb-3">My Stats</h2>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-snack-muted">Unique locations</p>
+                  <p className="font-semibold text-snack-text">{stats.uniqueLocationsVisited}</p>
+                </div>
+                <div>
+                  <p className="text-snack-muted">Avg overall given</p>
+                  <p className="font-semibold text-snack-text">{stats.averageOverallRatingGiven?.toFixed(1) ?? '—'}</p>
+                </div>
+                <div>
+                  <p className="text-snack-muted">Current streak</p>
+                  <p className="font-semibold text-snack-text">{stats.streak.current} days</p>
+                </div>
+                <div>
+                  <p className="text-snack-muted">Best streak</p>
+                  <p className="font-semibold text-snack-text">{stats.streak.best} days</p>
+                </div>
+              </div>
+              <div className="mt-3">
+                <p className="text-xs text-snack-muted mb-1">Last 8 weeks</p>
+                <div className="flex items-end gap-1 h-12">
+                  {stats.weeklyActivity.map((week) => (
+                    <div
+                      key={week.weekStart}
+                      className={`rounded-sm flex-1 ${week.posts > 0 ? 'bg-snack-primary/70' : 'bg-snack-surface'}`}
+                      style={{ height: `${week.posts > 0 ? Math.max(8, Math.round((week.posts / maxWeeklyPosts) * 48)) : 4}px` }}
+                      title={`${new Date(week.weekStart).toLocaleDateString()}: ${week.posts}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="card p-4 mb-6">
+            <h2 className="font-heading font-semibold text-snack-text mb-3">Badges</h2>
+            {earnedBadges.length === 0 && inProgressBadges.length === 0 ? (
+              <p className="text-sm text-snack-muted">No badge progress yet.</p>
+            ) : (
+              <>
+                {earnedBadges.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    {earnedBadges.map((row) => (
+                      <button
+                        key={row.badge.id}
+                        type="button"
+                        onClick={() => setSelectedBadge(row)}
+                        className="text-left border border-snack-border rounded-xl p-2"
+                      >
+                        <p className="text-sm font-semibold text-snack-text">{row.badge.name}</p>
+                        <p className="text-xs text-snack-muted">{row.badge.tier}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {inProgressBadges.length > 0 && (
+                  <div className="space-y-2">
+                    {inProgressBadges.map((row) => {
+                      const pct = Math.min(100, Math.round((row.progressCurrent / Math.max(1, row.progressTarget)) * 100))
+                      return (
+                        <button
+                          key={row.badge.id}
+                          type="button"
+                          onClick={() => setSelectedBadge(row)}
+                          className="w-full text-left"
+                        >
+                          <div className="flex justify-between text-xs text-snack-muted mb-1">
+                            <span>{row.badge.name}</span>
+                            <span>{row.progressCurrent}/{row.progressTarget}</span>
+                          </div>
+                          <div className="h-2 bg-snack-surface rounded-full overflow-hidden">
+                            <div className="h-full bg-snack-primary" style={{ width: `${pct}%` }} />
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {selectedBadge && (
+            <div className="fixed inset-0 z-50 bg-black/35 flex items-end sm:items-center justify-center p-4" onClick={() => setSelectedBadge(null)}>
+              <div className="w-full max-w-sm card p-4" onClick={(e) => e.stopPropagation()}>
+                <h3 className="font-heading font-semibold text-snack-text">{selectedBadge.badge.name}</h3>
+                <p className="text-xs text-snack-muted mt-1">Tier: {selectedBadge.badge.tier}</p>
+                <p className="text-sm text-snack-muted mt-2">{selectedBadge.badge.description}</p>
+                <p className="text-sm text-snack-text mt-3">
+                  Progress: {selectedBadge.progressCurrent}/{selectedBadge.progressTarget}
+                </p>
+                <button className="btn-secondary w-full mt-4" onClick={() => setSelectedBadge(null)}>Close</button>
+              </div>
+            </div>
+          )}
+
+          <div className="mb-6">
+            <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Notification Settings</h2>
+            <NotificationSettings />
+          </div>
+        </>
       )}
-
-      <div className="mb-6">
-        <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Notifications</h2>
-        <NotificationsList />
-      </div>
-
-      <div className="mb-6">
-        <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Notification Settings</h2>
-        <NotificationSettings />
-      </div>
-
-      <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">My Posts</h2>
-
-      {loading && (
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="card h-32 animate-pulse bg-snack-surface" />
-          ))}
-        </div>
-      )}
-
-      {!loading && reviews.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-snack-muted text-sm">You haven't written any reviews yet.</p>
-          <a href="/add-review" className="btn-primary mt-4 hidden md:inline-block">Add your first review</a>
-        </div>
-      )}
-
-      <div className="space-y-4">
-        {reviews.map((r) => <ReviewCard key={r.id} review={r} backContext="profile" />)}
-      </div>
     </div>
   )
 }
