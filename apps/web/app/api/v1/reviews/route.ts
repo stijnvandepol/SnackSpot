@@ -120,18 +120,36 @@ export async function POST(req: NextRequest) {
     await recalculateUserBadges(auth.sub)
 
     // Create mentions and send notifications
-    if (body.mentionedUserIds && body.mentionedUserIds.length > 0) {
-      const uniqueUserIds = [...new Set(body.mentionedUserIds)].filter((id) => id !== auth.sub)
-      
-      // Validate mentioned users exist
+    const mentionMatches = body.text.match(/@(\w{3,30})/g) ?? []
+    const mentionedUsernames = [...new Set(mentionMatches.map((m) => m.slice(1).toLowerCase()))]
+
+    const mentionedUsersByUsername = mentionedUsernames.length > 0
+      ? await prisma.user.findMany({
+          where: {
+            bannedAt: null,
+            OR: mentionedUsernames.map((username) => ({
+              username: { equals: username, mode: 'insensitive' },
+            })),
+          },
+          select: { id: true },
+        })
+      : []
+
+    const mentionedUserIds = [
+      ...new Set([
+        ...body.mentionedUserIds,
+        ...mentionedUsersByUsername.map((u) => u.id),
+      ]),
+    ].filter((id) => id !== auth.sub)
+
+    if (mentionedUserIds.length > 0) {
       const validUsers = await prisma.user.findMany({
-        where: { id: { in: uniqueUserIds }, bannedAt: null },
+        where: { id: { in: mentionedUserIds }, bannedAt: null },
         select: { id: true },
       })
 
       const validUserIds = validUsers.map((u) => u.id)
-      
-      // Create mention records
+
       await prisma.reviewMention.createMany({
         data: validUserIds.map((userId) => ({
           reviewId: review.id,
@@ -141,7 +159,6 @@ export async function POST(req: NextRequest) {
         skipDuplicates: true,
       })
 
-      // Send notifications to mentioned users
       for (const userId of validUserIds) {
         await notifyMention(userId, review.id, auth.sub)
       }

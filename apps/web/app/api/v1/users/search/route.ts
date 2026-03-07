@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    return ok({ data: users })
+    return ok(users)
   } catch (e) {
     return serverError('users/search', e)
   }

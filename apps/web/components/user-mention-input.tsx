@@ -30,6 +30,7 @@ export function UserMentionInput({
   const [searchQuery, setSearchQuery] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([])
+  const [mentionedUsers, setMentionedUsers] = useState<Array<{ id: string; username: string }>>([])
 
   useEffect(() => {
     if (!searchQuery || !accessToken) {
@@ -48,12 +49,23 @@ export function UserMentionInput({
         )
         const json = await res.json()
         if (res.ok && json.data) {
-          setSuggestions(json.data)
-          setShowSuggestions(json.data.length > 0)
+          const parsedSuggestions = Array.isArray(json.data)
+            ? json.data
+            : Array.isArray(json.data?.data)
+              ? json.data.data
+              : []
+
+          setSuggestions(parsedSuggestions)
+          setShowSuggestions(parsedSuggestions.length > 0)
           setSelectedIndex(0)
+        } else {
+          setSuggestions([])
+          setShowSuggestions(false)
         }
       } catch (error) {
         console.error('Failed to search users', error)
+        setSuggestions([])
+        setShowSuggestions(false)
       }
     }
 
@@ -81,11 +93,14 @@ export function UserMentionInput({
       setShowSuggestions(false)
     }
 
-    // Extract mentioned usernames and track IDs
     const mentions = newValue.match(/@(\w+)/g) || []
-    const usernames = mentions.map((m) => m.slice(1))
-    
-    onChange(newValue, mentionedUserIds)
+    const usernames = new Set(mentions.map((m) => m.slice(1).toLowerCase()))
+    const activeMentionedIds = mentionedUsers
+      .filter((u) => usernames.has(u.username.toLowerCase()))
+      .map((u) => u.id)
+
+    setMentionedUserIds(activeMentionedIds)
+    onChange(newValue, activeMentionedIds)
   }
 
   const insertMention = (user: User) => {
@@ -104,6 +119,10 @@ export function UserMentionInput({
       if (!mentionedUserIds.includes(user.id)) {
         const newMentionedIds = [...mentionedUserIds, user.id]
         setMentionedUserIds(newMentionedIds)
+        setMentionedUsers((prev) => {
+          if (prev.some((u) => u.id === user.id)) return prev
+          return [...prev, { id: user.id, username: user.username }]
+        })
         onChange(newText, newMentionedIds)
       } else {
         onChange(newText, mentionedUserIds)
