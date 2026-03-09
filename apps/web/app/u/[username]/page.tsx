@@ -15,30 +15,6 @@ interface UserProfile {
   role: string
   createdAt: string
   _count: { reviews: number; favorites: number }
-  achievements: {
-    totalEarned: number
-    recent: Array<{
-      earnedAt: string | null
-      badge: {
-        id: string
-        slug: string
-        name: string
-        description: string
-        tier: 'BRONZE' | 'SILVER' | 'GOLD'
-      }
-    }>
-  }
-  stats: {
-    totalPosts: number
-    postsLast30Days: number
-    totalLikesReceived: number
-    totalCommentsReceived: number
-    uniqueLocationsVisited: number
-    averageOverallRatingGiven: number | null
-    topLocations: Array<{ id: string; name: string; posts: number }>
-    weeklyActivity: Array<{ weekStart: string; posts: number }>
-    streak: { current: number; best: number }
-  }
 }
 
 interface Review {
@@ -50,6 +26,7 @@ interface Review {
   status: string
   likeCount?: number
   likedByMe?: boolean
+  overallRating?: number
   user: { id: string; username: string; avatarKey?: string | null; role: string }
   place: { id: string; name: string; address: string }
   reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
@@ -62,7 +39,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const maxWeeklyPosts = Math.max(1, ...(profile?.stats.weeklyActivity.map((week) => week.posts) ?? [0]))
 
   useEffect(() => {
     setLoading(true)
@@ -125,97 +101,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                       Joined {new Date(profile.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="card p-3 text-center">
-                    <p className="text-lg font-bold text-snack-text">{profile.stats.totalPosts}</p>
-                    <p className="text-xs text-snack-muted">Posts</p>
-                  </div>
-                  <div className="card p-3 text-center">
-                    <p className="text-lg font-bold text-snack-text">{profile.stats.totalLikesReceived}</p>
-                    <p className="text-xs text-snack-muted">Likes received</p>
-                  </div>
-                </div>
-
-                <div className="card p-4 mb-6 space-y-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="font-heading font-semibold text-snack-text">Profile Stats</h2>
-                    <span className="text-xs text-snack-muted">
-                      Avg rating given {profile.stats.averageOverallRatingGiven?.toFixed(1) ?? '—'}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <p className="text-snack-muted">Comments on posts</p>
-                      <p className="font-semibold text-snack-text">{profile.stats.totalCommentsReceived}</p>
-                    </div>
-                    <div>
-                      <p className="text-snack-muted">Current streak</p>
-                      <p className="font-semibold text-snack-text">{profile.stats.streak.current} days</p>
-                    </div>
-                    <div>
-                      <p className="text-snack-muted">Best streak</p>
-                      <p className="font-semibold text-snack-text">{profile.stats.streak.best} days</p>
-                    </div>
-                    <div>
-                      <p className="text-snack-muted">Unique spots</p>
-                      <p className="font-semibold text-snack-text">{profile.stats.uniqueLocationsVisited}</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="mb-1 text-xs text-snack-muted">Posting activity, last 8 weeks</p>
-                    <div className="flex h-12 items-end gap-1">
-                      {profile.stats.weeklyActivity.map((week) => (
-                        <div
-                          key={week.weekStart}
-                          className={`flex-1 rounded-sm ${week.posts > 0 ? 'bg-snack-primary/70' : 'bg-snack-surface'}`}
-                          style={{ height: `${week.posts > 0 ? Math.max(8, Math.round((week.posts / maxWeeklyPosts) * 48)) : 4}px` }}
-                          title={`${new Date(week.weekStart).toLocaleDateString()}: ${week.posts}`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="mb-2 text-xs text-snack-muted">Top places reviewed</p>
-                    {profile.stats.topLocations.length === 0 ? (
-                      <p className="text-sm text-snack-muted">No standout places yet.</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {profile.stats.topLocations.map((location) => (
-                          <div key={location.id} className="flex items-center justify-between rounded-xl bg-snack-surface px-3 py-2">
-                            <p className="text-sm font-medium text-snack-text truncate">{location.name}</p>
-                            <p className="text-xs text-snack-muted">{location.posts} posts</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="card p-4 mb-6">
-                  <h2 className="mb-3 font-heading font-semibold text-snack-text">Recent Achievements</h2>
-                  {profile.achievements.recent.length === 0 ? (
-                    <p className="text-sm text-snack-muted">No achievements unlocked yet.</p>
-                  ) : (
-                    <div className="grid gap-2 md:grid-cols-2">
-                      {profile.achievements.recent.map((entry) => (
-                        <div key={entry.badge.id} className="rounded-xl border border-[#ececec] p-3">
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="text-sm font-semibold text-snack-text">{entry.badge.name}</p>
-                            <span className="text-[11px] font-medium text-snack-muted">{entry.badge.tier}</span>
-                          </div>
-                          <p className="mt-1 text-xs text-snack-muted">{entry.badge.description}</p>
-                          <p className="mt-2 text-[11px] text-snack-muted">
-                            Unlocked {entry.earnedAt ? new Date(entry.earnedAt).toLocaleDateString() : 'recently'}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 <h2 className="font-heading font-semibold text-snack-text mb-4">Reviews</h2>
