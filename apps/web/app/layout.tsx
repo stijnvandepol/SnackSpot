@@ -12,6 +12,7 @@ const poppins = Poppins({ subsets: ['latin'], weight: ['500', '600', '700'], var
 
 export const metadata: Metadata = {
   metadataBase,
+  applicationName: 'SnackSpot',
   title: { default: 'SnackSpot', template: '%s | SnackSpot' },
   description: 'Discover and share the best snacks and meals near you.',
   alternates: {
@@ -32,9 +33,24 @@ export const metadata: Metadata = {
     google: googleSiteVerification || undefined,
   },
   manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+    ],
+    shortcut: ['/favicon.ico'],
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   themeColor: '#F97316',
   viewport: { width: 'device-width', initialScale: 1, viewportFit: 'cover' },
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Snack Spot' },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
   openGraph: {
     title: 'SnackSpot',
     description: 'Discover and share the best snacks and meals near you.',
