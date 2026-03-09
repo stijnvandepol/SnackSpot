@@ -635,13 +635,13 @@ function ProfileContent() {
             <Link href={`/u/${user.username}`} className="btn-secondary text-sm py-2">Public Profile</Link>
           </div>
 
-          {false && stats && (
+          {stats && false && (
             <div className="card p-4 mb-6">
               <h2 className="font-heading font-semibold text-snack-text mb-3">My Stats</h2>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <p className="text-snack-muted">Unique locations</p>
-                  <p className="font-semibold text-snack-text">{stats.uniqueLocationsVisited}</p>
+                  <p className="font-semibold text-snack-text">{stats?.uniqueLocationsVisited ?? 0}</p>
                 </div>
                 <div>
                   <p className="text-snack-muted">Avg overall given</p>
@@ -649,17 +649,17 @@ function ProfileContent() {
                 </div>
                 <div>
                   <p className="text-snack-muted">Current streak</p>
-                  <p className="font-semibold text-snack-text">{stats.streak.current} days</p>
+                  <p className="font-semibold text-snack-text">{stats?.streak.current ?? 0} days</p>
                 </div>
                 <div>
                   <p className="text-snack-muted">Best streak</p>
-                  <p className="font-semibold text-snack-text">{stats.streak.best} days</p>
+                  <p className="font-semibold text-snack-text">{stats?.streak.best ?? 0} days</p>
                 </div>
               </div>
               <div className="mt-3">
                 <p className="text-xs text-snack-muted mb-1">Last 8 weeks</p>
                 <div className="flex items-end gap-1 h-12">
-                  {stats.weeklyActivity.map((week) => (
+                  {(stats?.weeklyActivity ?? []).map((week) => (
                     <div
                       key={week.weekStart}
                       className={`rounded-sm flex-1 ${week.posts > 0 ? 'bg-snack-primary/70' : 'bg-snack-surface'}`}
@@ -722,14 +722,14 @@ function ProfileContent() {
             </div>
           )}
 
-          {false && selectedBadge && (
+          {selectedBadge && false && (
             <div className="fixed inset-0 z-50 bg-black/35 flex items-end sm:items-center justify-center p-4" onClick={() => setSelectedBadge(null)}>
               <div className="w-full max-w-sm card p-4" onClick={(e) => e.stopPropagation()}>
-                <h3 className="font-heading font-semibold text-snack-text">{selectedBadge.badge.name}</h3>
-                <p className="text-xs text-snack-muted mt-1">Tier: {selectedBadge.badge.tier}</p>
-                <p className="text-sm text-snack-muted mt-2">{selectedBadge.badge.description}</p>
+                <h3 className="font-heading font-semibold text-snack-text">{selectedBadge?.badge.name}</h3>
+                <p className="text-xs text-snack-muted mt-1">Tier: {selectedBadge?.badge.tier}</p>
+                <p className="text-sm text-snack-muted mt-2">{selectedBadge?.badge.description}</p>
                 <p className="text-sm text-snack-text mt-3">
-                  Progress: {selectedBadge.progressCurrent}/{selectedBadge.progressTarget}
+                  Progress: {selectedBadge?.progressCurrent ?? 0}/{selectedBadge?.progressTarget ?? 0}
                 </p>
                 <button className="btn-secondary w-full mt-4" onClick={() => setSelectedBadge(null)}>Close</button>
               </div>
