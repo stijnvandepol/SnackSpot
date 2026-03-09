@@ -11,4 +11,9 @@ describe('computeOverallRating', () => {
     const overall = computeOverallRating({ taste: 5, value: 4, portion: 3, service: 2 })
     expect(overall).toBe(3.5)
   })
+
+  it('handles half-star inputs', () => {
+    const overall = computeOverallRating({ taste: 4.5, value: 4, portion: 3.5, service: null })
+    expect(overall).toBe(4)
+  })
 })

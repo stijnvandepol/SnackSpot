@@ -51,15 +51,23 @@ export const PlaceSearchSchema = z.object({
 
 // ─── Review schemas ──────────────────────────────────────────────────────────
 
+const RatingValueSchema = z
+  .number()
+  .min(1)
+  .max(5)
+  .refine((value) => Math.abs(value * 2 - Math.round(value * 2)) < Number.EPSILON, {
+    message: 'Rating must be in 0.5 increments',
+  })
+
 export const CreateReviewSchema = z.object({
   placeId: z.string().min(1).optional(),
   place: CreatePlaceSchema.optional(),
-  rating: z.number().int().min(1).max(5).optional(),
+  rating: RatingValueSchema.optional(),
   ratings: z.object({
-    taste: z.number().int().min(1).max(5),
-    value: z.number().int().min(1).max(5),
-    portion: z.number().int().min(1).max(5),
-    service: z.number().int().min(1).max(5).nullable().optional(),
+    taste: RatingValueSchema,
+    value: RatingValueSchema,
+    portion: RatingValueSchema,
+    service: RatingValueSchema.nullable().optional(),
   }).optional(),
   text: z.string().min(10).max(2000),
   dishName: z.string().min(1).max(100).optional(),
@@ -71,12 +79,12 @@ export const CreateReviewSchema = z.object({
 })
 
 export const UpdateReviewSchema = z.object({
-  rating: z.number().int().min(1).max(5).optional(),
+  rating: RatingValueSchema.optional(),
   ratings: z.object({
-    taste: z.number().int().min(1).max(5),
-    value: z.number().int().min(1).max(5),
-    portion: z.number().int().min(1).max(5),
-    service: z.number().int().min(1).max(5).nullable().optional(),
+    taste: RatingValueSchema,
+    value: RatingValueSchema,
+    portion: RatingValueSchema,
+    service: RatingValueSchema.nullable().optional(),
   }).optional(),
   text: z.string().min(10).max(2000).optional(),
   dishName: z.string().min(1).max(100).optional(),

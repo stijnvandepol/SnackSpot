@@ -12,10 +12,30 @@ describe('CreateReviewSchema structured ratings', () => {
     expect(parsed.success).toBe(true)
   })
 
+  it('accepts half-star increments', () => {
+    const parsed = CreateReviewSchema.safeParse({
+      placeId: 'place_1',
+      ratings: { taste: 4.5, value: 4, portion: 3.5, service: 2.5 },
+      text: 'Very good meal and fast service',
+      photoIds: [],
+    })
+    expect(parsed.success).toBe(true)
+  })
+
   it('rejects out-of-range rating values', () => {
     const parsed = CreateReviewSchema.safeParse({
       placeId: 'place_1',
       ratings: { taste: 0, value: 4, portion: 4, service: null },
+      text: 'Very good meal and fast service',
+      photoIds: [],
+    })
+    expect(parsed.success).toBe(false)
+  })
+
+  it('rejects non-0.5 increments', () => {
+    const parsed = CreateReviewSchema.safeParse({
+      placeId: 'place_1',
+      ratings: { taste: 4.3, value: 4, portion: 4, service: null },
       text: 'Very good meal and fast service',
       photoIds: [],
     })

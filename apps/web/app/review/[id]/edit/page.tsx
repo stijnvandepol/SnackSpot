@@ -76,19 +76,37 @@ function createTempPhotoId(): string {
   return `tmp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
 }
 
+function isHalfStepRating(value: number): boolean {
+  return value >= 1 && value <= 5 && Math.abs(value * 2 - Math.round(value * 2)) < Number.EPSILON
+}
+
 function Stars({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
-    <div className="flex gap-1">
+    <div className="flex items-center gap-1">
       {[1, 2, 3, 4, 5].map((s) => (
-        <button
-          key={s}
-          type="button"
-          className={`text-4xl transition-transform hover:scale-110 ${s <= value ? 'text-snack-rating' : 'text-[#dfdfdf]'}`}
-          onClick={() => onChange(s)}
-        >
-          ★
-        </button>
+        <div key={s} className="relative inline-flex">
+          <button
+            type="button"
+            className="absolute inset-y-0 left-0 z-10 w-1/2"
+            aria-label={`Set ${s - 0.5} stars`}
+            onClick={() => onChange(s - 0.5)}
+          />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 z-10 w-1/2"
+            aria-label={`Set ${s} stars`}
+            onClick={() => onChange(s)}
+          />
+          <span
+            className={`pointer-events-none text-4xl ${
+              value >= s ? 'text-snack-rating' : value === s - 0.5 ? 'text-snack-rating/60' : 'text-[#dfdfdf]'
+            }`}
+          >
+            ★
+          </span>
+        </div>
       ))}
+      {value >= 1 && <span className="ml-2 text-sm font-semibold text-snack-text">{value.toFixed(1)}</span>}
     </div>
   )
 }
@@ -246,12 +264,12 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
   }
 
   const submit = async () => {
-    if (ratings.taste < 1 || ratings.taste > 5 || ratings.value < 1 || ratings.value > 5 || ratings.portion < 1 || ratings.portion > 5) {
-      setError('Choose ratings from 1 to 5')
+    if (!isHalfStepRating(ratings.taste) || !isHalfStepRating(ratings.value) || !isHalfStepRating(ratings.portion)) {
+      setError('Choose ratings from 1 to 5 in steps of 0.5')
       return
     }
-    if (ratings.service !== null && (ratings.service < 1 || ratings.service > 5)) {
-      setError('Service rating must be between 1 and 5')
+    if (ratings.service !== null && !isHalfStepRating(ratings.service)) {
+      setError('Service rating must be between 1 and 5 in steps of 0.5')
       return
     }
     if (text.trim().length < 10) {

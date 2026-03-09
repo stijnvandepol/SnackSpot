@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
       data: {
         userId: auth.sub,
         placeId: placeId!,
-        rating: Math.round(normalizedRatings.overall),
+        rating: normalizedRatings.overall,
         ratingTaste: normalizedRatings.taste,
         ratingValue: normalizedRatings.value,
         ratingPortion: normalizedRatings.portion,
@@ -173,11 +173,12 @@ export async function POST(req: NextRequest) {
 
     return created({
       ...review,
+      rating: Number(review.rating),
       ratings: {
-        taste: review.ratingTaste,
-        value: review.ratingValue,
-        portion: review.ratingPortion,
-        service: review.ratingService,
+        taste: Number(review.ratingTaste),
+        value: Number(review.ratingValue),
+        portion: Number(review.ratingPortion),
+        service: review.ratingService === null ? null : Number(review.ratingService),
       },
       overallRating: Number(review.ratingOverall),
     })

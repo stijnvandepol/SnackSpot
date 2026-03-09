@@ -66,14 +66,15 @@ export async function GET(
 
     return withNoStore(ok({
       ...review,
+      rating: Number(review.rating),
       likeCount: review._count.reviewLikes,
       commentCount: review._count.comments,
       likedByMe: auth ? review.reviewLikes.length > 0 : false,
       ratings: {
-        taste: review.ratingTaste,
-        value: review.ratingValue,
-        portion: review.ratingPortion,
-        service: review.ratingService,
+        taste: Number(review.ratingTaste),
+        value: Number(review.ratingValue),
+        portion: Number(review.ratingPortion),
+        service: review.ratingService === null ? null : Number(review.ratingService),
       },
       overallRating: Number(review.ratingOverall),
       _count: undefined,
@@ -151,7 +152,7 @@ export async function PATCH(
       data: {
         ...(body.ratings
           ? {
-              rating: Math.round(normalized!.overall),
+              rating: normalized!.overall,
               ratingTaste: normalized!.taste,
               ratingValue: normalized!.value,
               ratingPortion: normalized!.portion,
@@ -198,11 +199,12 @@ export async function PATCH(
     })
     return ok({
       ...updated,
+      rating: Number(updated.rating),
       ratings: {
-        taste: updated.ratingTaste,
-        value: updated.ratingValue,
-        portion: updated.ratingPortion,
-        service: updated.ratingService,
+        taste: Number(updated.ratingTaste),
+        value: Number(updated.ratingValue),
+        portion: Number(updated.ratingPortion),
+        service: updated.ratingService === null ? null : Number(updated.ratingService),
       },
       overallRating: Number(updated.ratingOverall),
     })

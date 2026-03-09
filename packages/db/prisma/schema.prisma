@@ -135,11 +135,11 @@ model Review {
   id       String       @id @default(cuid())
   userId   String       @map("user_id")
   placeId  String       @map("place_id")
-  rating   Int
-  ratingTaste   Int     @default(0) @map("rating_taste")
-  ratingValue   Int     @default(0) @map("rating_value")
-  ratingPortion Int     @default(0) @map("rating_portion")
-  ratingService Int?    @map("rating_service")
+  rating   Decimal      @default(0) @db.Decimal(2, 1)
+  ratingTaste   Decimal @default(0) @db.Decimal(2, 1) @map("rating_taste")
+  ratingValue   Decimal @default(0) @db.Decimal(2, 1) @map("rating_value")
+  ratingPortion Decimal @default(0) @db.Decimal(2, 1) @map("rating_portion")
+  ratingService Decimal? @db.Decimal(2, 1) @map("rating_service")
   ratingOverall Decimal @default(0) @db.Decimal(2, 1) @map("rating_overall")
   text     String
   dishName String?      @map("dish_name")

@@ -81,14 +81,15 @@ export async function GET(req: NextRequest) {
     const items = hasMore ? reviews.slice(0, query.limit) : reviews
     const withLikes = items.map((item) => ({
       ...item,
+      rating: Number(item.rating),
       likeCount: item._count.reviewLikes,
       commentCount: item._count.comments,
       likedByMe: item.reviewLikes.length > 0,
       ratings: {
-        taste: item.ratingTaste,
-        value: item.ratingValue,
-        portion: item.ratingPortion,
-        service: item.ratingService,
+        taste: Number(item.ratingTaste),
+        value: Number(item.ratingValue),
+        portion: Number(item.ratingPortion),
+        service: item.ratingService === null ? null : Number(item.ratingService),
       },
       overallRating: Number(item.ratingOverall),
       _count: undefined,
