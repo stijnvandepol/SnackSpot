@@ -14,7 +14,7 @@ import {
 } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
 import { rateLimitUser } from '@/lib/rate-limit'
-import { notifyReviewComment } from '@/lib/notification-service'
+import { notifyCommentMention, notifyReviewComment } from '@/lib/notification-service'
 
 export async function GET(
   req: NextRequest,
@@ -86,7 +86,7 @@ export async function POST(
   try {
     const review = await prisma.review.findUnique({
       where: { id },
-      select: { status: true },
+      select: { status: true, userId: true },
     })
     if (!review || review.status !== ReviewStatus.PUBLISHED) {
       return err('Review not found', 404)
@@ -109,6 +109,28 @@ export async function POST(
 
     // Notify review owner about the comment
     await notifyReviewComment(id, comment.id, auth.sub)
+
+    const mentionMatches = text.match(/@(\w{3,30})/g) ?? []
+    const mentionedUsernames = [...new Set(mentionMatches.map((match) => match.slice(1).toLowerCase()))]
+
+    if (mentionedUsernames.length > 0) {
+      const mentionedUsers = await prisma.user.findMany({
+        where: {
+          bannedAt: null,
+          OR: mentionedUsernames.map((username) => ({
+            username: { equals: username, mode: 'insensitive' },
+          })),
+        },
+        select: { id: true },
+      })
+
+      const mentionedUserIds = [...new Set(mentionedUsers.map((user) => user.id))]
+        .filter((userId) => userId !== auth.sub && userId !== review.userId)
+
+      await Promise.allSettled(
+        mentionedUserIds.map((userId) => notifyCommentMention(userId, id, comment.id, auth.sub)),
+      )
+    }
 
     return created({
       ...comment,

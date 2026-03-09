@@ -222,6 +222,49 @@ export async function notifyMention(mentionedUserId: string, reviewId: string, a
   }
 }
 
+export async function notifyCommentMention(
+  mentionedUserId: string,
+  reviewId: string,
+  commentId: string,
+  actorId: string,
+) {
+  try {
+    logger.info({ mentionedUserId, reviewId, commentId, actorId }, 'notifyCommentMention called')
+    const review = await prisma.review.findUnique({
+      where: { id: reviewId },
+      select: {
+        place: { select: { name: true } },
+      },
+    })
+
+    if (!review) {
+      logger.warn({ reviewId, commentId }, 'Review not found for comment mention notification')
+      return null
+    }
+
+    const actor = await prisma.user.findUnique({
+      where: { id: actorId },
+      select: { username: true },
+    })
+
+    if (!actor) return null
+
+    return createNotification({
+      userId: mentionedUserId,
+      type: 'COMMENT_MENTION',
+      title: 'You were mentioned',
+      message: `${actor.username} mentioned you in a comment${review.place ? ` at ${review.place.name}` : ''}`,
+      link: `/review/${reviewId}`,
+      actorId,
+      reviewId,
+      commentId,
+    })
+  } catch (error) {
+    logger.error({ error, mentionedUserId, reviewId, commentId, actorId }, 'Failed to notify comment mention')
+    return null
+  }
+}
+
 export async function notifyBadgeEarned(userId: string, badgeName: string) {
   try {
     return createNotification({
