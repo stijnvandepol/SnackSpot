@@ -10,8 +10,8 @@ export async function GET(
   const { username } = await params
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { username },
+    const user = await prisma.user.findFirst({
+      where: { username: { equals: username, mode: 'insensitive' } },
       select: { id: true, username: true, bio: true, avatarKey: true, role: true, createdAt: true },
     })
     if (!user) return err('User not found', 404)

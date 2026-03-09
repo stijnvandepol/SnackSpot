@@ -7,6 +7,7 @@ import { photoVariantUrl } from '@/lib/photo-url'
 import { ReviewLikeButton } from '@/components/review-like-button'
 import { ImageLightbox } from '@/components/image-lightbox'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
+import { MentionText } from '@/components/mention-text'
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null
@@ -233,7 +234,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
           </p>
         )}
 
-        <p className="text-snack-muted whitespace-pre-line">{review.text}</p>
+        <MentionText text={review.text} className="whitespace-pre-line text-snack-muted" />
 
         <div className="pt-1">
           <ReviewLikeButton
@@ -312,7 +313,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
                     </button>
                   )}
                 </div>
-                <p className="mt-2 text-sm text-snack-muted whitespace-pre-line">{comment.text}</p>
+                <MentionText text={comment.text} className="mt-2 whitespace-pre-line text-sm text-snack-muted" />
               </div>
             ))}
           </div>

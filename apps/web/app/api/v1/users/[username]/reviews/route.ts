@@ -19,8 +19,8 @@ export async function GET(
   if (isResponse(query)) return query
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { username },
+    const user = await prisma.user.findFirst({
+      where: { username: { equals: username, mode: 'insensitive' } },
       select: { id: true },
     })
     if (!user) return err('User not found', 404)
