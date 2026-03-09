@@ -3,12 +3,34 @@ import { Inter, Poppins } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
 import './globals.css'
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || 'http://localhost:8080'
+const metadataBase = new URL(appUrl)
+const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim()
+
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const poppins = Poppins({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-poppins' })
 
 export const metadata: Metadata = {
+  metadataBase,
   title: { default: 'SnackSpot', template: '%s | SnackSpot' },
   description: 'Discover and share the best snacks and meals near you.',
+  alternates: {
+    canonical: '/',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-video-preview': -1,
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: googleSiteVerification || undefined,
+  },
   manifest: '/manifest.webmanifest',
   themeColor: '#F97316',
   viewport: { width: 'device-width', initialScale: 1, viewportFit: 'cover' },
