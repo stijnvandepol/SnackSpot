@@ -256,7 +256,14 @@ function ProfileContent() {
               )}
 
               <div className="space-y-4">
-                {reviews.map((r) => <ReviewCard key={r.id} review={r} backContext="profile" />)}
+                {reviews.map((r) => (
+                  <ReviewCard
+                    key={r.id}
+                    review={r}
+                    photoVariantPreference={['large', 'medium', 'thumb']}
+                    backContext="profile"
+                  />
+                ))}
               </div>
             </>
           )}
@@ -412,7 +419,14 @@ function ProfileContent() {
           )}
 
           <div className="space-y-4">
-            {reviews.map((r) => <ReviewCard key={r.id} review={r} backContext="profile" />)}
+            {reviews.map((r) => (
+              <ReviewCard
+                key={r.id}
+                review={r}
+                photoVariantPreference={['large', 'medium', 'thumb']}
+                backContext="profile"
+              />
+            ))}
           </div>
         </>
       )}

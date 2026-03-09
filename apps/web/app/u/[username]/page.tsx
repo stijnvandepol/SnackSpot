@@ -107,7 +107,14 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {reviews.map((r) => <ReviewCard key={r.id} review={r} backContext={`user:${username}`} />)}
+                    {reviews.map((r) => (
+                      <ReviewCard
+                        key={r.id}
+                        review={r}
+                        photoVariantPreference={['large', 'medium', 'thumb']}
+                        backContext={`user:${username}`}
+                      />
+                    ))}
                   </div>
                 )}
               </>
