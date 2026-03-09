@@ -15,6 +15,7 @@ interface UserProfile {
   role: string
   createdAt: string
   _count: { reviews: number; favorites: number }
+  totalLikesReceived: number
 }
 
 interface Review {
@@ -100,6 +101,17 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                     <p className="text-xs text-snack-muted mt-1">
                       Joined {new Date(profile.createdAt).toLocaleDateString()}
                     </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  <div className="card p-3 text-center">
+                    <p className="text-lg font-bold text-snack-text">{profile._count.reviews}</p>
+                    <p className="text-xs text-snack-muted">Posts</p>
+                  </div>
+                  <div className="card p-3 text-center">
+                    <p className="text-lg font-bold text-snack-text">{profile.totalLikesReceived}</p>
+                    <p className="text-xs text-snack-muted">Likes received</p>
                   </div>
                 </div>
 
