@@ -127,22 +127,14 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <div className="grid grid-cols-2 gap-3 mb-6">
                   <div className="card p-3 text-center">
                     <p className="text-lg font-bold text-snack-text">{profile.stats.totalPosts}</p>
                     <p className="text-xs text-snack-muted">Posts</p>
                   </div>
                   <div className="card p-3 text-center">
-                    <p className="text-lg font-bold text-snack-text">{profile.stats.postsLast30Days}</p>
-                    <p className="text-xs text-snack-muted">Past month</p>
-                  </div>
-                  <div className="card p-3 text-center">
                     <p className="text-lg font-bold text-snack-text">{profile.stats.totalLikesReceived}</p>
                     <p className="text-xs text-snack-muted">Likes received</p>
-                  </div>
-                  <div className="card p-3 text-center">
-                    <p className="text-lg font-bold text-snack-text">{profile.achievements.totalEarned}</p>
-                    <p className="text-xs text-snack-muted">Achievements</p>
                   </div>
                 </div>
 

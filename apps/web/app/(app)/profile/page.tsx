@@ -69,6 +69,7 @@ function ProfileContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const tab = searchParams.get('tab') ?? 'posts'
+  const profileTabs = ['posts', 'stats', 'notifications', 'settings'] as const
   const [reviews, setReviews] = useState<Review[]>([])
   const [earnedBadges, setEarnedBadges] = useState<BadgeRow[]>([])
   const [inProgressBadges, setInProgressBadges] = useState<BadgeRow[]>([])
@@ -184,6 +185,107 @@ function ProfileContent() {
     }
   }
 
+  const statsSummaryCards = (
+    <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="card p-3 text-center">
+        <p className="text-lg font-bold text-snack-text">{stats?.totalPosts ?? reviews.length}</p>
+        <p className="text-xs text-snack-muted">Posts</p>
+      </div>
+      <div className="card p-3 text-center">
+        <p className="text-lg font-bold text-snack-text">{stats?.totalLikesReceived ?? 0}</p>
+        <p className="text-xs text-snack-muted">Likes received</p>
+      </div>
+    </div>
+  )
+
+  const achievementsPanel = (
+    <div className="card p-4 mb-6">
+      <h2 className="font-heading font-semibold text-snack-text mb-3">Achievements</h2>
+      {earnedBadges.length === 0 && inProgressBadges.length === 0 ? (
+        <p className="text-sm text-snack-muted">No achievement progress yet.</p>
+      ) : (
+        <>
+          {earnedBadges.length > 0 && (
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {earnedBadges.map((row) => (
+                <button
+                  key={row.badge.id}
+                  type="button"
+                  onClick={() => setSelectedBadge(row)}
+                  className="text-left border border-snack-border rounded-xl p-2"
+                >
+                  <p className="text-sm font-semibold text-snack-text">{row.badge.name}</p>
+                  <p className="text-xs text-snack-muted">{row.badge.tier}</p>
+                </button>
+              ))}
+            </div>
+          )}
+          {inProgressBadges.length > 0 && (
+            <div className="space-y-2">
+              {inProgressBadges.map((row) => {
+                const pct = Math.min(100, Math.round((row.progressCurrent / Math.max(1, row.progressTarget)) * 100))
+                return (
+                  <button
+                    key={row.badge.id}
+                    type="button"
+                    onClick={() => setSelectedBadge(row)}
+                    className="w-full text-left"
+                  >
+                    <div className="flex justify-between text-xs text-snack-muted mb-1">
+                      <span>{row.badge.name}</span>
+                      <span>{row.progressCurrent}/{row.progressTarget}</span>
+                    </div>
+                    <div className="h-2 bg-snack-surface rounded-full overflow-hidden">
+                      <div className="h-full bg-snack-primary" style={{ width: `${pct}%` }} />
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+
+  const statsPanel = stats ? (
+    <div className="card p-4 mb-6">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-heading font-semibold text-snack-text">My Stats</h2>
+        <span className="text-xs text-snack-muted">
+          Avg rating given {stats.averageOverallRatingGiven?.toFixed(1) ?? '—'}
+        </span>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <p className="text-snack-muted">Unique locations</p>
+          <p className="font-semibold text-snack-text">{stats.uniqueLocationsVisited}</p>
+        </div>
+        <div>
+          <p className="text-snack-muted">Current streak</p>
+          <p className="font-semibold text-snack-text">{stats.streak.current} days</p>
+        </div>
+        <div>
+          <p className="text-snack-muted">Best streak</p>
+          <p className="font-semibold text-snack-text">{stats.streak.best} days</p>
+        </div>
+      </div>
+      <div className="mt-3">
+        <p className="text-xs text-snack-muted mb-1">Last 8 weeks</p>
+        <div className="flex items-end gap-1 h-12">
+          {stats.weeklyActivity.map((week) => (
+            <div
+              key={week.weekStart}
+              className={`rounded-sm flex-1 ${week.posts > 0 ? 'bg-snack-primary/70' : 'bg-snack-surface'}`}
+              style={{ height: `${week.posts > 0 ? Math.max(8, Math.round((week.posts / maxWeeklyPosts) * 48)) : 4}px` }}
+              title={`${new Date(week.weekStart).toLocaleDateString()}: ${week.posts}`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  ) : null
+
   if (!user) {
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center">
@@ -219,7 +321,7 @@ function ProfileContent() {
 
           {/* Tab Navigation */}
           <div className="flex gap-2 border-b border-[#ececec] -mx-4 px-4 overflow-x-auto">
-            {['posts', 'notifications', 'settings'].map((t) => (
+            {profileTabs.map((t) => (
               <Link
                 key={t}
                 href={`/profile?tab=${t}`}
@@ -229,7 +331,7 @@ function ProfileContent() {
                     : 'border-transparent text-snack-muted hover:text-snack-text'
                 }`}
               >
-                {t === 'posts' ? 'Posts' : t === 'notifications' ? 'Notifications' : 'Settings'}
+                {t === 'posts' ? 'Posts' : t === 'stats' ? 'Stats' : t === 'notifications' ? 'Notifications' : 'Settings'}
               </Link>
             ))}
           </div>
@@ -271,6 +373,14 @@ function ProfileContent() {
           {/* Notifications Tab */}
           {tab === 'notifications' && (
             <NotificationsList />
+          )}
+
+          {tab === 'stats' && (
+            <div className="space-y-4">
+              {statsSummaryCards}
+              {statsPanel}
+              {achievementsPanel}
+            </div>
           )}
 
           {/* Settings Tab */}
@@ -384,7 +494,7 @@ function ProfileContent() {
       </div>
 
       <div className="flex gap-2 border-b border-[#ececec] overflow-x-auto">
-        {['posts', 'notifications', 'settings'].map((t) => (
+        {profileTabs.map((t) => (
           <Link
             key={t}
             href={`/profile?tab=${t}`}
@@ -394,7 +504,7 @@ function ProfileContent() {
                 : 'border-transparent text-snack-muted hover:text-snack-text'
             }`}
           >
-            {t === 'posts' ? 'Posts' : t === 'notifications' ? 'Notifications' : 'Settings'}
+            {t === 'posts' ? 'Posts' : t === 'stats' ? 'Stats' : t === 'notifications' ? 'Notifications' : 'Settings'}
           </Link>
         ))}
       </div>
@@ -435,6 +545,15 @@ function ProfileContent() {
         <>
           <h2 className="font-heading font-semibold text-lg text-snack-text">Notifications</h2>
           <NotificationsList />
+        </>
+      )}
+
+      {tab === 'stats' && (
+        <>
+          <h2 className="font-heading font-semibold text-lg text-snack-text">My Stats</h2>
+          {statsSummaryCards}
+          {statsPanel}
+          {achievementsPanel}
         </>
       )}
 
@@ -512,26 +631,11 @@ function ProfileContent() {
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            <div className="card p-3 text-center">
-              <p className="text-lg font-bold text-snack-text">{stats?.totalPosts ?? reviews.length}</p>
-              <p className="text-xs text-snack-muted">Posts</p>
-            </div>
-            <div className="card p-3 text-center">
-              <p className="text-lg font-bold text-snack-text">{stats?.totalLikesReceived ?? 0}</p>
-              <p className="text-xs text-snack-muted">Likes received</p>
-            </div>
-            <div className="card p-3 text-center">
-              <p className="text-lg font-bold text-snack-text">{earnedBadges.length}</p>
-              <p className="text-xs text-snack-muted">Achievements</p>
-            </div>
-          </div>
-
           <div className="mb-6 flex flex-wrap gap-2">
             <Link href={`/u/${user.username}`} className="btn-secondary text-sm py-2">Public Profile</Link>
           </div>
 
-          {stats && (
+          {false && stats && (
             <div className="card p-4 mb-6">
               <h2 className="font-heading font-semibold text-snack-text mb-3">My Stats</h2>
               <div className="grid grid-cols-2 gap-3 text-sm">
@@ -568,7 +672,8 @@ function ProfileContent() {
             </div>
           )}
 
-          <div className="card p-4 mb-6">
+          {false && (
+            <div className="card p-4 mb-6">
               <h2 className="font-heading font-semibold text-snack-text mb-3">Achievements</h2>
             {earnedBadges.length === 0 && inProgressBadges.length === 0 ? (
               <p className="text-sm text-snack-muted">No achievement progress yet.</p>
@@ -614,9 +719,10 @@ function ProfileContent() {
                 )}
               </>
             )}
-          </div>
+            </div>
+          )}
 
-          {selectedBadge && (
+          {false && selectedBadge && (
             <div className="fixed inset-0 z-50 bg-black/35 flex items-end sm:items-center justify-center p-4" onClick={() => setSelectedBadge(null)}>
               <div className="w-full max-w-sm card p-4" onClick={(e) => e.stopPropagation()}>
                 <h3 className="font-heading font-semibold text-snack-text">{selectedBadge.badge.name}</h3>
@@ -635,6 +741,20 @@ function ProfileContent() {
             <NotificationSettings />
           </div>
         </>
+      )}
+
+      {selectedBadge && (
+        <div className="fixed inset-0 z-50 bg-black/35 flex items-end sm:items-center justify-center p-4" onClick={() => setSelectedBadge(null)}>
+          <div className="w-full max-w-sm card p-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-heading font-semibold text-snack-text">{selectedBadge.badge.name}</h3>
+            <p className="text-xs text-snack-muted mt-1">Tier: {selectedBadge.badge.tier}</p>
+            <p className="text-sm text-snack-muted mt-2">{selectedBadge.badge.description}</p>
+            <p className="text-sm text-snack-text mt-3">
+              Progress: {selectedBadge.progressCurrent}/{selectedBadge.progressTarget}
+            </p>
+            <button className="btn-secondary w-full mt-4" onClick={() => setSelectedBadge(null)}>Close</button>
+          </div>
+        </div>
       )}
     </div>
   )
