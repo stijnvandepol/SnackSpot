@@ -4,10 +4,10 @@ import { db } from '@/lib/db'
 
 // GET /api/places - List all places
 export async function GET(req: NextRequest) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const url = new URL(req.url)
     const page = parseInt(url.searchParams.get('page') || '1')
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100)
@@ -75,10 +75,10 @@ export async function GET(req: NextRequest) {
 
 // POST /api/places - Create a new place
 export async function POST(req: NextRequest) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const { name, address, lat, lng } = (await req.json()) as {
       name: string
       address: string
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create place with PostGIS geography point
-    const result = await db.$executeRaw`
+    await db.$executeRaw`
       INSERT INTO places (id, name, address, location, created_at, updated_at)
       VALUES (
         gen_random_uuid()::text,
@@ -130,10 +130,10 @@ export async function POST(req: NextRequest) {
 
 // DELETE /api/places/bulk - Delete places without reviews
 export async function DELETE(req: NextRequest) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const result = await db.place.deleteMany({
       where: {
         reviews: {

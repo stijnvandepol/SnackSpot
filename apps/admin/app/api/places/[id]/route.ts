@@ -6,10 +6,10 @@ type Params = { params: { id: string } }
 
 // GET /api/places/[id] - Get place details
 export async function GET(req: NextRequest, { params }: Params) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const place = await db.place.findUnique({
       where: { id: params.id },
       select: {
@@ -67,10 +67,10 @@ export async function GET(req: NextRequest, { params }: Params) {
 
 // PATCH /api/places/[id] - Update place
 export async function PATCH(req: NextRequest, { params }: Params) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const body = (await req.json()) as {
       name?: string
       address?: string
@@ -130,10 +130,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
 // DELETE /api/places/[id] - Delete place
 export async function DELETE(req: NextRequest, { params }: Params) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     await db.place.delete({
       where: { id: params.id },
     })

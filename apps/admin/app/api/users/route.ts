@@ -5,10 +5,10 @@ import argon2 from 'argon2'
 
 // GET /api/users - List all users
 export async function GET(req: NextRequest) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const url = new URL(req.url)
     const page = parseInt(url.searchParams.get('page') || '1')
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100)
@@ -69,10 +69,10 @@ export async function GET(req: NextRequest) {
 
 // POST /api/users - Create a new user
 export async function POST(req: NextRequest) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const { email, username, password, role } = (await req.json()) as {
       email: string
       username: string

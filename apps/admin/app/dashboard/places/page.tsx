@@ -21,15 +21,10 @@ export default function PlacesPage() {
   const [newPlace, setNewPlace] = useState({ name: '', address: '', lat: '', lng: '' })
 
   const loadPlaces = async () => {
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
     setLoading(true)
     try {
       const url = `/api/places?page=${page}&search=${search}&withoutReviews=${showWithoutReviews}`
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch(url)
       const data = await res.json()
       setPlaces(data.places || [])
       setTotal(data.pagination?.total || 0)
@@ -47,13 +42,9 @@ export default function PlacesPage() {
   const handleDeletePlace = async (placeId: string, name: string) => {
     if (!confirm(`Weet je zeker dat je restaurant "${name}" wilt verwijderen?`)) return
 
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
     try {
       const res = await fetch(`/api/places/${placeId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       })
 
       if (res.ok) {
@@ -71,13 +62,9 @@ export default function PlacesPage() {
   const handleDeletePlacesWithoutReviews = async () => {
     if (!confirm('Weet je zeker dat je ALLE restaurants zonder reviews wilt verwijderen?')) return
 
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
     try {
       const res = await fetch('/api/places', {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       })
 
       const data = await res.json()
@@ -93,9 +80,6 @@ export default function PlacesPage() {
   }
 
   const handleCreatePlace = async () => {
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
     if (!newPlace.name || !newPlace.address || !newPlace.lat || !newPlace.lng) {
       alert('Alle velden zijn verplicht')
       return
@@ -105,7 +89,6 @@ export default function PlacesPage() {
       const res = await fetch('/api/places', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

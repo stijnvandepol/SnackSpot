@@ -14,16 +14,7 @@ export default function DashboardLayout({
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('admin_token')
-    if (!token) {
-      router.push('/')
-      return
-    }
-
-    // Verify token and get user info
-    fetch('/api/auth/me', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch('/api/auth/me')
       .then((res) => {
         if (!res.ok) throw new Error('Unauthorized')
         return res.json()
@@ -33,13 +24,12 @@ export default function DashboardLayout({
         setLoading(false)
       })
       .catch(() => {
-        localStorage.removeItem('admin_token')
         router.push('/')
       })
   }, [router])
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token')
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' }).catch(() => undefined)
     router.push('/')
   }
 

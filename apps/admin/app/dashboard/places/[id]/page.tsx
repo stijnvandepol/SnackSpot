@@ -10,12 +10,7 @@ export default function EditPlacePage({ params }: { params: { id: string } }) {
   const [address, setAddress] = useState('')
 
   useEffect(() => {
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
-    fetch(`/api/places/${params.id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch(`/api/places/${params.id}`)
       .then((res) => res.json())
       .then((data) => {
         setPlace(data.place)
@@ -27,14 +22,10 @@ export default function EditPlacePage({ params }: { params: { id: string } }) {
   }, [params.id])
 
   const handleSave = async () => {
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
     try {
       const res = await fetch(`/api/places/${params.id}`, {
         method: 'PATCH',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ name, address }),

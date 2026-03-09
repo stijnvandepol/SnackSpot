@@ -47,7 +47,7 @@ pnpm dev
 
 ### Productie (Docker)
 ```bash
-# Admin panel start automatisch op poort 3001
+# Admin panel start standaard alleen op localhost:3001
 docker-compose up -d admin
 ```
 
@@ -58,12 +58,12 @@ Lokaal:
 http://localhost:3001
 ```
 
-LAN toegang (voor Cloudflare Tunnel):
+LAN toegang (alleen als je `ADMIN_BIND_ADDRESS=0.0.0.0` zet):
 ```
 http://192.168.x.x:3001
 ```
 
-Het admin panel is standaard toegankelijk vanaf het LAN, zodat je het via Cloudflare Tunnel + OAuth kunt beveiligen (aanbevolen).
+Standaard bindt het admin panel alleen op localhost. Zet `ADMIN_BIND_ADDRESS=0.0.0.0` als je het bewust via LAN of een tunnelhost wilt aanbieden.
 
 ## 👤 Admin Gebruiker Aanmaken
 
@@ -130,17 +130,17 @@ pnpm --filter @snackspot/db prisma studio
 
 ## 🔐 Authenticatie
 
-Het admin panel gebruikt dezelfde JWT tokens als de hoofd-app maar vereist de `ADMIN` rol.
+Het admin panel gebruikt een server-side admin sessiecookie op basis van dezelfde JWT secrets als de hoofd-app en vereist de `ADMIN` rol.
 
 ### Login Flow
 1. Navigeer naar `http://localhost:3001` (of je admin domein)
 2. Log in met een account met ADMIN rol
-3. Token wordt opgeslagen in localStorage
-4. Token is 8 uur geldig
+3. De server zet een `httpOnly` sessiecookie
+4. De sessie is 8 uur geldig
 
 ### API Endpoints
 Alle admin API endpoints bevinden zich in `/api/*` en vereisen:
-- Authorization header: `Bearer <token>`
+- een geldige admin sessiecookie
 - ADMIN rol in de JWT token
 
 ## 🛠️ Technische Details

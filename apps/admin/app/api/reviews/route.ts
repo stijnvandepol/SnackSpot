@@ -4,10 +4,10 @@ import { db } from '@/lib/db'
 
 // GET /api/reviews - List all reviews
 export async function GET(req: NextRequest) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const url = new URL(req.url)
     const page = parseInt(url.searchParams.get('page') || '1')
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100)

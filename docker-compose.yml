@@ -44,7 +44,7 @@ services:
     networks: [snackspot]
 
   minio:
-    image: ${MINIO_IMAGE:-minio/minio:latest}
+    image: ${MINIO_IMAGE:-minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1}
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -52,8 +52,8 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required}
       MINIO_API_CORS_ALLOW_ORIGIN: ${MINIO_CORS_ORIGINS:-http://localhost:8080,http://localhost:3000,http://127.0.0.1:8080}
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${MINIO_API_BIND_ADDRESS:-127.0.0.1}:9000:9000"
+      - "${MINIO_CONSOLE_BIND_ADDRESS:-127.0.0.1}:9001:9001"
     volumes:
       - miniodata:/data
     healthcheck:
@@ -142,15 +142,15 @@ services:
     restart: unless-stopped
     init: true
     ports:
-      # Admin panel LAN-accessible for Cloudflare Tunnel + OAuth protection
-      # Bind to 0.0.0.0:3001 to allow access from LAN
-      - "0.0.0.0:3001:3001"
+      # Override ADMIN_BIND_ADDRESS to expose the admin UI beyond localhost.
+      - "${ADMIN_BIND_ADDRESS:-127.0.0.1}:3001:3001"
     environment:
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
       JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
       JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS:-7}
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
       NODE_ENV: production
     depends_on:
       db:

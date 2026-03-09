@@ -2,10 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { LoginSchema } from '@snackspot/shared'
 import { db } from '@/lib/db'
 import argon2 from 'argon2'
-import jwt from 'jsonwebtoken'
-import { env } from '@/lib/env'
+import { buildSetAdminCookie, signAdminAccessToken } from '@/lib/auth'
+import { getClientIp, rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req.headers)
+  const rl = rateLimit(`admin-login:${ip}`, 5, 15 * 60)
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Te veel inlogpogingen. Probeer het later opnieuw.' },
+      { status: 429 }
+    )
+  }
+
   try {
     const body = await req.json().catch(() => null)
     const parsed = LoginSchema.safeParse(body)
@@ -29,16 +38,11 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Ongeldige inloggegevens' },
-        { status: 401 }
-      )
-    }
+    const passwordOk = user
+      ? await argon2.verify(user.passwordHash, password)
+      : await argon2.hash(password).then(() => false)
 
-    // Verify password
-    const validPassword = await argon2.verify(user.passwordHash, password)
-    if (!validPassword) {
+    if (!user || user.role !== 'ADMIN' || !passwordOk) {
       return NextResponse.json(
         { error: 'Ongeldige inloggegevens' },
         { status: 401 }
@@ -46,24 +50,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate JWT token
-    const accessToken = jwt.sign(
+    const accessToken = signAdminAccessToken(
       {
         sub: user.id,
         email: user.email,
         username: user.username,
         role: user.role,
       },
-      env.JWT_ACCESS_SECRET,
-      {
-        algorithm: 'HS256',
-        issuer: 'snackspot-admin',
-        audience: 'snackspot-admin',
-        expiresIn: '8h',
-      }
     )
 
-    return NextResponse.json({
-      accessToken,
+    const response = NextResponse.json({
       user: {
         id: user.id,
         email: user.email,
@@ -71,6 +67,8 @@ export async function POST(req: NextRequest) {
         role: user.role,
       },
     })
+    response.headers.set('Set-Cookie', buildSetAdminCookie(accessToken))
+    return response
   } catch (error) {
     return NextResponse.json(
       { error: 'Er is een fout opgetreden' },

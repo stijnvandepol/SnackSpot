@@ -33,15 +33,10 @@ export default function ReportsPage() {
   const [typeFilter, setTypeFilter] = useState('')
 
   const loadReports = async () => {
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
     setLoading(true)
     try {
       const url = `/api/reports?page=${page}&status=${statusFilter}&targetType=${typeFilter}`
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch(url)
       const data = await res.json()
       setReports(data.reports || [])
       setTotal(data.pagination?.total || 0)
@@ -57,9 +52,6 @@ export default function ReportsPage() {
   }, [page, statusFilter, typeFilter])
 
   const handleAction = async (reportId: string, action: string, targetId: string) => {
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
     const actionName = action === 'DISMISS' ? 'afwijzen' : 'uitvoeren'
     if (!confirm(`Weet je zeker dat je deze actie wilt ${actionName}?`)) return
 
@@ -67,7 +59,6 @@ export default function ReportsPage() {
       const res = await fetch(`/api/reports/${reportId}`, {
         method: 'PATCH',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ action, targetId }),

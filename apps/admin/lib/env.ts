@@ -8,6 +8,10 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(32),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   ADMIN_TOKEN: z.string().min(32).optional(),
+  AUTH_COOKIE_SECURE: z
+    .string()
+    .optional()
+    .transform((v) => (v === undefined ? undefined : v === 'true')),
 })
 
 const parsed = envSchema.safeParse(process.env)

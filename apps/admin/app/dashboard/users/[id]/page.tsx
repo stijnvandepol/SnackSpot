@@ -11,12 +11,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   const [role, setRole] = useState('USER')
 
   useEffect(() => {
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
-    fetch(`/api/users/${params.id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch(`/api/users/${params.id}`)
       .then((res) => res.json())
       .then((data) => {
         setUser(data.user)
@@ -29,14 +24,10 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   }, [params.id])
 
   const handleSave = async () => {
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
     try {
       const res = await fetch(`/api/users/${params.id}`, {
         method: 'PATCH',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, username, role }),

@@ -9,12 +9,7 @@ export default function ReviewDetailsPage({ params }: { params: { id: string } }
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
-    fetch(`/api/reviews/${params.id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch(`/api/reviews/${params.id}`)
       .then((res) => res.json())
       .then((data) => {
         setReview(data.review)

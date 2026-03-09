@@ -6,10 +6,10 @@ type Params = { params: { id: string } }
 
 // GET /api/reviews/[id] - Get review details
 export async function GET(req: NextRequest, { params }: Params) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const review = await db.review.findUnique({
       where: { id: params.id },
       select: {
@@ -65,10 +65,10 @@ export async function GET(req: NextRequest, { params }: Params) {
 
 // PATCH /api/reviews/[id] - Update review status
 export async function PATCH(req: NextRequest, { params }: Params) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const { status } = (await req.json()) as { status: 'PUBLISHED' | 'HIDDEN' | 'DELETED' }
 
     if (!['PUBLISHED', 'HIDDEN', 'DELETED'].includes(status)) {
@@ -104,10 +104,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
 // DELETE /api/reviews/[id] - Delete review permanently
 export async function DELETE(req: NextRequest, { params }: Params) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     await db.review.delete({
       where: { id: params.id },
     })

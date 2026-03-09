@@ -22,13 +22,10 @@ export default function LoginPage() {
       })
 
       const data = await res.json()
-
       if (!res.ok) {
         throw new Error(data.error || 'Login mislukt')
       }
 
-      // Store token in localStorage
-      localStorage.setItem('admin_token', data.accessToken)
       router.push('/dashboard')
     } catch (err: any) {
       setError(err.message)

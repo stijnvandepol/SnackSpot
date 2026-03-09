@@ -7,10 +7,10 @@ type Params = { params: { id: string } }
 
 // POST /api/users/[id]/reset-password - Reset user password
 export async function POST(req: NextRequest, { params }: Params) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const { password } = (await req.json()) as { password: string }
 
     if (!password || password.length < 8) {

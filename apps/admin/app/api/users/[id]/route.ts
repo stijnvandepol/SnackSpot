@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
-import argon2 from 'argon2'
 
 type Params = { params: { id: string } }
 
 // GET /api/users/[id] - Get user details
 export async function GET(req: NextRequest, { params }: Params) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const user = await db.user.findUnique({
       where: { id: params.id },
       select: {
@@ -53,10 +52,10 @@ export async function GET(req: NextRequest, { params }: Params) {
 
 // PATCH /api/users/[id] - Update user
 export async function PATCH(req: NextRequest, { params }: Params) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const body = (await req.json()) as {
       email?: string
       username?: string
@@ -108,10 +107,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
 // DELETE /api/users/[id] - Delete user
 export async function DELETE(req: NextRequest, { params }: Params) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    const admin = await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     // Prevent self-deletion
     if (admin.sub === params.id) {
       return NextResponse.json(

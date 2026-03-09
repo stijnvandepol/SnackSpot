@@ -23,14 +23,9 @@ export default function UsersPage() {
   const [newPassword, setNewPassword] = useState('')
 
   const loadUsers = async () => {
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
     setLoading(true)
     try {
-      const res = await fetch(`/api/users?page=${page}&search=${search}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch(`/api/users?page=${page}&search=${search}`)
       const data = await res.json()
       setUsers(data.users || [])
       setTotal(data.pagination?.total || 0)
@@ -48,14 +43,10 @@ export default function UsersPage() {
   const handleResetPassword = async () => {
     if (!selectedUser || !newPassword) return
 
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
     try {
       const res = await fetch(`/api/users/${selectedUser.id}/reset-password`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ password: newPassword }),
@@ -78,13 +69,9 @@ export default function UsersPage() {
   const handleDeleteUser = async (userId: string, username: string) => {
     if (!confirm(`Weet je zeker dat je gebruiker "${username}" wilt verwijderen?`)) return
 
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
     try {
       const res = await fetch(`/api/users/${userId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       })
 
       if (res.ok) {
@@ -100,16 +87,12 @@ export default function UsersPage() {
   }
 
   const handleToggleBan = async (user: User) => {
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
     const newBannedAt = user.bannedAt ? null : new Date().toISOString()
 
     try {
       const res = await fetch(`/api/users/${user.id}`, {
         method: 'PATCH',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ bannedAt: newBannedAt }),

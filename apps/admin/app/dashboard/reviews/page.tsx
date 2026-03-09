@@ -23,15 +23,10 @@ export default function ReviewsPage() {
   const [statusFilter, setStatusFilter] = useState('')
 
   const loadReviews = async () => {
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
     setLoading(true)
     try {
       const url = `/api/reviews?page=${page}&search=${search}&status=${statusFilter}`
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch(url)
       const data = await res.json()
       setReviews(data.reviews || [])
       setTotal(data.pagination?.total || 0)
@@ -49,13 +44,9 @@ export default function ReviewsPage() {
   const handleDeleteReview = async (reviewId: string) => {
     if (!confirm('Weet je zeker dat je deze review permanent wilt verwijderen?')) return
 
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
     try {
       const res = await fetch(`/api/reviews/${reviewId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       })
 
       if (res.ok) {
@@ -71,14 +62,10 @@ export default function ReviewsPage() {
   }
 
   const handleChangeStatus = async (reviewId: string, newStatus: string) => {
-    const token = localStorage.getItem('admin_token')
-    if (!token) return
-
     try {
       const res = await fetch(`/api/reviews/${reviewId}`, {
         method: 'PATCH',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ status: newStatus }),

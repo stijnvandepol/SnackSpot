@@ -6,10 +6,10 @@ type Params = { params: { id: string } }
 
 // GET /api/reports/[id] - Get report details
 export async function GET(req: NextRequest, { params }: Params) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const report = await db.report.findUnique({
       where: { id: params.id },
       select: {
@@ -78,10 +78,10 @@ export async function GET(req: NextRequest, { params }: Params) {
 
 // PATCH /api/reports/[id] - Update report status
 export async function PATCH(req: NextRequest, { params }: Params) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    const admin = await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const { status, action, targetId } = (await req.json()) as {
       status?: 'OPEN' | 'RESOLVED' | 'DISMISSED'
       action?: 'HIDE_REVIEW' | 'DELETE_REVIEW' | 'DELETE_PHOTO' | 'DISMISS'
@@ -193,10 +193,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
 // DELETE /api/reports/[id] - Delete report
 export async function DELETE(req: NextRequest, { params }: Params) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     await db.report.delete({
       where: { id: params.id },
     })

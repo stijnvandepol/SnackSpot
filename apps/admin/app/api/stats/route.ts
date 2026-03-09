@@ -3,10 +3,10 @@ import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    await requireAdmin(authHeader)
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
 
+  try {
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
@@ -54,10 +54,7 @@ export async function GET(req: NextRequest) {
       placesWithoutReviews,
       openReports,
     })
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    )
+  } catch {
+    return NextResponse.json({ error: 'Er is een fout opgetreden' }, { status: 500 })
   }
 }
