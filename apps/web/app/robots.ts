@@ -1,8 +1,9 @@
 import type { MetadataRoute } from 'next'
-
-const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || 'http://localhost:8080'
+import { getSiteUrl } from '@/lib/site-url'
 
 export default function robots(): MetadataRoute.Robots {
+  const appUrl = getSiteUrl()
+
   return {
     rules: {
       userAgent: '*',

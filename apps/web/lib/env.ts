@@ -30,7 +30,7 @@ const envSchema = z.object({
     .optional()
     .transform((v) => v === undefined ? undefined : v === 'true'),
 
-  CORS_ORIGINS: z.string().default('http://localhost:8080'),
+  CORS_ORIGINS: z.string().default('https://snackspot.online'),
   ALLOWED_HOSTS: z.string().optional(),
   MAX_JSON_BODY_BYTES: z.coerce.number().int().positive().default(256 * 1024),
 

@@ -25,8 +25,8 @@ RUN mkdir -p /app/apps/web/public
 RUN pnpm --filter @snackspot/db generate
 
 # Build-time public vars
-ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
-ARG NEXT_PUBLIC_MINIO_PUBLIC_URL=http://localhost:9000
+ARG NEXT_PUBLIC_APP_URL=https://snackspot.online
+ARG NEXT_PUBLIC_MINIO_PUBLIC_URL=https://snackspot.online
 ARG NEXT_PUBLIC_MINIO_BUCKET=snackspot
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_MINIO_PUBLIC_URL=$NEXT_PUBLIC_MINIO_PUBLIC_URL
@@ -34,12 +34,12 @@ ENV NEXT_PUBLIC_MINIO_BUCKET=$NEXT_PUBLIC_MINIO_BUCKET
 
 # Placeholder server-side env vars for Next.js build analysis.
 ENV NODE_ENV=production \
-    DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder \
-    REDIS_URL=redis://localhost:6379 \
-    MINIO_ENDPOINT=localhost \
+    DATABASE_URL=postgresql://placeholder:placeholder@db:5432/placeholder \
+    REDIS_URL=redis://redis:6379 \
+    MINIO_ENDPOINT=minio \
     MINIO_ACCESS_KEY=placeholder-key \
     MINIO_SECRET_KEY=placeholder-secret-key-min \
-    MINIO_PUBLIC_URL=http://localhost:9000 \
+    MINIO_PUBLIC_URL=https://snackspot.online \
     JWT_ACCESS_SECRET=placeholder-access-secret-at-least-32-chars-long \
     JWT_REFRESH_SECRET=placeholder-refresh-secret-at-least-32-chars-long
 

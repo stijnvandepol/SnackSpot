@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const CORS_ORIGINS = (process.env.CORS_ORIGINS ?? 'http://localhost:8080')
+const CORS_ORIGINS = (process.env.CORS_ORIGINS ?? 'https://snackspot.online')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean)

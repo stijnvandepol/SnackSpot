@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import { Inter, Poppins } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
+import { getSiteOrigin } from '@/lib/site-url'
 import './globals.css'
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || 'http://localhost:8080'
-const metadataBase = new URL(appUrl)
+const metadataBase = getSiteOrigin()
 const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim()
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })

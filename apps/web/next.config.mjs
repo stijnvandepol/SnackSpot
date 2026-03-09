@@ -10,13 +10,13 @@ const nextConfig = {
       const bucket = process.env.MINIO_BUCKET ?? 'snackspot'
       const internal = {
         protocol: 'http',
-        hostname: process.env.MINIO_ENDPOINT ?? 'localhost',
+        hostname: process.env.MINIO_ENDPOINT ?? 'minio',
         port: process.env.MINIO_PORT ?? '9000',
         pathname: `/${bucket}/**`,
       }
 
       try {
-        const publicUrl = new URL(process.env.MINIO_PUBLIC_URL ?? 'http://localhost:9000')
+        const publicUrl = new URL(process.env.MINIO_PUBLIC_URL ?? 'https://snackspot.online')
         return [
           internal,
           {
@@ -34,7 +34,7 @@ const nextConfig = {
 
   async headers() {
     const isProd = process.env.NODE_ENV === 'production'
-    const minioEndpoint = process.env.MINIO_ENDPOINT ?? 'localhost'
+    const minioEndpoint = process.env.MINIO_ENDPOINT ?? 'minio'
     const minioPort = process.env.MINIO_PORT ?? '9000'
     const minioInternalOrigin = `http://${minioEndpoint}:${minioPort}`
     const minioPublicOrigin = (() => {
