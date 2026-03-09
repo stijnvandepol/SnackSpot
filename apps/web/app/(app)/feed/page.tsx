@@ -135,7 +135,7 @@ export default function FeedPage() {
       )}
 
       {!hasMore && reviews.length > 0 && (
-        <p className="text-center text-sm text-snack-muted py-6">End of feed.</p>
+        <p className="text-center text-sm text-snack-muted py-6">No more snacks to scroll. Time to grab one.</p>
       )}
     </div>
   )
