@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { photoVariantUrl } from '@/lib/photo-url'
+import { computeOverallRating } from '@/lib/ratings'
 import { shouldUseDirectBrowserUpload } from '@/lib/upload'
 
 interface ReviewEditData {
@@ -110,12 +111,6 @@ function Stars({ value, onChange }: { value: number; onChange: (v: number) => vo
       {value >= 1 && <span className="ml-2 text-sm font-semibold text-snack-text">{value.toFixed(1)}</span>}
     </div>
   )
-}
-
-function computeOverall(ratings: RatingDraft): number {
-  const values = [ratings.taste, ratings.value, ratings.portion]
-  if (typeof ratings.service === 'number') values.push(ratings.service)
-  return Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10
 }
 
 function StepIndicators({ step }: { step: Step }) {
@@ -480,7 +475,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
           </div>
 
           <div className="rounded-lg bg-snack-surface px-3 py-2 text-sm text-snack-text">
-            Overall rating: <span className="font-semibold">{computeOverall(ratings).toFixed(1)}</span>
+            Overall rating: <span className="font-semibold">{computeOverallRating(ratings).toFixed(1)}</span>
           </div>
 
           <div>

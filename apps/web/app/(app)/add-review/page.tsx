@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { UserMentionInput } from '@/components/user-mention-input'
+import { computeOverallRating } from '@/lib/ratings'
 import { shouldUseDirectBrowserUpload } from '@/lib/upload'
 
 type Step = 'place' | 'review' | 'photos'
@@ -110,12 +111,6 @@ function Stars({ value, onChange }: { value: number; onChange: (v: number) => vo
       {value >= 1 && <span className="ml-2 text-sm font-semibold text-snack-text">{value.toFixed(1)}</span>}
     </div>
   )
-}
-
-function computeOverall(ratings: RatingDraft): number {
-  const values = [ratings.taste, ratings.value, ratings.portion]
-  if (typeof ratings.service === 'number') values.push(ratings.service)
-  return Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10
 }
 
 export default function AddReviewPage() {
@@ -761,7 +756,7 @@ export default function AddReviewPage() {
             </div>
           </div>
           <div className="px-3 py-2 bg-snack-surface rounded-lg text-sm text-snack-text">
-            Overall rating: <span className="font-semibold">{computeOverall(ratings).toFixed(1)}</span>
+            Overall rating: <span className="font-semibold">{computeOverallRating(ratings).toFixed(1)}</span>
           </div>
           <div>
             <label className="label">Dish name</label>

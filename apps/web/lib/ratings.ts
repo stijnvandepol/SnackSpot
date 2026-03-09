@@ -13,11 +13,15 @@ export interface NormalizedRatings {
   overall: number
 }
 
+export function roundToHalfStep(value: number): number {
+  return Math.round(value * 2) / 2
+}
+
 export function computeOverallRating(input: RatingInput): number {
   const values = [input.taste, input.value, input.portion]
   if (typeof input.service === 'number') values.push(input.service)
   const avg = values.reduce((sum, value) => sum + value, 0) / values.length
-  return Math.round(avg * 10) / 10
+  return roundToHalfStep(avg)
 }
 
 export function normalizeRatings(input: RatingInput): NormalizedRatings {

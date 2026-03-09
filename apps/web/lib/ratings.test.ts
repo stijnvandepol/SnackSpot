@@ -16,4 +16,9 @@ describe('computeOverallRating', () => {
     const overall = computeOverallRating({ taste: 4.5, value: 4, portion: 3.5, service: null })
     expect(overall).toBe(4)
   })
+
+  it('rounds non-half averages to the nearest half-step', () => {
+    const overall = computeOverallRating({ taste: 5, value: 5, portion: 5, service: 4 })
+    expect(overall).toBe(5)
+  })
 })

@@ -100,6 +100,7 @@ export async function PATCH(
     const normalized = body.ratings ? normalizeRatings(body.ratings) : null
     const normalizedDishName = normalizeDishName(body.dishName)
     const nextPhotoIds = body.photoIds ?? null
+    const dedupedPhotoIds = nextPhotoIds ? Array.from(new Set(nextPhotoIds)) : null
 
     const review = await prisma.review.findUnique({
       where: { id },
@@ -115,7 +116,6 @@ export async function PATCH(
         return err(`Too many photos - max ${env.MAX_PHOTOS_PER_REVIEW}`, 422)
       }
 
-      const dedupedPhotoIds = Array.from(new Set(nextPhotoIds))
       if (dedupedPhotoIds.length !== nextPhotoIds.length) {
         return err('Duplicate photo IDs are not allowed', 422)
       }
@@ -147,55 +147,65 @@ export async function PATCH(
       }
     }
 
-    const updated = await prisma.review.update({
-      where: { id },
-      data: {
-        ...(body.ratings
+    const reviewData = {
+      ...(body.ratings
+        ? {
+            rating: normalized!.overall,
+            ratingTaste: normalized!.taste,
+            ratingValue: normalized!.value,
+            ratingPortion: normalized!.portion,
+            ratingService: normalized!.service,
+            ratingOverall: normalized!.overall,
+          }
+        : body.rating !== undefined
           ? {
-              rating: normalized!.overall,
-              ratingTaste: normalized!.taste,
-              ratingValue: normalized!.value,
-              ratingPortion: normalized!.portion,
-              ratingService: normalized!.service,
-              ratingOverall: normalized!.overall,
-            }
-          : body.rating !== undefined
-            ? {
-                rating: body.rating,
-                ratingTaste: body.rating,
-                ratingValue: body.rating,
-                ratingPortion: body.rating,
-                ratingService: null,
-                ratingOverall: body.rating,
-              }
-            : {}),
-        ...(body.text !== undefined && { text: body.text }),
-        ...(body.dishName !== undefined && { dishName: normalizedDishName }),
-        ...(nextPhotoIds !== null
-          ? {
-              reviewPhotos: {
-                deleteMany: {},
-                ...(nextPhotoIds.length > 0
-                  ? {
-                      create: nextPhotoIds.map((photoId, i) => ({ photoId, sortOrder: i })),
-                    }
-                  : {}),
-              },
+              rating: body.rating,
+              ratingTaste: body.rating,
+              ratingValue: body.rating,
+              ratingPortion: body.rating,
+              ratingService: null,
+              ratingOverall: body.rating,
             }
           : {}),
-      },
-      select: {
-        id: true,
-        rating: true,
-        ratingTaste: true,
-        ratingValue: true,
-        ratingPortion: true,
-        ratingService: true,
-        ratingOverall: true,
-        text: true,
-        dishName: true,
-        updatedAt: true,
-      },
+      ...(body.text !== undefined && { text: body.text }),
+      ...(body.dishName !== undefined && { dishName: normalizedDishName }),
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const savedReview = await tx.review.update({
+        where: { id },
+        data: reviewData,
+        select: {
+          id: true,
+          rating: true,
+          ratingTaste: true,
+          ratingValue: true,
+          ratingPortion: true,
+          ratingService: true,
+          ratingOverall: true,
+          text: true,
+          dishName: true,
+          updatedAt: true,
+        },
+      })
+
+      if (dedupedPhotoIds !== null) {
+        await tx.reviewPhoto.deleteMany({
+          where: { reviewId: id },
+        })
+
+        if (dedupedPhotoIds.length > 0) {
+          await tx.reviewPhoto.createMany({
+            data: dedupedPhotoIds.map((photoId, i) => ({
+              reviewId: id,
+              photoId,
+              sortOrder: i,
+            })),
+          })
+        }
+      }
+
+      return savedReview
     })
     return ok({
       ...updated,
