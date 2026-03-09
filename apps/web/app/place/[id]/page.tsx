@@ -146,6 +146,7 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
                   key={r.id}
                   review={{ ...r, place: { id: place.id, name: place.name, address: place.address } }}
                   showPlace={false}
+                  photoVariantPreference={['large', 'medium', 'thumb']}
                   backContext={`place:${place.id}:${encodeURIComponent(from ?? 'search')}`}
                 />
               ))}
