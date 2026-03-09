@@ -4,7 +4,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'SnackSpot',
     short_name: 'SnackSpot',
-    description: 'Discover and share the best snacks and meals near you.',
+    description:
+      'Discover the best food spots around you with SnackSpot. Share your own food reviews, explore hidden gems, and find your next favorite place to eat.',
     id: '/',
     scope: '/',
     start_url: '/',

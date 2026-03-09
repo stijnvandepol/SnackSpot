@@ -6,6 +6,8 @@ import './globals.css'
 
 const metadataBase = getSiteOrigin()
 const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim()
+const appDescription =
+  'Discover the best food spots around you with SnackSpot. Share your own food reviews, explore hidden gems, and find your next favorite place to eat.'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const poppins = Poppins({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-poppins' })
@@ -14,7 +16,7 @@ export const metadata: Metadata = {
   metadataBase,
   applicationName: 'SnackSpot',
   title: { default: 'SnackSpot', template: '%s | SnackSpot' },
-  description: 'Discover and share the best snacks and meals near you.',
+  description: appDescription,
   alternates: {
     canonical: '/',
   },
@@ -53,13 +55,13 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'SnackSpot',
-    description: 'Discover and share the best snacks and meals near you.',
+    description: appDescription,
     images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'SnackSpot',
-    description: 'Discover and share the best snacks and meals near you.',
+    description: appDescription,
     images: ['/twitter-image'],
   },
 }
