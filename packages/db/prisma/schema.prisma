@@ -102,6 +102,8 @@ model User {
   reviewMentionsGiven    ReviewMention[] @relation("MentioningUser")
   pushSubscriptions PushSubscription[]
   actorNotifications Notification[] @relation("NotificationActor")
+  blockedWords       BlockedWord[]
+  reviewedFlags      FlaggedComment[] @relation("FlaggedCommentReviewer")
 
   @@map("users")
 }
@@ -228,13 +230,41 @@ model Comment {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  notifications Notification[]
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review         Review          @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  notifications  Notification[]
+  flaggedComment FlaggedComment?
 
   @@index([reviewId, createdAt(sort: Desc), id(sort: Desc)])
   @@index([userId, createdAt(sort: Desc)])
   @@map("comments")
+}
+
+model BlockedWord {
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  word      String   @unique
+  createdBy String   @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  creator User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@map("blocked_words")
+}
+
+model FlaggedComment {
+  id          String    @id @default(dbgenerated("gen_random_uuid()"))
+  commentId   String    @unique @map("comment_id")
+  matchedWord String    @map("matched_word")
+  status      String    @default("PENDING")
+  reviewedBy  String?   @map("reviewed_by")
+  reviewedAt  DateTime? @map("reviewed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  comment  Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reviewer User?   @relation("FlaggedCommentReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt(sort: Desc)])
+  @@map("flagged_comments")
 }
 
 model Photo {

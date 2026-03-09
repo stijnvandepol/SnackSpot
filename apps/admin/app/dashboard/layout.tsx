@@ -50,6 +50,7 @@ export default function DashboardLayout({
     { href: '/dashboard/places', label: '🏪 Restaurants', icon: '🏪' },
     { href: '/dashboard/reviews', label: '⭐ Reviews', icon: '⭐' },
     { href: '/dashboard/reports', label: '🚨 Meldingen', icon: '🚨' },
+    { href: '/dashboard/comments', label: '💬 Comments', icon: '💬' },
   ]
 
   return (

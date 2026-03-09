@@ -1,0 +1,60 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/auth'
+import { db } from '@/lib/db'
+
+type Params = { params: { id: string } }
+
+// PATCH /api/comments/flagged/[id] - Approve or delete a flagged comment
+export async function PATCH(req: NextRequest, { params }: Params) {
+  const admin = requireAdmin(req)
+  if (admin instanceof Response) return admin
+
+  try {
+    const { action } = (await req.json()) as { action: 'APPROVE' | 'DELETE' }
+
+    if (!['APPROVE', 'DELETE'].includes(action)) {
+      return NextResponse.json({ error: 'Ongeldige actie' }, { status: 400 })
+    }
+
+    const flagged = await db.flaggedComment.findUnique({
+      where: { id: params.id },
+      select: { commentId: true, status: true },
+    })
+
+    if (!flagged) {
+      return NextResponse.json({ error: 'Gemarkeerde comment niet gevonden' }, { status: 404 })
+    }
+
+    if (flagged.status !== 'PENDING') {
+      return NextResponse.json({ error: 'Comment is al beoordeeld' }, { status: 409 })
+    }
+
+    if (action === 'DELETE') {
+      // Delete the actual comment (cascade deletes the flagged_comment too)
+      await db.comment.delete({ where: { id: flagged.commentId } })
+    } else {
+      // Approve: just update the flag status
+      await db.flaggedComment.update({
+        where: { id: params.id },
+        data: { status: 'APPROVED', reviewedBy: admin.sub, reviewedAt: new Date() },
+      })
+    }
+
+    await db.moderationAction.create({
+      data: {
+        moderatorId: admin.sub,
+        actionType: action === 'DELETE' ? 'DELETE_REVIEW' : 'DISMISS_REPORT',
+        targetType: 'COMMENT',
+        targetId: flagged.commentId,
+        note: action === 'DELETE' ? 'Comment verwijderd via triggerwoord moderatie' : 'Comment goedgekeurd via triggerwoord moderatie',
+      },
+    })
+
+    return NextResponse.json({ success: true, action })
+  } catch (err: any) {
+    if (err.code === 'P2025') {
+      return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
+    }
+    return NextResponse.json({ error: 'Error processing action' }, { status: 500 })
+  }
+}

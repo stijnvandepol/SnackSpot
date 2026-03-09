@@ -108,6 +108,17 @@ export async function POST(
       },
     })
 
+    // Check comment text against blocked words and flag if matched
+    const blockedWords = await prisma.blockedWord.findMany({ select: { word: true } })
+    const matchedWord = blockedWords.find((bw) =>
+      text.toLowerCase().includes(bw.word.toLowerCase()),
+    )
+    if (matchedWord) {
+      await prisma.flaggedComment.create({
+        data: { commentId: comment.id, matchedWord: matchedWord.word },
+      })
+    }
+
     // Notify review owner about the comment
     await notifyReviewComment(id, comment.id, auth.sub)
     await recalculateUserBadges(review.userId, { criteriaTypes: ['COMMENTS_RECEIVED_COUNT'] })
