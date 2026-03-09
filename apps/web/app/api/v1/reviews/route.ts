@@ -13,10 +13,6 @@ export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
   if (isResponse(auth)) return auth
 
-  // Rate limit: 20 reviews per hour per user
-  const rl = await rateLimitUser(auth.sub, 'review_create', 20, 3600)
-  if (!rl.allowed) return err('Review rate limit exceeded', 429)
-
   const body = await parseBody(req, CreateReviewSchema)
   if (isResponse(body)) return body
 
@@ -80,6 +76,11 @@ export async function POST(req: NextRequest) {
         return err('One or more photos are already attached to a review', 409)
       }
     }
+
+    // Run rate-limit after payload/photo validation so failed attempts don't burn quota as quickly.
+    // Allow higher throughput for power users posting multiple reviews in a short session.
+    const rl = await rateLimitUser(auth.sub, 'review_create', 60, 3600)
+    if (!rl.allowed) return err('Review rate limit exceeded', 429)
 
     const review = await prisma.review.create({
       data: {
