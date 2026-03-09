@@ -47,7 +47,7 @@ pnpm dev
 
 ### Productie (Docker)
 ```bash
-# Admin panel start standaard alleen op localhost:3001
+# Admin panel volgt ADMIN_BIND_ADDRESS (standaard 0.0.0.0 in deze repo)
 docker-compose up -d admin
 ```
 
@@ -63,7 +63,7 @@ LAN toegang (alleen als je `ADMIN_BIND_ADDRESS=0.0.0.0` zet):
 http://192.168.x.x:3001
 ```
 
-Standaard bindt het admin panel alleen op localhost. Zet `ADMIN_BIND_ADDRESS=0.0.0.0` als je het bewust via LAN of een tunnelhost wilt aanbieden.
+Wil je het panel alleen lokaal houden? Zet `ADMIN_BIND_ADDRESS=127.0.0.1`. Voor LAN/tunnelhosts gebruik je `ADMIN_BIND_ADDRESS=0.0.0.0`.
 
 ## 👤 Admin Gebruiker Aanmaken
 
