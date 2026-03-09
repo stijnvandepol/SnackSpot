@@ -2,6 +2,7 @@ import { type NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import { ok, err, serverError, withPublicCache } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
+import { getUserStats } from '@/lib/user-stats'
 
 export async function GET(
   _req: NextRequest,
@@ -16,9 +17,10 @@ export async function GET(
     })
     if (!user) return err('User not found', 404)
 
-    const [reviewCount, favoritesCount] = await Promise.all([
+    const [reviewCount, favoritesCount, stats] = await Promise.all([
       prisma.review.count({ where: { userId: user.id, status: ReviewStatus.PUBLISHED } }),
       prisma.favorite.count({ where: { userId: user.id } }),
+      getUserStats(user.id),
     ])
 
     return withPublicCache(ok({
@@ -27,6 +29,7 @@ export async function GET(
         reviews: reviewCount,
         favorites: favoritesCount,
       },
+      stats,
     }), 30, 120)
   } catch (e) {
     return serverError('users/[username]', e)
