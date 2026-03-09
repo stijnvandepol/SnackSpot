@@ -645,7 +645,7 @@ function ProfileContent() {
                 </div>
                 <div>
                   <p className="text-snack-muted">Avg overall given</p>
-                  <p className="font-semibold text-snack-text">{stats.averageOverallRatingGiven?.toFixed(1) ?? '—'}</p>
+                  <p className="font-semibold text-snack-text">{stats?.averageOverallRatingGiven?.toFixed(1) ?? '-'}</p>
                 </div>
                 <div>
                   <p className="text-snack-muted">Current streak</p>
