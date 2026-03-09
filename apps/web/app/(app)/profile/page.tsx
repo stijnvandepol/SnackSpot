@@ -523,7 +523,7 @@ function ProfileContent() {
             </div>
             <div className="card p-3 text-center">
               <p className="text-lg font-bold text-snack-text">{earnedBadges.length}</p>
-              <p className="text-xs text-snack-muted">Badges</p>
+              <p className="text-xs text-snack-muted">Achievements</p>
             </div>
           </div>
 
@@ -569,9 +569,9 @@ function ProfileContent() {
           )}
 
           <div className="card p-4 mb-6">
-            <h2 className="font-heading font-semibold text-snack-text mb-3">Badges</h2>
+              <h2 className="font-heading font-semibold text-snack-text mb-3">Achievements</h2>
             {earnedBadges.length === 0 && inProgressBadges.length === 0 ? (
-              <p className="text-sm text-snack-muted">No badge progress yet.</p>
+              <p className="text-sm text-snack-muted">No achievement progress yet.</p>
             ) : (
               <>
                 {earnedBadges.length > 0 && (

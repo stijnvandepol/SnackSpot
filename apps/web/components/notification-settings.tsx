@@ -196,8 +196,8 @@ export function NotificationSettings() {
 
         <label className="flex items-center justify-between p-3 rounded-xl hover:bg-snack-surface transition cursor-pointer">
           <div>
-            <p className="text-sm font-medium text-snack-text">Badges</p>
-            <p className="text-xs text-snack-muted">When you earn a new badge</p>
+            <p className="text-sm font-medium text-snack-text">Achievements</p>
+            <p className="text-xs text-snack-muted">When you unlock a new achievement</p>
           </div>
           <input
             type="checkbox"

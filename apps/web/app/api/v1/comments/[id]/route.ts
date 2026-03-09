@@ -1,6 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import { noContent, err, requireAuth, isResponse, serverError } from '@/lib/api-helpers'
+import { recalculateUserBadges } from '@/lib/badge-service'
 
 export async function DELETE(
   req: NextRequest,
@@ -13,7 +14,7 @@ export async function DELETE(
   try {
     const comment = await prisma.comment.findUnique({
       where: { id },
-      select: { id: true, userId: true },
+      select: { id: true, userId: true, review: { select: { userId: true } } },
     })
     if (!comment) return err('Comment not found', 404)
 
@@ -22,6 +23,7 @@ export async function DELETE(
     if (!isOwner && !isMod) return err('Forbidden', 403)
 
     await prisma.comment.delete({ where: { id } })
+    await recalculateUserBadges(comment.review.userId, { criteriaTypes: ['COMMENTS_RECEIVED_COUNT'] })
     return noContent()
   } catch (e) {
     return serverError('comments/[id] DELETE', e)

@@ -15,6 +15,19 @@ interface UserProfile {
   role: string
   createdAt: string
   _count: { reviews: number; favorites: number }
+  achievements: {
+    totalEarned: number
+    recent: Array<{
+      earnedAt: string | null
+      badge: {
+        id: string
+        slug: string
+        name: string
+        description: string
+        tier: 'BRONZE' | 'SILVER' | 'GOLD'
+      }
+    }>
+  }
   stats: {
     totalPosts: number
     postsLast30Days: number
@@ -128,8 +141,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                     <p className="text-xs text-snack-muted">Likes received</p>
                   </div>
                   <div className="card p-3 text-center">
-                    <p className="text-lg font-bold text-snack-text">{profile.stats.uniqueLocationsVisited}</p>
-                    <p className="text-xs text-snack-muted">Unique spots</p>
+                    <p className="text-lg font-bold text-snack-text">{profile.achievements.totalEarned}</p>
+                    <p className="text-xs text-snack-muted">Achievements</p>
                   </div>
                 </div>
 
@@ -155,8 +168,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                       <p className="font-semibold text-snack-text">{profile.stats.streak.best} days</p>
                     </div>
                     <div>
-                      <p className="text-snack-muted">Favorites saved</p>
-                      <p className="font-semibold text-snack-text">{profile._count.favorites}</p>
+                      <p className="text-snack-muted">Unique spots</p>
+                      <p className="font-semibold text-snack-text">{profile.stats.uniqueLocationsVisited}</p>
                     </div>
                   </div>
 
@@ -189,6 +202,28 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                       </div>
                     )}
                   </div>
+                </div>
+
+                <div className="card p-4 mb-6">
+                  <h2 className="mb-3 font-heading font-semibold text-snack-text">Recent Achievements</h2>
+                  {profile.achievements.recent.length === 0 ? (
+                    <p className="text-sm text-snack-muted">No achievements unlocked yet.</p>
+                  ) : (
+                    <div className="grid gap-2 md:grid-cols-2">
+                      {profile.achievements.recent.map((entry) => (
+                        <div key={entry.badge.id} className="rounded-xl border border-[#ececec] p-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-sm font-semibold text-snack-text">{entry.badge.name}</p>
+                            <span className="text-[11px] font-medium text-snack-muted">{entry.badge.tier}</span>
+                          </div>
+                          <p className="mt-1 text-xs text-snack-muted">{entry.badge.description}</p>
+                          <p className="mt-2 text-[11px] text-snack-muted">
+                            Unlocked {entry.earnedAt ? new Date(entry.earnedAt).toLocaleDateString() : 'recently'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <h2 className="font-heading font-semibold text-snack-text mb-4">Reviews</h2>

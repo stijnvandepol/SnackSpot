@@ -270,8 +270,8 @@ export async function notifyBadgeEarned(userId: string, badgeName: string) {
     return createNotification({
       userId,
       type: 'BADGE_EARNED',
-      title: 'Badge earned!',
-      message: `Congratulations! You earned the "${badgeName}" badge`,
+      title: 'Achievement unlocked',
+      message: `You unlocked "${badgeName}"`,
       link: '/profile',
     })
   } catch (error) {

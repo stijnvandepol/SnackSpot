@@ -14,6 +14,7 @@ import {
 } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
 import { rateLimitUser } from '@/lib/rate-limit'
+import { recalculateUserBadges } from '@/lib/badge-service'
 import { notifyCommentMention, notifyReviewComment } from '@/lib/notification-service'
 
 export async function GET(
@@ -109,6 +110,7 @@ export async function POST(
 
     // Notify review owner about the comment
     await notifyReviewComment(id, comment.id, auth.sub)
+    await recalculateUserBadges(review.userId, { criteriaTypes: ['COMMENTS_RECEIVED_COUNT'] })
 
     const mentionMatches = text.match(/@(\w{3,30})/g) ?? []
     const mentionedUsernames = [...new Set(mentionMatches.map((match) => match.slice(1).toLowerCase()))]

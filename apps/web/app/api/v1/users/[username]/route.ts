@@ -23,6 +23,29 @@ export async function GET(
       getUserStats(user.id),
     ])
 
+    const [achievementsCount, recentAchievements] = await Promise.all([
+      prisma.userBadge.count({
+        where: { userId: user.id, earnedAt: { not: null }, badge: { isActive: true } },
+      }),
+      prisma.userBadge.findMany({
+        where: { userId: user.id, earnedAt: { not: null }, badge: { isActive: true } },
+        orderBy: [{ earnedAt: 'desc' }, { createdAt: 'asc' }],
+        take: 4,
+        select: {
+          earnedAt: true,
+          badge: {
+            select: {
+              id: true,
+              slug: true,
+              name: true,
+              description: true,
+              tier: true,
+            },
+          },
+        },
+      }),
+    ])
+
     return withPublicCache(ok({
       ...user,
       _count: {
@@ -30,6 +53,10 @@ export async function GET(
         favorites: favoritesCount,
       },
       stats,
+      achievements: {
+        totalEarned: achievementsCount,
+        recent: recentAchievements,
+      },
     }), 30, 120)
   } catch (e) {
     return serverError('users/[username]', e)
