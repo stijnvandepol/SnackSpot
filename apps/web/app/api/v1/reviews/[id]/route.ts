@@ -100,7 +100,7 @@ export async function PATCH(
     const normalized = body.ratings ? normalizeRatings(body.ratings) : null
     const normalizedDishName = normalizeDishName(body.dishName)
     const nextPhotoIds = body.photoIds ?? null
-    const dedupedPhotoIds = nextPhotoIds ? Array.from(new Set(nextPhotoIds)) : null
+    const dedupedPhotoIds = nextPhotoIds !== null ? Array.from(new Set(nextPhotoIds)) : null
 
     const review = await prisma.review.findUnique({
       where: { id },
@@ -111,7 +111,7 @@ export async function PATCH(
     // Only the owner can edit
     if (review.userId !== auth.sub) return err('Forbidden', 403)
 
-    if (nextPhotoIds !== null) {
+    if (nextPhotoIds !== null && dedupedPhotoIds !== null) {
       if (nextPhotoIds.length > env.MAX_PHOTOS_PER_REVIEW) {
         return err(`Too many photos - max ${env.MAX_PHOTOS_PER_REVIEW}`, 422)
       }
