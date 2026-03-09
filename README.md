@@ -1,186 +1,189 @@
-# 🍟 SnackSpot
+# SnackSpot
 
-A mobile-first social food-review app. Users post snack & meal reviews with photos and location. Discover the best spots near you.
+**A mobile-first social food-review app.** Post snack & meal reviews with photos and location tags. Discover the best spots near you through a community-powered feed.
 
-## Stack
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Quickstart with Docker](#quickstart-with-docker)
+  - [Local Development](#local-development)
+- [Configuration](#configuration)
+- [Default Ports](#default-ports)
+- [Admin Panel](#admin-panel)
+- [API Reference](#api-reference)
+- [Photo Upload Flow](#photo-upload-flow)
+- [Database](#database)
+- [Testing](#testing)
+- [Security](#security)
+- [Contributing](#contributing)
+
+---
+
+## Features
+
+**For users:**
+- Register and log in with a personal profile (avatar, bio, username)
+- Write reviews with multi-dimensional ratings: taste, value, portion size, service
+- Attach up to 5 photos per review (auto-converted to WebP with multiple size variants)
+- Like and comment on reviews; mention other users with `@username`
+- Discover places via text search or geolocation (nearby radius search)
+- Earn badges for milestones: post streaks, unique locations, engagement, and more
+- Receive notifications for likes, comments, mentions, and badge awards
+- Browse user profiles and their review history
+
+**For moderators and admins:**
+- Admin panel (separate app on port 3001) for managing users, restaurants, reviews, and reports
+- Soft-delete reviews, hide content, ban/unban users, reset passwords
+- Handle community reports with open/resolved/dismissed statuses
+- Dashboard with stats and activity overview
+
+---
+
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend + API | Next.js 15 (App Router, TypeScript) + Tailwind CSS |
-| Database | PostgreSQL 16 + PostGIS 3.4 |
-| Cache / queue | Redis 7 + BullMQ |
-| Object storage | MinIO (S3-compatible) |
-| Auth | Argon2id passwords · JWT access token · httpOnly refresh cookie |
-| Image processing | Sharp (WebP variants, EXIF strip) – runs in worker |
+| Frontend + API | Next.js 15 (App Router, TypeScript) + Tailwind CSS + React 19 |
+| Admin Panel | Next.js 14 (App Router, TypeScript) |
+| Database | PostgreSQL 16 + PostGIS 3.4 (geospatial queries) |
+| Cache / Queue | Redis 7 + BullMQ 5 |
+| Object Storage | MinIO (S3-compatible) |
+| Auth | Argon2id password hashing · JWT access tokens · httpOnly refresh cookies |
+| Image Processing | Sharp — WebP conversion, EXIF stripping, multi-size variants (runs in worker) |
 | Validation | Zod |
-| Logging | pino |
-| Rate limiting | Redis sliding-window (per IP + per user) |
+| ORM | Prisma |
+| Logging | Pino |
+| Rate Limiting | Redis sliding-window counters (per IP + per user) |
+| Package Manager | pnpm 9 (workspace monorepo) |
+| Testing | Vitest |
+| Runtime | Node.js 20+ |
 
 ---
 
-## Prerequisites
+## Project Structure
 
-- [Docker](https://docs.docker.com/get-docker/) ≥ 24 & [Docker Compose](https://docs.docker.com/compose/) ≥ 2.20
-- Nothing else is required to *run*. Node.js / pnpm are only needed for local dev.
+```
+snackspot/
+├── apps/
+│   ├── web/                   # Next.js 15 — main app (frontend + REST API v1)
+│   │   ├── app/
+│   │   │   ├── api/v1/        # All REST API route handlers
+│   │   │   ├── (app)/         # Authenticated pages (feed, profile, add review)
+│   │   │   ├── auth/          # Login / register pages
+│   │   │   ├── place/[id]/    # Place detail page
+│   │   │   ├── review/[id]/   # Review detail page
+│   │   │   └── u/[username]/  # Public user profile
+│   │   ├── components/        # Shared React components
+│   │   └── lib/               # Server utilities (auth, DB, Redis, MinIO, rate limiting)
+│   │
+│   ├── admin/                 # Next.js 14 — admin dashboard (port 3001)
+│   │   ├── app/
+│   │   │   ├── api/           # Admin API endpoints
+│   │   │   └── dashboard/     # Admin UI pages
+│   │   └── lib/               # Admin auth, DB, rate limiting
+│   │
+│   └── worker/                # BullMQ background worker — image processing
+│       └── src/index.ts
+│
+├── packages/
+│   ├── db/                    # Prisma schema + SQL migrations + seed script
+│   ├── shared/                # Zod schemas + shared TypeScript types
+│   └── ui/                    # Shared React UI components (e.g. star rating)
+│
+└── infra/
+    ├── docker/                # docker-compose.yml + Dockerfile.migrate
+    └── nginx/                 # Optional reverse-proxy config
+```
 
 ---
 
-## Quickstart (production mode)
+## Getting Started
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) ≥ 24
+- [Docker Compose](https://docs.docker.com/compose/) ≥ 2.20
+
+> Node.js and pnpm are only required for [local development](#local-development).
+
+---
+
+### Quickstart with Docker
 
 ```bash
-# 1. Clone and enter
-git clone <repo> snackspot && cd snackspot
+# 1. Clone the repository
+git clone https://github.com/stijnvandepol/SnackSpot.git
+cd SnackSpot
 
-# 2. Create your env file
+# 2. Copy the environment template
 cp .env.example .env
 
-# 2b. Set required secrets and passwords
-# - POSTGRES_PASSWORD
-# - MINIO_ACCESS_KEY / MINIO_SECRET_KEY
-# - JWT_ACCESS_SECRET / JWT_REFRESH_SECRET
+# 3. Generate strong JWT secrets and paste them into .env
+openssl rand -hex 64   # → JWT_ACCESS_SECRET
+openssl rand -hex 64   # → JWT_REFRESH_SECRET
 
-# 3. Generate strong JWT secrets (Linux/macOS):
-openssl rand -hex 64
-# Paste these values into JWT_ACCESS_SECRET and JWT_REFRESH_SECRET in .env
+# 4. Set the remaining required values in .env:
+#    POSTGRES_PASSWORD, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_PUBLIC_URL
 
-# 4. Build and start all services (db, redis, minio, migrate, web, worker)
-docker compose -f infra/docker/docker-compose.yml up -d --build
+# 5. Build and start all services
+docker compose up -d --build
 
-# 5. Check logs
-docker compose -f infra/docker/docker-compose.yml logs -f web migrate
+# 6. Follow startup logs
+docker compose logs -f web migrate
 ```
 
 The app is now available at **http://localhost:8080**
 
-The Docker ports are published on all interfaces (`0.0.0.0`) so the app can also be reached from your LAN via:
-**http://<your-host-lan-ip>:8080**
+> The ports are bound to `0.0.0.0`, so the app is also reachable on your local network at `http://<your-host-ip>:8080`.
 
-### Linux helper script
-
-You can use the helper script to start/update the app and auto-manage `.env`:
+#### Verify everything is running
 
 ```bash
-chmod +x scripts/manage.sh
-
-# Creates .env automatically (if missing) and starts the stack
-./scripts/manage.sh start
-
-# Pull latest code + images, then rebuild and restart
-./scripts/manage.sh update
-
-# Follow logs (or: SERVICE=web ./scripts/manage.sh logs)
-./scripts/manage.sh logs
-
-# Stop stack
-./scripts/manage.sh stop
+docker compose ps
 ```
 
-If `.env` already exists, the script keeps your existing values and only adds missing fields.
+All services should show status `healthy`. The `migrate` container will have exited (that is expected — it runs once and stops).
 
 ---
 
-## Default ports
+### Local Development
 
-| Service | Port | URL |
-|---|---|---|
-| Web app | 8080 | http://localhost:8080 |
-| **Admin Panel** | **3001** | **http://localhost:3001** |
-| MinIO API | 9000 | http://localhost:9000 |
-| MinIO Console | 9001 | http://localhost:9001 |
-| PostgreSQL | (internal) | `db:5432` inside Docker network |
-| Redis | (internal) | `redis:6379` inside Docker network |
-
----
-
-## 🔐 Admin Panel
-
-SnackSpot includes a separate admin panel for managing users, restaurants, and reviews. The admin panel runs on **port 3001** for security isolation.
-
-### Features
-
-- **User Management**: View, edit, delete users; reset passwords; ban/unban accounts
-- **Restaurant Management**: Create, edit, delete restaurants; bulk delete restaurants without reviews
-- **Review Management**: View, hide, delete reviews; change review status
-- **Reports & Moderation**: Handle reported reviews, photos, and users; resolve or dismiss reports
-- **Dashboard**: Statistics and activity overview with open reports counter
-
-### ⚠️ Security
-
-**IMPORTANT:** The admin panel should be protected:
-- **Recommended:** Use Cloudflare Tunnel + OAuth (see [Cloudflare Setup Guide](apps/admin/CLOUDFLARE_SETUP.md))
-- Block port 3001 from public access using firewall rules
-- Use IP whitelist via reverse proxy (nginx)
-- Access via VPN or SSH tunnel
-- Only grant ADMIN role to trusted users
-
-### Quick Start
-
-1. **Create an admin user** (via database):
-```sql
--- Connect to database
-psql postgresql://snackspot:password@localhost:5432/snackspot
-
--- Promote existing user to ADMIN
-UPDATE users SET role = 'ADMIN' WHERE email = 'your-email@example.com';
-```
-
-2. **Access admin panel**:
-   - Navigate to http://localhost:3001
-   - Login with your ADMIN account
-
-### Documentation
-
-See [apps/admin/README.md](apps/admin/README.md) for detailed setup and [apps/admin/SECURITY.md](apps/admin/SECURITY.md) for security configuration.
-
----
-
-## LAN / Cloudflared setup
-
-For access from other devices (LAN) or public access through Cloudflare Tunnel, set these values in `.env`:
-
-```env
-NEXT_PUBLIC_APP_URL=https://app.example.com
-MINIO_PUBLIC_URL=https://storage.example.com
-CORS_ORIGINS=https://app.example.com,http://192.168.1.50:8080
-MINIO_CORS_ORIGINS=*
-AUTH_COOKIE_SECURE=true
-```
-
-Notes:
-- `CORS_ORIGINS` controls which browser origins may call `/api/*`.
-- `MINIO_CORS_ORIGINS` controls which browser origins may upload directly to MinIO using presigned URLs (`*` avoids hostname/domain mismatch).
-- Set `AUTH_COOKIE_SECURE=true` for HTTPS domains (Cloudflared/public). Use `false` only for local HTTP/LAN testing.
-- If you only tunnel the web app and not MinIO, photo uploads will fail (uploads are direct-to-MinIO by design).
-
----
-
-## Migrations
-
-Migrations run automatically on startup via the `migrate` service.
-
-To run manually:
+Run only the infrastructure in Docker and the app natively for hot-reloading.
 
 ```bash
-# From host (requires pnpm installed)
-DATABASE_URL="postgresql://snackspot:snackspot@localhost:5432/snackspot" \
-  pnpm --filter @snackspot/db migrate
+# Install dependencies
+pnpm install
 
-# Or inside the running container
-docker compose -f infra/docker/docker-compose.yml exec web \
-  node packages/db/scripts/migrate.mjs
+# Start infrastructure (keep this terminal open or use -d)
+docker compose up -d db redis minio
+
+# Apply database migrations
+pnpm db:migrate
+
+# Generate the Prisma client
+pnpm db:generate
+
+# Start the web app (terminal 1)
+pnpm dev
+
+# Start the image-processing worker (terminal 2)
+pnpm worker:dev
 ```
 
----
-
-## Seed data
+#### Seed demo data
 
 ```bash
-# Requires the DB to be running and migrated
 DATABASE_URL="postgresql://snackspot:snackspot@localhost:5432/snackspot" \
   pnpm --filter @snackspot/db seed
 ```
 
-Demo accounts (password for all: **Password1!**):
+Demo accounts (all use password `Password1!`):
 
 | Email | Role |
 |---|---|
@@ -189,156 +192,278 @@ Demo accounts (password for all: **Password1!**):
 | alice@example.com | USER |
 | bob@example.com | USER |
 
-> **Note:** The seed uses a pre-hashed placeholder. The real API uses argon2id; the seed accounts work for demo purposes only. To use them for login testing, update the password hashes via the API's register endpoint or reset them manually.
+---
+
+## Configuration
+
+Copy `.env.example` to `.env` and fill in the values below.
+
+### Required
+
+| Variable | Description |
+|---|---|
+| `POSTGRES_PASSWORD` | Password for the PostgreSQL `snackspot` user |
+| `DATABASE_URL` | Full connection string — keep in sync with `POSTGRES_PASSWORD` |
+| `MINIO_ACCESS_KEY` | MinIO root username |
+| `MINIO_SECRET_KEY` | MinIO root password |
+| `MINIO_PUBLIC_URL` | Public-facing base URL for MinIO (e.g. `https://storage.example.com`) |
+| `JWT_ACCESS_SECRET` | Min 32 chars — generate with `openssl rand -hex 64` |
+| `JWT_REFRESH_SECRET` | Min 32 chars — generate with `openssl rand -hex 64` |
+
+### Optional / Defaults
+
+| Variable | Default | Description |
+|---|---|---|
+| `REDIS_URL` | `redis://redis:6379` | Redis connection URL |
+| `MINIO_ENDPOINT` | `minio` | MinIO hostname inside Docker network |
+| `MINIO_PORT` | `9000` | MinIO API port |
+| `MINIO_USE_SSL` | `false` | Enable TLS for MinIO connections |
+| `MINIO_BUCKET` | `snackspot` | Bucket name |
+| `MINIO_CORS_ORIGINS` | `*` | CORS origins for direct browser uploads |
+| `JWT_ACCESS_EXPIRES_IN` | `15m` | Access token lifetime |
+| `JWT_REFRESH_EXPIRES_DAYS` | `7` | Refresh token lifetime in days |
+| `AUTH_COOKIE_SECURE` | `false` | Set to `true` when serving over HTTPS |
+| `NEXT_PUBLIC_APP_URL` | `https://snackspot.online` | Public URL of the web app |
+| `CORS_ORIGINS` | `https://snackspot.online` | Comma-separated allowed API origins |
+| `MAX_FILE_SIZE_BYTES` | `10485760` | Max upload size (10 MB) |
+| `MAX_PHOTOS_PER_REVIEW` | `5` | Max photos per review |
+| `ADMIN_BIND_ADDRESS` | `0.0.0.0` | Network interface for the admin panel |
+
+### LAN / Cloudflare Tunnel setup
+
+For access outside localhost, update your `.env`:
+
+```env
+NEXT_PUBLIC_APP_URL=https://app.example.com
+MINIO_PUBLIC_URL=https://storage.example.com
+CORS_ORIGINS=https://app.example.com
+MINIO_CORS_ORIGINS=*
+AUTH_COOKIE_SECURE=true
+```
+
+> If you only tunnel the web app but not MinIO, photo uploads will fail — uploads go directly from the browser to MinIO using presigned URLs.
 
 ---
 
-## MinIO Console
+## Default Ports
+
+| Service | Port | URL |
+|---|---|---|
+| Web app | 8080 | http://localhost:8080 |
+| Admin panel | 3001 | http://localhost:3001 |
+| MinIO API | 9000 | http://localhost:9000 |
+| MinIO Console | 9001 | http://localhost:9001 |
+| PostgreSQL | (internal) | `db:5432` — Docker network only |
+| Redis | (internal) | `redis:6379` — Docker network only |
+
+---
+
+## Admin Panel
+
+The admin panel is a separate Next.js app running on port 3001.
+
+**Capabilities:**
+- User management — view, edit, ban/unban, reset passwords
+- Restaurant management — CRUD, bulk delete empty restaurants
+- Review moderation — hide, delete, change status
+- Report handling — open/resolved/dismissed workflow
+- Dashboard with stats and open-report counter
+
+### Create an admin user
+
+```sql
+-- Connect to the database
+psql postgresql://snackspot:YOUR_PASSWORD@localhost:5432/snackspot
+
+-- Promote an existing user to ADMIN
+UPDATE users SET role = 'ADMIN' WHERE email = 'your@email.com';
+```
+
+Then log in at http://localhost:3001.
+
+### Security
+
+> **The admin panel must not be publicly accessible.**
+
+Recommended options (in order of preference):
+
+1. Cloudflare Tunnel + OAuth — see [apps/admin/CLOUDFLARE_SETUP.md](apps/admin/CLOUDFLARE_SETUP.md)
+2. Nginx reverse proxy with IP allowlist
+3. VPN or SSH tunnel
+4. Firewall rule blocking port 3001 from public interfaces
+
+See [apps/admin/README.md](apps/admin/README.md) and [apps/admin/SECURITY.md](apps/admin/SECURITY.md) for full documentation.
+
+---
+
+## API Reference
+
+All endpoints are prefixed with `/api/v1`.
+
+### Authentication
+
+```
+POST /api/v1/auth/register          Create a new account
+POST /api/v1/auth/login             Login — returns access token + sets refresh cookie
+POST /api/v1/auth/refresh           Rotate refresh token — returns new access token
+POST /api/v1/auth/logout            Revoke refresh token
+GET  /api/v1/auth/me                Get current user (Bearer)
+```
+
+### Feed & Reviews
+
+```
+GET    /api/v1/feed                 Newest reviews (cursor pagination)
+GET    /api/v1/me/reviews           Current user's reviews (Bearer)
+POST   /api/v1/reviews              Create a review (Bearer, rate-limited)
+GET    /api/v1/reviews/:id          Get review by ID
+PATCH  /api/v1/reviews/:id          Update review (owner only)
+DELETE /api/v1/reviews/:id          Soft-delete (owner or mod/admin)
+```
+
+### Places
+
+```
+GET /api/v1/places/search?q=&lat=&lng=&radius=    Text or geo search
+GET /api/v1/places/:id                             Place detail + average ratings
+GET /api/v1/places/:id/reviews?sort=new|top        Reviews for a place
+```
+
+### Photos
+
+```
+POST /api/v1/photos/initiate-upload     Get presigned PUT URL for direct upload
+POST /api/v1/photos/confirm-upload      Confirm upload, enqueue processing
+POST /api/v1/photos/upload-fallback     Same-origin fallback (when direct upload is blocked)
+```
+
+### Social
+
+```
+POST   /api/v1/reviews/:id/likes           Like a review (Bearer)
+DELETE /api/v1/reviews/:id/likes           Unlike a review (Bearer)
+GET    /api/v1/reviews/:id/comments        Get comments on a review
+POST   /api/v1/reviews/:id/comments        Post a comment (Bearer)
+DELETE /api/v1/comments/:id                Delete a comment (owner or mod/admin)
+```
+
+### Users
+
+```
+GET /api/v1/users/:username             Public user profile
+GET /api/v1/users/:username/reviews     Reviews by user
+GET /api/v1/users/exists?username=      Check if username is taken
+```
+
+### Moderation (MODERATOR / ADMIN only)
+
+```
+GET  /api/v1/mod/queue      Open reports queue
+POST /api/v1/mod/actions    Take action: hide / delete / ban / dismiss
+```
+
+---
+
+## Photo Upload Flow
+
+Photos are uploaded directly from the browser to MinIO using presigned URLs. A background worker then processes them asynchronously.
+
+```
+Client          API                 MinIO           Worker
+  │               │                   │               │
+  ├─ POST initiate ►│                   │               │
+  │◄── presigned URL ──────────────────┤               │
+  │               │                   │               │
+  ├─ PUT file ─────────────────────── ►│               │
+  │               │                   │               │
+  ├─ POST confirm ─►│                   │               │
+  │               ├─ verify exists ───►│               │
+  │               ├─ enqueue job ───────────────────── ►│
+  │◄── { status: "processing" }        │               │
+  │               │                   │               │
+  │               │    Worker: download → WebP → upload variants
+  │               │                   │◄──────────────┤
+  │               │                   ├─ update DB ───►│
+```
+
+**Processed variants:**
+
+| Name | Max size |
+|---|---|
+| `thumb.webp` | 256 px |
+| `medium.webp` | 1024 px |
+| `large.webp` | 2048 px |
+
+Originals are stored in `originals/<userId>/<uuid>.<ext>` and never served publicly.
+
+---
+
+## Database
+
+### Migrations
+
+Migrations run automatically on startup via the `migrate` Docker service.
+
+To run manually:
+
+```bash
+# From host (requires pnpm)
+DATABASE_URL="postgresql://snackspot:PASSWORD@localhost:5432/snackspot" \
+  pnpm --filter @snackspot/db migrate
+
+# Or inside the running container
+docker compose exec web node packages/db/scripts/migrate.mjs
+```
+
+### MinIO Console
 
 1. Open http://localhost:9001
 2. Log in with `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` from your `.env`
 3. Browse the `snackspot` bucket
-4. Originals: `originals/<userId>/<uuid>.<ext>`
-5. Processed variants: `variants/<uuid>/thumb.webp`, `medium.webp`, `large.webp`
 
 ---
 
-## Local development (without Docker)
+## Testing
+
+Unit tests are written with [Vitest](https://vitest.dev/).
 
 ```bash
-# Install deps
-pnpm install
+# Run all tests once
+pnpm test
 
-# Start infrastructure (DB + Redis + MinIO) – keep this running
-docker compose -f infra/docker/docker-compose.yml up -d db redis minio
-
-# Run migrations
-pnpm db:migrate
-
-# Generate Prisma client
-pnpm db:generate
-
-# Start web dev server
-pnpm dev
-
-# Start worker (separate terminal)
-pnpm worker:dev
+# Watch mode
+pnpm test:watch
 ```
+
+**Test coverage:**
+- Badge progress calculations (`badge-service.test.ts`)
+- Rating normalization (`ratings.test.ts`)
+- `@mention` parsing (`mentions.test.ts`)
+- Review schema validation (`review-schema.test.ts`)
 
 ---
 
-## API overview
+## Security
 
-All endpoints are versioned under `/api/v1`.
-
-### Auth
-```
-POST /api/v1/auth/register   – create account
-POST /api/v1/auth/login      – get access token + set refresh cookie
-POST /api/v1/auth/refresh    – rotate refresh token, return new access token
-POST /api/v1/auth/logout     – revoke refresh token
-GET  /api/v1/auth/me         – current user (Bearer)
-```
-
-### Feed
-```
-GET /api/v1/feed?cursor=&limit=   – newest reviews (cursor pagination)
-GET /api/v1/me/reviews?cursor=&limit= – current user's reviews (Bearer)
-```
-
-### Places
-```
-GET /api/v1/places/search?q=&lat=&lng=&radius=   – text or geo search
-GET /api/v1/places/:id                           – place detail + avg rating
-GET /api/v1/places/:id/reviews?sort=new|top      – reviews for place
-```
-
-### Reviews
-```
-POST   /api/v1/reviews          – create review (Bearer, rate-limited)
-GET    /api/v1/reviews/:id
-PATCH  /api/v1/reviews/:id      – update (owner only)
-DELETE /api/v1/reviews/:id      – soft-delete (owner or mod/admin)
-```
-
-### Photos
-```
-POST /api/v1/photos/initiate-upload   – get presigned PUT URL
-POST /api/v1/photos/confirm-upload    – verify upload, enqueue processing
-POST /api/v1/photos/upload-fallback   – same-origin fallback upload when direct browser→MinIO is blocked
-```
-
-### Moderation (MODERATOR / ADMIN)
-```
-GET  /api/v1/mod/queue     – open reports
-POST /api/v1/mod/actions   – hide/delete/ban/dismiss
-```
-
-### Users
-```
-GET /api/v1/users/:username
-GET /api/v1/users/:username/reviews?cursor=&limit=
-```
+| Topic | Implementation |
+|---|---|
+| **Passwords** | Argon2id — 64 MiB memory, 3 iterations, parallelism 4 |
+| **JWT** | Access tokens expire in 15 min; refresh tokens rotate on every use |
+| **Rate limiting** | Login: 10/15 min per IP · Register: 5/h per IP · Reviews: 20/h per user · Photo upload: 30/h per user |
+| **CORS** | Strict origin matching via `CORS_ORIGINS` |
+| **Uploads** | MIME type allowlist · 10 MB max · 5 photos max per review |
+| **EXIF stripping** | Sharp removes all metadata from processed photo variants |
+| **Security headers** | CSP and other headers set by Next.js config on every response |
+| **Cookies** | `HttpOnly; SameSite=Strict`; `Secure` controlled by `AUTH_COOKIE_SECURE` |
+| **RBAC** | Owner-only edits · mod/admin moderation actions · admin-only bans |
+| **Docker** | `no-new-privileges` · all capabilities dropped · read-only filesystem · resource limits |
+| **Proxy trust** | Explicit `TRUST_PROXY=true` required for correct IP detection behind reverse proxies |
 
 ---
 
-## Photo upload flow
+## Contributing
 
-```
-Client          API              MinIO           Worker
-  │                │                │               │
-  ├─POST initiate──►│                │               │
-  │◄─── presigned URL ──────────────┤               │
-  │                │                │               │
-  ├─PUT file ──────────────────────►│               │
-  │                │                │               │
-  ├─POST confirm ──►│                │               │
-  │                ├─ verify exists─►│               │
-  │                ├─ enqueue job ──────────────────►│
-  │◄─ { status: "processing" }      │               │
-  │                │                │               │
-  │                │     Worker: download, re-encode, upload variants
-  │                │                │◄──────────────┤
-  │                │                ├─ update DB ───►│
-```
-
----
-
-## Security notes
-
-- **Passwords** hashed with Argon2id (memoryCost 64 MiB, timeCost 3, parallelism 4)
-- **JWT** access tokens expire in 15 min; refresh tokens rotate on every use
-- **Rate limits**: login 10/15 min per IP, register 5/h per IP, review-create 20/h per user, photo-upload 30/h per user
-- **Uploads**: allowlist of MIME types, max 10 MB, max 5 per review; originals are never served publicly
-- **EXIF stripping**: Sharp removes all metadata from processed variants
-- **CSP / security headers** set by Next.js config on every response
-- **CORS** locked to `CORS_ORIGINS` env var
-- **Proxy trust** is explicit via `TRUST_PROXY=true` (required for correct IP rate limiting behind reverse proxies)
-- **Cookies** are `HttpOnly; SameSite=Strict`; `Secure` is controlled by `AUTH_COOKIE_SECURE`
-- **RBAC**: owner-only edits, mod/admin moderation actions, admin-only bans
-
----
-
-## Directory structure
-
-```
-snackspot/
-├── apps/
-│   ├── web/           # Next.js 15 (App Router) – frontend + REST API
-│   │   ├── app/
-│   │   │   ├── api/v1/         # Route handlers
-│   │   │   ├── (app)/          # Authenticated app pages
-│   │   │   ├── auth/           # Login / register pages
-│   │   │   ├── place/[id]/
-│   │   │   └── review/[id]/
-│   │   ├── components/         # React components
-│   │   └── lib/                # Server utilities (db, auth, redis, minio…)
-│   └── worker/        # BullMQ image-processing worker
-├── packages/
-│   ├── db/            # Prisma schema + SQL migrations + seed
-│   ├── shared/        # Zod schemas + shared types
-│   └── ui/            # Shared React UI components
-└── infra/
-    ├── docker/        # docker-compose.yml + Dockerfile.migrate
-    └── nginx/         # Optional reverse-proxy config
-```
+1. Fork the repository and create a branch: `git checkout -b feat/your-feature`
+2. Make your changes and run tests: `pnpm test`
+3. Ensure the Docker build passes: `docker compose build`
+4. Open a pull request with a clear description of the change
