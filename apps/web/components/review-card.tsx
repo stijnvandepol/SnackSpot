@@ -63,7 +63,7 @@ export function ReviewCard({
       <div className="relative">
         <Link
           href={reviewHref}
-          className="absolute inset-0 rounded-xl focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2"
+          className="absolute inset-0 z-10 rounded-xl focus-visible:z-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2"
           aria-label={`Open review by ${review.user.username}`}
         />
         {thumb && (
@@ -76,7 +76,7 @@ export function ReviewCard({
             />
           </div>
         )}
-        <div className="relative z-10 space-y-2 p-4 pointer-events-none">
+        <div className="relative z-20 space-y-2 p-4 pointer-events-none">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               {review.dishName && (
