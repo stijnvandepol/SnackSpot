@@ -8,6 +8,7 @@ import { normalizeRatings } from '@/lib/ratings'
 import { recalculateUserBadges } from '@/lib/badge-service'
 import { normalizeDishName } from '@/lib/text'
 import { notifyMention } from '@/lib/notification-service'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
@@ -118,51 +119,55 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    await recalculateUserBadges(auth.sub)
+    await recalculateUserBadges(auth.sub).catch((error) => {
+      logger.error({ err: error, userId: auth.sub, reviewId: review.id }, 'Badge recalculation failed after review create')
+    })
 
     // Create mentions and send notifications
-    const mentionMatches = body.text.match(/@(\w{3,30})/g) ?? []
-    const mentionedUsernames = [...new Set(mentionMatches.map((m) => m.slice(1).toLowerCase()))]
+    try {
+      const mentionMatches = body.text.match(/@(\w{3,30})/g) ?? []
+      const mentionedUsernames = [...new Set(mentionMatches.map((m) => m.slice(1).toLowerCase()))]
 
-    const mentionedUsersByUsername = mentionedUsernames.length > 0
-      ? await prisma.user.findMany({
-          where: {
-            bannedAt: null,
-            OR: mentionedUsernames.map((username) => ({
-              username: { equals: username, mode: 'insensitive' },
-            })),
-          },
+      const mentionedUsersByUsername = mentionedUsernames.length > 0
+        ? await prisma.user.findMany({
+            where: {
+              bannedAt: null,
+              OR: mentionedUsernames.map((username) => ({
+                username: { equals: username, mode: 'insensitive' },
+              })),
+            },
+            select: { id: true },
+          })
+        : []
+
+      const mentionedUserIds = [
+        ...new Set([
+          ...body.mentionedUserIds,
+          ...mentionedUsersByUsername.map((u) => u.id),
+        ]),
+      ].filter((id) => id !== auth.sub)
+
+      if (mentionedUserIds.length > 0) {
+        const validUsers = await prisma.user.findMany({
+          where: { id: { in: mentionedUserIds }, bannedAt: null },
           select: { id: true },
         })
-      : []
 
-    const mentionedUserIds = [
-      ...new Set([
-        ...body.mentionedUserIds,
-        ...mentionedUsersByUsername.map((u) => u.id),
-      ]),
-    ].filter((id) => id !== auth.sub)
+        const validUserIds = validUsers.map((u) => u.id)
 
-    if (mentionedUserIds.length > 0) {
-      const validUsers = await prisma.user.findMany({
-        where: { id: { in: mentionedUserIds }, bannedAt: null },
-        select: { id: true },
-      })
+        await prisma.reviewMention.createMany({
+          data: validUserIds.map((userId) => ({
+            reviewId: review.id,
+            mentionedUserId: userId,
+            mentionedByUserId: auth.sub,
+          })),
+          skipDuplicates: true,
+        })
 
-      const validUserIds = validUsers.map((u) => u.id)
-
-      await prisma.reviewMention.createMany({
-        data: validUserIds.map((userId) => ({
-          reviewId: review.id,
-          mentionedUserId: userId,
-          mentionedByUserId: auth.sub,
-        })),
-        skipDuplicates: true,
-      })
-
-      for (const userId of validUserIds) {
-        await notifyMention(userId, review.id, auth.sub)
+        await Promise.allSettled(validUserIds.map((userId) => notifyMention(userId, review.id, auth.sub)))
       }
+    } catch (error) {
+      logger.error({ err: error, userId: auth.sub, reviewId: review.id }, 'Mention processing failed after review create')
     }
 
     return created({

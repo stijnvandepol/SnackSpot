@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { photoVariantUrl } from '@/lib/photo-url'
+import { shouldUseDirectBrowserUpload } from '@/lib/upload'
 
 interface ReviewEditData {
   id: string
@@ -356,23 +357,25 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
         realId = initData.photoId
 
         let uploaded = false
-        try {
-          const controller = new AbortController()
-          const timeout = setTimeout(() => controller.abort(), 5000)
-          let putRes: Response
+        if (shouldUseDirectBrowserUpload(initData.uploadUrl)) {
           try {
-            putRes = await fetch(initData.uploadUrl, {
-              method: 'PUT',
-              body: file,
-              headers: { 'Content-Type': normalizedMime },
-              signal: controller.signal,
-            })
-          } finally {
-            clearTimeout(timeout)
+            const controller = new AbortController()
+            const timeout = setTimeout(() => controller.abort(), 5000)
+            let putRes: Response
+            try {
+              putRes = await fetch(initData.uploadUrl, {
+                method: 'PUT',
+                body: file,
+                headers: { 'Content-Type': normalizedMime },
+                signal: controller.signal,
+              })
+            } finally {
+              clearTimeout(timeout)
+            }
+            if (putRes.ok) uploaded = true
+          } catch {
+            // Ignore direct upload failures and use fallback.
           }
-          if (putRes.ok) uploaded = true
-        } catch {
-          // Ignore direct upload failures and use fallback.
         }
 
         if (!uploaded) {

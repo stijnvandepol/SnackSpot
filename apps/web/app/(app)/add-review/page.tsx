@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { UserMentionInput } from '@/components/user-mention-input'
+import { shouldUseDirectBrowserUpload } from '@/lib/upload'
 
 type Step = 'place' | 'review' | 'photos'
 
@@ -410,27 +411,31 @@ export default function AddReviewPage() {
         // 2. PUT directly to MinIO (preferred path)
         let uploaded = false
         const uploadStartTime = Date.now()
-        try {
-          const controller = new AbortController()
-          const timeout = setTimeout(() => controller.abort(), 5000)
-          let putRes: Response
+        if (shouldUseDirectBrowserUpload(initData.uploadUrl)) {
           try {
-            putRes = await fetch(initData.uploadUrl, {
-              method: 'PUT',
-              body: file,
-              headers: { 'Content-Type': normalizedMime },
-              signal: controller.signal,
-            })
-          } finally {
-            clearTimeout(timeout)
+            const controller = new AbortController()
+            const timeout = setTimeout(() => controller.abort(), 5000)
+            let putRes: Response
+            try {
+              putRes = await fetch(initData.uploadUrl, {
+                method: 'PUT',
+                body: file,
+                headers: { 'Content-Type': normalizedMime },
+                signal: controller.signal,
+              })
+            } finally {
+              clearTimeout(timeout)
+            }
+            if (putRes.ok) {
+              uploaded = true
+            } else if (isDev) {
+              console.warn(`[Upload] Direct MinIO upload failed: ${putRes.status} ${putRes.statusText}; trying fallback`)
+            }
+          } catch (directErr) {
+            if (isDev) console.warn('[Upload] Direct MinIO upload blocked; trying fallback', directErr)
           }
-          if (putRes.ok) {
-            uploaded = true
-          } else if (isDev) {
-            console.warn(`[Upload] Direct MinIO upload failed: ${putRes.status} ${putRes.statusText}; trying fallback`)
-          }
-        } catch (directErr) {
-          if (isDev) console.warn('[Upload] Direct MinIO upload blocked; trying fallback', directErr)
+        } else if (isDev) {
+          console.log('[Upload] Same-origin upload detected; using fallback route')
         }
 
         // Fallback path: upload through same-origin API to avoid browser CORS/mixed-content issues.
@@ -474,7 +479,7 @@ export default function AddReviewPage() {
         console.error(`[Upload] ✗ ${file.name} failed:`, err)
         const msg =
           err instanceof Error && /Failed to fetch|NetworkError|CORS|Mixed Content/i.test(err.message)
-            ? 'Upload blocked by browser (CORS/HTTPS mismatch). Check MINIO_PUBLIC_URL and MINIO_CORS_ORIGINS.'
+            ? 'Upload blocked before reaching the server. Check the upload proxy/network path.'
             : err instanceof Error
               ? err.message
               : 'Photo upload failed'
@@ -873,4 +878,3 @@ export default function AddReviewPage() {
     </div>
   )
 }
-
