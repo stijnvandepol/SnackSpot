@@ -79,8 +79,10 @@ export default function NearbyPage() {
         const res = await fetch(`/api/v1/places/search?lat=${lat}&lng=${lng}&radius=${r}&limit=30`)
         if (!res.ok) throw new Error('Search failed')
         const json = await res.json()
-        const rawPlaces = Array.isArray(json?.data?.data) ? json.data.data : []
-        const normalizedPlaces = rawPlaces.map(normalizePlace).filter((place): place is Place => place !== null)
+        const rawPlaces: unknown[] = Array.isArray(json?.data?.data) ? json.data.data : []
+        const normalizedPlaces = rawPlaces
+          .map(normalizePlace)
+          .filter((place: Place | null): place is Place => place !== null)
 
         if (normalizedPlaces.length !== rawPlaces.length) {
           console.warn('Dropped nearby places with invalid coordinates', {
