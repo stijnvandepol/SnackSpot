@@ -122,6 +122,8 @@ export default function NearbyPage() {
   const [loading, setLoading] = useState(false)
   const [geoError, setGeoError] = useState<string | null>(null)
   const [searchError, setSearchError] = useState<string | null>(null)
+  const [manualLocation, setManualLocation] = useState('')
+  const [manualLoading, setManualLoading] = useState(false)
   const [radius, setRadius] = useState(3000)
   const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null)
 
@@ -249,6 +251,49 @@ export default function NearbyPage() {
     void locate()
   }
 
+  const useManualLocation = async () => {
+    const query = manualLocation.trim()
+    if (query.length < 2) {
+      setGeoError('Enter a city or address first.')
+      return
+    }
+
+    setGeoError(null)
+    setSearchError(null)
+    setManualLoading(true)
+
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&addressdetails=0`,
+        {
+          headers: {
+            'Accept-Language': 'nl,en',
+          },
+        },
+      )
+
+      if (!res.ok) throw new Error(`Geocoding failed: ${res.status}`)
+
+      const data = (await res.json()) as Array<{ lat: string; lon: string }> | undefined
+      const first = Array.isArray(data) ? data[0] : undefined
+      const lat = toFiniteNumber(first?.lat)
+      const lng = toFiniteNumber(first?.lon)
+
+      if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
+        setGeoError('Could not find a valid location for that query.')
+        return
+      }
+
+      setPosition({ lat, lng })
+      await search(lat, lng, radius)
+    } catch (err) {
+      console.error('[Manual location lookup failed]', err)
+      setGeoError('Manual location lookup failed. Try another city or address.')
+    } finally {
+      setManualLoading(false)
+    }
+  }
+
   // Re-search when radius changes
   useEffect(() => {
     if (position) search(position.lat, position.lng, radius)
@@ -264,9 +309,30 @@ export default function NearbyPage() {
       {/* Controls */}
       <div className="card p-4 mb-6 space-y-4">
         {geoError && <p className="text-sm text-red-500">{geoError}</p>}
-        <button onClick={useMyLocation} className="btn-primary w-full" disabled={loading}>
+        <button onClick={useMyLocation} className="btn-primary w-full" disabled={loading || manualLoading}>
           {loading ? 'Searching…' : 'Use current location'}
         </button>
+
+        <div className="space-y-2">
+          <label className="label">Laptop fallback: enter city or address</label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={manualLocation}
+              onChange={(e) => setManualLocation(e.target.value)}
+              placeholder="e.g. Amsterdam Centraal"
+              className="w-full rounded-lg border border-[#ececec] bg-white px-3 py-2 text-sm"
+            />
+            <button
+              type="button"
+              className="btn-secondary whitespace-nowrap"
+              onClick={() => void useManualLocation()}
+              disabled={manualLoading || loading}
+            >
+              {manualLoading ? 'Finding…' : 'Use address'}
+            </button>
+          </div>
+        </div>
 
         <div>
           <label className="label">
@@ -306,7 +372,7 @@ export default function NearbyPage() {
             type="button"
             className="btn-secondary w-full"
             onClick={() => search(position.lat, position.lng, radius)}
-            disabled={loading}
+            disabled={loading || manualLoading}
           >
             Search this area again
           </button>
