@@ -4,6 +4,7 @@ import { ReviewLikeButton } from '@/components/review-like-button'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { MentionText } from '@/components/mention-text'
 import { getReviewTagLabel } from '@/lib/review-tags'
+import { extractCity } from '@/lib/utils'
 
 interface ReviewCardProps {
   review: {
@@ -85,7 +86,12 @@ export function ReviewCard({
                 <p className="truncate font-semibold text-snack-text">{review.dishName}</p>
               )}
               {showPlace && review.place && (
-                <p className="truncate text-xs text-snack-muted">{review.place.name}</p>
+                <p className="truncate text-xs text-snack-muted">
+                  {review.place.name}
+                  {extractCity(review.place.address) && (
+                    <span className="text-snack-muted/60"> · {extractCity(review.place.address)}</span>
+                  )}
+                </p>
               )}
             </div>
             <div className="text-right">

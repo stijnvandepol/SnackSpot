@@ -9,6 +9,7 @@ import { ImageLightbox } from '@/components/image-lightbox'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { MentionText } from '@/components/mention-text'
 import { getReviewTagLabel } from '@/lib/review-tags'
+import { extractCity } from '@/lib/utils'
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null
@@ -220,6 +221,9 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
             {review.dishName && <p className="font-heading font-bold text-lg text-snack-text">{review.dishName}</p>}
             <Link href={placeLinkHref} className="text-sm text-snack-primary hover:underline">
               {review.place.name}
+              {extractCity(review.place.address) && (
+                <span className="text-snack-muted font-normal"> · {extractCity(review.place.address)}</span>
+              )}
             </Link>
           </div>
           <div className="text-snack-rating text-lg flex-shrink-0">
