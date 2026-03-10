@@ -20,6 +20,18 @@ interface PlaceMapProps {
   radius: number
 }
 
+function isValidLatitude(value: number): boolean {
+  return Number.isFinite(value) && value >= -90 && value <= 90
+}
+
+function isValidLongitude(value: number): boolean {
+  return Number.isFinite(value) && value >= -180 && value <= 180
+}
+
+function hasValidCoordinates(point: { lat: number; lng: number }): boolean {
+  return isValidLatitude(point.lat) && isValidLongitude(point.lng)
+}
+
 function FitBounds({ position, places }: { position: { lat: number; lng: number }; places: Place[] }) {
   const { map, isLoaded } = useMap()
 
@@ -60,6 +72,20 @@ function formatRating(rating: number | null): string {
 }
 
 export function PlaceMap({ position, places, radius }: PlaceMapProps) {
+  if (!hasValidCoordinates(position)) {
+    console.warn('Skipping nearby map render because the current position is invalid', position)
+    return null
+  }
+
+  const validPlaces = places.filter(hasValidCoordinates)
+
+  if (validPlaces.length !== places.length) {
+    console.warn('Skipping nearby map markers with invalid coordinates', {
+      total: places.length,
+      skipped: places.length - validPlaces.length,
+    })
+  }
+
   return (
     <div className="w-full rounded-xl overflow-hidden border border-[#ececec] mb-6 shadow-sm" style={{ height: '420px' }}>
       <Map
@@ -84,7 +110,7 @@ export function PlaceMap({ position, places, radius }: PlaceMapProps) {
         </MapMarker>
 
         {/* Place markers */}
-        {places.map((place) => (
+        {validPlaces.map((place) => (
           <MapMarker key={place.id} longitude={place.lng} latitude={place.lat}>
             <MarkerContent>
               <svg width="28" height="38" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -122,7 +148,7 @@ export function PlaceMap({ position, places, radius }: PlaceMapProps) {
           </MapMarker>
         ))}
 
-        <FitBounds position={position} places={places} />
+        <FitBounds position={position} places={validPlaces} />
         <MapControls showZoom showCompass position="top-right" />
       </Map>
     </div>

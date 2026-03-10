@@ -19,6 +19,50 @@ interface Place {
   distance_m: number
 }
 
+function toFiniteNumber(value: unknown): number | null {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null
+  }
+
+  if (typeof value === 'string' && value.trim().length > 0) {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+
+  return null
+}
+
+function isValidLatitude(value: number): boolean {
+  return Number.isFinite(value) && value >= -90 && value <= 90
+}
+
+function isValidLongitude(value: number): boolean {
+  return Number.isFinite(value) && value >= -180 && value <= 180
+}
+
+function normalizePlace(raw: unknown): Place | null {
+  if (!raw || typeof raw !== 'object') return null
+
+  const candidate = raw as Record<string, unknown>
+  const lat = toFiniteNumber(candidate.lat)
+  const lng = toFiniteNumber(candidate.lng)
+
+  if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
+    return null
+  }
+
+  return {
+    id: typeof candidate.id === 'string' ? candidate.id : '',
+    name: typeof candidate.name === 'string' ? candidate.name : 'Unknown place',
+    address: typeof candidate.address === 'string' ? candidate.address : '',
+    lat,
+    lng,
+    avg_rating: toFiniteNumber(candidate.avg_rating),
+    review_count: toFiniteNumber(candidate.review_count) ?? 0,
+    distance_m: toFiniteNumber(candidate.distance_m) ?? 0,
+  }
+}
+
 export default function NearbyPage() {
   const [places, setPlaces] = useState<Place[]>([])
   const [loading, setLoading] = useState(false)
@@ -35,7 +79,17 @@ export default function NearbyPage() {
         const res = await fetch(`/api/v1/places/search?lat=${lat}&lng=${lng}&radius=${r}&limit=30`)
         if (!res.ok) throw new Error('Search failed')
         const json = await res.json()
-        setPlaces(json.data.data)
+        const rawPlaces = Array.isArray(json?.data?.data) ? json.data.data : []
+        const normalizedPlaces = rawPlaces.map(normalizePlace).filter((place): place is Place => place !== null)
+
+        if (normalizedPlaces.length !== rawPlaces.length) {
+          console.warn('Dropped nearby places with invalid coordinates', {
+            total: rawPlaces.length,
+            dropped: rawPlaces.length - normalizedPlaces.length,
+          })
+        }
+
+        setPlaces(normalizedPlaces)
       } catch (err) {
         console.error(err)
         setSearchError('Could not load nearby places. Try again.')
@@ -55,6 +109,12 @@ export default function NearbyPage() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude: lat, longitude: lng } = pos.coords
+        if (!isValidLatitude(lat) || !isValidLongitude(lng)) {
+          setGeoError('Received an invalid location from your browser.')
+          setLoading(false)
+          return
+        }
+
         setPosition({ lat, lng })
         search(lat, lng, radius)
         setGeoError(null)
