@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { extractCity } from '@/lib/utils'
 
 interface PlaceCardProps {
   place: {
@@ -28,13 +27,8 @@ export function PlaceCard({ place, from }: PlaceCardProps) {
       <article className="card p-4 transition hover:shadow-md">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="font-semibold text-snack-text truncate">
-              {place.name}
-              {extractCity(place.address) && (
-                <span className="font-normal text-snack-muted"> · {extractCity(place.address)}</span>
-              )}
-            </h3>
-            <p className="text-xs text-snack-muted truncate mt-0.5">{place.address}</p>
+            <h3 className="font-semibold text-snack-text truncate">{place.name}</h3>
+            <p className="text-sm text-snack-muted truncate mt-0.5">{place.address}</p>
           </div>
           {place.distance !== undefined && (
             <span className="flex-shrink-0 text-xs font-medium text-snack-primary bg-snack-surface px-2 py-1 rounded-full">
