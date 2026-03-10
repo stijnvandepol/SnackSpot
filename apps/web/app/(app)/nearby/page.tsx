@@ -124,6 +124,7 @@ export default function NearbyPage() {
         setGeoError(null)
       },
       (err) => {
+        console.error('[Geolocation error]', err.code, err.message)
         setGeoError(`Location error: ${err.message}`)
         setLoading(false)
       },
@@ -145,6 +146,7 @@ export default function NearbyPage() {
 
       {/* Controls */}
       <div className="card p-4 mb-6 space-y-4">
+        {geoError && <p className="text-sm text-red-500">{geoError}</p>}
         <button onClick={useMyLocation} className="btn-primary w-full" disabled={loading}>
           {loading ? 'Searching…' : 'Use current location'}
         </button>
@@ -180,7 +182,6 @@ export default function NearbyPage() {
           </div>
         </div>
 
-        {geoError && <p className="text-sm text-red-500">{geoError}</p>}
         {searchError && <p className="text-sm text-red-500">{searchError}</p>}
 
         {position && (
