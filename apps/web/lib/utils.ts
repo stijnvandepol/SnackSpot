@@ -45,17 +45,17 @@ export function extractCity(address: string): string | null {
     if (match) return match[1].trim()
   }
 
-  // Filter out countries, provinces, standalone postal codes, and pure numbers
+  // Filter out countries, provinces, standalone postal codes, and bare house numbers
   const candidates = parts.filter(
     (p) => !SKIP_PARTS.has(p.toLowerCase()) && !POSTAL_ONLY_RE.test(p) && !/^\d+$/.test(p),
   )
 
   if (candidates.length === 0) return null
 
-  // Return the first candidate that doesn't look like a street name
-  const city = candidates.find((p) => !looksLikeStreet(p))
-  if (city) return city
+  // With 2+ parts the city is always the second meaningful segment (after the street).
+  // This holds for all Nominatim formats: "Street Nr, City[, Municipality, …]"
+  if (candidates.length >= 2) return candidates[1]
 
-  // Fallback: last remaining candidate (best effort)
-  return candidates.at(-1) ?? null
+  // Single candidate: only return it if it doesn't look like a street
+  return looksLikeStreet(candidates[0]) ? null : candidates[0]
 }
