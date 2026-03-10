@@ -104,42 +104,31 @@ export default function NearbyPage() {
     }
     setLoading(true)
 
-    // Try high accuracy first (GPS on mobile). Desktop browsers may succeed but return
-    // NaN coordinates (Firefox bug) or throw POSITION_UNAVAILABLE/TIMEOUT — in either
-    // case fall back to standard accuracy (IP/WiFi geolocation) which works on desktop.
-    const tryWithOptions = (highAccuracy: boolean) => {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = toFiniteNumber(pos.coords.latitude)
-          const lng = toFiniteNumber(pos.coords.longitude)
+    // Use high accuracy (GPS) only on touch devices (mobile/tablet).
+    // Desktop has no GPS — high accuracy causes NaN coords or errors in some browsers.
+    const highAccuracy = navigator.maxTouchPoints > 0
 
-          if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
-            if (highAccuracy) {
-              tryWithOptions(false)
-              return
-            }
-            setGeoError('Received an invalid location from your browser.')
-            setLoading(false)
-            return
-          }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = toFiniteNumber(pos.coords.latitude)
+        const lng = toFiniteNumber(pos.coords.longitude)
 
-          setPosition({ lat, lng })
-          search(lat, lng, radius)
-          setGeoError(null)
-        },
-        (err) => {
-          if (highAccuracy && (err.code === err.POSITION_UNAVAILABLE || err.code === err.TIMEOUT)) {
-            tryWithOptions(false)
-          } else {
-            setGeoError(`Location error: ${err.message}`)
-            setLoading(false)
-          }
-        },
-        { enableHighAccuracy: highAccuracy, timeout: 10000, maximumAge: 300000 },
-      )
-    }
+        if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
+          setGeoError('Received an invalid location from your browser.')
+          setLoading(false)
+          return
+        }
 
-    tryWithOptions(true)
+        setPosition({ lat, lng })
+        search(lat, lng, radius)
+        setGeoError(null)
+      },
+      (err) => {
+        setGeoError(`Location error: ${err.message}`)
+        setLoading(false)
+      },
+      { enableHighAccuracy: highAccuracy, timeout: 10000, maximumAge: 300000 },
+    )
   }
 
   // Re-search when radius changes
