@@ -20,6 +20,12 @@ const SKIP_PARTS = new Set([
 const POSTAL_ONLY_RE = /^\d{4}\s?[A-Za-z]{2}$/
 // Postal code at the start of a part, followed by a city name: "1234 AB Amsterdam"
 const POSTAL_CITY_RE = /^\d{4}\s?[A-Za-z]{2}\s+(.+)/
+// Parts that contain a digit or a common Dutch street suffix look like a street, not a city
+const STREET_SUFFIX_RE = /\b(?:straat|laan|weg|plein|dijk|gracht|kade|steeg|pad|dreef|boulevard|singel|allee)\b/i
+
+function looksLikeStreet(part: string): boolean {
+  return /\d/.test(part) || STREET_SUFFIX_RE.test(part)
+}
 
 /**
  * Extracts the city from an address string.
@@ -39,17 +45,17 @@ export function extractCity(address: string): string | null {
     if (match) return match[1].trim()
   }
 
-  // Filter out countries, provinces, and standalone postal codes
+  // Filter out countries, provinces, standalone postal codes, and pure numbers
   const candidates = parts.filter(
-    (p) => !SKIP_PARTS.has(p.toLowerCase()) && !POSTAL_ONLY_RE.test(p),
+    (p) => !SKIP_PARTS.has(p.toLowerCase()) && !POSTAL_ONLY_RE.test(p) && !/^\d+$/.test(p),
   )
 
   if (candidates.length === 0) return null
 
-  // Address structure (OSM / typical NL format):
-  //   [0] street (+ house nr)   [1] house nr or suburb   [2] city   [3+] municipality, …
-  // For short addresses (1–2 parts left) the city is the last remaining part.
-  if (candidates.length >= 3) return candidates[2]
-  if (candidates.length === 2) return candidates[1]
-  return candidates[0]
+  // Return the first candidate that doesn't look like a street name
+  const city = candidates.find((p) => !looksLikeStreet(p))
+  if (city) return city
+
+  // Fallback: last remaining candidate (best effort)
+  return candidates.at(-1) ?? null
 }
