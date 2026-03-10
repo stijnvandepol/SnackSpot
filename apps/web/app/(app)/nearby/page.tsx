@@ -103,29 +103,47 @@ export default function NearbyPage() {
       return
     }
     setLoading(true)
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = toFiniteNumber(pos.coords.latitude)
-        const lng = toFiniteNumber(pos.coords.longitude)
 
-        if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
-          console.warn('Browser returned invalid geolocation coordinates', {
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-            coords: pos.coords,
-          })
-          setGeoError('Received an invalid location from your browser.')
-          setLoading(false)
-          return
-        }
+    const handlePosition = (pos: GeolocationPosition) => {
+      const lat = toFiniteNumber(pos.coords.latitude)
+      const lng = toFiniteNumber(pos.coords.longitude)
 
-        setPosition({ lat, lng })
-        search(lat, lng, radius)
-        setGeoError(null)
-      },
-      (err) => {
-        setGeoError(`Location error: ${err.message}`)
+      if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
+        console.warn('Browser returned invalid geolocation coordinates', {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          coords: pos.coords,
+        })
+        setGeoError('Received an invalid location from your browser.')
         setLoading(false)
+        return
+      }
+
+      setPosition({ lat, lng })
+      search(lat, lng, radius)
+      setGeoError(null)
+    }
+
+    const handleError = (err: GeolocationPositionError) => {
+      setGeoError(`Location error: ${err.message}`)
+      setLoading(false)
+    }
+
+    // Try high accuracy first (GPS on mobile). On desktop, high accuracy may not be
+    // available (POSITION_UNAVAILABLE) or time out — fall back to standard accuracy
+    // (IP/WiFi geolocation) which works reliably on desktop browsers.
+    navigator.geolocation.getCurrentPosition(
+      handlePosition,
+      (err) => {
+        if (err.code === err.POSITION_UNAVAILABLE || err.code === err.TIMEOUT) {
+          navigator.geolocation.getCurrentPosition(handlePosition, handleError, {
+            enableHighAccuracy: false,
+            timeout: 10000,
+            maximumAge: 300000,
+          })
+        } else {
+          handleError(err)
+        }
       },
       {
         enableHighAccuracy: true,
