@@ -20,16 +20,11 @@ interface Place {
 }
 
 function toFiniteNumber(value: unknown): number | null {
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : null
-  }
+  if (value === null || value === undefined) return null
+  if (typeof value === 'string' && value.trim().length === 0) return null
 
-  if (typeof value === 'string' && value.trim().length > 0) {
-    const parsed = Number(value)
-    return Number.isFinite(parsed) ? parsed : null
-  }
-
-  return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 function isValidLatitude(value: number): boolean {
@@ -114,6 +109,11 @@ export default function NearbyPage() {
         const lng = toFiniteNumber(pos.coords.longitude)
 
         if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
+          console.warn('Browser returned invalid geolocation coordinates', {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            coords: pos.coords,
+          })
           setGeoError('Received an invalid location from your browser.')
           setLoading(false)
           return
@@ -126,6 +126,11 @@ export default function NearbyPage() {
       (err) => {
         setGeoError(`Location error: ${err.message}`)
         setLoading(false)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000,
       },
     )
   }
