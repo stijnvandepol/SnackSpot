@@ -19,6 +19,11 @@ interface Place {
   distance_m: number
 }
 
+interface GeolocationErrorLike {
+  code?: number
+  message?: string
+}
+
 function toFiniteNumber(value: unknown): number | null {
   if (value === null || value === undefined) return null
   if (typeof value === 'string' && value.trim().length === 0) return null
@@ -56,6 +61,28 @@ function normalizePlace(raw: unknown): Place | null {
     review_count: toFiniteNumber(candidate.review_count) ?? 0,
     distance_m: toFiniteNumber(candidate.distance_m) ?? 0,
   }
+}
+
+function getReadableGeolocationError(err: GeolocationErrorLike): string {
+  if (err.code === 1) {
+    return 'Location permission was denied. Enable location access for this site in your browser settings.'
+  }
+
+  if (err.code === 2) {
+    return 'Your location is unavailable right now. Check OS location services and try again.'
+  }
+
+  if (err.code === 3) {
+    return 'Location request timed out. Try again in an open area or with a better connection.'
+  }
+
+  return err.message ? `Location error: ${err.message}` : 'Could not determine your location.'
+}
+
+function getCurrentPosition(options: PositionOptions): Promise<GeolocationPosition> {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, options)
+  })
 }
 
 export default function NearbyPage() {
@@ -102,35 +129,78 @@ export default function NearbyPage() {
       setGeoError('Geolocation not supported by your browser.')
       return
     }
+
+    if (!window.isSecureContext) {
+      setGeoError('Location only works on secure origins (HTTPS or localhost).')
+      return
+    }
+
+    setGeoError(null)
     setLoading(true)
 
-    // Use high accuracy (GPS) only on touch devices (mobile/tablet).
-    // Desktop has no GPS — high accuracy causes NaN coords or errors in some browsers.
-    const highAccuracy = navigator.maxTouchPoints > 0
+    const locate = async () => {
+      try {
+        if ('permissions' in navigator && navigator.permissions?.query) {
+          try {
+            const permission = await navigator.permissions.query({ name: 'geolocation' })
+            if (permission.state === 'denied') {
+              setGeoError('Location permission is blocked in your browser. Enable it and try again.')
+              return
+            }
+          } catch {
+            // Ignore Permissions API issues and continue with direct geolocation request.
+          }
+        }
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = toFiniteNumber(pos.coords.latitude)
-        const lng = toFiniteNumber(pos.coords.longitude)
+        // Try multiple strategies because browsers/OSes differ across desktop and mobile.
+        const attempts: PositionOptions[] = [
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
+          { enableHighAccuracy: false, timeout: 20000, maximumAge: 0 },
+        ]
 
-        if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
-          console.error('[Geolocation] Invalid coords from browser', pos.coords.latitude, pos.coords.longitude)
-          setGeoError('Your browser returned an invalid location. Make sure Location Services are enabled in your OS and browser settings.')
+        let lastError: GeolocationErrorLike | null = null
+        let foundPosition: GeolocationPosition | null = null
+
+        for (const options of attempts) {
+          try {
+            foundPosition = await getCurrentPosition(options)
+            break
+          } catch (err) {
+            const geoErr = err as GeolocationErrorLike
+            lastError = geoErr
+            if (geoErr.code === 1) break
+          }
+        }
+
+        if (!foundPosition) {
+          setGeoError(getReadableGeolocationError(lastError ?? {}))
           setLoading(false)
           return
         }
 
+        const lat = toFiniteNumber(foundPosition.coords.latitude)
+        const lng = toFiniteNumber(foundPosition.coords.longitude)
+
+        if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
+          console.error('[Geolocation] Invalid coords from browser', foundPosition.coords.latitude, foundPosition.coords.longitude)
+          setGeoError('Your browser returned an invalid location. Make sure Location Services are enabled in your OS and browser settings.')
+          return
+        }
+
         setPosition({ lat, lng })
-        search(lat, lng, radius)
+        await search(lat, lng, radius)
         setGeoError(null)
-      },
-      (err) => {
-        console.error('[Geolocation error]', err.code, err.message)
-        setGeoError(`Location error: ${err.message}`)
+      } catch (err) {
+        const geoErr = err as GeolocationErrorLike
+        console.error('[Geolocation error]', geoErr.code, geoErr.message)
+        setGeoError(getReadableGeolocationError(geoErr))
+      } finally {
         setLoading(false)
-      },
-      { enableHighAccuracy: highAccuracy, timeout: 10000, maximumAge: 300000 },
-    )
+      }
+    }
+
+    void locate()
   }
 
   // Re-search when radius changes
