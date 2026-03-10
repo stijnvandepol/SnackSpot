@@ -47,6 +47,10 @@ export async function GET(
         dishName: true,
         status: true,
         createdAt: true,
+        tags: {
+          orderBy: { tag: 'asc' },
+          select: { tag: true },
+        },
         _count: { select: { reviewLikes: true } },
         reviewLikes: {
           where: { userId: auth?.sub ?? '__no_user__' },
@@ -75,6 +79,7 @@ export async function GET(
         service: item.ratingService === null ? null : Number(item.ratingService),
       },
       overallRating: Number(item.ratingOverall),
+      tags: item.tags.map((tag) => tag.tag),
       _count: undefined,
       reviewLikes: undefined,
     }))

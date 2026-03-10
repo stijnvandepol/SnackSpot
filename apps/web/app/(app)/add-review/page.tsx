@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { UserMentionInput } from '@/components/user-mention-input'
 import { computeOverallRating } from '@/lib/ratings'
+import { REVIEW_TAG_OPTIONS, type ReviewTag } from '@/lib/review-tags'
 import { shouldUseDirectBrowserUpload } from '@/lib/upload'
 
 type Step = 'place' | 'review' | 'photos'
@@ -133,6 +134,7 @@ export default function AddReviewPage() {
   const [text, setText] = useState('')
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([])
   const [dishName, setDishName] = useState('')
+  const [selectedTags, setSelectedTags] = useState<ReviewTag[]>([])
   const [photos, setPhotos] = useState<UploadedPhoto[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -508,6 +510,7 @@ export default function AddReviewPage() {
           ratings,
           text,
           dishName: dishName || undefined,
+          tags: selectedTags,
           photoIds: photos.filter((p) => p.status === 'ready').map((p) => p.photoId),
           mentionedUserIds,
         }
@@ -521,6 +524,7 @@ export default function AddReviewPage() {
           ratings,
           text,
           dishName: dishName || undefined,
+          tags: selectedTags,
           photoIds: photos.filter((p) => p.status === 'ready').map((p) => p.photoId),
           mentionedUserIds,
         }
@@ -761,6 +765,45 @@ export default function AddReviewPage() {
           <div>
             <label className="label">Dish name</label>
             <input className="input" placeholder="e.g. Stroopwafel, Herring" value={dishName} onChange={(e) => setDishName(e.target.value)} maxLength={100} />
+          </div>
+          <div>
+            <div className="flex items-center justify-between gap-3">
+              <label className="label mb-0">Post tags</label>
+              <span className="text-xs text-snack-muted">{selectedTags.length}/6</span>
+            </div>
+            <p className="mt-1 text-xs text-snack-muted">Add a few tags so Explore can surface the right kind of spot.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {REVIEW_TAG_OPTIONS.map((option) => {
+                const isActive = selectedTags.includes(option.value)
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTags((prev) => {
+                        if (prev.includes(option.value)) {
+                          return prev.filter((tag) => tag !== option.value)
+                        }
+                        if (prev.length >= 6) {
+                          return prev
+                        }
+                        return [...prev, option.value]
+                      })
+                    }}
+                    className={`rounded-full border px-3 py-2 text-xs font-medium transition ${
+                      isActive
+                        ? 'border-snack-primary bg-snack-primary text-white'
+                        : 'border-snack-border bg-white text-snack-muted hover:border-snack-primary hover:text-snack-primary'
+                    }`}
+                    title={option.hint}
+                    aria-pressed={isActive}
+                  >
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
           <div>
             <label className="label">Your review * <span className="text-snack-muted font-normal">({text.length}/2000)</span></label>

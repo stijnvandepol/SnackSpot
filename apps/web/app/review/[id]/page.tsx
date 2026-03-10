@@ -8,6 +8,7 @@ import { ReviewLikeButton } from '@/components/review-like-button'
 import { ImageLightbox } from '@/components/image-lightbox'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { MentionText } from '@/components/mention-text'
+import { getReviewTagLabel } from '@/lib/review-tags'
 
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null
@@ -16,6 +17,7 @@ interface Review {
   commentCount?: number
   overallRating?: number
   ratings?: { taste: number; value: number; portion: number; service?: number | null }
+  tags?: string[]
   user: { id: string; username: string; avatarKey?: string | null; role: string }
   place: { id: string; name: string; address: string }
   reviewPhotos: Array<{ sortOrder: number; photo: { id: string; variants: Record<string, string> } }>
@@ -232,6 +234,19 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
             Taste {review.ratings.taste} • Value {review.ratings.value} • Portion {review.ratings.portion}
             {typeof review.ratings.service === 'number' ? ` • Service ${review.ratings.service}` : ''}
           </p>
+        )}
+
+        {review.tags && review.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {review.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-snack-surface px-2.5 py-1 text-xs font-medium text-snack-primary"
+              >
+                {getReviewTagLabel(tag)}
+              </span>
+            ))}
+          </div>
         )}
 
         <MentionText text={review.text} className="whitespace-pre-line text-snack-muted" />

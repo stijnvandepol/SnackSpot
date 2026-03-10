@@ -59,6 +59,19 @@ const RatingValueSchema = z
     message: 'Rating must be in 0.5 increments',
   })
 
+export const REVIEW_TAG_VALUES = [
+  'budget-spot',
+  'street-food',
+  'late-night',
+  'local-favorite',
+  'worth-the-detour',
+  'small-but-mighty',
+  'under-the-radar',
+  'unexpected-location',
+] as const
+
+export const ReviewTagSchema = z.enum(REVIEW_TAG_VALUES)
+
 export const CreateReviewSchema = z.object({
   placeId: z.string().min(1).optional(),
   place: CreatePlaceSchema.optional(),
@@ -71,6 +84,7 @@ export const CreateReviewSchema = z.object({
   }).optional(),
   text: z.string().min(10).max(2000),
   dishName: z.string().min(1).max(100).optional(),
+  tags: z.array(ReviewTagSchema).max(6).default([]),
   photoIds: z.array(z.string()).min(1).max(5),
   mentionedUserIds: z.array(z.string()).max(10).default([]),
 }).refine((data) => Boolean(data.rating || data.ratings), {
@@ -88,6 +102,7 @@ export const UpdateReviewSchema = z.object({
   }).optional(),
   text: z.string().min(10).max(2000).optional(),
   dishName: z.string().min(1).max(100).optional(),
+  tags: z.array(ReviewTagSchema).max(6).optional(),
   photoIds: z.array(z.string()).max(5).optional(),
 })
 

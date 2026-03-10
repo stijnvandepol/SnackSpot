@@ -59,6 +59,10 @@ export async function GET(req: NextRequest) {
         dishName: true,
         status: true,
         createdAt: true,
+        tags: {
+          orderBy: { tag: 'asc' },
+          select: { tag: true },
+        },
         user: { select: { id: true, username: true, avatarKey: true, role: true } },
         place: { select: { id: true, name: true, address: true } },
         _count: { select: { reviewLikes: true, comments: true } },
@@ -92,6 +96,7 @@ export async function GET(req: NextRequest) {
         service: item.ratingService === null ? null : Number(item.ratingService),
       },
       overallRating: Number(item.ratingOverall),
+      tags: item.tags.map((tag) => tag.tag),
       _count: undefined,
       reviewLikes: undefined,
     }))

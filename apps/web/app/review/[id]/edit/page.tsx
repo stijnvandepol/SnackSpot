@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { computeOverallRating } from '@/lib/ratings'
+import { REVIEW_TAG_OPTIONS, type ReviewTag } from '@/lib/review-tags'
 import { shouldUseDirectBrowserUpload } from '@/lib/upload'
 
 interface ReviewEditData {
@@ -19,6 +20,7 @@ interface ReviewEditData {
   overallRating?: number
   text: string
   dishName?: string | null
+  tags?: ReviewTag[]
   reviewPhotos: Array<{ sortOrder: number; photo: { id: string; variants: Record<string, string> } }>
   user: { id: string; username: string }
   place: { id: string; name: string; address: string }
@@ -155,6 +157,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
   })
   const [dishName, setDishName] = useState('')
   const [text, setText] = useState('')
+  const [selectedTags, setSelectedTags] = useState<ReviewTag[]>([])
   const [photos, setPhotos] = useState<UploadedPhoto[]>([])
   const [step, setStep] = useState<Step>('place')
   const [saving, setSaving] = useState(false)
@@ -189,6 +192,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
         })
         setDishName(data.dishName ?? '')
         setText(data.text)
+        setSelectedTags(data.tags ?? [])
         const existingPhotos = data.reviewPhotos
           .sort((a, b) => a.sortOrder - b.sortOrder)
           .reduce<UploadedPhoto[]>((acc, rp) => {
@@ -295,6 +299,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
           ratings,
           text: text.trim(),
           dishName: dishName.trim() || undefined,
+          tags: selectedTags,
           photoIds,
         }),
       })
@@ -487,6 +492,46 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
               onChange={(e) => setDishName(e.target.value)}
               maxLength={100}
             />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between gap-3">
+              <label className="label mb-0">Post tags</label>
+              <span className="text-xs text-snack-muted">{selectedTags.length}/6</span>
+            </div>
+            <p className="mt-1 text-xs text-snack-muted">Keep the tags accurate so Explore can place this post in the right discovery lane.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {REVIEW_TAG_OPTIONS.map((option) => {
+                const isActive = selectedTags.includes(option.value)
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTags((prev) => {
+                        if (prev.includes(option.value)) {
+                          return prev.filter((tag) => tag !== option.value)
+                        }
+                        if (prev.length >= 6) {
+                          return prev
+                        }
+                        return [...prev, option.value]
+                      })
+                    }}
+                    className={`rounded-full border px-3 py-2 text-xs font-medium transition ${
+                      isActive
+                        ? 'border-snack-primary bg-snack-primary text-white'
+                        : 'border-snack-border bg-white text-snack-muted hover:border-snack-primary hover:text-snack-primary'
+                    }`}
+                    title={option.hint}
+                    aria-pressed={isActive}
+                  >
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           <div>

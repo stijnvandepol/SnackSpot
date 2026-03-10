@@ -41,6 +41,10 @@ export async function GET(
         status: true,
         createdAt: true,
         updatedAt: true,
+        tags: {
+          orderBy: { tag: 'asc' },
+          select: { tag: true },
+        },
         _count: { select: { reviewLikes: true, comments: true } },
         user: { select: { id: true, username: true, avatarKey: true, role: true } },
         place: { select: { id: true, name: true, address: true } },
@@ -77,6 +81,7 @@ export async function GET(
         service: review.ratingService === null ? null : Number(review.ratingService),
       },
       overallRating: Number(review.ratingOverall),
+      tags: review.tags.map((item) => item.tag),
       _count: undefined,
       reviewLikes: undefined,
     }))
@@ -99,6 +104,8 @@ export async function PATCH(
   try {
     const normalized = body.ratings ? normalizeRatings(body.ratings) : null
     const normalizedDishName = normalizeDishName(body.dishName)
+    const nextTags = body.tags ?? null
+    const dedupedTags = nextTags !== null ? Array.from(new Set(nextTags)) : null
     const nextPhotoIds = body.photoIds ?? null
     const dedupedPhotoIds = nextPhotoIds !== null ? Array.from(new Set(nextPhotoIds)) : null
 
@@ -186,8 +193,27 @@ export async function PATCH(
           text: true,
           dishName: true,
           updatedAt: true,
+          tags: {
+            orderBy: { tag: 'asc' },
+            select: { tag: true },
+          },
         },
       })
+
+      if (dedupedTags !== null) {
+        await tx.reviewTag.deleteMany({
+          where: { reviewId: id },
+        })
+
+        if (dedupedTags.length > 0) {
+          await tx.reviewTag.createMany({
+            data: dedupedTags.map((tag) => ({
+              reviewId: id,
+              tag,
+            })),
+          })
+        }
+      }
 
       if (dedupedPhotoIds !== null) {
         await tx.reviewPhoto.deleteMany({
@@ -217,6 +243,7 @@ export async function PATCH(
         service: updated.ratingService === null ? null : Number(updated.ratingService),
       },
       overallRating: Number(updated.ratingOverall),
+      tags: updated.tags.map((item) => item.tag),
     })
   } catch (e) {
     return serverError('reviews/[id] PATCH', e)

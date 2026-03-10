@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
           service: null,
         })
     const normalizedDishName = normalizeDishName(body.dishName)
+    const reviewTags = Array.from(new Set(body.tags))
 
     let placeId = body.placeId
 
@@ -95,6 +96,13 @@ export async function POST(req: NextRequest) {
         ratingOverall: normalizedRatings.overall,
         text: body.text,
         dishName: normalizedDishName,
+        tags: reviewTags.length > 0
+          ? {
+              createMany: {
+                data: reviewTags.map((tag) => ({ tag })),
+              },
+            }
+          : undefined,
         reviewPhotos: {
           create: body.photoIds.map((photoId, i) => ({ photoId, sortOrder: i })),
         },
@@ -111,6 +119,10 @@ export async function POST(req: NextRequest) {
         dishName: true,
         status: true,
         createdAt: true,
+        tags: {
+          orderBy: { tag: 'asc' },
+          select: { tag: true },
+        },
         place: { select: { id: true, name: true, address: true } },
         reviewPhotos: {
           orderBy: { sortOrder: 'asc' },
@@ -180,6 +192,7 @@ export async function POST(req: NextRequest) {
         service: review.ratingService === null ? null : Number(review.ratingService),
       },
       overallRating: Number(review.ratingOverall),
+      tags: review.tags.map((item) => item.tag),
     })
   } catch (e) {
     return serverError('reviews POST', e)

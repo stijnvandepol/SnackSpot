@@ -7,7 +7,7 @@ RUN npm install -g pnpm@9.15.4
 WORKDIR /app
 
 # Dependencies
-COPY pnpm-workspace.yaml package.json .npmrc ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
 COPY packages/db/package.json packages/db/
 COPY packages/db/prisma packages/db/prisma/
 COPY packages/shared/package.json packages/shared/
@@ -15,7 +15,7 @@ COPY packages/ui/package.json packages/ui/
 COPY apps/web/package.json apps/web/
 COPY tsconfig.base.json ./
 
-RUN pnpm install && pnpm store prune && rm -rf /root/.cache/pnpm
+RUN pnpm install --frozen-lockfile && pnpm store prune && rm -rf /root/.cache/pnpm
 
 # Source
 COPY packages/ packages/

@@ -160,6 +160,7 @@ model Review {
   reports      Report[]
   mentions     ReviewMention[]
   notifications Notification[]
+  tags          ReviewTag[]
 
   @@index([createdAt(sort: Desc)])
   @@index([placeId, createdAt(sort: Desc)])
@@ -171,6 +172,18 @@ model Review {
   @@index([userId, status, placeId])
   @@index([userId, status, id])
   @@map("reviews")
+}
+
+model ReviewTag {
+  reviewId   String   @map("review_id")
+  tag        String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@id([reviewId, tag])
+  @@index([tag, createdAt(sort: Desc)])
+  @@map("review_tags")
 }
 
 model Badge {

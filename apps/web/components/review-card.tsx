@@ -3,6 +3,7 @@ import { photoVariantUrl } from '@/lib/photo-url'
 import { ReviewLikeButton } from '@/components/review-like-button'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { MentionText } from '@/components/mention-text'
+import { getReviewTagLabel } from '@/lib/review-tags'
 
 interface ReviewCardProps {
   review: {
@@ -13,6 +14,7 @@ interface ReviewCardProps {
     createdAt: Date | string
     overallRating?: number
     ratings?: { taste: number; value: number; portion: number; service?: number | null }
+    tags?: string[]
     user: { id: string; username: string; avatarKey?: string | null }
     place?: { id: string; name: string; address: string }
     likeCount?: number
@@ -92,11 +94,17 @@ export function ReviewCard({
             </div>
           </div>
 
-          {review.ratings && (
-            <p className="text-xs text-snack-muted">
-              Taste {review.ratings.taste} • Value {review.ratings.value} • Portion {review.ratings.portion}
-              {typeof review.ratings.service === 'number' ? ` • Service ${review.ratings.service}` : ''}
-            </p>
+          {review.tags && review.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {review.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full bg-white/90 px-2 py-1 text-[11px] font-medium text-snack-primary shadow-sm"
+                >
+                  {getReviewTagLabel(tag)}
+                </span>
+              ))}
+            </div>
           )}
 
           <MentionText
