@@ -19,15 +19,9 @@ interface Place {
   distance_m: number
 }
 
-interface GeolocationErrorLike {
-  code?: number
-  message?: string
-}
-
 function toFiniteNumber(value: unknown): number | null {
   if (value === null || value === undefined) return null
   if (typeof value === 'string' && value.trim().length === 0) return null
-
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : null
 }
@@ -63,77 +57,31 @@ function normalizePlace(raw: unknown): Place | null {
   }
 }
 
-function getReadableGeolocationError(err: GeolocationErrorLike): string {
-  if (err.code === 1) {
-    return 'Location permission was denied. Enable location access for this site in your browser settings.'
-  }
-
-  if (err.code === 2) {
-    return 'Your location is unavailable right now. Check OS location services and try again.'
-  }
-
-  if (err.code === 3) {
-    return 'Location request timed out. Try again in an open area or with a better connection.'
-  }
-
-  return err.message ? `Location error: ${err.message}` : 'Could not determine your location.'
+// accuracy === 0 is the Windows OS bug indicator — the success callback fired
+// but the underlying Win32 ILatLongReport API returned uninitialized floats (NaN).
+// See: https://bugzilla.mozilla.org/show_bug.cgi?id=1980653
+function isUsablePosition(pos: GeolocationPosition): boolean {
+  const { latitude, longitude, accuracy } = pos.coords
+  return (
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    isValidLatitude(latitude) &&
+    isValidLongitude(longitude) &&
+    accuracy > 0
+  )
 }
 
-function getCurrentPosition(options: PositionOptions): Promise<GeolocationPosition> {
-  return new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(resolve, reject, options)
-  })
-}
-
-function hasValidPositionCoords(position: GeolocationPosition): boolean {
-  const lat = toFiniteNumber(position.coords.latitude)
-  const lng = toFiniteNumber(position.coords.longitude)
-  return lat !== null && lng !== null && isValidLatitude(lat) && isValidLongitude(lng)
-}
-
-function getFirstWatchPosition(options: PositionOptions, timeoutMs: number): Promise<GeolocationPosition> {
-  return new Promise((resolve, reject) => {
-    const timeoutId = window.setTimeout(() => {
-      if (watchId !== null) navigator.geolocation.clearWatch(watchId)
-      reject({ code: 3, message: 'Location watch timed out.' } satisfies GeolocationErrorLike)
-    }, timeoutMs)
-
-    let watchId: number | null = null
-
-    watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        if (!hasValidPositionCoords(position)) return
-        clearTimeout(timeoutId)
-        navigator.geolocation.clearWatch(watchId as number)
-        resolve(position)
-      },
-      (error) => {
-        clearTimeout(timeoutId)
-        if (watchId !== null) navigator.geolocation.clearWatch(watchId)
-        reject(error)
-      },
-      options,
-    )
-  })
-}
-
-async function getIpBasedPosition(): Promise<{ lat: number; lng: number } | null> {
+async function getIpPosition(): Promise<{ lat: number; lng: number } | null> {
   try {
     const controller = new AbortController()
     const timeoutId = window.setTimeout(() => controller.abort(), 7000)
     const res = await fetch('https://ipapi.co/json/', { signal: controller.signal })
     clearTimeout(timeoutId)
-
     if (!res.ok) return null
-
     const json = (await res.json()) as { latitude?: unknown; longitude?: unknown }
     const lat = toFiniteNumber(json.latitude)
     const lng = toFiniteNumber(json.longitude)
-
-    if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
-      return null
-    }
-
+    if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) return null
     return { lat, lng }
   } catch {
     return null
@@ -145,8 +93,6 @@ export default function NearbyPage() {
   const [loading, setLoading] = useState(false)
   const [geoError, setGeoError] = useState<string | null>(null)
   const [searchError, setSearchError] = useState<string | null>(null)
-  const [manualLocation, setManualLocation] = useState('')
-  const [manualLoading, setManualLoading] = useState(false)
   const [radius, setRadius] = useState(3000)
   const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null)
 
@@ -162,14 +108,6 @@ export default function NearbyPage() {
         const normalizedPlaces = rawPlaces
           .map(normalizePlace)
           .filter((place: Place | null): place is Place => place !== null)
-
-        if (normalizedPlaces.length !== rawPlaces.length) {
-          console.warn('Dropped nearby places with invalid coordinates', {
-            total: rawPlaces.length,
-            dropped: rawPlaces.length - normalizedPlaces.length,
-          })
-        }
-
         setPlaces(normalizedPlaces)
       } catch (err) {
         console.error(err)
@@ -187,144 +125,63 @@ export default function NearbyPage() {
       return
     }
 
-    if (!window.isSecureContext) {
-      setGeoError('Location only works on secure origins (HTTPS or localhost).')
-      return
-    }
-
     setGeoError(null)
     setLoading(true)
 
     const locate = async () => {
       try {
+        // Check permission state first (avoids a silent failure on denied permission)
         if ('permissions' in navigator && navigator.permissions?.query) {
           try {
-            const permission = await navigator.permissions.query({ name: 'geolocation' })
-            if (permission.state === 'denied') {
-              setGeoError('Location permission is blocked in your browser. Enable it and try again.')
+            const perm = await navigator.permissions.query({ name: 'geolocation' })
+            if (perm.state === 'denied') {
+              setGeoError('Location permission is blocked. Enable it in your browser site settings.')
               return
             }
-          } catch {
-            // Ignore Permissions API issues and continue with direct geolocation request.
-          }
+          } catch { /* Permissions API not supported — continue */ }
         }
 
-        // Try multiple strategies because browsers/OSes differ across desktop and mobile.
-        const attempts: PositionOptions[] = [
-          { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
-          { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
-          { enableHighAccuracy: false, timeout: 20000, maximumAge: 0 },
-        ]
+        // Use enableHighAccuracy: false on all devices.
+        // enableHighAccuracy: true on desktops (no GPS) causes the Windows
+        // ILatLongReport bug: success fires but coords are NaN, accuracy 0.
+        // With false, the browser uses IP/WiFi triangulation which works reliably.
+        const browserPos = await new Promise<GeolocationPosition | null>((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => resolve(isUsablePosition(pos) ? pos : null),
+            () => resolve(null),
+            { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
+          )
+        })
 
-        let lastError: GeolocationErrorLike | null = null
-        let foundPosition: GeolocationPosition | null = null
-
-        for (const options of attempts) {
-          try {
-            const attemptPosition = await getCurrentPosition(options)
-            if (!hasValidPositionCoords(attemptPosition)) {
-              console.warn('[Geolocation] Invalid coords from browser attempt', attemptPosition.coords.latitude, attemptPosition.coords.longitude, options)
-              lastError = { code: 2, message: 'Browser returned invalid coordinates.' }
-              continue
-            }
-
-            foundPosition = attemptPosition
-            break
-          } catch (err) {
-            const geoErr = err as GeolocationErrorLike
-            lastError = geoErr
-            if (geoErr.code === 1) break
-          }
-        }
-
-        if (!foundPosition) {
-          try {
-            foundPosition = await getFirstWatchPosition({ enableHighAccuracy: false, maximumAge: 0 }, 15000)
-          } catch (err) {
-            lastError = err as GeolocationErrorLike
-          }
-        }
-
-        if (!foundPosition) {
-          const ipPosition = await getIpBasedPosition()
-          if (ipPosition) {
-            setPosition(ipPosition)
-            await search(ipPosition.lat, ipPosition.lng, radius)
-            setGeoError('Using an approximate location based on your network. For exact results, enable OS/browser location services.')
-            return
-          }
-        }
-
-        if (!foundPosition) {
-          setGeoError(getReadableGeolocationError(lastError ?? {}))
+        if (browserPos) {
+          const lat = browserPos.coords.latitude
+          const lng = browserPos.coords.longitude
+          setPosition({ lat, lng })
+          await search(lat, lng, radius)
+          setGeoError(null)
           return
         }
 
-        const lat = toFiniteNumber(foundPosition.coords.latitude)
-        const lng = toFiniteNumber(foundPosition.coords.longitude)
-
-        if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
-          console.error('[Geolocation] Invalid coords from browser', foundPosition.coords.latitude, foundPosition.coords.longitude)
-          setGeoError('Your browser returned an invalid location. Make sure Location Services are enabled in your OS and browser settings.')
+        // Browser geolocation returned NaN or failed — fall back to IP geolocation.
+        // This handles the Windows ILatLongReport NaN bug and no-signal desktop environments.
+        const ipPos = await getIpPosition()
+        if (ipPos) {
+          setPosition(ipPos)
+          await search(ipPos.lat, ipPos.lng, radius)
+          setGeoError('Using approximate location (IP-based). Enable OS location services for exact results.')
           return
         }
 
-        setPosition({ lat, lng })
-        await search(lat, lng, radius)
-        setGeoError(null)
+        setGeoError('Could not determine your location. Check that Location Services are enabled in your OS and browser.')
       } catch (err) {
-        const geoErr = err as GeolocationErrorLike
-        console.error('[Geolocation error]', geoErr.code, geoErr.message)
-        setGeoError(getReadableGeolocationError(geoErr))
+        console.error('[Geolocation]', err)
+        setGeoError('Could not determine your location. Check that Location Services are enabled in your OS and browser.')
       } finally {
         setLoading(false)
       }
     }
 
     void locate()
-  }
-
-  const useManualLocation = async () => {
-    const query = manualLocation.trim()
-    if (query.length < 2) {
-      setGeoError('Enter a city or address first.')
-      return
-    }
-
-    setGeoError(null)
-    setSearchError(null)
-    setManualLoading(true)
-
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&addressdetails=0`,
-        {
-          headers: {
-            'Accept-Language': 'nl,en',
-          },
-        },
-      )
-
-      if (!res.ok) throw new Error(`Geocoding failed: ${res.status}`)
-
-      const data = (await res.json()) as Array<{ lat: string; lon: string }> | undefined
-      const first = Array.isArray(data) ? data[0] : undefined
-      const lat = toFiniteNumber(first?.lat)
-      const lng = toFiniteNumber(first?.lon)
-
-      if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
-        setGeoError('Could not find a valid location for that query.')
-        return
-      }
-
-      setPosition({ lat, lng })
-      await search(lat, lng, radius)
-    } catch (err) {
-      console.error('[Manual location lookup failed]', err)
-      setGeoError('Manual location lookup failed. Try another city or address.')
-    } finally {
-      setManualLoading(false)
-    }
   }
 
   // Re-search when radius changes
@@ -342,30 +199,9 @@ export default function NearbyPage() {
       {/* Controls */}
       <div className="card p-4 mb-6 space-y-4">
         {geoError && <p className="text-sm text-red-500">{geoError}</p>}
-        <button onClick={useMyLocation} className="btn-primary w-full" disabled={loading || manualLoading}>
+        <button onClick={useMyLocation} className="btn-primary w-full" disabled={loading}>
           {loading ? 'Searching…' : 'Use current location'}
         </button>
-
-        <div className="space-y-2">
-          <label className="label">Laptop fallback: enter city or address</label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={manualLocation}
-              onChange={(e) => setManualLocation(e.target.value)}
-              placeholder="e.g. Amsterdam Centraal"
-              className="w-full rounded-lg border border-[#ececec] bg-white px-3 py-2 text-sm"
-            />
-            <button
-              type="button"
-              className="btn-secondary whitespace-nowrap"
-              onClick={() => void useManualLocation()}
-              disabled={manualLoading || loading}
-            >
-              {manualLoading ? 'Finding…' : 'Use address'}
-            </button>
-          </div>
-        </div>
 
         <div>
           <label className="label">
@@ -405,7 +241,7 @@ export default function NearbyPage() {
             type="button"
             className="btn-secondary w-full"
             onClick={() => search(position.lat, position.lng, radius)}
-            disabled={loading || manualLoading}
+            disabled={loading}
           >
             Search this area again
           </button>
