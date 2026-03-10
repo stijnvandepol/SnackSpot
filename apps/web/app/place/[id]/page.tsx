@@ -9,7 +9,10 @@ import { useAuth } from '@/components/auth-provider'
 interface Place { id: string; name: string; address: string; lat: number; lng: number; avg_rating: number | null; review_count: number }
 interface Review {
   id: string; rating: number; text: string; dishName?: string | null; createdAt: string; status: string
-  likeCount?: number; likedByMe?: boolean
+  overallRating?: number
+  ratings?: { taste: number; value: number; portion: number; service?: number | null }
+  tags?: string[]
+  likeCount?: number; commentCount?: number; likedByMe?: boolean
   user: { id: string; username: string; avatarKey?: string | null; role: string }
   reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
 }

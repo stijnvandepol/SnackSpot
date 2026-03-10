@@ -51,7 +51,7 @@ export async function GET(
           orderBy: { tag: 'asc' },
           select: { tag: true },
         },
-        _count: { select: { reviewLikes: true } },
+        _count: { select: { reviewLikes: true, comments: true } },
         reviewLikes: {
           where: { userId: auth?.sub ?? '__no_user__' },
           select: { userId: true },
@@ -71,6 +71,7 @@ export async function GET(
       ...item,
       rating: Number(item.rating),
       likeCount: item._count.reviewLikes,
+      commentCount: item._count.comments,
       likedByMe: item.reviewLikes.length > 0,
       ratings: {
         taste: Number(item.ratingTaste),
