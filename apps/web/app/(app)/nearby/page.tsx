@@ -88,10 +88,13 @@ async function getIpPosition(): Promise<{ lat: number; lng: number } | null> {
   }
 }
 
+const GEO_FAIL_MSG = 'Could not determine your location. Check that Location Services are enabled in your OS and browser.'
+
 export default function NearbyPage() {
   const [places, setPlaces] = useState<Place[]>([])
   const [loading, setLoading] = useState(false)
   const [geoError, setGeoError] = useState<string | null>(null)
+  const [geoInfo, setGeoInfo] = useState<string | null>(null)
   const [searchError, setSearchError] = useState<string | null>(null)
   const [radius, setRadius] = useState(3000)
   const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null)
@@ -126,6 +129,7 @@ export default function NearbyPage() {
     }
 
     setGeoError(null)
+    setGeoInfo(null)
     setLoading(true)
 
     const locate = async () => {
@@ -154,11 +158,8 @@ export default function NearbyPage() {
         })
 
         if (browserPos) {
-          const lat = browserPos.coords.latitude
-          const lng = browserPos.coords.longitude
-          setPosition({ lat, lng })
-          await search(lat, lng, radius)
-          setGeoError(null)
+          setPosition({ lat: browserPos.coords.latitude, lng: browserPos.coords.longitude })
+          await search(browserPos.coords.latitude, browserPos.coords.longitude, radius)
           return
         }
 
@@ -168,14 +169,14 @@ export default function NearbyPage() {
         if (ipPos) {
           setPosition(ipPos)
           await search(ipPos.lat, ipPos.lng, radius)
-          setGeoError('Using approximate location (IP-based). Enable OS location services for exact results.')
+          setGeoInfo('Using approximate location (IP-based). Enable OS location services for exact results.')
           return
         }
 
-        setGeoError('Could not determine your location. Check that Location Services are enabled in your OS and browser.')
+        setGeoError(GEO_FAIL_MSG)
       } catch (err) {
         console.error('[Geolocation]', err)
-        setGeoError('Could not determine your location. Check that Location Services are enabled in your OS and browser.')
+        setGeoError(GEO_FAIL_MSG)
       } finally {
         setLoading(false)
       }
@@ -199,6 +200,7 @@ export default function NearbyPage() {
       {/* Controls */}
       <div className="card p-4 mb-6 space-y-4">
         {geoError && <p className="text-sm text-red-500">{geoError}</p>}
+        {geoInfo && <p className="text-sm text-amber-600">{geoInfo}</p>}
         <button onClick={useMyLocation} className="btn-primary w-full" disabled={loading}>
           {loading ? 'Searching…' : 'Use current location'}
         </button>
