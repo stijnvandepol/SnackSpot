@@ -94,10 +94,17 @@ export function ReviewCard({
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <span className="text-sm font-semibold text-snack-text">{(review.overallRating ?? review.rating).toFixed(1)}</span>
-              <Stars rating={Math.round(review.overallRating ?? review.rating)} />
-            </div>
+            {showPlace ? (
+              <div className="text-right">
+                <p className="text-sm font-semibold text-snack-text">{(review.overallRating ?? review.rating).toFixed(1)}</p>
+                <Stars rating={Math.round(review.overallRating ?? review.rating)} />
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <span className="text-sm font-semibold text-snack-text">{(review.overallRating ?? review.rating).toFixed(1)}</span>
+                <Stars rating={Math.round(review.overallRating ?? review.rating)} />
+              </div>
+            )}
           </div>
 
           {review.tags && review.tags.length > 0 && (
