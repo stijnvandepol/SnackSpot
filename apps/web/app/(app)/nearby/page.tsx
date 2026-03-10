@@ -85,6 +85,38 @@ function getCurrentPosition(options: PositionOptions): Promise<GeolocationPositi
   })
 }
 
+function hasValidPositionCoords(position: GeolocationPosition): boolean {
+  const lat = toFiniteNumber(position.coords.latitude)
+  const lng = toFiniteNumber(position.coords.longitude)
+  return lat !== null && lng !== null && isValidLatitude(lat) && isValidLongitude(lng)
+}
+
+function getFirstWatchPosition(options: PositionOptions, timeoutMs: number): Promise<GeolocationPosition> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId)
+      reject({ code: 3, message: 'Location watch timed out.' } satisfies GeolocationErrorLike)
+    }, timeoutMs)
+
+    let watchId: number | null = null
+
+    watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        if (!hasValidPositionCoords(position)) return
+        clearTimeout(timeoutId)
+        navigator.geolocation.clearWatch(watchId as number)
+        resolve(position)
+      },
+      (error) => {
+        clearTimeout(timeoutId)
+        if (watchId !== null) navigator.geolocation.clearWatch(watchId)
+        reject(error)
+      },
+      options,
+    )
+  })
+}
+
 export default function NearbyPage() {
   const [places, setPlaces] = useState<Place[]>([])
   const [loading, setLoading] = useState(false)
@@ -164,7 +196,14 @@ export default function NearbyPage() {
 
         for (const options of attempts) {
           try {
-            foundPosition = await getCurrentPosition(options)
+            const attemptPosition = await getCurrentPosition(options)
+            if (!hasValidPositionCoords(attemptPosition)) {
+              console.warn('[Geolocation] Invalid coords from browser attempt', attemptPosition.coords.latitude, attemptPosition.coords.longitude, options)
+              lastError = { code: 2, message: 'Browser returned invalid coordinates.' }
+              continue
+            }
+
+            foundPosition = attemptPosition
             break
           } catch (err) {
             const geoErr = err as GeolocationErrorLike
@@ -174,8 +213,15 @@ export default function NearbyPage() {
         }
 
         if (!foundPosition) {
+          try {
+            foundPosition = await getFirstWatchPosition({ enableHighAccuracy: false, maximumAge: 0 }, 15000)
+          } catch (err) {
+            lastError = err as GeolocationErrorLike
+          }
+        }
+
+        if (!foundPosition) {
           setGeoError(getReadableGeolocationError(lastError ?? {}))
-          setLoading(false)
           return
         }
 
