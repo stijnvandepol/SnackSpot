@@ -80,7 +80,7 @@ export function ReviewCard({
           </div>
         )}
         <div className="relative z-20 space-y-2 p-4 pointer-events-none">
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               {review.dishName && (
                 <p className="truncate font-semibold text-snack-text">{review.dishName}</p>

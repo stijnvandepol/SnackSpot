@@ -252,13 +252,10 @@ export default function AddReviewPage() {
           
           if (data.address) {
             const addr = data.address
-            // Build address string
-            const parts = []
-            if (addr.road) parts.push(addr.road)
-            if (addr.house_number) parts.push(addr.house_number)
-            if (addr.city || addr.town || addr.village) {
-              parts.push(addr.city || addr.town || addr.village)
-            }
+            // Build a clean "Street HouseNumber, City" address from components
+            const street = [addr.road, addr.house_number].filter(Boolean).join(' ')
+            const city = addr.city || addr.town || addr.village || addr.municipality || ''
+            const parts = [street, city].filter(Boolean)
             const addressStr = parts.length > 0 ? parts.join(', ') : data.display_name
             
             setPlace((p) => ({
@@ -334,11 +331,20 @@ export default function AddReviewPage() {
       
       if (data && data.length > 0) {
         const result = data[0]
+        // Build a clean "Street HouseNumber, City" address from components
+        let cleanAddress = place.address
+        if (result.address) {
+          const addr = result.address
+          const street = [addr.road, addr.house_number].filter(Boolean).join(' ')
+          const city = addr.city || addr.town || addr.village || addr.municipality || ''
+          const parts = [street, city].filter(Boolean)
+          if (parts.length > 0) cleanAddress = parts.join(', ')
+        }
         setPlace((p) => ({
           ...p,
           lat: result.lat,
           lng: result.lon,
-          address: result.display_name || p.address, // Update with full formatted address
+          address: cleanAddress,
         }))
         if (isDev) console.log('Coordinates found:', result.lat, result.lon)
       } else {
