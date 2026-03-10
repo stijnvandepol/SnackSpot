@@ -65,7 +65,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               `img-src 'self' data: blob: ${minioInternalOrigin} ${minioPublicOrigin} https://*.basemaps.cartocdn.com`,
               "font-src 'self' https://fonts.gstatic.com",
-              `connect-src 'self' ${minioInternalOrigin} ${minioPublicOrigin} https://nominatim.openstreetmap.org https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com`,
+              `connect-src 'self' ${minioInternalOrigin} ${minioPublicOrigin} https://nominatim.openstreetmap.org https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com https://ipapi.co`,
               "worker-src blob: 'self'",
               "frame-ancestors 'none'",
             ].join('; '),

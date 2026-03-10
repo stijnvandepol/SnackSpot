@@ -117,6 +117,29 @@ function getFirstWatchPosition(options: PositionOptions, timeoutMs: number): Pro
   })
 }
 
+async function getIpBasedPosition(): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), 7000)
+    const res = await fetch('https://ipapi.co/json/', { signal: controller.signal })
+    clearTimeout(timeoutId)
+
+    if (!res.ok) return null
+
+    const json = (await res.json()) as { latitude?: unknown; longitude?: unknown }
+    const lat = toFiniteNumber(json.latitude)
+    const lng = toFiniteNumber(json.longitude)
+
+    if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
+      return null
+    }
+
+    return { lat, lng }
+  } catch {
+    return null
+  }
+}
+
 export default function NearbyPage() {
   const [places, setPlaces] = useState<Place[]>([])
   const [loading, setLoading] = useState(false)
@@ -219,6 +242,16 @@ export default function NearbyPage() {
             foundPosition = await getFirstWatchPosition({ enableHighAccuracy: false, maximumAge: 0 }, 15000)
           } catch (err) {
             lastError = err as GeolocationErrorLike
+          }
+        }
+
+        if (!foundPosition) {
+          const ipPosition = await getIpBasedPosition()
+          if (ipPosition) {
+            setPosition(ipPosition)
+            await search(ipPosition.lat, ipPosition.lng, radius)
+            setGeoError('Using an approximate location based on your network. For exact results, enable OS/browser location services.')
+            return
           }
         }
 
