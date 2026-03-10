@@ -110,8 +110,10 @@ export default function NearbyPage() {
     setLoading(true)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const { latitude: lat, longitude: lng } = pos.coords
-        if (!isValidLatitude(lat) || !isValidLongitude(lng)) {
+        const lat = toFiniteNumber(pos.coords.latitude)
+        const lng = toFiniteNumber(pos.coords.longitude)
+
+        if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
           setGeoError('Received an invalid location from your browser.')
           setLoading(false)
           return
