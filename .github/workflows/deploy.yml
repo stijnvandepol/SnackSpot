@@ -33,16 +33,18 @@ jobs:
           docker --version
           docker compose version
 
+      - name: Show workspace
+        run: |
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          pwd
+
       - name: Deploy stack
-        working-directory: infra/docker
-        run: docker compose up -d --build --remove-orphans
+        run: docker compose --env-file .env -f infra/docker/docker-compose.yml up -d --build --remove-orphans
 
       - name: Show service status
         if: always()
-        working-directory: infra/docker
-        run: docker compose ps
+        run: docker compose --env-file .env -f infra/docker/docker-compose.yml ps
 
       - name: Show recent logs on failure
         if: failure()
-        working-directory: infra/docker
-        run: docker compose logs --tail=200
+        run: docker compose --env-file .env -f infra/docker/docker-compose.yml logs --tail=200
