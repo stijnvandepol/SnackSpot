@@ -129,10 +129,10 @@ export async function GET(req: NextRequest) {
       JOIN (
         SELECT place_id, COUNT(*)::int AS review_count
         FROM reviews
-        WHERE status = ${ReviewStatus.PUBLISHED}
+        WHERE status = 'PUBLISHED'
         GROUP BY place_id
       ) place_counts ON place_counts.place_id = r.place_id
-      WHERE r.status = ${ReviewStatus.PUBLISHED}
+      WHERE r.status = 'PUBLISHED'
       ${query.tag
         ? Prisma.sql`AND EXISTS (
             SELECT 1
