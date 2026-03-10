@@ -114,7 +114,8 @@ export default function NearbyPage() {
         const lng = toFiniteNumber(pos.coords.longitude)
 
         if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
-          setGeoError('Received an invalid location from your browser.')
+          console.error('[Geolocation] Invalid coords from browser', pos.coords.latitude, pos.coords.longitude)
+          setGeoError('Your browser returned an invalid location. Make sure Location Services are enabled in your OS and browser settings.')
           setLoading(false)
           return
         }
