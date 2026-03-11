@@ -128,17 +128,17 @@ function renderBrandedEmail({
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${escapeHtml(title)}</title>
 </head>
-<body style="margin:0;padding:0;background:${EMAIL_BACKGROUND};font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:${EMAIL_TEXT};">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+<body style="margin:0;padding:0;background:${EMAIL_BACKGROUND};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:${EMAIL_TEXT};">
+  <div style="display:none;font-size:1px;color:${EMAIL_BACKGROUND};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
     ${escapeHtml(previewText)}
   </div>
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:radial-gradient(circle at top left, rgba(249,115,22,0.14), transparent 32%), linear-gradient(180deg, ${EMAIL_BACKGROUND} 0%, #ffffff 28%, #ffffff 100%);padding:40px 16px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${EMAIL_BACKGROUND};margin:0;padding:0;">
     <tr>
-      <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+      <td align="center" style="padding:40px 16px;">
+        <table width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;">
           <tr>
             <td style="padding:0 0 20px;">
-              <div style="margin:0 0 10px;font-family:Poppins,Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:30px;font-weight:700;letter-spacing:-0.04em;line-height:1;color:${EMAIL_TEXT};">
+              <div style="margin:0 0 10px;font-size:30px;font-weight:700;letter-spacing:-0.04em;line-height:1;color:${EMAIL_TEXT};">
                 ${renderWordmark()}
               </div>
               <p style="margin:0;font-size:13px;line-height:1.6;color:${EMAIL_MUTED};">
@@ -148,16 +148,16 @@ function renderBrandedEmail({
           </tr>
           <tr>
             <td>
-              <table width="100%" cellpadding="0" cellspacing="0" style="background:${EMAIL_SURFACE};border:1px solid ${EMAIL_BORDER};border-radius:24px;overflow:hidden;box-shadow:0 18px 45px rgba(15,23,42,0.08);">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${EMAIL_SURFACE};border:1px solid ${EMAIL_BORDER};border-radius:24px;overflow:hidden;">
                 <tr>
-                  <td style="padding:0;background:linear-gradient(135deg, rgba(249,115,22,0.14) 0%, rgba(220,38,38,0.08) 100%);border-bottom:1px solid ${EMAIL_SOFT_BORDER};">
-                    <table width="100%" cellpadding="0" cellspacing="0">
+                  <td style="padding:0;background:#FFF1E8;border-bottom:1px solid ${EMAIL_SOFT_BORDER};">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
                       <tr>
                         <td style="padding:32px 32px 24px;">
                           <span style="display:inline-block;margin:0 0 16px;padding:7px 12px;border-radius:999px;border:1px solid rgba(249,115,22,0.18);background:rgba(255,255,255,0.84);font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:${EMAIL_PRIMARY};">
                             ${escapeHtml(eyebrow)}
                           </span>
-                          <h1 style="margin:0 0 12px;font-family:Poppins,Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:32px;font-weight:700;line-height:1.15;letter-spacing:-0.04em;color:${EMAIL_TEXT};">
+                          <h1 style="margin:0 0 12px;font-size:32px;font-weight:700;line-height:1.15;letter-spacing:-0.04em;color:${EMAIL_TEXT};">
                             ${escapeHtml(title)}
                           </h1>
                           <p style="margin:0;font-size:15px;line-height:1.75;color:${EMAIL_MUTED};">
@@ -170,8 +170,8 @@ function renderBrandedEmail({
                 </tr>
                 <tr>
                   <td style="padding:32px;">
-                    ${action ? `<table cellpadding="0" cellspacing="0" style="margin:0 0 24px;"><tr><td><a href="${escapeHtml(action.href)}" style="display:inline-block;padding:14px 22px;border-radius:12px;background:${EMAIL_PRIMARY};color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;line-height:1;box-shadow:0 10px 24px rgba(249,115,22,0.22);">${escapeHtml(action.label)}</a></td></tr></table>` : ''}
-                    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 ${secondaryBlockTitle && secondaryBlockBody ? '16px' : '0'};background:${EMAIL_MUTED_SURFACE};border:1px solid ${EMAIL_SOFT_BORDER};border-radius:18px;">
+                    ${action ? `<table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;"><tr><td align="center" bgcolor="${EMAIL_PRIMARY}" style="border-radius:12px;"><a href="${escapeHtml(action.href)}" style="display:inline-block;padding:14px 22px;border-radius:12px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;line-height:1;background:${EMAIL_PRIMARY};">${escapeHtml(action.label)}</a></td></tr></table>` : ''}
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 ${secondaryBlockTitle && secondaryBlockBody ? '16px' : '0'};background:${EMAIL_MUTED_SURFACE};border:1px solid ${EMAIL_SOFT_BORDER};border-radius:18px;">
                       <tr>
                         <td style="padding:18px 18px 16px;">
                           <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:${EMAIL_PRIMARY};">${escapeHtml(calloutTitle)}</p>
@@ -179,7 +179,7 @@ function renderBrandedEmail({
                         </td>
                       </tr>
                     </table>
-                    ${secondaryBlockTitle && secondaryBlockBody ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:${EMAIL_SURFACE};border:1px solid ${EMAIL_BORDER};border-radius:18px;"><tr><td style="padding:18px 18px 16px;"><p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:${EMAIL_MUTED};">${escapeHtml(secondaryBlockTitle)}</p><p style="margin:0;font-size:13px;line-height:1.75;color:${EMAIL_MUTED};">${secondaryBlockBody}</p></td></tr></table>` : ''}
+                    ${secondaryBlockTitle && secondaryBlockBody ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${EMAIL_SURFACE};border:1px solid ${EMAIL_BORDER};border-radius:18px;"><tr><td style="padding:18px 18px 16px;"><p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:${EMAIL_MUTED};">${escapeHtml(secondaryBlockTitle)}</p><p style="margin:0;font-size:13px;line-height:1.75;color:${EMAIL_MUTED};">${secondaryBlockBody}</p></td></tr></table>` : ''}
                   </td>
                 </tr>
               </table>
@@ -201,7 +201,7 @@ function renderBrandedEmail({
 }
 
 function renderWordmark(): string {
-  return `<span style="color:${EMAIL_PRIMARY};">Snack</span><span style="color:${EMAIL_ACCENT};">Sp</span><svg width="15" height="19" viewBox="0 0 16 20" fill="none" style="display:inline-block;vertical-align:middle;position:relative;top:-2px;" aria-hidden="true"><path d="M8 19c2.6-3.5 6-7.5 6-11a6 6 0 1 0-12 0c0 3.5 3.4 7.5 6 11Z" fill="${EMAIL_ACCENT}"/><circle cx="8" cy="8" r="2.25" fill="white"/></svg><span style="color:${EMAIL_ACCENT};">t</span>`
+  return `<span style="color:${EMAIL_PRIMARY};">Snack</span><span style="color:${EMAIL_ACCENT};">Spot</span>`
 }
 
 function passwordChangedText(username: string): string {
