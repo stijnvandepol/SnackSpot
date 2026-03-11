@@ -48,55 +48,43 @@ function passwordResetHtml(resetUrl: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reset your password</title>
 </head>
-<body style="margin:0;padding:0;background:#F6F7F9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F6F7F9;padding:40px 0;">
+<body style="margin:0;padding:0;background:#F6F7F9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F6F7F9;padding:48px 0 32px;">
     <tr>
       <td align="center">
-        <table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #E2E8F0;">
-          <!-- Header -->
+        <!-- Logo -->
+        <p style="margin:0 0 20px;font-size:28px;font-weight:800;letter-spacing:-0.5px;line-height:1;">
+          <span style="color:#F97316;">Snack</span><span style="color:#DC2626;">Sp</span><svg width="15" height="19" viewBox="0 0 16 20" fill="none" style="display:inline-block;vertical-align:middle;position:relative;top:-2px;" aria-hidden="true"><path d="M8 19c2.6-3.5 6-7.5 6-11a6 6 0 1 0-12 0c0 3.5 3.4 7.5 6 11Z" fill="#DC2626"/><circle cx="8" cy="8" r="2.25" fill="white"/></svg><span style="color:#DC2626;">t</span>
+        </p>
+        <!-- Card -->
+        <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;border:1px solid #E7E7E7;overflow:hidden;">
           <tr>
-            <td style="background:#0F172A;padding:28px 40px;">
-              <p style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.5px;">
-                <span style="color:#F97316;">Snack</span><span style="color:#DC2626;">Spot</span>
-              </p>
-            </td>
-          </tr>
-          <!-- Orange accent bar -->
-          <tr>
-            <td style="height:4px;background:linear-gradient(90deg,#F97316,#DC2626);font-size:0;line-height:0;">&nbsp;</td>
-          </tr>
-          <!-- Body -->
-          <tr>
-            <td style="padding:40px;">
-              <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0F172A;">Reset your password</p>
-              <p style="margin:0 0 28px;font-size:15px;color:#64748B;line-height:1.6;">
+            <td style="padding:36px 40px 32px;">
+              <p style="margin:0 0 6px;font-size:22px;font-weight:700;color:#0F172A;letter-spacing:-0.3px;">Reset your password</p>
+              <p style="margin:0 0 28px;font-size:15px;color:#64748B;line-height:1.65;">
                 We received a request to reset the password for your SnackSpot account.
-                Click the button below to choose a new password. This link is valid for <strong style="color:#0F172A;">15 minutes</strong>.
+                Click the button below to choose a new password. This link is valid for <strong style="color:#0F172A;font-weight:600;">15 minutes</strong>.
               </p>
               <a href="${resetUrl}"
-                 style="display:inline-block;padding:13px 28px;background:#F97316;color:#ffffff;border-radius:8px;text-decoration:none;font-size:15px;font-weight:700;letter-spacing:0.1px;">
+                 style="display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:11px 28px;background:#F97316;color:#ffffff;border-radius:12px;text-decoration:none;font-size:15px;font-weight:600;">
                 Reset password
               </a>
               <p style="margin:28px 0 0;font-size:13px;color:#94A3B8;line-height:1.6;">
                 If you did not request a password reset, you can safely ignore this email —
                 your password will not be changed.
               </p>
-              <hr style="border:none;border-top:1px solid #F1F5F9;margin:28px 0;" />
-              <p style="margin:0;font-size:12px;color:#94A3B8;line-height:1.6;">
-                If the button above does not work, copy and paste this link into your browser:<br />
+              <hr style="border:none;border-top:1px solid #F1F5F9;margin:24px 0;" />
+              <p style="margin:0;font-size:12px;color:#94A3B8;line-height:1.7;">
+                Button not working? Copy and paste this link into your browser:<br />
                 <span style="word-break:break-all;color:#64748B;">${resetUrl}</span>
               </p>
             </td>
           </tr>
-          <!-- Footer -->
-          <tr>
-            <td style="background:#F8FAFC;padding:20px 40px;border-top:1px solid #F1F5F9;">
-              <p style="margin:0;font-size:12px;color:#94A3B8;">
-                &copy; ${new Date().getFullYear()} SnackSpot &mdash; Discover the best hidden food spots near you.
-              </p>
-            </td>
-          </tr>
         </table>
+        <!-- Footer -->
+        <p style="margin:20px 0 0;font-size:12px;color:#94A3B8;">
+          &copy; ${new Date().getFullYear()} SnackSpot &mdash; Discover hidden food spots near you.
+        </p>
       </td>
     </tr>
   </table>
@@ -125,45 +113,33 @@ function passwordChangedHtml(username: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Password changed</title>
 </head>
-<body style="margin:0;padding:0;background:#F6F7F9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F6F7F9;padding:40px 0;">
+<body style="margin:0;padding:0;background:#F6F7F9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F6F7F9;padding:48px 0 32px;">
     <tr>
       <td align="center">
-        <table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #E2E8F0;">
-          <!-- Header -->
+        <!-- Logo -->
+        <p style="margin:0 0 20px;font-size:28px;font-weight:800;letter-spacing:-0.5px;line-height:1;">
+          <span style="color:#F97316;">Snack</span><span style="color:#DC2626;">Sp</span><svg width="15" height="19" viewBox="0 0 16 20" fill="none" style="display:inline-block;vertical-align:middle;position:relative;top:-2px;" aria-hidden="true"><path d="M8 19c2.6-3.5 6-7.5 6-11a6 6 0 1 0-12 0c0 3.5 3.4 7.5 6 11Z" fill="#DC2626"/><circle cx="8" cy="8" r="2.25" fill="white"/></svg><span style="color:#DC2626;">t</span>
+        </p>
+        <!-- Card -->
+        <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;border:1px solid #E7E7E7;overflow:hidden;">
           <tr>
-            <td style="background:#0F172A;padding:28px 40px;">
-              <p style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.5px;">
-                <span style="color:#F97316;">Snack</span><span style="color:#DC2626;">Spot</span>
-              </p>
-            </td>
-          </tr>
-          <!-- Orange accent bar -->
-          <tr>
-            <td style="height:4px;background:linear-gradient(90deg,#F97316,#DC2626);font-size:0;line-height:0;">&nbsp;</td>
-          </tr>
-          <!-- Body -->
-          <tr>
-            <td style="padding:40px;">
-              <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0F172A;">Password changed</p>
-              <p style="margin:0 0 20px;font-size:15px;color:#64748B;line-height:1.6;">
-                Hi <strong style="color:#0F172A;">${escapeHtml(username)}</strong>, the password for your SnackSpot account has been successfully changed.
+            <td style="padding:36px 40px 32px;">
+              <p style="margin:0 0 6px;font-size:22px;font-weight:700;color:#0F172A;letter-spacing:-0.3px;">Password changed</p>
+              <p style="margin:0 0 16px;font-size:15px;color:#64748B;line-height:1.65;">
+                Hi <strong style="color:#0F172A;font-weight:600;">${escapeHtml(username)}</strong>, the password for your SnackSpot account has been successfully changed.
                 All active sessions have been signed out.
               </p>
-              <p style="margin:0;font-size:14px;color:#64748B;line-height:1.6;">
+              <p style="margin:0;font-size:14px;color:#64748B;line-height:1.65;">
                 If you did not make this change, please contact us immediately by replying to this email.
               </p>
             </td>
           </tr>
-          <!-- Footer -->
-          <tr>
-            <td style="background:#F8FAFC;padding:20px 40px;border-top:1px solid #F1F5F9;">
-              <p style="margin:0;font-size:12px;color:#94A3B8;">
-                &copy; ${new Date().getFullYear()} SnackSpot &mdash; Discover the best hidden food spots near you.
-              </p>
-            </td>
-          </tr>
         </table>
+        <!-- Footer -->
+        <p style="margin:20px 0 0;font-size:12px;color:#94A3B8;">
+          &copy; ${new Date().getFullYear()} SnackSpot &mdash; Discover hidden food spots near you.
+        </p>
       </td>
     </tr>
   </table>
