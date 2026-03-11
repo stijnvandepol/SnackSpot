@@ -59,10 +59,13 @@ export async function POST(req: NextRequest) {
     // Build the reset URL — never embed the user ID or email directly
     const resetUrl = `${env.NEXT_PUBLIC_APP_URL}/auth/reset-password?token=${rawToken}`
 
-    // Fire-and-forget; a delivery failure should not reveal user existence via the error shape
-    sendPasswordResetEmail(user.email, resetUrl).catch((e: unknown) => {
+    // Await sending to avoid request teardown racing the mail call in serverless runtimes.
+    // Delivery errors are still swallowed to keep the response shape generic.
+    try {
+      await sendPasswordResetEmail(user.email, resetUrl)
+    } catch (e: unknown) {
       console.error('[forgot-password] email send failed:', e instanceof Error ? e.message : String(e))
-    })
+    }
 
     return withNoStore(GENERIC_OK)
   } catch (e) {

@@ -59,9 +59,11 @@ export async function POST(req: NextRequest) {
     })
 
     if (user) {
-      sendPasswordChangedEmail(user.email, user.username).catch(() => {
+      try {
+        await sendPasswordChangedEmail(user.email, user.username)
+      } catch {
         // Swallowed — confirmation mail failure must not affect the response
-      })
+      }
     }
 
     // Clear the refresh-token cookie in the response (session is already invalidated in DB)
