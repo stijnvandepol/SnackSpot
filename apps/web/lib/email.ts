@@ -3,7 +3,7 @@ import { env } from './env'
 
 const resend = new Resend(env.RESEND_API_KEY)
 
-const EMAIL_BACKGROUND = '#FFF7ED'
+const EMAIL_BACKGROUND = '#F6F7F9'
 const EMAIL_SURFACE = '#FFFFFF'
 const EMAIL_MUTED_SURFACE = '#F6F7F9'
 const EMAIL_PRIMARY = '#F97316'
@@ -74,29 +74,13 @@ Your password will not be changed.`
 }
 
 function passwordResetFallbackHtml(resetUrl: string): string {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reset your password</title>
-</head>
-<body style="margin:0;padding:24px;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:${EMAIL_TEXT};">
-  <div style="max-width:480px;margin:0 auto;border:1px solid ${EMAIL_BORDER};border-radius:16px;padding:24px;">
-    <p style="margin:0 0 16px;font-size:24px;font-weight:700;color:${EMAIL_PRIMARY};">SnackSpot</p>
-    <h1 style="margin:0 0 12px;font-size:24px;color:${EMAIL_TEXT};">Reset your password</h1>
-    <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:${EMAIL_MUTED};">
-      We received a request to reset your SnackSpot password. Use the link below within 15 minutes.
-    </p>
-    <p style="margin:0 0 20px;">
-      <a href="${escapeHtml(resetUrl)}" style="color:${EMAIL_PRIMARY};font-weight:600;">${escapeHtml(resetUrl)}</a>
-    </p>
-    <p style="margin:0;font-size:14px;line-height:1.6;color:${EMAIL_MUTED};">
-      If you did not request this, you can ignore this email.
-    </p>
-  </div>
-</body>
-</html>`
+  return renderFallbackEmail({
+    title: 'Reset your password',
+    body: 'We received a request to reset your SnackSpot password. Use the link below within 15 minutes.',
+    linkLabel: 'Reset password',
+    linkHref: resetUrl,
+    footer: 'If you did not request this, you can ignore this email.',
+  })
 }
 
 function passwordChangedHtml(username: string): string {
@@ -154,8 +138,8 @@ function renderBrandedEmail({
       <td align="center" style="padding:40px 16px;">
         <table width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;">
           <tr>
-            <td style="padding:0 0 20px;">
-              <div style="margin:0 0 10px;font-size:30px;font-weight:700;letter-spacing:-0.04em;line-height:1;color:${EMAIL_TEXT};">
+            <td style="padding:0 0 18px;text-align:center;">
+              <div style="margin:0 0 8px;font-size:30px;font-weight:700;letter-spacing:-0.04em;line-height:1;color:${EMAIL_TEXT};">
                 ${renderWordmark()}
               </div>
               <p style="margin:0;font-size:13px;line-height:1.6;color:${EMAIL_MUTED};">
@@ -165,19 +149,22 @@ function renderBrandedEmail({
           </tr>
           <tr>
             <td>
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${EMAIL_SURFACE};border:1px solid ${EMAIL_BORDER};border-radius:24px;overflow:hidden;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${EMAIL_SURFACE};border:1px solid ${EMAIL_BORDER};border-radius:16px;overflow:hidden;">
                 <tr>
-                  <td style="padding:0;background:#FFF1E8;border-bottom:1px solid ${EMAIL_SOFT_BORDER};">
+                  <td style="height:6px;background:${EMAIL_PRIMARY};font-size:0;line-height:0;">&nbsp;</td>
+                </tr>
+                <tr>
+                  <td style="padding:0;background:${EMAIL_SURFACE};border-bottom:1px solid ${EMAIL_SOFT_BORDER};">
                     <table width="100%" cellpadding="0" cellspacing="0" border="0">
                       <tr>
-                        <td style="padding:32px 32px 24px;">
-                          <span style="display:inline-block;margin:0 0 16px;padding:7px 12px;border-radius:999px;border:1px solid rgba(249,115,22,0.18);background:rgba(255,255,255,0.84);font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:${EMAIL_PRIMARY};">
+                        <td style="padding:28px 28px 20px;">
+                          <span style="display:inline-block;margin:0 0 14px;padding:7px 12px;border-radius:999px;border:1px solid #FDE6D6;background:#FFF7ED;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:${EMAIL_PRIMARY};">
                             ${escapeHtml(eyebrow)}
                           </span>
-                          <h1 style="margin:0 0 12px;font-size:32px;font-weight:700;line-height:1.15;letter-spacing:-0.04em;color:${EMAIL_TEXT};">
+                          <h1 style="margin:0 0 10px;font-size:28px;font-weight:700;line-height:1.15;letter-spacing:-0.03em;color:${EMAIL_TEXT};">
                             ${escapeHtml(title)}
                           </h1>
-                          <p style="margin:0;font-size:15px;line-height:1.75;color:${EMAIL_MUTED};">
+                          <p style="margin:0;font-size:15px;line-height:1.7;color:${EMAIL_MUTED};">
                             ${intro}
                           </p>
                         </td>
@@ -186,9 +173,9 @@ function renderBrandedEmail({
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:32px;">
-                    ${action ? `<table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;"><tr><td align="center" bgcolor="${EMAIL_PRIMARY}" style="border-radius:12px;"><a href="${escapeHtml(action.href)}" style="display:inline-block;padding:14px 22px;border-radius:12px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;line-height:1;background:${EMAIL_PRIMARY};">${escapeHtml(action.label)}</a></td></tr></table>` : ''}
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 ${secondaryBlockTitle && secondaryBlockBody ? '16px' : '0'};background:${EMAIL_MUTED_SURFACE};border:1px solid ${EMAIL_SOFT_BORDER};border-radius:18px;">
+                  <td style="padding:28px;">
+                    ${action ? `<table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;"><tr><td align="center" bgcolor="${EMAIL_PRIMARY}" style="border-radius:12px;"><a href="${escapeHtml(action.href)}" style="display:inline-block;padding:14px 22px;border-radius:12px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;line-height:1;background:${EMAIL_PRIMARY};">${escapeHtml(action.label)}</a></td></tr></table>` : ''}
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 ${secondaryBlockTitle && secondaryBlockBody ? '14px' : '0'};background:${EMAIL_MUTED_SURFACE};border:1px solid ${EMAIL_SOFT_BORDER};border-radius:12px;">
                       <tr>
                         <td style="padding:18px 18px 16px;">
                           <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:${EMAIL_PRIMARY};">${escapeHtml(calloutTitle)}</p>
@@ -196,14 +183,14 @@ function renderBrandedEmail({
                         </td>
                       </tr>
                     </table>
-                    ${secondaryBlockTitle && secondaryBlockBody ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${EMAIL_SURFACE};border:1px solid ${EMAIL_BORDER};border-radius:18px;"><tr><td style="padding:18px 18px 16px;"><p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:${EMAIL_MUTED};">${escapeHtml(secondaryBlockTitle)}</p><p style="margin:0;font-size:13px;line-height:1.75;color:${EMAIL_MUTED};">${secondaryBlockBody}</p></td></tr></table>` : ''}
+                    ${secondaryBlockTitle && secondaryBlockBody ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${EMAIL_SURFACE};border:1px solid ${EMAIL_BORDER};border-radius:12px;"><tr><td style="padding:18px 18px 16px;"><p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:${EMAIL_MUTED};">${escapeHtml(secondaryBlockTitle)}</p><p style="margin:0;font-size:13px;line-height:1.75;color:${EMAIL_MUTED};">${secondaryBlockBody}</p></td></tr></table>` : ''}
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
           <tr>
-            <td style="padding:18px 4px 0;text-align:center;">
+            <td style="padding:16px 8px 0;text-align:center;">
               <p style="margin:0;font-size:12px;line-height:1.7;color:#94A3B8;">
                 &copy; ${new Date().getFullYear()} SnackSpot &mdash; Built for discovering hidden food spots near you.
               </p>
@@ -231,24 +218,60 @@ If you did not make this change, please contact us immediately.`
 }
 
 function passwordChangedFallbackHtml(username: string): string {
+  return renderFallbackEmail({
+    title: 'Password changed',
+    body: `Hi <strong style="color:${EMAIL_TEXT};">${escapeHtml(username)}</strong>, your SnackSpot password has been changed successfully and active sessions were signed out.`,
+    footer: 'If you did not make this change, reply to this email immediately.',
+  })
+}
+
+type FallbackEmailOptions = {
+  title: string
+  body: string
+  linkLabel?: string
+  linkHref?: string
+  footer: string
+}
+
+function renderFallbackEmail({ title, body, linkLabel, linkHref, footer }: FallbackEmailOptions): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Password changed</title>
+  <title>${escapeHtml(title)}</title>
 </head>
-<body style="margin:0;padding:24px;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:${EMAIL_TEXT};">
-  <div style="max-width:480px;margin:0 auto;border:1px solid ${EMAIL_BORDER};border-radius:16px;padding:24px;">
-    <p style="margin:0 0 16px;font-size:24px;font-weight:700;color:${EMAIL_PRIMARY};">SnackSpot</p>
-    <h1 style="margin:0 0 12px;font-size:24px;color:${EMAIL_TEXT};">Password changed</h1>
-    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${EMAIL_MUTED};">
-      Hi <strong style="color:${EMAIL_TEXT};">${escapeHtml(username)}</strong>, your SnackSpot password has been changed successfully and active sessions were signed out.
-    </p>
-    <p style="margin:0;font-size:14px;line-height:1.6;color:${EMAIL_MUTED};">
-      If you did not make this change, reply to this email immediately.
-    </p>
-  </div>
+<body style="margin:0;padding:24px;background:${EMAIL_BACKGROUND};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:${EMAIL_TEXT};">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td align="center">
+        <table width="480" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:480px;">
+          <tr>
+            <td style="padding:0 0 14px;text-align:center;">
+              <div style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.04em;line-height:1;">${renderWordmark()}</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:${EMAIL_SURFACE};border:1px solid ${EMAIL_BORDER};border-radius:16px;overflow:hidden;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="height:5px;background:${EMAIL_PRIMARY};font-size:0;line-height:0;">&nbsp;</td>
+                </tr>
+                <tr>
+                  <td style="padding:24px;">
+                    <h1 style="margin:0 0 12px;font-size:24px;font-weight:700;line-height:1.2;color:${EMAIL_TEXT};">${escapeHtml(title)}</h1>
+                    <p style="margin:0 0 18px;font-size:15px;line-height:1.7;color:${EMAIL_MUTED};">${body}</p>
+                    ${linkLabel && linkHref ? `<p style="margin:0 0 18px;"><a href="${escapeHtml(linkHref)}" style="color:${EMAIL_PRIMARY};font-weight:600;text-decoration:none;">${escapeHtml(linkLabel)}</a><br /><span style="font-size:13px;line-height:1.7;color:${EMAIL_MUTED};word-break:break-all;">${escapeHtml(linkHref)}</span></p>` : ''}
+                    <p style="margin:0;font-size:14px;line-height:1.7;color:${EMAIL_MUTED};">${footer}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`
 }
