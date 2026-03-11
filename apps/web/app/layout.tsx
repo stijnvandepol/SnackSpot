@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Poppins } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
+import { CookieConsent } from '@/components/cookie-consent'
 import { getSiteOrigin } from '@/lib/site-url'
 import './globals.css'
 
@@ -74,7 +75,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`h-full ${inter.variable} ${poppins.variable}`}>
       <head />
       <body className="h-full font-body">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <CookieConsent />
+        </AuthProvider>
       </body>
     </html>
   )

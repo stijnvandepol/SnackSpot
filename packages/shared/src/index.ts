@@ -150,6 +150,12 @@ export const ConfirmUploadSchema = z.object({
   reviewId: z.string().optional(),
 })
 
+// ─── Account schemas ─────────────────────────────────────────────────────────
+
+export const DeleteAccountSchema = z.object({
+  password: z.string().min(1).max(128),
+})
+
 // ─── Report schemas ──────────────────────────────────────────────────────────
 
 export const CreateReportSchema = z.object({

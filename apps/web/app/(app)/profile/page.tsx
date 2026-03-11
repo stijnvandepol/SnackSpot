@@ -83,6 +83,10 @@ function ProfileContent() {
   const [profileError, setProfileError] = useState<string | null>(null)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [selectedBadge, setSelectedBadge] = useState<BadgeRow | null>(null)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const maxWeeklyPosts = Math.max(1, ...(stats?.weeklyActivity.map((week) => week.posts) ?? [0]))
 
@@ -184,6 +188,47 @@ function ProfileContent() {
       setProfileSaving(false)
     }
   }
+
+  const handleDeleteAccount = async () => {
+    if (!accessToken || !deletePassword) return
+    setDeleteLoading(true)
+    setDeleteError(null)
+    try {
+      const res = await fetch('/api/v1/me', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+        credentials: 'include',
+        body: JSON.stringify({ password: deletePassword }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setDeleteError(json.error ?? 'Failed to delete account')
+        return
+      }
+      await logout()
+      router.push('/auth/login')
+    } catch {
+      setDeleteError('Failed to delete account')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  const dangerZone = (
+    <div className="card p-4 border border-red-200">
+      <h3 className="font-heading font-semibold text-red-600 mb-1">Danger Zone</h3>
+      <p className="text-xs text-snack-muted mb-3">
+        Permanently delete your account and all your data. This cannot be undone.
+      </p>
+      <button
+        type="button"
+        className="w-full text-sm py-2 px-4 rounded-xl border border-red-300 text-red-600 hover:bg-red-50 transition font-medium"
+        onClick={() => { setDeleteModalOpen(true); setDeletePassword(''); setDeleteError(null) }}
+      >
+        Delete my account
+      </button>
+    </div>
+  )
 
   const statsSummaryCards = (
     <div className="grid grid-cols-2 gap-3 mb-6">
@@ -455,6 +500,8 @@ function ProfileContent() {
                 <h3 className="font-heading font-semibold text-snack-text mb-3">Notification Preferences</h3>
                 <NotificationSettings />
               </div>
+
+              {dangerZone}
             </div>
           )}
         </div>
@@ -740,6 +787,8 @@ function ProfileContent() {
             <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Notification Settings</h2>
             <NotificationSettings />
           </div>
+
+          {dangerZone}
         </>
       )}
 
@@ -753,6 +802,44 @@ function ProfileContent() {
               Progress: {selectedBadge.progressCurrent}/{selectedBadge.progressTarget}
             </p>
             <button className="btn-secondary w-full mt-4" onClick={() => setSelectedBadge(null)}>Close</button>
+          </div>
+        </div>
+      )}
+
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setDeleteModalOpen(false)}>
+          <div className="w-full max-w-sm card p-5" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-heading font-semibold text-snack-text mb-1">Delete account</h3>
+            <p className="text-sm text-snack-muted mb-4">
+              This permanently deletes your account, reviews, and all associated data. Enter your password to confirm.
+            </p>
+            <input
+              type="password"
+              className="input mb-3"
+              placeholder="Your password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              autoFocus
+            />
+            {deleteError && <p className="text-xs text-red-500 mb-3">{deleteError}</p>}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="btn-secondary flex-1 text-sm"
+                onClick={() => setDeleteModalOpen(false)}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="flex-1 text-sm py-2 px-4 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium disabled:opacity-50"
+                onClick={handleDeleteAccount}
+                disabled={deleteLoading || !deletePassword}
+              >
+                {deleteLoading ? 'Deleting...' : 'Delete account'}
+              </button>
+            </div>
           </div>
         </div>
       )}
