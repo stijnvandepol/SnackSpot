@@ -52,13 +52,6 @@ const flow = [
   },
 ]
 
-const securityItems = [
-  'Secure account sessions, role-based moderation, and protected admin access',
-  'Controlled uploads, private originals, and public image variants for reviews',
-  'Minimal cookie usage focused on login continuity rather than tracking',
-  'Reporting and moderation flows to keep community content useful and trustworthy',
-]
-
 function BrandMark() {
   return (
     <span className="font-heading text-xl font-bold leading-none">
@@ -88,7 +81,6 @@ export default function ProductPage() {
           <nav className="hidden items-center gap-5 text-sm text-snack-muted md:flex">
             <a href="#problem" className="hover:text-snack-text">Problem</a>
             <a href="#features" className="hover:text-snack-text">Features</a>
-            <a href="#security" className="hover:text-snack-text">Security</a>
             <a href="#why" className="hover:text-snack-text">Why SnackSpot</a>
           </nav>
           <div className="flex items-center gap-2">
@@ -212,25 +204,6 @@ export default function ProductPage() {
           </div>
         </section>
 
-        <section id="security" className="mx-auto max-w-6xl px-4 py-8 md:py-14">
-          <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-            <div className="rounded-[1.75rem] bg-snack-text p-8 text-white">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/70">Security and privacy</p>
-              <h2 className="mt-3 font-heading text-3xl font-bold">The platform already enforces a practical security baseline.</h2>
-              <p className="mt-4 text-sm leading-6 text-slate-300">
-                The current implementation focuses on safe account handling, controlled uploads, role-based moderation, and minimal cookie usage rather than broad marketing promises.
-              </p>
-            </div>
-            <div className="grid gap-4">
-              {securityItems.map((item) => (
-                <div key={item} className="card p-5">
-                  <p className="text-sm leading-6 text-snack-text">{item}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <section id="why" className="mx-auto max-w-6xl px-4 py-8 md:py-14">
           <div className="card overflow-hidden p-0">
             <div className="grid gap-0 md:grid-cols-[0.95fr_1.05fr]">
@@ -248,16 +221,8 @@ export default function ProductPage() {
                     <p className="mt-2 text-sm font-semibold text-snack-text">Locals, explorers, and reviewers chasing hidden gems</p>
                   </div>
                   <div className="rounded-2xl bg-snack-surface p-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-snack-muted">Operational users</p>
-                    <p className="mt-2 text-sm font-semibold text-snack-text">Moderators and admins maintaining content quality</p>
-                  </div>
-                  <div className="rounded-2xl bg-snack-surface p-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-snack-muted">Core use cases</p>
                     <p className="mt-2 text-sm font-semibold text-snack-text">Discover overlooked spots, publish reviews, track engagement, resolve reports</p>
-                  </div>
-                  <div className="rounded-2xl bg-snack-surface p-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-snack-muted">Product benefit</p>
-                    <p className="mt-2 text-sm font-semibold text-snack-text">A focused way to surface small places with strong community context</p>
                   </div>
                 </div>
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row">
