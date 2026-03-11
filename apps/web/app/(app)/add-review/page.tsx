@@ -551,22 +551,39 @@ export default function AddReviewPage() {
     }
   }
 
+  const stepOrder: Step[] = ['place', 'review', 'photos']
+  const currentStepIndex = stepOrder.indexOf(step)
+  const selectedPlaceSummary = (place.name || place.address) ? (
+    <div className="rounded-xl border border-snack-border bg-snack-surface px-4 py-3">
+      <p className="text-xs font-medium uppercase tracking-[0.18em] text-snack-muted">Place</p>
+      <p className="mt-1 font-semibold text-snack-text">{place.name || 'New place'}</p>
+      {place.address && <p className="mt-1 text-sm text-snack-muted">{place.address}</p>}
+    </div>
+  ) : null
+
   return (
     <div className="mx-auto max-w-lg px-4 py-6">
       <h1 className="text-2xl font-heading font-bold text-snack-text mb-6">Create Post</h1>
 
       {/* Step indicators */}
-      <div className="flex items-center gap-2 mb-8">
-        {(['place', 'review', 'photos'] as Step[]).map((s, i) => (
-          <div key={s} className="flex items-center gap-2">
-            <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold ${
-              step === s ? 'bg-snack-primary text-white' : i < ['place','review','photos'].indexOf(step) ? 'bg-snack-accent text-snack-text' : 'bg-snack-surface text-snack-muted'
-            }`}>
-              {i + 1}
+      <div className="mb-8" aria-label="Create post progress">
+        <div className="flex items-center gap-2">
+          {stepOrder.map((s, i) => (
+            <div key={s} className="flex items-center gap-2">
+              <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
+                step === s ? 'bg-snack-primary text-white' : i < currentStepIndex ? 'bg-snack-accent text-snack-text' : 'bg-snack-surface text-snack-muted'
+              }`}>
+                {i + 1}
+              </div>
+              {i < 2 && <div className="h-0.5 w-8 flex-1 bg-[#e6e6e6]" />}
             </div>
-            {i < 2 && <div className="flex-1 h-0.5 bg-[#e6e6e6] w-8" />}
-          </div>
-        ))}
+          ))}
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-snack-muted">
+          <span className={step === 'place' ? 'font-semibold text-snack-primary' : undefined}>Place</span>
+          <span className={step === 'review' ? 'text-center font-semibold text-snack-primary' : 'text-center'}>Review</span>
+          <span className={step === 'photos' ? 'text-right font-semibold text-snack-primary' : 'text-right'}>Photos</span>
+        </div>
       </div>
 
       {/* Step 1: Place */}
@@ -574,24 +591,26 @@ export default function AddReviewPage() {
         <div className="space-y-4">
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => {
                 setPlace((p) => ({ ...p, mode: 'existing', placeId: undefined, name: '', address: '', lat: '', lng: '' }))
                 setSearchQuery('')
                 setSearchResults([])
               }}
-              className={`flex-1 py-2 rounded-xl text-sm font-medium border transition ${place.mode === 'existing' ? 'border-snack-primary bg-snack-surface text-snack-primary' : 'border-[#e4e4e4] text-snack-muted'}`}
+              className={`flex-1 rounded-xl border px-4 py-2 text-sm font-medium transition ${place.mode === 'existing' ? 'border-snack-primary bg-snack-surface text-snack-primary' : 'border-[#e4e4e4] text-snack-muted'}`}
             >
-              📍 Existing place
+              Existing place
             </button>
             <button
+              type="button"
               onClick={() => {
                 setPlace((p) => ({ ...p, mode: 'new', placeId: undefined, name: '', address: '', lat: '', lng: '' }))
                 setSearchQuery('')
                 setSearchResults([])
               }}
-              className={`flex-1 py-2 rounded-xl text-sm font-medium border transition ${place.mode === 'new' ? 'border-snack-primary bg-snack-surface text-snack-primary' : 'border-[#e4e4e4] text-snack-muted'}`}
+              className={`flex-1 rounded-xl border px-4 py-2 text-sm font-medium transition ${place.mode === 'new' ? 'border-snack-primary bg-snack-surface text-snack-primary' : 'border-[#e4e4e4] text-snack-muted'}`}
             >
-              ➕ New place
+              New place
             </button>
           </div>
 
@@ -599,6 +618,7 @@ export default function AddReviewPage() {
             <>
               <div className="relative">
                 <label className="label">Search for a place *</label>
+                <p className="mb-2 text-xs text-snack-muted">Choose an existing place so your post lands on the right place page.</p>
                 <input 
                   className="input" 
                   placeholder="Start typing place name..." 
@@ -607,7 +627,7 @@ export default function AddReviewPage() {
                   autoComplete="off"
                 />
                 {searching && (
-                  <div className="absolute right-3 top-10 text-snack-muted">
+                  <div className="absolute right-3 top-10 text-xs text-snack-muted">
                     🔍...
                   </div>
                 )}
@@ -637,14 +657,19 @@ export default function AddReviewPage() {
                     ))}
                   </div>
                 )}
+                {!searching && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
+                  <div className="mt-2 rounded-xl border border-dashed border-snack-border px-4 py-3 text-sm text-snack-muted">
+                    No place matched your search. Use <span className="font-medium text-snack-text">New place</span> if you want to add it.
+                  </div>
+                )}
               </div>
               
               {place.placeId && (
                 <div className="px-4 py-3 bg-green-50 border border-green-200 rounded-xl">
                   <div className="flex items-start gap-2">
-                    <span className="text-lg">✓</span>
+                    <span className="text-lg" aria-hidden="true">+</span>
                     <div className="flex-1">
-                      <div className="font-medium text-snack-text">{place.name}</div>
+                      <div className="font-medium text-snack-text">Selected place: {place.name}</div>
                       <div className="text-xs text-snack-muted mt-0.5">{place.address}</div>
                     </div>
                   </div>
@@ -666,7 +691,7 @@ export default function AddReviewPage() {
               
               <div>
                 <label className="label">Address *</label>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <input 
                     className="input flex-1" 
                     placeholder="Street, City" 
@@ -683,7 +708,7 @@ export default function AddReviewPage() {
                     type="button"
                     onClick={handleGeocodeAddress}
                     disabled={geocoding || !place.address}
-                    className="btn-secondary px-3 whitespace-nowrap"
+                    className="btn-secondary px-3 whitespace-nowrap sm:flex-none"
                   >
                     {geocoding ? 'Pin...' : 'Pin'}
                   </button>
@@ -691,9 +716,9 @@ export default function AddReviewPage() {
                     type="button"
                     onClick={handleUseCurrentLocation}
                     disabled={fetchingLocation}
-                    className="btn-secondary px-3 whitespace-nowrap"
+                    className="btn-secondary px-3 whitespace-nowrap sm:flex-none"
                   >
-                    {fetchingLocation ? '📍...' : 'Use current location'}
+                    {fetchingLocation ? 'Locating...' : 'Use current location'}
                   </button>
                 </div>
                 <p className="text-xs text-snack-muted mt-1">
@@ -703,7 +728,7 @@ export default function AddReviewPage() {
               
               {place.lat && place.lng && (
                 <div className="px-3 py-2 bg-snack-surface rounded-lg text-xs text-snack-muted">
-                  📍 Coordinates: {parseFloat(place.lat).toFixed(4)}, {parseFloat(place.lng).toFixed(4)}
+                  Coordinates pinned at {parseFloat(place.lat).toFixed(4)}, {parseFloat(place.lng).toFixed(4)}
                 </div>
               )}
             </>
@@ -711,6 +736,7 @@ export default function AddReviewPage() {
 
           <button
             className="btn-primary w-full mt-2"
+            type="button"
             disabled={geocoding || fetchingLocation || searching}
             onClick={async () => {
               if (place.mode === 'existing') {
@@ -731,15 +757,16 @@ export default function AddReviewPage() {
               setStep('review')
             }}
           >
-            {geocoding || fetchingLocation || searching ? 'Loading...' : 'Next: Write Review →'}
+            {geocoding || fetchingLocation || searching ? 'Loading...' : 'Next: Write review'}
           </button>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="status" aria-live="polite">{error}</div>}
         </div>
       )}
 
       {/* Step 2: Review */}
       {step === 'review' && (
         <div className="space-y-4">
+          {selectedPlaceSummary}
           <div>
             <label className="label">Taste *</label>
             <Stars value={ratings.taste} onChange={(value) => setRatings((prev) => ({ ...prev, taste: value }))} />
@@ -823,21 +850,23 @@ export default function AddReviewPage() {
               className="input min-h-[140px] resize-none"
               maxLength={2000}
             />
+            <p className="mt-2 text-xs text-snack-muted">Share the standout details: what you ordered, how it tasted, and whether you would recommend it.</p>
           </div>
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="status" aria-live="polite">{error}</div>}
 
           <div className="flex gap-2">
-            <button className="btn-secondary flex-1" onClick={() => setStep('place')}>← Back</button>
+            <button className="btn-secondary flex-1" type="button" onClick={() => setStep('place')}>Back</button>
             <button
               className="btn-primary flex-1"
+              type="button"
               onClick={() => {
                 if (text.length < 10) { setError('Review text must be at least 10 characters'); return }
                 setError(null)
                 setStep('photos')
               }}
             >
-              Next: Add Photos →
+              Next: Add photos
             </button>
           </div>
         </div>
@@ -846,7 +875,8 @@ export default function AddReviewPage() {
       {/* Step 3: Photos */}
       {step === 'photos' && (
         <div className="space-y-4">
-          <p className="text-sm text-snack-muted">Add up to 5 photos (optional).</p>
+          {selectedPlaceSummary}
+          <p className="text-sm text-snack-muted">Add 1 to 5 photos so your post stands out in the feed and on the place page.</p>
 
           <input
             id="review-photo-input"
@@ -882,7 +912,8 @@ export default function AddReviewPage() {
                     }
                   </div>
                   <button
-                    className="absolute top-1 right-1 h-6 w-6 bg-black/50 rounded-full text-white text-xs flex items-center justify-center"
+                    type="button"
+                    className="absolute top-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-sm text-white"
                     onClick={() => {
                       revokePreviewUrl(p.previewUrl)
                       setPhotos((prev) => prev.filter((x) => x.photoId !== p.photoId))
@@ -905,16 +936,17 @@ export default function AddReviewPage() {
             </div>
           )}
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="status" aria-live="polite">{error}</div>}
 
           <div className="flex gap-2">
-            <button className="btn-secondary flex-1" onClick={() => setStep('review')}>← Back</button>
+            <button className="btn-secondary flex-1" type="button" onClick={() => setStep('review')}>Back</button>
             <button
               className="btn-primary flex-1"
+              type="button"
               onClick={handleSubmit}
               disabled={submitting || photos.filter((p) => p.status === 'ready').length === 0 || photos.some((p) => p.status === 'uploading' || p.status === 'confirming')}
             >
-              {submitting ? 'Submitting…' : '✓ Submit Review'}
+              {submitting ? 'Submitting...' : 'Submit review'}
             </button>
           </div>
         </div>

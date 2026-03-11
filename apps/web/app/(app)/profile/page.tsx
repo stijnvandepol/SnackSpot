@@ -88,6 +88,7 @@ function ProfileContent() {
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [isMobileViewport, setIsMobileViewport] = useState<boolean | null>(null)
   const maxWeeklyPosts = Math.max(1, ...(stats?.weeklyActivity.map((week) => week.posts) ?? [0]))
 
   useEffect(() => {
@@ -117,6 +118,17 @@ function ProfileContent() {
       })
       .finally(() => setLoading(false))
   }, [user, accessToken])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const mediaQuery = window.matchMedia('(max-width: 767px)')
+    const syncViewport = () => setIsMobileViewport(mediaQuery.matches)
+
+    syncViewport()
+    mediaQuery.addEventListener('change', syncViewport)
+    return () => mediaQuery.removeEventListener('change', syncViewport)
+  }, [])
 
   const handleAvatarUpload = async (file: File | null) => {
     if (!file || !accessToken) return
@@ -340,10 +352,19 @@ function ProfileContent() {
     )
   }
 
-  // Mobile Layout
-  if (typeof window !== 'undefined' && window.innerWidth < 768) {
+  if (isMobileViewport === null) {
     return (
-      <div className="md:hidden flex flex-col h-screen max-h-screen overflow-hidden">
+      <div className="mx-auto max-w-lg px-4 py-8 space-y-6">
+        <div className="card h-28 animate-pulse bg-snack-surface" />
+        <div className="card h-48 animate-pulse bg-snack-surface" />
+      </div>
+    )
+  }
+
+  // Mobile Layout
+  if (isMobileViewport) {
+    return (
+      <div className="md:hidden flex min-h-full flex-col">
         {/* Header */}
         <div className="sticky top-0 z-20 bg-white border-b border-[#ececec] px-4 py-4">
           <div className="flex items-center gap-3 mb-4">
@@ -355,6 +376,7 @@ function ProfileContent() {
             <div className="flex-1 min-w-0">
               <h1 className="font-heading font-bold text-lg text-snack-text truncate">{meProfile?.username ?? user.username}</h1>
               <p className="text-xs text-snack-muted">@{meProfile?.username ?? user.username}</p>
+              <p className="mt-1 text-xs text-snack-muted line-clamp-2">{meProfile?.bio?.trim() || 'Snack hunter & reviewer'}</p>
             </div>
             <button
               onClick={async () => { await logout(); router.push('/auth/login') }}
@@ -370,6 +392,7 @@ function ProfileContent() {
               <Link
                 key={t}
                 href={`/profile?tab=${t}`}
+                aria-current={tab === t ? 'page' : undefined}
                 className={`py-2 px-3 text-sm font-medium whitespace-nowrap transition border-b-2 ${
                   tab === t
                     ? 'border-snack-primary text-snack-primary'
@@ -498,7 +521,7 @@ function ProfileContent() {
               {/* Notification Preferences */}
               <div className="card p-4">
                 <h3 className="font-heading font-semibold text-snack-text mb-3">Notification Preferences</h3>
-                <NotificationSettings />
+                <NotificationSettings embedded />
               </div>
 
               {dangerZone}
@@ -545,6 +568,7 @@ function ProfileContent() {
           <Link
             key={t}
             href={`/profile?tab=${t}`}
+            aria-current={tab === t ? 'page' : undefined}
             className={`py-3 px-4 text-sm font-medium whitespace-nowrap transition border-b-2 ${
               tab === t
                 ? 'border-snack-primary text-snack-primary'
@@ -785,7 +809,7 @@ function ProfileContent() {
 
           <div className="mb-6">
             <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Notification Settings</h2>
-            <NotificationSettings />
+            <NotificationSettings embedded />
           </div>
 
           {dangerZone}

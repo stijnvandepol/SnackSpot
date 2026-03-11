@@ -173,15 +173,25 @@ export function UserMentionInput({
         placeholder={placeholder}
         className={className}
         maxLength={maxLength}
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={showSuggestions}
+        aria-controls="mention-suggestions"
       />
 
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-[#ececec] rounded-xl shadow-lg max-h-48 overflow-y-auto">
+        <div
+          id="mention-suggestions"
+          role="listbox"
+          className="absolute z-50 w-full mt-1 bg-white border border-[#ececec] rounded-xl shadow-lg max-h-48 overflow-y-auto"
+        >
           {suggestions.map((user, index) => (
             <button
               key={user.id}
               type="button"
               onClick={() => insertMention(user)}
+              role="option"
+              aria-selected={index === selectedIndex}
               className={`w-full text-left px-4 py-2 hover:bg-snack-surface transition flex items-center gap-2 ${
                 index === selectedIndex ? 'bg-snack-surface' : ''
               }`}

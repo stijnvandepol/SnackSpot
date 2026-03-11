@@ -13,6 +13,7 @@ const config: Config = {
           primary: '#F97316',
           accent: '#DC2626',
           rating: '#F59E0B',
+          border: '#E5E7EB',
           background: '#FFFFFF',
           surface: '#F6F7F9',
           text: '#0F172A',

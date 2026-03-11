@@ -57,6 +57,7 @@ export function ReviewLikeButton({
       disabled={loading || !accessToken}
       className={`inline-flex items-center gap-1 text-sm ${likedByMe ? 'text-rose-600' : 'text-snack-muted'} ${!accessToken ? 'opacity-60 cursor-not-allowed' : ''} ${className ?? ''}`}
       aria-label={likedByMe ? 'Unlike post' : 'Like post'}
+      aria-pressed={likedByMe}
       title={accessToken ? (likedByMe ? 'Unlike' : 'Like') : 'Log in to like'}
     >
       <span aria-hidden="true">{likedByMe ? '♥' : '♡'}</span>

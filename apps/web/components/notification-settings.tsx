@@ -13,12 +13,17 @@ interface NotificationPreferences {
   pushOnBadge: boolean
 }
 
-export function NotificationSettings() {
+interface NotificationSettingsProps {
+  embedded?: boolean
+}
+
+export function NotificationSettings({ embedded = false }: NotificationSettingsProps) {
   const { accessToken } = useAuth()
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [messageTone, setMessageTone] = useState<'success' | 'error' | null>(null)
   const [pushSupported, setPushSupported] = useState(false)
   const [pushPermission, setPushPermission] = useState<NotificationPermission>('default')
 
@@ -58,6 +63,7 @@ export function NotificationSettings() {
 
     setSaving(true)
     setMessage(null)
+    setMessageTone(null)
 
     try {
       const res = await fetch('/api/v1/me/notification-preferences', {
@@ -72,9 +78,11 @@ export function NotificationSettings() {
       const json = await res.json()
       if (res.ok) {
         setMessage('Settings saved successfully')
+        setMessageTone('success')
         setTimeout(() => setMessage(null), 3000)
       } else {
         setMessage(json.error ?? 'Failed to save settings')
+        setMessageTone('error')
       }
     } finally {
       setSaving(false)
@@ -90,16 +98,19 @@ export function NotificationSettings() {
 
       if (permission === 'granted') {
         setMessage('Push notifications enabled. You will receive notifications for new activity.')
+        setMessageTone('success')
         setTimeout(() => setMessage(null), 5000)
       }
     } catch (error) {
       console.error('Failed to request push permission', error)
+      setMessage('Could not enable push notifications right now.')
+      setMessageTone('error')
     }
   }
 
   if (loading) {
     return (
-      <div className="card p-4">
+      <div className={embedded ? 'rounded-xl border border-snack-border bg-white p-4' : 'card p-4'}>
         <p className="text-sm text-snack-muted">Loading settings...</p>
       </div>
     )
@@ -107,28 +118,28 @@ export function NotificationSettings() {
 
   if (!preferences) {
     return (
-      <div className="card p-4">
+      <div className={embedded ? 'rounded-xl border border-snack-border bg-white p-4' : 'card p-4'}>
         <p className="text-sm text-snack-muted">Could not load notification settings</p>
       </div>
     )
   }
 
   return (
-    <div className="card p-6 space-y-6">
+    <div className={`${embedded ? 'rounded-xl border border-snack-border bg-white p-4' : 'card p-6'} space-y-6`}>
       <div>
-        <h2 className="font-heading font-semibold text-lg text-snack-text mb-2">
-          Notification Settings
-        </h2>
+        {!embedded && (
+          <h2 className="mb-2 text-lg font-heading font-semibold text-snack-text">
+            Notification Settings
+          </h2>
+        )}
         <p className="text-sm text-snack-muted">
-          Choose when you want to receive notifications
+          Choose which alerts SnackSpot sends and through which channel.
         </p>
       </div>
 
       {pushSupported && pushPermission !== 'granted' && (
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-          <p className="text-sm text-blue-900 mb-2">
-            📱 Enable push notifications to receive real-time alerts
-          </p>
+          <p className="text-sm text-blue-900 mb-2">Enable push notifications to receive real-time alerts.</p>
           <button
             onClick={requestPushPermission}
             className="btn-primary text-sm"
@@ -140,11 +151,73 @@ export function NotificationSettings() {
 
       {pushSupported && pushPermission === 'granted' && (
         <div className="p-3 bg-green-50 border border-green-200 rounded-xl">
-          <p className="text-sm text-green-900">
-            ✅ Push notifications are enabled
-          </p>
+          <p className="text-sm text-green-900">Push notifications are enabled.</p>
         </div>
       )}
+
+      <div className="space-y-4">
+        <h3 className="font-medium text-snack-text">Email Notifications</h3>
+
+        <label className="flex items-center justify-between gap-3 rounded-xl p-3 transition hover:bg-snack-surface cursor-pointer">
+          <div>
+            <p className="text-sm font-medium text-snack-text">Likes</p>
+            <p className="text-xs text-snack-muted">Email me when someone likes my review</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={preferences.emailOnLike}
+            onChange={(e) =>
+              setPreferences({ ...preferences, emailOnLike: e.target.checked })
+            }
+            className="h-5 w-5 rounded border-gray-300 text-snack-primary focus:ring-snack-primary"
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 rounded-xl p-3 transition hover:bg-snack-surface cursor-pointer">
+          <div>
+            <p className="text-sm font-medium text-snack-text">Comments</p>
+            <p className="text-xs text-snack-muted">Email me when someone comments on my review</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={preferences.emailOnComment}
+            onChange={(e) =>
+              setPreferences({ ...preferences, emailOnComment: e.target.checked })
+            }
+            className="h-5 w-5 rounded border-gray-300 text-snack-primary focus:ring-snack-primary"
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 rounded-xl p-3 transition hover:bg-snack-surface cursor-pointer">
+          <div>
+            <p className="text-sm font-medium text-snack-text">Mentions</p>
+            <p className="text-xs text-snack-muted">Email me when someone mentions me in a post or comment</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={preferences.emailOnMention}
+            onChange={(e) =>
+              setPreferences({ ...preferences, emailOnMention: e.target.checked })
+            }
+            className="h-5 w-5 rounded border-gray-300 text-snack-primary focus:ring-snack-primary"
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 rounded-xl p-3 transition hover:bg-snack-surface cursor-pointer">
+          <div>
+            <p className="text-sm font-medium text-snack-text">Achievements</p>
+            <p className="text-xs text-snack-muted">Email me when I unlock a new badge</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={preferences.emailOnBadge}
+            onChange={(e) =>
+              setPreferences({ ...preferences, emailOnBadge: e.target.checked })
+            }
+            className="h-5 w-5 rounded border-gray-300 text-snack-primary focus:ring-snack-primary"
+          />
+        </label>
+      </div>
 
       <div className="space-y-4">
         <h3 className="font-medium text-snack-text">Push Notifications</h3>
@@ -213,7 +286,7 @@ export function NotificationSettings() {
       {message && (
         <div
           className={`p-3 rounded-xl text-sm ${
-            message.includes('success')
+            messageTone === 'success'
               ? 'bg-green-50 text-green-900'
               : 'bg-red-50 text-red-900'
           }`}

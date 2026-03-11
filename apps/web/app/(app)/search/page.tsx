@@ -60,7 +60,13 @@ export default function SearchPage() {
   const [featuredError, setFeaturedError] = useState<string | null>(null)
   const [tagError, setTagError] = useState<string | null>(null)
   const [searchError, setSearchError] = useState<string | null>(null)
+  const [showKeyboardTip, setShowKeyboardTip] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setShowKeyboardTip(window.matchMedia('(pointer:fine) and (min-width: 768px)').matches)
+  }, [])
 
   useEffect(() => {
     fetch('/api/v1/places/featured?limit=8')
@@ -181,52 +187,73 @@ export default function SearchPage() {
       <div className="mb-5 space-y-1">
         <h1 className="text-2xl font-heading font-bold text-snack-text md:text-3xl">Explore</h1>
         <p className="text-sm text-snack-muted">Browse places with recent reviews, or search by name and tags when you know what you want.</p>
-        <p className="text-xs text-snack-muted">Tip: press / to focus search.</p>
+        {showKeyboardTip && <p className="text-xs text-snack-muted">Tip: press / to focus search.</p>}
       </div>
 
-      <form onSubmit={handleSubmit} className="mb-4 flex gap-2">
-        <input
-          ref={inputRef}
-          type="search"
-          className="input flex-1"
-          placeholder="Search places or dishes..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          autoFocus
-          aria-label="Search places or dishes"
-        />
-        {(q.length > 0 || hasActiveTag) && (
-          <button type="button" className="btn-secondary flex-shrink-0" onClick={resetSearch}>
-            Reset
-          </button>
-        )}
-        <button type="submit" className="btn-primary flex-shrink-0" disabled={loading || q.trim().length === 0}>
-          {loading ? 'Searching...' : 'Search'}
-        </button>
-      </form>
-
-      <div className="mb-6 flex flex-wrap gap-2">
-        {REVIEW_TAG_OPTIONS.map((option) => {
-          const isActive = activeTag === option.value
-
-          return (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setActiveTag((prev) => (prev === option.value ? 'all' : option.value))}
-              className={`rounded-full border px-3 py-2 text-xs font-medium transition ${
-                isActive
-                  ? 'border-snack-primary bg-snack-primary text-white'
-                  : 'border-snack-border bg-white text-snack-muted hover:border-snack-primary hover:text-snack-primary'
-              }`}
-              title={option.hint}
-              aria-pressed={isActive}
-            >
-              {option.label}
+      <div className="card mb-4 p-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row">
+          <input
+            ref={inputRef}
+            type="search"
+            className="input flex-1"
+            placeholder="Search places or dishes..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            autoFocus={showKeyboardTip}
+            aria-label="Search places or dishes"
+          />
+          <div className="flex gap-2 sm:flex-shrink-0">
+            {(q.length > 0 || hasActiveTag) && (
+              <button type="button" className="btn-secondary flex-1 sm:flex-none" onClick={resetSearch}>
+                Reset
+              </button>
+            )}
+            <button type="submit" className="btn-primary flex-1 sm:flex-none" disabled={loading || q.trim().length === 0}>
+              {loading ? 'Searching...' : 'Search'}
             </button>
-          )
-        })}
+          </div>
+        </form>
+
+        <div className="mt-4">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-snack-text">Browse by tag</p>
+            {hasActiveTag && (
+              <button type="button" className="text-xs font-medium text-snack-primary hover:underline" onClick={() => setActiveTag('all')}>
+                Clear tag
+              </button>
+            )}
+          </div>
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+            {REVIEW_TAG_OPTIONS.map((option) => {
+              const isActive = activeTag === option.value
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setActiveTag((prev) => (prev === option.value ? 'all' : option.value))}
+                  className={`shrink-0 rounded-full border px-3 py-2 text-xs font-medium transition ${
+                    isActive
+                      ? 'border-snack-primary bg-snack-primary text-white'
+                      : 'border-snack-border bg-white text-snack-muted hover:border-snack-primary hover:text-snack-primary'
+                  }`}
+                  title={option.hint}
+                  aria-pressed={isActive}
+                >
+                  {option.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
       </div>
+
+      {(searched || hasActiveTag) && (
+        <div className="mb-4 rounded-xl border border-snack-border bg-snack-surface px-4 py-3 text-sm text-snack-muted" aria-live="polite">
+          {searched && <span>Showing place results for &ldquo;{q}&rdquo;.</span>}
+          {!searched && hasActiveTag && <span>Showing posts tagged {getReviewTagLabel(activeTag).toLowerCase()}.</span>}
+        </div>
+      )}
 
       {searchError && (
         <div className="card mb-4 border-red-200 bg-red-50/50 p-3" role="status" aria-live="polite">
@@ -295,7 +322,7 @@ export default function SearchPage() {
         <section className="space-y-3">
           <div>
             <h2 className="text-lg font-heading font-semibold text-snack-text">Place results</h2>
-            <p className="text-xs text-snack-muted">Search results for &ldquo;{q}&rdquo;.</p>
+            <p className="text-xs text-snack-muted">{places.length} result{places.length === 1 ? '' : 's'} for &ldquo;{q}&rdquo;.</p>
           </div>
 
           {places.length > 0 ? (
@@ -315,9 +342,10 @@ export default function SearchPage() {
               ))}
             </div>
           ) : (
-            <div className="py-16 text-center">
-              <p className="text-snack-muted">No results for &ldquo;{q}&rdquo;.</p>
-              <button type="button" className="btn-secondary mt-3 text-sm" onClick={resetSearch}>
+            <div className="card py-12 text-center">
+              <p className="text-snack-text font-medium">No place matched &ldquo;{q}&rdquo;.</p>
+              <p className="mt-1 text-sm text-snack-muted">Try a different spelling, a city name, or browse by tag instead.</p>
+              <button type="button" className="btn-secondary mt-4 text-sm" onClick={resetSearch}>
                 Reset search
               </button>
             </div>
@@ -329,7 +357,7 @@ export default function SearchPage() {
         <section className="space-y-3">
           <div>
             <h2 className="text-lg font-heading font-semibold text-snack-text">{getReviewTagLabel(activeTag)}</h2>
-            <p className="text-xs text-snack-muted">Posts tagged with this discovery cue.</p>
+            <p className="text-xs text-snack-muted">{tagResults.length} tagged post{tagResults.length === 1 ? '' : 's'} in this lane.</p>
           </div>
 
           {tagLoading ? (

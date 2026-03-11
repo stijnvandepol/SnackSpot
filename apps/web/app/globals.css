@@ -42,7 +42,7 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50;
     background-color: var(--snack-primary);
   }
 
@@ -56,7 +56,7 @@
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl border px-5 py-2.5 text-sm font-semibold shadow-sm transition disabled:opacity-50;
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-xl border px-5 py-2.5 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50;
     border-color: #e7e7e7;
     background-color: var(--snack-bg);
     color: var(--snack-text);
@@ -72,7 +72,7 @@
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium transition;
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-xl px-4 py-2 text-sm font-medium transition;
     color: var(--snack-muted);
   }
 
@@ -87,7 +87,7 @@
   }
 
   .input {
-    @apply w-full rounded-xl border bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2;
+    @apply min-h-[44px] w-full rounded-xl border bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2;
     border-color: #e7e7e7;
     color: var(--snack-text);
   }

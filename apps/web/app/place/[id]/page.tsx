@@ -73,11 +73,11 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <Link href={backHref} className="btn-secondary text-sm">← Back</Link>
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <Link href={backHref} className="btn-secondary text-sm">Back</Link>
         {place && (
           <Link href={`/add-review?placeId=${place.id}`} className="btn-primary text-sm">
-            + Write Review
+            Write review
           </Link>
         )}
       </div>
@@ -89,26 +89,31 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
         </div>
       ) : (
         <>
-          <div className="mb-6">
+          <div className="card mb-6 p-5">
             <h1 className="text-2xl font-heading font-bold text-snack-text">{place.name}</h1>
-            <p className="text-sm text-snack-muted mt-1">{place.address}</p>
+            <p className="mt-1 text-sm text-snack-muted">{place.address}</p>
 
-            <div className="flex items-center gap-4 mt-3 flex-wrap">
-              {place.avg_rating !== null && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-snack-rating">{'★'.repeat(Math.round(place.avg_rating ?? 0))}</span>
-                  <span className="font-semibold text-snack-text">{place.avg_rating?.toFixed(1)}</span>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl bg-snack-surface px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Rating</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="text-snack-rating">{place.avg_rating !== null ? '★'.repeat(Math.max(1, Math.round(place.avg_rating ?? 0))) : '—'}</span>
+                  <span className="font-semibold text-snack-text">{place.avg_rating?.toFixed(1) ?? 'No rating yet'}</span>
                 </div>
-              )}
-              <span className="text-sm text-snack-muted">{place.review_count} {place.review_count === 1 ? 'review' : 'reviews'}</span>
+              </div>
+              <div className="rounded-xl bg-snack-surface px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Reviews</p>
+                <p className="mt-1 font-semibold text-snack-text">{place.review_count} {place.review_count === 1 ? 'post' : 'posts'}</p>
+              </div>
               <a
                 href={`https://www.google.com/maps?q=${place.lat},${place.lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-snack-primary hover:underline"
+                className="rounded-xl bg-snack-surface px-4 py-3 transition hover:bg-[#eef2f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2"
                 aria-label={`Open ${place.name} in maps`}
               >
-                Open in maps
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Directions</p>
+                <p className="mt-1 font-semibold text-snack-primary">Open in maps</p>
               </a>
             </div>
           </div>
@@ -125,7 +130,9 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
               {(['new', 'top'] as const).map((s) => (
                 <button
                   key={s}
+                  type="button"
                   onClick={() => setSort(s)}
+                  aria-pressed={sort === s}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${sort === s ? 'bg-snack-primary text-white' : 'bg-snack-surface text-snack-muted hover:opacity-90'}`}
                 >
                   {s === 'new' ? 'Newest' : 'Top'}
@@ -139,8 +146,12 @@ export default function PlacePage({ params }: { params: Promise<{ id: string }> 
               {[...Array(3)].map((_, i) => <div key={i} className="card h-32 animate-pulse bg-snack-surface" />)}
             </div>
           ) : reviews.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-snack-muted text-sm">No reviews yet. Be the first!</p>
+            <div className="card py-12 text-center">
+              <p className="font-medium text-snack-text">No reviews yet.</p>
+              <p className="mt-1 text-sm text-snack-muted">Be the first person to post a snack from this place.</p>
+              <Link href={`/add-review?placeId=${place.id}`} className="btn-primary mt-4 text-sm">
+                Write the first review
+              </Link>
             </div>
           ) : (
             <div className="space-y-4">

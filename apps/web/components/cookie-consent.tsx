@@ -28,7 +28,7 @@ export function CookieConsent() {
       <div className="card p-4 shadow-lg border border-snack-border">
         <p className="text-sm font-semibold text-snack-text mb-1">Cookies</p>
         <p className="text-xs text-snack-muted mb-3">
-          We use one session cookie (<span className="font-mono">snackspot_rt</span>) to keep you
+          We use one session cookie to keep you
           logged in. No tracking or advertising cookies.
         </p>
         <div className="flex gap-2">

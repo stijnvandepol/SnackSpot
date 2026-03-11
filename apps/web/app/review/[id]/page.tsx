@@ -189,7 +189,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
     <div className="mx-auto max-w-lg px-4 py-6 space-y-6">
       <div className="flex items-center gap-2">
         <Link href={backHref} className="btn-secondary text-sm">
-          ← Back
+          Back
         </Link>
       </div>
 
@@ -255,13 +255,13 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
         <MentionText text={review.text} className="whitespace-pre-line text-snack-muted" />
 
-        <div className="pt-1">
+        <div className="flex items-center justify-between gap-3 pt-1">
           <ReviewLikeButton
             reviewId={review.id}
             initialLikeCount={review.likeCount ?? 0}
             initialLikedByMe={Boolean(review.likedByMe)}
           />
-          <p className="text-xs text-snack-muted mt-1">{review.commentCount ?? comments.length} comments</p>
+          <p className="text-xs text-snack-muted">{review.commentCount ?? comments.length} comments</p>
         </div>
 
         <div className="flex items-center justify-between pt-2 border-t border-[#ededed]">
@@ -289,8 +289,9 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
               aria-label="Write a comment"
             />
             <div className="flex items-center justify-between">
-              <p className="text-xs text-snack-muted">{newComment.length}/1000</p>
+              <p className="text-xs text-snack-muted">Keep it constructive. {newComment.length}/1000</p>
               <button
+                type="button"
                 className="btn-primary text-sm"
                 onClick={submitComment}
                 disabled={commentSubmitting || newComment.trim().length < 1}
@@ -301,15 +302,17 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
             {commentError && <p className="text-sm text-red-600" role="status" aria-live="polite">{commentError}</p>}
           </div>
         ) : (
-          <p className="text-sm text-snack-muted">
-            <Link href="/auth/login" className="text-snack-primary hover:underline">Log in</Link> to comment.
-          </p>
+          <div className="rounded-xl border border-snack-border bg-snack-surface px-4 py-3 text-sm text-snack-muted">
+            <Link href="/auth/login" className="text-snack-primary hover:underline">Log in</Link> to join the conversation.
+          </div>
         )}
 
         {commentsLoading ? (
           <p className="text-sm text-snack-muted">Loading comments...</p>
         ) : comments.length === 0 ? (
-          <p className="text-sm text-snack-muted">No comments yet. Be the first.</p>
+          <div className="rounded-xl border border-dashed border-snack-border px-4 py-6 text-center text-sm text-snack-muted">
+            No comments yet. Be the first to add context or a recommendation.
+          </div>
         ) : (
           <div className="space-y-3">
             {comments.map((comment) => (
@@ -344,6 +347,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
         <div className="flex gap-2">
           <Link href={editHref} className="btn-secondary flex-1 text-center text-sm">Edit</Link>
           <button
+            type="button"
             className="btn-secondary flex-1 text-sm text-red-600 hover:bg-red-50"
             onClick={async () => {
               if (!confirm('Delete this review?')) return
@@ -358,8 +362,8 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
       {/* Report section */}
       {user && !isOwner && !reported && (
-        <details className="text-sm">
-          <summary className="cursor-pointer text-snack-muted hover:text-snack-text">Report this review</summary>
+        <details className="rounded-xl border border-snack-border px-4 py-3 text-sm">
+          <summary className="cursor-pointer font-medium text-snack-muted hover:text-snack-text">Report this review</summary>
           <div className="mt-3 space-y-2 pl-2 border-l-2 border-[#ececec]">
             <textarea
               className="input text-sm min-h-[80px]"
@@ -368,7 +372,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
               onChange={(e) => setReportReason(e.target.value)}
               maxLength={500}
             />
-            <button onClick={submitReport} disabled={reporting || reportReason.length < 5} className="btn-secondary text-sm py-2">
+            <button type="button" onClick={submitReport} disabled={reporting || reportReason.length < 5} className="btn-secondary text-sm py-2">
               {reporting ? 'Sending…' : 'Submit report'}
             </button>
             {reportError && <p className="text-sm text-red-600" role="status" aria-live="polite">{reportError}</p>}
