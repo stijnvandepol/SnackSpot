@@ -205,7 +205,7 @@ function renderBrandedEmail({
 }
 
 function renderWordmark(): string {
-  return `<span style="color:${EMAIL_PRIMARY};">Snack</span><span style="color:${EMAIL_ACCENT};">Spot</span>`
+  return `<span style="color:${EMAIL_PRIMARY};">Snack</span><span style="color:${EMAIL_ACCENT};">Sp</span><svg width="15" height="19" viewBox="0 0 16 20" fill="none" style="display:inline-block;vertical-align:middle;position:relative;top:-2px;" aria-hidden="true"><path d="M8 19c2.6-3.5 6-7.5 6-11a6 6 0 1 0-12 0c0 3.5 3.4 7.5 6 11Z" fill="${EMAIL_ACCENT}"/><circle cx="8" cy="8" r="2.25" fill="white"/></svg><span style="color:${EMAIL_ACCENT};">t</span>`
 }
 
 function passwordChangedText(username: string): string {
