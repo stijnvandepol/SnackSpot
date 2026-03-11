@@ -16,36 +16,27 @@ const EMAIL_SOFT_BORDER = '#F1F5F9'
 // ─── Password reset email ─────────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string): Promise<void> {
-  const { error } = await resend.emails.send({
-    from: env.RESEND_FROM_EMAIL,
-    to: [to],
+  await sendEmailWithFallback({
+    to,
     subject: 'Reset your SnackSpot password',
     html: passwordResetHtml(resetUrl),
+    fallbackHtml: passwordResetFallbackHtml(resetUrl),
     text: passwordResetText(resetUrl),
-    tags: [{ name: 'category', value: 'password-reset' }],
+    category: 'password-reset',
   })
-
-  if (error) {
-    // Log without exposing the reset URL or any PII beyond the category
-    throw new Error(`Failed to send password reset email: ${error.message}`)
-  }
 }
 
 // ─── Password changed confirmation email ─────────────────────────────────────
 
 export async function sendPasswordChangedEmail(to: string, username: string): Promise<void> {
-  const { error } = await resend.emails.send({
-    from: env.RESEND_FROM_EMAIL,
-    to: [to],
+  await sendEmailWithFallback({
+    to,
     subject: 'Your SnackSpot password has been changed',
     html: passwordChangedHtml(username),
+    fallbackHtml: passwordChangedFallbackHtml(username),
     text: passwordChangedText(username),
-    tags: [{ name: 'category', value: 'password-changed' }],
+    category: 'password-changed',
   })
-
-  if (error) {
-    throw new Error(`Failed to send password changed email: ${error.message}`)
-  }
 }
 
 // ─── Email templates ──────────────────────────────────────────────────────────
@@ -80,6 +71,32 @@ ${resetUrl}
 
 If you did not request a password reset, you can safely ignore this email.
 Your password will not be changed.`
+}
+
+function passwordResetFallbackHtml(resetUrl: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reset your password</title>
+</head>
+<body style="margin:0;padding:24px;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:${EMAIL_TEXT};">
+  <div style="max-width:480px;margin:0 auto;border:1px solid ${EMAIL_BORDER};border-radius:16px;padding:24px;">
+    <p style="margin:0 0 16px;font-size:24px;font-weight:700;color:${EMAIL_PRIMARY};">SnackSpot</p>
+    <h1 style="margin:0 0 12px;font-size:24px;color:${EMAIL_TEXT};">Reset your password</h1>
+    <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:${EMAIL_MUTED};">
+      We received a request to reset your SnackSpot password. Use the link below within 15 minutes.
+    </p>
+    <p style="margin:0 0 20px;">
+      <a href="${escapeHtml(resetUrl)}" style="color:${EMAIL_PRIMARY};font-weight:600;">${escapeHtml(resetUrl)}</a>
+    </p>
+    <p style="margin:0;font-size:14px;line-height:1.6;color:${EMAIL_MUTED};">
+      If you did not request this, you can ignore this email.
+    </p>
+  </div>
+</body>
+</html>`
 }
 
 function passwordChangedHtml(username: string): string {
@@ -211,6 +228,73 @@ Hi ${username}, the password for your SnackSpot account has been successfully ch
 All active sessions have been signed out.
 
 If you did not make this change, please contact us immediately.`
+}
+
+function passwordChangedFallbackHtml(username: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Password changed</title>
+</head>
+<body style="margin:0;padding:24px;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:${EMAIL_TEXT};">
+  <div style="max-width:480px;margin:0 auto;border:1px solid ${EMAIL_BORDER};border-radius:16px;padding:24px;">
+    <p style="margin:0 0 16px;font-size:24px;font-weight:700;color:${EMAIL_PRIMARY};">SnackSpot</p>
+    <h1 style="margin:0 0 12px;font-size:24px;color:${EMAIL_TEXT};">Password changed</h1>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${EMAIL_MUTED};">
+      Hi <strong style="color:${EMAIL_TEXT};">${escapeHtml(username)}</strong>, your SnackSpot password has been changed successfully and active sessions were signed out.
+    </p>
+    <p style="margin:0;font-size:14px;line-height:1.6;color:${EMAIL_MUTED};">
+      If you did not make this change, reply to this email immediately.
+    </p>
+  </div>
+</body>
+</html>`
+}
+
+type SendEmailWithFallbackOptions = {
+  to: string
+  subject: string
+  html: string
+  fallbackHtml: string
+  text: string
+  category: string
+}
+
+async function sendEmailWithFallback({ to, subject, html, fallbackHtml, text, category }: SendEmailWithFallbackOptions): Promise<void> {
+  const primary = await resend.emails.send({
+    from: env.RESEND_FROM_EMAIL,
+    to: [to],
+    subject,
+    html,
+    text,
+    tags: [{ name: 'category', value: category }],
+  })
+
+  if (!primary.error) {
+    return
+  }
+
+  const fallback = await resend.emails.send({
+    from: env.RESEND_FROM_EMAIL,
+    to: [to],
+    subject,
+    html: fallbackHtml,
+    text,
+    tags: [
+      { name: 'category', value: category },
+      { name: 'template', value: 'fallback' },
+    ],
+  })
+
+  if (!fallback.error) {
+    return
+  }
+
+  throw new Error(
+    `Failed to send ${category} email: primary=${primary.error.message}; fallback=${fallback.error.message}`,
+  )
 }
 
 function escapeHtml(str: string): string {
