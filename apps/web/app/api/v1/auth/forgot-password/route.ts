@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     })
 
     // Build the reset URL — never embed the user ID or email directly
-    const resetUrl = `${env.NEXT_PUBLIC_APP_URL}/reset-password?token=${rawToken}`
+    const resetUrl = `${env.NEXT_PUBLIC_APP_URL}/auth/reset-password?token=${rawToken}`
 
     // Fire-and-forget; a delivery failure should not reveal user existence via the error shape
     sendPasswordResetEmail(user.email, resetUrl).catch(() => {
