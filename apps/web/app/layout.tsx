@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Poppins } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
 import { CookieConsent } from '@/components/cookie-consent'
@@ -12,6 +12,13 @@ const appDescription =
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const poppins = Poppins({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-poppins' })
+
+export const viewport: Viewport = {
+  themeColor: '#F97316',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+}
 
 export const metadata: Metadata = {
   metadataBase,
@@ -51,8 +58,6 @@ export const metadata: Metadata = {
       { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
     ],
   },
-  themeColor: '#F97316',
-  viewport: { width: 'device-width', initialScale: 1, viewportFit: 'cover' },
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Snack Spot' },
   other: {
     'mobile-web-app-capable': 'yes',
