@@ -254,8 +254,5 @@ networks:
 
 volumes:
   pgdata:
-    external: true
   redisdata:
-    external: true
   miniodata:
-    external: true
