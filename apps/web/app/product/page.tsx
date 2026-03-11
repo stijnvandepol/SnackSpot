@@ -27,9 +27,9 @@ const pillars = [
 
 const features = [
   'Photo-first feed with likes, comments, mentions, and user profiles',
-  'Nearby discovery for local spots powered by geolocation and PostGIS place search',
-  'Structured review model with half-star ratings and discovery tags for hidden gems',
-  'Fast photo uploads with processed image variants for the feed and place pages',
+  'Nearby discovery to find local spots around you',
+  'Structured reviews with half-star ratings and discovery tags',
+  'Fast photo uploads for the feed and place pages',
   'Notifications, badge progress, profile stats, and streak tracking',
   'Separate admin panel for reports, reviews, users, places, and flagged comments',
 ]
@@ -148,7 +148,7 @@ export default function ProductPage() {
                   </div>
                   <div className="rounded-2xl border border-snack-border p-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-snack-muted">Operations</p>
-                    <p className="mt-2 text-sm font-semibold text-snack-text">Admin dashboard, moderation queue, reports, flagged comments</p>
+                    <p className="mt-2 text-sm font-semibold text-snack-text">Reports, moderation tools, flagged comments, and user management</p>
                   </div>
                 </div>
                 <div className="rounded-2xl bg-gradient-to-r from-snack-primary to-snack-accent p-4 text-white">
