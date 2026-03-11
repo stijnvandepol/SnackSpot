@@ -65,6 +65,23 @@ export function refreshTokenExpiresAt(): Date {
   return new Date(Date.now() + env.JWT_REFRESH_EXPIRES_DAYS * 24 * 60 * 60 * 1000)
 }
 
+// ─── Password reset token ────────────────────────────────────────────────────
+
+const RESET_TOKEN_BYTES = 32 // 256 bits → 64 hex chars
+const RESET_TOKEN_TTL_MINUTES = 15
+
+export function generateResetToken(): string {
+  return randomBytes(RESET_TOKEN_BYTES).toString('hex')
+}
+
+export function hashResetToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex')
+}
+
+export function resetTokenExpiresAt(): Date {
+  return new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60 * 1000)
+}
+
 // ─── Cookie helpers ──────────────────────────────────────────────────────────
 
 export const REFRESH_COOKIE = 'snackspot_rt'

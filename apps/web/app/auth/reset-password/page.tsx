@@ -1,38 +1,64 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('')
+function ResetPasswordForm() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  const token = searchParams.get('token') ?? ''
+
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState(false)
+
+  // Redirect to forgot-password if there's no token in the URL
+  useEffect(() => {
+    if (!token) router.replace('/auth/forgot-password')
+  }, [token, router])
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
+
+    if (password !== confirm) {
+      setError('Passwords do not match.')
+      return
+    }
+
     setLoading(true)
 
     try {
-      const res = await fetch('/api/v1/auth/forgot-password', {
+      const res = await fetch('/api/v1/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ token, password }),
       })
+
+      const json = await res.json()
 
       if (res.status === 429) {
         setError('Too many requests – please try again later.')
         return
       }
 
-      // Always show the success state regardless of whether the email exists
-      setSubmitted(true)
+      if (!res.ok) {
+        setError(json?.error ?? 'This reset link is invalid or has expired.')
+        return
+      }
+
+      setDone(true)
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
   }
+
+  if (!token) return null
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-snack-surface to-white flex items-center justify-center px-4">
@@ -51,13 +77,11 @@ export default function ForgotPasswordPage() {
               t
             </span>
           </div>
-          <h2 className="text-2xl font-heading font-bold text-snack-text">Forgot password?</h2>
-          <p className="text-sm text-snack-muted mt-1">
-            Enter your email and we&apos;ll send a reset link
-          </p>
+          <h2 className="text-2xl font-heading font-bold text-snack-text">Choose a new password</h2>
+          <p className="text-sm text-snack-muted mt-1">Min. 8 characters, 1 uppercase, 1 number</p>
         </div>
 
-        {submitted ? (
+        {done ? (
           <div className="card p-6 text-center space-y-4">
             <div className="mx-auto w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
               <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -65,14 +89,13 @@ export default function ForgotPasswordPage() {
               </svg>
             </div>
             <div>
-              <p className="font-medium text-snack-text">Check your email</p>
+              <p className="font-medium text-snack-text">Password changed</p>
               <p className="text-sm text-snack-muted mt-1">
-                If an account with that email exists, we&apos;ve sent a password reset link.
-                The link is valid for 15 minutes.
+                Your password has been updated and all sessions have been signed out.
               </p>
             </div>
-            <Link href="/auth/login" className="text-sm text-snack-primary font-medium hover:underline">
-              Back to login
+            <Link href="/auth/login" className="btn-primary inline-block w-full text-center">
+              Log in
             </Link>
           </div>
         ) : (
@@ -84,34 +107,49 @@ export default function ForgotPasswordPage() {
             )}
 
             <div>
-              <label className="label" htmlFor="email">Email</label>
+              <label className="label" htmlFor="password">New password</label>
               <input
-                id="email"
-                type="email"
+                id="password"
+                type="password"
                 className="input"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                autoComplete="email"
+                minLength={8}
+                autoComplete="new-password"
+              />
+            </div>
+
+            <div>
+              <label className="label" htmlFor="confirm">Confirm new password</label>
+              <input
+                id="confirm"
+                type="password"
+                className="input"
+                placeholder="••••••••"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                required
+                minLength={8}
+                autoComplete="new-password"
               />
             </div>
 
             <button type="submit" className="btn-primary w-full" disabled={loading}>
-              {loading ? 'Sending…' : 'Send reset link'}
+              {loading ? 'Saving…' : 'Set new password'}
             </button>
           </form>
         )}
-
-        {!submitted && (
-          <p className="text-center mt-6 text-sm text-snack-muted">
-            Remembered it?{' '}
-            <Link href="/auth/login" className="text-snack-primary font-medium hover:underline">
-              Back to login
-            </Link>
-          </p>
-        )}
       </div>
     </div>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense>
+      <ResetPasswordForm />
+    </Suspense>
   )
 }
