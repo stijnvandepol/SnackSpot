@@ -41,7 +41,8 @@ ENV NODE_ENV=production \
     MINIO_SECRET_KEY=placeholder-secret-key-min \
     MINIO_PUBLIC_URL=https://snackspot.online \
     JWT_ACCESS_SECRET=placeholder-access-secret-at-least-32-chars-long \
-    JWT_REFRESH_SECRET=placeholder-refresh-secret-at-least-32-chars-long
+    JWT_REFRESH_SECRET=placeholder-refresh-secret-at-least-32-chars-long \
+    RESEND_API_KEY=placeholder-resend-api-key
 
 RUN pnpm --filter web build
 
