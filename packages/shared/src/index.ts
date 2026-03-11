@@ -150,22 +150,6 @@ export const ConfirmUploadSchema = z.object({
   reviewId: z.string().optional(),
 })
 
-// ─── Password reset schemas ──────────────────────────────────────────────────
-
-export const ForgotPasswordSchema = z.object({
-  email: z.string().email().max(254),
-})
-
-export const ResetPasswordSchema = z.object({
-  token: z.string().length(64),
-  password: z
-    .string()
-    .min(8)
-    .max(128)
-    .regex(/[A-Z]/, 'Must contain an uppercase letter')
-    .regex(/[0-9]/, 'Must contain a number'),
-})
-
 // ─── Account schemas ─────────────────────────────────────────────────────────
 
 export const DeleteAccountSchema = z.object({

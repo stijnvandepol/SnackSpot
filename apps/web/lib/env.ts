@@ -30,12 +30,6 @@ const envSchema = z.object({
     .optional()
     .transform((v) => v === undefined ? undefined : v === 'true'),
 
-  NEXT_PUBLIC_APP_URL: z.string().url().default('https://snackspot.online'),
-
-  // Email (Resend)
-  RESEND_API_KEY: z.string().min(1),
-  RESEND_FROM_EMAIL: z.string().default('SnackSpot <noreply@snackspot.online>'),
-
   CORS_ORIGINS: z.string().default('https://snackspot.online'),
   ALLOWED_HOSTS: z.string().optional(),
   MAX_JSON_BODY_BYTES: z.coerce.number().int().positive().default(256 * 1024),
