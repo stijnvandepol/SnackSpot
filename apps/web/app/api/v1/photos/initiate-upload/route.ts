@@ -6,17 +6,7 @@ import { presignedPut, ensureBucket } from '@/lib/minio'
 import { env } from '@/lib/env'
 import { ok, err, parseBody, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
 import { rateLimitUser } from '@/lib/rate-limit'
-
-const ALLOWED_MIMES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/avif',
-  'image/heic',
-  'image/heif',
-  'image/heic-sequence',
-  'image/heif-sequence',
-])
+import { ALLOWED_IMAGE_MIMES } from '@/lib/upload'
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
@@ -29,7 +19,7 @@ export async function POST(req: NextRequest) {
   const body = await parseBody(req, InitiateUploadSchema)
   if (isResponse(body)) return body
 
-  if (!ALLOWED_MIMES.has(body.contentType)) {
+  if (!ALLOWED_IMAGE_MIMES.has(body.contentType)) {
     return err('File type not allowed', 415)
   }
   if (body.size > env.MAX_FILE_SIZE_BYTES) {

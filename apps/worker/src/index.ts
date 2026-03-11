@@ -137,13 +137,12 @@ async function processPhoto(job: Job<PhotoJob>): Promise<void> {
     const destKey = `variants/${uuid}/${variant.name}.webp`
 
     const outputBuffer = await sharp(originalBuffer, { limitInputPixels: MAX_INPUT_PIXELS })
-      .rotate() // auto-rotate from EXIF
+      .rotate() // auto-rotate from EXIF orientation, then discard EXIF
       .resize({ width: variant.width, withoutEnlargement: true })
-      .withMetadata({}) // strips all EXIF by default then only keeps necessary
+      // withMetadata() intentionally omitted: Sharp strips all metadata (incl. GPS) by default
       .webp({ quality: variant.quality, effort: 4 })
       .toBuffer()
 
-    // Strip any remaining EXIF by converting with sharp (sharp already strips by default)
     await uploadBuffer(destKey, outputBuffer, 'image/webp')
     variantKeys[variant.name] = destKey
     jobLog.debug({ variant: variant.name, size: outputBuffer.length }, 'Variant uploaded')

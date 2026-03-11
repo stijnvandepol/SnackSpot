@@ -2,11 +2,16 @@ import { type NextRequest } from 'next/server'
 import { ModerationActionSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
 import { ok, err, parseBody, requireRole, serverError, isResponse } from '@/lib/api-helpers'
+import { rateLimitUser } from '@/lib/rate-limit'
 import { ReviewStatus, PhotoModerationStatus, ReportStatus, ModerationActionType } from '@prisma/client'
 
 export async function POST(req: NextRequest) {
   const auth = requireRole(req, 'MODERATOR')
   if (isResponse(auth)) return auth
+
+  // Rate limit: 200 moderation actions per hour per moderator
+  const rl = await rateLimitUser(auth.sub, 'mod_action', 200, 3600)
+  if (!rl.allowed) return err('Too many requests', 429)
 
   const body = await parseBody(req, ModerationActionSchema)
   if (isResponse(body)) return body

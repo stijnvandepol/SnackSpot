@@ -6,17 +6,7 @@ import { getPhotoQueue } from '@/lib/queue'
 import type { PhotoJob } from '@/lib/queue'
 import { env } from '@/lib/env'
 import { ok, err, parseBody, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
-
-const ALLOWED_MIMES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/avif',
-  'image/heic',
-  'image/heif',
-  'image/heic-sequence',
-  'image/heif-sequence',
-])
+import { ALLOWED_IMAGE_MIMES } from '@/lib/upload'
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
@@ -51,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     const rawContentType = objectInfo.contentType ?? metadataContentType
     const contentType = rawContentType?.split(';')[0]?.trim().toLowerCase() ?? null
-    if (!contentType || !ALLOWED_MIMES.has(contentType)) {
+    if (!contentType || !ALLOWED_IMAGE_MIMES.has(contentType)) {
       return err('File type not allowed', 415)
     }
 

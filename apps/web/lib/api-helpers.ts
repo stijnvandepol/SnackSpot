@@ -137,7 +137,9 @@ export function requireSameOrigin(req: NextRequest): Response | null {
     return err('Invalid Origin header', 400)
   }
 
-  const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host')
+  // Only trust x-forwarded-host when running behind a known proxy (TRUST_PROXY=true).
+  // Unconditionally trusting it lets an attacker spoof the header to bypass this check.
+  const host = (env.TRUST_PROXY ? req.headers.get('x-forwarded-host') : null) ?? req.headers.get('host')
   if (!host) return err('Missing host header', 400)
 
   const allowed = originUrl.host === host

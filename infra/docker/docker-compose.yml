@@ -9,7 +9,9 @@ x-common-env: &common-env
   MINIO_BUCKET: ${MINIO_BUCKET:-snackspot}
   MINIO_REGION: ${MINIO_REGION:-us-east-1}
   MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?MINIO_PUBLIC_URL is required}
-  AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+  # Default true: cookies must be Secure when running behind HTTPS (production default).
+  # Override with AUTH_COOKIE_SECURE=false only for local HTTP/LAN development.
+  AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-true}
   TRUST_PROXY: ${TRUST_PROXY:-true}
 
 services:
@@ -28,6 +30,9 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 256
     networks: [snackspot]
 
   redis:
@@ -41,6 +46,9 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 128
     networks: [snackspot]
 
   minio:
@@ -62,6 +70,9 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 256
     networks: [snackspot]
 
   migrate:
@@ -170,6 +181,46 @@ services:
     mem_limit: 768m
     cpus: 1.0
     pids_limit: 256
+    networks: [snackspot]
+
+  admin:
+    build:
+      context: ../..
+      dockerfile: apps/admin/Dockerfile
+    restart: unless-stopped
+    init: true
+    ports:
+      # Bind to ADMIN_BIND_ADDRESS (default 0.0.0.0 for LAN/tunnel access from another machine).
+      # Set to 127.0.0.1 if cloudflared runs on the same host.
+      - "${ADMIN_BIND_ADDRESS:-0.0.0.0}:3001:3001"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-true}
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001',{redirect:'manual'}).then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/apps/admin/.next/cache
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 128
     networks: [snackspot]
 
 networks:
