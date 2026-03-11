@@ -209,11 +209,14 @@ function renderWordmark(): string {
     <span style="color:${EMAIL_PRIMARY};">Snack</span>
     <span style="display:inline-flex;align-items:baseline;color:${EMAIL_ACCENT};">
       Sp
-      <span style="display:inline-flex;width:0.75em;height:0.95em;align-items:center;justify-content:center;vertical-align:middle;position:relative;top:-0.03em;">
-        <svg viewBox="0 0 16 20" fill="none" width="100%" height="100%" aria-hidden="true" style="display:block;">
-          <path d="M8 19c2.6-3.5 6-7.5 6-11a6 6 0 1 0-12 0c0 3.5 3.4 7.5 6 11Z" fill="currentColor" />
-          <circle cx="8" cy="8" r="2.25" fill="#FFFFFF" />
-        </svg>
+      <span style="display:inline-block;position:relative;width:0.75em;height:0.95em;vertical-align:middle;top:-0.03em;line-height:1;">
+        <span style="display:inline-block;width:100%;text-align:center;color:${EMAIL_ACCENT};font-weight:700;line-height:0.95em;">o</span>
+        <span style="position:absolute;left:0;top:0;width:100%;height:100%;display:inline-flex;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 16 20" fill="none" width="15" height="19" aria-hidden="true" style="display:block;">
+            <path d="M8 19c2.6-3.5 6-7.5 6-11a6 6 0 1 0-12 0c0 3.5 3.4 7.5 6 11Z" fill="${EMAIL_ACCENT}" />
+            <circle cx="8" cy="8" r="2.25" fill="#FFFFFF" />
+          </svg>
+        </span>
       </span>
       t
     </span>
