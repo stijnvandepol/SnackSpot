@@ -4,7 +4,7 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   title: 'Product',
   description:
-    'SnackSpot is a mobile-first community app for discovering food spots, posting photo reviews, and managing moderation with a separate admin panel.',
+    'SnackSpot is a mobile-first community app for discovering under-the-radar food spots, posting photo reviews, and sharing smaller local places worth knowing.',
   alternates: {
     canonical: '/product',
   },
@@ -13,11 +13,11 @@ export const metadata: Metadata = {
 const pillars = [
   {
     title: 'Find places worth the detour',
-    body: 'Browse a live feed, search places by name, or open a nearby radius search to discover local snack spots with community context.',
+    body: 'Browse a live feed, search by place, or open nearby discovery to uncover smaller local spots that rarely show up in mainstream food guides.',
   },
   {
-    title: 'Post richer food reviews',
-    body: 'Every post combines photos, place data, dish names, and category ratings for taste, value, portion, and optional service.',
+    title: 'Review overlooked local gems',
+    body: 'Every post combines photos, place data, dish names, and category ratings so good lesser-known places get useful context instead of one-line praise.',
   },
   {
     title: 'Run the platform safely',
@@ -27,8 +27,8 @@ const pillars = [
 
 const features = [
   'Photo-first feed with likes, comments, mentions, and user profiles',
-  'Nearby discovery powered by geolocation and PostGIS place search',
-  'Structured review model with half-star ratings and discovery tags',
+  'Nearby discovery for local spots powered by geolocation and PostGIS place search',
+  'Structured review model with half-star ratings and discovery tags for hidden gems',
   'Fast photo uploads with processed image variants for the feed and place pages',
   'Notifications, badge progress, profile stats, and streak tracking',
   'Separate admin panel for reports, reviews, users, places, and flagged comments',
@@ -38,17 +38,17 @@ const flow = [
   {
     step: '01',
     title: 'Discover',
-    body: 'Users open the feed, search for a place, or scan a map-based nearby list.',
+    body: 'Users open the feed, search for a place, or scan a nearby list to find smaller spots worth trying.',
   },
   {
     step: '02',
     title: 'Review',
-    body: 'They add a place, rate multiple aspects, upload photos, and publish a post tied to a real location.',
+    body: 'They add a place, rate multiple aspects, upload photos, and publish a post tied to a real local location.',
   },
   {
     step: '03',
     title: 'Grow the community',
-    body: 'Other users engage through likes, comments, mentions, notifications, badges, and moderation-backed reporting flows.',
+    body: 'Other users engage through likes, comments, mentions, notifications, badges, and reporting flows that keep recommendations useful.',
   },
 ]
 
@@ -89,7 +89,7 @@ export default function ProductPage() {
             <a href="#problem" className="hover:text-snack-text">Problem</a>
             <a href="#features" className="hover:text-snack-text">Features</a>
             <a href="#security" className="hover:text-snack-text">Security</a>
-            <a href="#stack" className="hover:text-snack-text">Stack</a>
+            <a href="#why" className="hover:text-snack-text">Why SnackSpot</a>
           </nav>
           <div className="flex items-center gap-2">
             <Link href="/auth/login" className="btn-ghost text-sm">Log in</Link>
@@ -102,13 +102,13 @@ export default function ProductPage() {
         <section className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-[1.2fr_0.8fr] md:items-center md:py-24">
           <div>
             <p className="mb-4 inline-flex rounded-full border border-snack-primary/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-snack-primary">
-              Mobile-first food review platform
+              Mobile-first hidden gem review app
             </p>
             <h1 className="max-w-3xl font-heading text-4xl font-bold leading-tight text-snack-text md:text-6xl">
-              A social product for discovering food spots and publishing structured snack reviews.
+              A social product for finding and reviewing the local spots most people still miss.
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-snack-muted md:text-lg">
-              SnackSpot combines a community feed, place discovery, photo uploads, moderation tooling, and a separate admin surface into one focused review platform built for food spots and casual meals.
+              SnackSpot combines a community feed, place discovery, photo uploads, and moderation tooling into one focused product for under-the-radar food spots, hidden gems, and smaller places worth sharing.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/auth/register" className="btn-primary text-sm">Start with an account</Link>
@@ -117,11 +117,11 @@ export default function ProductPage() {
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
               <div className="rounded-2xl border border-snack-border bg-white/90 p-4 shadow-sm">
                 <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Core value</p>
-                <p className="mt-2 text-sm font-semibold text-snack-text">Real places, real dishes, real community signals</p>
+                <p className="mt-2 text-sm font-semibold text-snack-text">Real hidden gems, real dishes, real community signals</p>
               </div>
               <div className="rounded-2xl border border-snack-border bg-white/90 p-4 shadow-sm">
                 <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Audience</p>
-                <p className="mt-2 text-sm font-semibold text-snack-text">Food explorers, local reviewers, moderators, admins</p>
+                <p className="mt-2 text-sm font-semibold text-snack-text">Curious locals, spot hunters, reviewers, moderators, admins</p>
               </div>
               <div className="rounded-2xl border border-snack-border bg-white/90 p-4 shadow-sm">
                 <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Deployment</p>
@@ -139,12 +139,12 @@ export default function ProductPage() {
               <div className="mt-5 space-y-4">
                 <div className="rounded-2xl bg-snack-surface p-4">
                   <p className="text-sm font-semibold text-snack-text">Photo reviews with context</p>
-                  <p className="mt-1 text-sm text-snack-muted">Dish name, place, city, tags, likes, comments, and multiple rating dimensions.</p>
+                  <p className="mt-1 text-sm text-snack-muted">Dish name, place, city, tags, likes, comments, and multiple rating dimensions for spots people do not already know.</p>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="rounded-2xl border border-snack-border p-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-snack-muted">Discovery</p>
-                    <p className="mt-2 text-sm font-semibold text-snack-text">Search, featured places, nearby radius map, tagged lanes</p>
+                    <p className="mt-2 text-sm font-semibold text-snack-text">Search, nearby discovery, featured places, tagged hidden gems</p>
                   </div>
                   <div className="rounded-2xl border border-snack-border p-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-snack-muted">Operations</p>
@@ -153,7 +153,7 @@ export default function ProductPage() {
                 </div>
                 <div className="rounded-2xl bg-gradient-to-r from-snack-primary to-snack-accent p-4 text-white">
                   <p className="text-xs uppercase tracking-[0.16em] text-white/80">Product focus</p>
-                  <p className="mt-2 text-sm font-semibold">The experience is built around finding places, posting better reviews, and keeping the community healthy.</p>
+                  <p className="mt-2 text-sm font-semibold">The experience is built around surfacing overlooked places, posting useful reviews, and keeping the community trustworthy.</p>
                 </div>
               </div>
             </div>
@@ -164,7 +164,7 @@ export default function ProductPage() {
           <div className="mb-8 max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">Problem</p>
             <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
-              Food discovery tools often split place data, personal reviews, photos, and moderation into disconnected systems.
+              Smaller local food spots are easy to miss when discovery is dominated by mainstream listings, generic maps, and broad review sites.
             </h2>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
@@ -181,7 +181,7 @@ export default function ProductPage() {
           <div className="mb-8 max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">Solution</p>
             <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
-              SnackSpot packages discovery, social proof, place intelligence, and community operations into one product surface.
+              SnackSpot gives overlooked places a dedicated review flow built around discovery, context, and trusted community signals.
             </h2>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
@@ -198,7 +198,7 @@ export default function ProductPage() {
           <div className="mb-8 max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">How it works</p>
             <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
-              The product flow is built around places, posts, and community feedback loops.
+              The product flow is built around discovering hidden spots, documenting why they matter, and passing them on.
             </h2>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
@@ -231,21 +231,21 @@ export default function ProductPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-4 py-8 md:py-14">
+        <section id="why" className="mx-auto max-w-6xl px-4 py-8 md:py-14">
           <div className="card overflow-hidden p-0">
             <div className="grid gap-0 md:grid-cols-[0.95fr_1.05fr]">
               <div className="bg-gradient-to-br from-snack-primary to-snack-accent p-8 text-white">
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/75">Why this product</p>
-                <h2 className="mt-3 font-heading text-3xl font-bold">Built for real community review workflows, not generic directory pages.</h2>
+                <h2 className="mt-3 font-heading text-3xl font-bold">Built for lesser-known food spots, not generic top-10 lists.</h2>
                 <p className="mt-4 text-sm leading-6 text-white/85">
-                  The value comes from tying structured ratings, authentic photos, place discovery, social engagement, and moderation tooling into one coherent review ecosystem.
+                  The value comes from giving small standout places better visibility through structured ratings, authentic photos, local discovery, and community moderation.
                 </p>
               </div>
               <div className="p-8">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="rounded-2xl bg-snack-surface p-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-snack-muted">Primary users</p>
-                    <p className="mt-2 text-sm font-semibold text-snack-text">Community reviewers and food spot explorers</p>
+                    <p className="mt-2 text-sm font-semibold text-snack-text">Locals, explorers, and reviewers chasing hidden gems</p>
                   </div>
                   <div className="rounded-2xl bg-snack-surface p-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-snack-muted">Operational users</p>
@@ -253,11 +253,11 @@ export default function ProductPage() {
                   </div>
                   <div className="rounded-2xl bg-snack-surface p-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-snack-muted">Core use cases</p>
-                    <p className="mt-2 text-sm font-semibold text-snack-text">Discover places, publish posts, track engagement, resolve reports</p>
+                    <p className="mt-2 text-sm font-semibold text-snack-text">Discover overlooked spots, publish reviews, track engagement, resolve reports</p>
                   </div>
                   <div className="rounded-2xl bg-snack-surface p-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-snack-muted">Product benefit</p>
-                    <p className="mt-2 text-sm font-semibold text-snack-text">A focused food-review workflow with modern social and ops foundations</p>
+                    <p className="mt-2 text-sm font-semibold text-snack-text">A focused way to surface small places with strong community context</p>
                   </div>
                 </div>
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row">

@@ -1,6 +1,6 @@
 # SnackSpot
 
-**A mobile-first social food-review app.** Post snack & meal reviews with photos and location tags. Discover the best spots near you through a community-powered feed.
+**A mobile-first social app for discovering under-the-radar food spots.** Post reviews with photos and location tags, and help other people find smaller local places that are easy to miss.
 
 ---
 

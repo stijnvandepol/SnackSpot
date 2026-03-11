@@ -8,7 +8,7 @@ import './globals.css'
 const metadataBase = getSiteOrigin()
 const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim()
 const appDescription =
-  'Discover the best food spots around you with SnackSpot. Share your own food reviews, explore hidden gems, and find your next favorite place to eat.'
+  'Discover under-the-radar food spots with SnackSpot. Share reviews of smaller local places, surface hidden gems, and help others find great food they would otherwise miss.'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const poppins = Poppins({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-poppins' })
