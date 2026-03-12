@@ -33,6 +33,15 @@ interface CommentItem {
   canDelete: boolean
 }
 
+const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+  dateStyle: 'medium',
+  timeZone: 'UTC',
+})
+
+function formatDate(dateInput: string) {
+  return dateFormatter.format(new Date(dateInput))
+}
+
 export default function ReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const { user, accessToken } = useAuth()
@@ -271,7 +280,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
               {review.user.username}
             </Link>
           </div>
-          <time className="text-xs text-snack-muted">{new Date(review.createdAt).toLocaleDateString()}</time>
+          <time className="text-xs text-snack-muted">{formatDate(review.createdAt)}</time>
         </div>
       </div>
 
@@ -323,7 +332,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
                     <Link href={`/u/${comment.user.username}`} className="text-sm font-medium text-snack-text hover:underline truncate">
                       {comment.user.username}
                     </Link>
-                    <time className="text-xs text-snack-muted whitespace-nowrap">{new Date(comment.createdAt).toLocaleDateString()}</time>
+                    <time className="text-xs text-snack-muted whitespace-nowrap">{formatDate(comment.createdAt)}</time>
                   </div>
                   {comment.canDelete && (
                     <button

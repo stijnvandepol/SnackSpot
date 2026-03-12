@@ -5,13 +5,13 @@
 @layer base {
   :root {
     --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
-    --snack-primary: #F97316;
+    --snack-primary: #C2410C;
     --snack-accent: #DC2626;
     --snack-rating: #F59E0B;
     --snack-bg: #FFFFFF;
     --snack-surface: #F6F7F9;
     --snack-text: #0F172A;
-    --snack-muted: #64748B;
+    --snack-muted: #475569;
   }
 
   html {

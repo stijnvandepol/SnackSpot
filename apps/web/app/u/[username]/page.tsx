@@ -33,6 +33,15 @@ interface Review {
   reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
 }
 
+const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+  dateStyle: 'medium',
+  timeZone: 'UTC',
+})
+
+function formatDate(dateInput: string) {
+  return dateFormatter.format(new Date(dateInput))
+}
+
 export default function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = use(params)
   const { accessToken } = useAuth()
@@ -98,9 +107,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                     <h1 className="font-heading font-bold text-xl text-snack-text">{profile.username}</h1>
                     <p className="text-sm text-snack-muted">@{profile.username}</p>
                     <p className="text-xs text-snack-muted mt-1">{profile.bio?.trim() || 'SnackSpot member'}</p>
-                    <p className="text-xs text-snack-muted mt-1">
-                      Joined {new Date(profile.createdAt).toLocaleDateString()}
-                    </p>
+                    <p className="text-xs text-snack-muted mt-1">Joined {formatDate(profile.createdAt)}</p>
                   </div>
                 </div>
 
