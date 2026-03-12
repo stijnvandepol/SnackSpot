@@ -238,28 +238,9 @@ export default function ProductPage() {
       </main>
 
       <footer className="px-4 pb-10 pt-4 text-center">
-        <nav className="mb-4 flex items-center justify-center gap-4" aria-label="Footer navigation">
-          <Link
-            href="/guides"
-            className="btn-secondary text-sm"
-          >
-            Guides
-          </Link>
-          <Link href="/search" className="text-sm font-medium text-snack-muted transition hover:text-snack-text">
-            Explore
-          </Link>
-          <Link href="/nearby" className="text-sm font-medium text-snack-muted transition hover:text-snack-text">
-            Nearby
-          </Link>
-        </nav>
-        <a
-          href="https://stijnvandepol.nl"
-          target="_blank"
-          rel="noreferrer"
-          className="text-sm font-medium text-snack-muted transition hover:text-snack-text"
-        >
-          Stijn van de Pol
-        </a>
+        <p className="text-sm font-medium text-snack-muted">
+          &copy; {new Date().getFullYear()} SnackSpot
+        </p>
       </footer>
     </div>
   )
