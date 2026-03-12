@@ -25,9 +25,6 @@ export const metadata: Metadata = {
   applicationName: 'SnackSpot',
   title: { default: 'SnackSpot', template: '%s | SnackSpot' },
   description: appDescription,
-  alternates: {
-    canonical: '/',
-  },
   robots: {
     index: true,
     follow: true,
