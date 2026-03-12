@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { RelatedGuides } from '@/components/RelatedGuides'
+import { GuidesShell } from '@/components/guides-shell'
 
 const faqItems = [
   {
@@ -44,10 +45,11 @@ export const metadata: Metadata = {
 
 export default function AddSnackSpotToHomescreenGuidePage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+    <GuidesShell>
+      <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
-      <article className="guide-content prose prose-slate">
+        <article className="guide-content guide-article prose prose-slate">
         <h1>Add SnackSpot to your home screen (Android &amp; iPhone)</h1>
 
         <p>
@@ -184,9 +186,10 @@ export default function AddSnackSpotToHomescreenGuidePage() {
             <Link href="/auth/register">Create one here</Link>.
           </p>
         </section>
-      </article>
+        </article>
 
-      <RelatedGuides currentHref="/guides/add-snackspot-to-home-screen" />
-    </div>
+        <RelatedGuides currentHref="/guides/add-snackspot-to-home-screen" />
+      </div>
+    </GuidesShell>
   )
 }

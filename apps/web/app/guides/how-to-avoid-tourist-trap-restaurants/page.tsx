@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { RelatedGuides } from '@/components/RelatedGuides'
+import { GuidesShell } from '@/components/guides-shell'
 
 const faqItems = [
   {
@@ -49,10 +50,11 @@ export const metadata: Metadata = {
 
 export default function AvoidTouristTrapRestaurantsGuidePage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+    <GuidesShell>
+      <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
-      <article className="guide-content prose prose-slate">
+        <article className="guide-content guide-article prose prose-slate">
         <h1>How To Avoid Tourist Trap Restaurants And Eat Like A Local</h1>
 
         <p>
@@ -236,9 +238,10 @@ export default function AvoidTouristTrapRestaurantsGuidePage() {
             <Link href="/auth/register">joining SnackSpot</Link>.
           </p>
         </section>
-      </article>
+        </article>
 
-      <RelatedGuides currentHref="/guides/how-to-avoid-tourist-trap-restaurants" />
-    </div>
+        <RelatedGuides currentHref="/guides/how-to-avoid-tourist-trap-restaurants" />
+      </div>
+    </GuidesShell>
   )
 }

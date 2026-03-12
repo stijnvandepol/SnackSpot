@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { RelatedGuides } from '@/components/RelatedGuides'
+import { GuidesShell } from '@/components/guides-shell'
 
 const faqItems = [
   {
@@ -49,10 +50,11 @@ export const metadata: Metadata = {
 
 export default function SpotFakeRestaurantReviewsGuidePage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+    <GuidesShell>
+      <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
-      <article className="guide-content prose prose-slate">
+        <article className="guide-content guide-article prose prose-slate">
         <h1>How To Spot Fake Restaurant Reviews And Choose Places With Confidence</h1>
 
         <p>
@@ -247,9 +249,10 @@ export default function SpotFakeRestaurantReviewsGuidePage() {
             <Link href="/auth/register">signing up</Link>.
           </p>
         </section>
-      </article>
+        </article>
 
-      <RelatedGuides currentHref="/guides/how-to-spot-fake-restaurant-reviews" />
-    </div>
+        <RelatedGuides currentHref="/guides/how-to-spot-fake-restaurant-reviews" />
+      </div>
+    </GuidesShell>
   )
 }

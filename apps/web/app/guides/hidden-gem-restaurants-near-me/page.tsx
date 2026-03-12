@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { RelatedGuides } from '@/components/RelatedGuides'
+import { GuidesShell } from '@/components/guides-shell'
 
 const faqItems = [
   {
@@ -49,10 +50,11 @@ export const metadata: Metadata = {
 
 export default function HiddenGemRestaurantsGuidePage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+    <GuidesShell>
+      <div className="mx-auto max-w-4xl px-4 py-10 md:py-14">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
-      <article className="guide-content prose prose-slate">
+        <article className="guide-content guide-article prose prose-slate">
         <h1>Hidden Gem Restaurants Near Me: How To Find Better Local Food Consistently</h1>
 
         <p>
@@ -233,9 +235,10 @@ export default function HiddenGemRestaurantsGuidePage() {
             <Link href="/auth/register">sign up for SnackSpot</Link>.
           </p>
         </section>
-      </article>
+        </article>
 
-      <RelatedGuides currentHref="/guides/hidden-gem-restaurants-near-me" />
-    </div>
+        <RelatedGuides currentHref="/guides/hidden-gem-restaurants-near-me" />
+      </div>
+    </GuidesShell>
   )
 }
