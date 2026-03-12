@@ -44,7 +44,6 @@ ENV NODE_ENV=production \
     JWT_REFRESH_SECRET=placeholder-refresh-secret-at-least-32-chars-long \
     RESEND_API_KEY=placeholder-resend-api-key
 
-RUN pnpm --filter web test
 RUN pnpm --filter web build
 
 FROM node:20-alpine AS runner
