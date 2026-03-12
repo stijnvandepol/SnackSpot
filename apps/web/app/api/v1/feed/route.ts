@@ -105,7 +105,7 @@ export async function GET(req: NextRequest) {
       : null
 
     const res = ok({ data: withLikes, pagination: { nextCursor, hasMore } })
-    return auth ? withNoStore(res) : withPublicCache(res, 10, 30)
+    return auth ? withNoStore(res) : withPublicCache(res, 60, 120)
   } catch (e) {
     return serverError('feed', e)
   }

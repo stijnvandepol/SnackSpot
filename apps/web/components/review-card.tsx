@@ -26,6 +26,7 @@ interface ReviewCardProps {
   showPlace?: boolean
   photoVariantPreference?: ReadonlyArray<'thumb' | 'medium' | 'large'>
   backContext?: string
+  priority?: boolean
 }
 
 function timeAgo(dateInput: Date | string): string {
@@ -51,6 +52,7 @@ export function ReviewCard({
   showPlace = true,
   photoVariantPreference = ['thumb', 'medium', 'large'],
   backContext,
+  priority = false,
 }: ReviewCardProps) {
   const thumb =
     review.reviewPhotos
@@ -75,7 +77,8 @@ export function ReviewCard({
               src={thumb}
               alt={review.dishName ?? 'Review photo'}
               className="h-full w-full object-cover"
-              loading="lazy"
+              loading={priority ? 'eager' : 'lazy'}
+              fetchPriority={priority ? 'high' : 'auto'}
             />
           </div>
         )}

@@ -58,7 +58,7 @@ export default function FeedPage() {
       setHasMore(json.data.pagination.hasMore)
     } catch (err) {
       requestedCursorsRef.current.delete(cursorKey)
-      console.error(err)
+      if (process.env.NODE_ENV !== 'production') console.error(err)
       setError('Could not load feed. Check your connection and try again.')
     } finally {
       inFlightRef.current = false
@@ -115,12 +115,13 @@ export default function FeedPage() {
       )}
 
       <div className="space-y-4">
-        {reviews.map((r) => (
+        {reviews.map((r, i) => (
           <ReviewCard
             key={r.id}
             review={r}
             photoVariantPreference={['medium', 'large', 'thumb']}
             backContext="feed"
+            priority={i === 0}
           />
         ))}
       </div>
