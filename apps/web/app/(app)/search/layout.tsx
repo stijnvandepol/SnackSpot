@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Search',
+  title: 'Explore',
   alternates: {
     canonical: '/search',
   },
