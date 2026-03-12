@@ -69,6 +69,7 @@ export default function ForgotPasswordPage() {
               <p className="text-sm text-snack-muted mt-1">
                 If an account with that email exists, we&apos;ve sent a password reset link.
                 The link is valid for 15 minutes.
+                If you can&apos;t find the email, please check your spam folder.
               </p>
             </div>
             <Link href="/auth/login" className="text-sm text-snack-primary font-medium hover:underline">

@@ -11,7 +11,9 @@ import { logger } from '@/lib/logger'
 // Response body factory — Response bodies are ReadableStreams consumed exactly once.
 // A module-level Response constant would return a drained stream on the second request.
 function genericOk() {
-  return withNoStore(ok({ message: 'If an account with that email exists, a reset link has been sent.' }))
+  return withNoStore(ok({
+    message: 'If an account with that email exists, a reset link has been sent. If you cannot find the email, please check your spam folder.',
+  }))
 }
 
 export async function POST(req: NextRequest) {
