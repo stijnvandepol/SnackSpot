@@ -5,6 +5,7 @@ import {
   hashPassword,
   signAccessToken,
   generateRefreshToken,
+  generateTokenFamily,
   hashRefreshToken,
   refreshTokenExpiresAt,
   buildSetCookie,
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
     const expiresAt = refreshTokenExpiresAt()
 
     await prisma.refreshToken.create({
-      data: { userId: user.id, tokenHash: hashRefreshToken(rawRefresh), expiresAt },
+      data: { userId: user.id, tokenHash: hashRefreshToken(rawRefresh), family: generateTokenFamily(), expiresAt },
     })
 
     try {
