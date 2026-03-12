@@ -11,6 +11,11 @@ const ALLOWED_HOSTS = (process.env.ALLOWED_HOSTS ?? '')
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean)
 
+// Only trust x-forwarded-host when explicitly configured — mirrors the same guard used in
+// api-helpers.ts:requireSameOrigin. Unconditionally trusting this header allows an attacker
+// outside the proxy to spoof it and bypass the ALLOWED_HOSTS check.
+const TRUST_PROXY = process.env.TRUST_PROXY === 'true'
+
 function corsHeaders(origin: string | null, isPreflight: boolean): Headers {
   const headers = new Headers()
   const allowed = origin && CORS_ORIGINS.includes(origin) ? origin : null
@@ -29,7 +34,7 @@ function corsHeaders(origin: string | null, isPreflight: boolean): Headers {
 export function middleware(req: NextRequest) {
   const startedAt = Date.now()
   const origin = req.headers.get('origin')
-  const host = (req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? '').toLowerCase()
+  const host = ((TRUST_PROXY ? req.headers.get('x-forwarded-host') : null) ?? req.headers.get('host') ?? '').toLowerCase()
 
   if (ALLOWED_HOSTS.length > 0 && host && !ALLOWED_HOSTS.includes(host)) {
     return new Response('Host not allowed', { status: 400 })

@@ -7,8 +7,11 @@ import { ok, err, parseBody, serverError, isResponse, requireSameOrigin, withNoS
 import { rateLimitIP, rateLimit, getClientIP } from '@/lib/rate-limit'
 import { env } from '@/lib/env'
 
-// Generic response sent regardless of whether the email exists (prevents account enumeration).
-const GENERIC_OK = ok({ message: 'If an account with that email exists, a reset link has been sent.' })
+// Response body factory — Response bodies are ReadableStreams consumed exactly once.
+// A module-level Response constant would return a drained stream on the second request.
+function genericOk() {
+  return withNoStore(ok({ message: 'If an account with that email exists, a reset link has been sent.' }))
+}
 
 export async function POST(req: NextRequest) {
   const sameOrigin = requireSameOrigin(req)
@@ -29,7 +32,7 @@ export async function POST(req: NextRequest) {
   const emailRl = await rateLimit(`rl:email:forgot-password:${emailKey}`, 3, 3600)
   if (!emailRl.allowed) {
     // Still return a generic response — don't reveal rate-limiting by email
-    return withNoStore(GENERIC_OK)
+    return genericOk()
   }
 
   try {
@@ -40,7 +43,7 @@ export async function POST(req: NextRequest) {
 
     // Always return the same response regardless of whether the user was found
     if (!user) {
-      return withNoStore(GENERIC_OK)
+      return genericOk()
     }
 
     // Invalidate any existing (unused) tokens for this user before issuing a new one
@@ -67,7 +70,7 @@ export async function POST(req: NextRequest) {
       console.error('[forgot-password] email send failed:', e instanceof Error ? e.message : String(e))
     }
 
-    return withNoStore(GENERIC_OK)
+    return genericOk()
   } catch (e) {
     return serverError('forgot-password', e)
   }

@@ -48,9 +48,10 @@ const MINIO_USE_SSL   = process.env.MINIO_USE_SSL === 'true'
 const MINIO_ACCESS_KEY = requireEnv('MINIO_ACCESS_KEY')
 const MINIO_SECRET_KEY = requireEnv('MINIO_SECRET_KEY')
 const BUCKET          = process.env.MINIO_BUCKET ?? 'snackspot'
-const QUEUE_NAME      = 'photo-processing'
+const QUEUE_NAME         = 'photo-processing'
 const MAX_ORIGINAL_BYTES = positiveIntFromEnv('MAX_FILE_SIZE_BYTES', 10 * 1024 * 1024)
-const MAX_INPUT_PIXELS = positiveIntFromEnv('MAX_INPUT_PIXELS', 40_000_000)
+const MAX_INPUT_PIXELS   = positiveIntFromEnv('MAX_INPUT_PIXELS', 40_000_000)
+const WORKER_CONCURRENCY = positiveIntFromEnv('WORKER_CONCURRENCY', 3)
 
 // ─── Clients ─────────────────────────────────────────────────────────────────
 
@@ -171,7 +172,7 @@ async function processPhoto(job: Job<PhotoJob>): Promise<void> {
 
 const worker = new Worker<PhotoJob>(QUEUE_NAME, processPhoto, {
   connection: redis,
-  concurrency: 3,
+  concurrency: WORKER_CONCURRENCY,
 })
 
 worker.on('completed', (job) => {
@@ -210,4 +211,4 @@ async function shutdown(signal: string) {
 process.on('SIGTERM', () => shutdown('SIGTERM'))
 process.on('SIGINT',  () => shutdown('SIGINT'))
 
-log.info({ queue: QUEUE_NAME, concurrency: 3 }, 'Worker started – waiting for jobs')
+log.info({ queue: QUEUE_NAME, concurrency: WORKER_CONCURRENCY }, 'Worker started – waiting for jobs')

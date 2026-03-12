@@ -42,6 +42,8 @@ const envSchema = z.object({
 
   MAX_FILE_SIZE_BYTES: z.coerce.number().int().positive().default(10 * 1024 * 1024),
   MAX_PHOTOS_PER_REVIEW: z.coerce.number().int().positive().default(5),
+
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).optional(),
 })
 
 const _env = envSchema.safeParse(process.env)

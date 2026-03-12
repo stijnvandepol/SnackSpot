@@ -18,11 +18,11 @@ export async function createNotification(params: CreateNotificationParams) {
   try {
     // Don't notify users about their own actions
     if (params.userId === params.actorId) {
-      logger.info({ params }, 'Skipping notification: actor is same as recipient')
+      logger.debug({ params }, 'Skipping notification: actor is same as recipient')
       return null
     }
 
-    logger.info({ params }, 'Creating notification')
+    logger.debug({ params }, 'Creating notification')
     const notification = await prisma.notification.create({
       data: {
         userId: params.userId,
@@ -35,7 +35,7 @@ export async function createNotification(params: CreateNotificationParams) {
         commentId: params.commentId,
       },
     })
-    logger.info({ notificationId: notification.id, userId: params.userId }, 'Notification created successfully')
+    logger.debug({ notificationId: notification.id, userId: params.userId }, 'Notification created successfully')
 
     // Check user preferences and send push notification if enabled
     try {
@@ -77,7 +77,7 @@ function shouldSendPush(
   }
 }
 
-async function sendPushNotification(userId: string, notification: { title: string; message: string; link: string | null }) {
+async function sendPushNotification(userId: string, _notification: { title: string; message: string; link: string | null }) {
   try {
     const subscriptions = await prisma.pushSubscription.findMany({
       where: { userId },
@@ -97,7 +97,7 @@ async function sendPushNotification(userId: string, notification: { title: strin
 
 export async function notifyReviewLike(reviewId: string, actorId: string) {
   try {
-    logger.info({ reviewId, actorId }, 'notifyReviewLike called')
+    logger.debug({ reviewId, actorId }, 'notifyReviewLike called')
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
       select: {
@@ -113,7 +113,7 @@ export async function notifyReviewLike(reviewId: string, actorId: string) {
     }
 
     if (review.userId === actorId) {
-      logger.info({ reviewId, actorId }, 'Skipping like notification: user liked their own review')
+      logger.debug({ reviewId, actorId }, 'Skipping like notification: user liked their own review')
       return null
     }
 
@@ -141,7 +141,7 @@ export async function notifyReviewLike(reviewId: string, actorId: string) {
 
 export async function notifyReviewComment(reviewId: string, commentId: string, actorId: string) {
   try {
-    logger.info({ reviewId, commentId, actorId }, 'notifyReviewComment called')
+    logger.debug({ reviewId, commentId, actorId }, 'notifyReviewComment called')
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
       select: {
@@ -157,7 +157,7 @@ export async function notifyReviewComment(reviewId: string, commentId: string, a
     }
 
     if (review.userId === actorId) {
-      logger.info({ reviewId, actorId }, 'Skipping comment notification: user commented on their own review')
+      logger.debug({ reviewId, actorId }, 'Skipping comment notification: user commented on their own review')
       return null
     }
 
@@ -186,7 +186,7 @@ export async function notifyReviewComment(reviewId: string, commentId: string, a
 
 export async function notifyMention(mentionedUserId: string, reviewId: string, actorId: string) {
   try {
-    logger.info({ mentionedUserId, reviewId, actorId }, 'notifyMention called')
+    logger.debug({ mentionedUserId, reviewId, actorId }, 'notifyMention called')
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
       select: {
@@ -229,7 +229,7 @@ export async function notifyCommentMention(
   actorId: string,
 ) {
   try {
-    logger.info({ mentionedUserId, reviewId, commentId, actorId }, 'notifyCommentMention called')
+    logger.debug({ mentionedUserId, reviewId, commentId, actorId }, 'notifyCommentMention called')
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
       select: {
