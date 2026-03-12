@@ -38,6 +38,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
+      <footer className="border-t border-[#ececec] bg-white/90">
+        <div className="mx-auto flex max-w-6xl items-center justify-center gap-5 px-4 py-3 text-sm">
+          <Link href="/guides" className="font-semibold text-snack-primary hover:underline">
+            Guides
+          </Link>
+          <Link href="/search" className="text-snack-muted hover:text-snack-text">
+            Explore
+          </Link>
+          <Link href="/nearby" className="text-snack-muted hover:text-snack-text">
+            Nearby
+          </Link>
+        </div>
+      </footer>
+
       {/* Mobile bottom nav */}
       <BottomNav />
     </div>

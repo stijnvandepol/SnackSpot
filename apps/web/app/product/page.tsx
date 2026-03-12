@@ -84,6 +84,7 @@ export default function ProductPage() {
             <a href="#why" className="hover:text-snack-text">Why SnackSpot</a>
           </nav>
           <div className="flex items-center gap-2">
+            <Link href="/guides" className="btn-secondary text-sm">Guides</Link>
             <Link href="/auth/login" className="btn-ghost text-sm">Log in</Link>
             <Link href="/auth/register" className="btn-primary text-sm">Create account</Link>
           </div>
@@ -105,6 +106,7 @@ export default function ProductPage() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/auth/register" className="btn-primary text-sm">Start with an account</Link>
               <Link href="/feed" className="btn-secondary text-sm">Open the app feed</Link>
+              <Link href="/guides" className="btn-secondary text-sm">Read guides</Link>
             </div>
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
               <div className="rounded-2xl border border-snack-border bg-white/90 p-4 shadow-sm">
@@ -236,12 +238,18 @@ export default function ProductPage() {
       </main>
 
       <footer className="px-4 pb-10 pt-4 text-center">
-        <nav className="mb-3" aria-label="Footer navigation">
+        <nav className="mb-4 flex items-center justify-center gap-4" aria-label="Footer navigation">
           <Link
             href="/guides"
-            className="text-sm font-medium text-snack-muted transition hover:text-snack-text"
+            className="btn-secondary text-sm"
           >
             Guides
+          </Link>
+          <Link href="/search" className="text-sm font-medium text-snack-muted transition hover:text-snack-text">
+            Explore
+          </Link>
+          <Link href="/nearby" className="text-sm font-medium text-snack-muted transition hover:text-snack-text">
+            Nearby
           </Link>
         </nav>
         <a

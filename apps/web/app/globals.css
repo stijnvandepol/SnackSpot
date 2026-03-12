@@ -105,6 +105,27 @@
     @apply block text-sm font-medium mb-1.5;
     color: var(--snack-muted);
   }
+
+  .guide-content {
+    @apply mx-auto max-w-2xl;
+  }
+
+  .guide-content p {
+    @apply leading-7;
+  }
+
+  .guide-content h2 {
+    @apply mt-10;
+  }
+
+  .guide-content h3 {
+    @apply mt-6;
+  }
+
+  .guide-content ul,
+  .guide-content ol {
+    @apply my-4;
+  }
 }
 
 /* Prevent iOS Safari auto-zoom on form focus */

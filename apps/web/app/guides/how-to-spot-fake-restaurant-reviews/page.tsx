@@ -52,7 +52,7 @@ export default function SpotFakeRestaurantReviewsGuidePage() {
     <div className="mx-auto max-w-3xl px-4 py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
-      <article className="prose prose-slate max-w-none">
+      <article className="guide-content prose prose-slate">
         <h1>How To Spot Fake Restaurant Reviews And Choose Places With Confidence</h1>
 
         <p>

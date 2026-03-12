@@ -14,6 +14,7 @@ export function TopNav() {
     { href: '/feed', label: 'Home' },
     { href: '/search', label: 'Explore' },
     { href: '/nearby', label: 'Nearby' },
+    { href: '/guides', label: 'Guides' },
   ]
 
   return (

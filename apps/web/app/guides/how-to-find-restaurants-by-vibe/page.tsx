@@ -52,7 +52,7 @@ export default function FindRestaurantsByVibeGuidePage() {
     <div className="mx-auto max-w-3xl px-4 py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
-      <article className="prose prose-slate max-w-none">
+      <article className="guide-content prose prose-slate">
         <h1>How To Find Restaurants By Vibe And Stop Choosing The Wrong Place</h1>
 
         <p>
