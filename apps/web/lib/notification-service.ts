@@ -33,7 +33,6 @@ export async function createNotification(params: CreateNotificationParams) {
       return null
     }
 
-    logger.debug({ params }, 'Creating notification')
     const notification = await prisma.notification.create({
       data: {
         userId: params.userId,
@@ -48,7 +47,6 @@ export async function createNotification(params: CreateNotificationParams) {
     })
     logger.debug({ notificationId: notification.id, userId: params.userId }, 'Notification created successfully')
 
-    // Check user preferences and send push notification if enabled
     try {
       const preferences = await prisma.notificationPreferences.findUnique({
         where: { userId: params.userId },
@@ -58,13 +56,13 @@ export async function createNotification(params: CreateNotificationParams) {
         await sendPushNotification(params.userId, notification)
       }
     } catch (prefError) {
-      logger.error({ error: prefError, userId: params.userId }, 'Failed to check notification preferences')
+      logger.error({ err: prefError, userId: params.userId }, 'Failed to check notification preferences')
       // Continue anyway - notification was created successfully
     }
 
     return notification
-  } catch (error) {
-    logger.error({ error, params }, 'Failed to create notification')
+  } catch (err) {
+    logger.error({ err, params }, 'Failed to create notification')
     return null
   }
 }
@@ -100,8 +98,8 @@ async function sendPushNotification(
       where: { userId },
       select: { id: true, endpoint: true, p256dhKey: true, authKey: true },
     })
-  } catch (error) {
-    logger.error({ error, userId }, 'Failed to fetch push subscriptions')
+  } catch (err) {
+    logger.error({ err, userId }, 'Failed to fetch push subscriptions')
     return
   }
 
@@ -145,7 +143,6 @@ async function sendPushNotification(
 
 export async function notifyReviewLike(reviewId: string, actorId: string) {
   try {
-    logger.debug({ reviewId, actorId }, 'notifyReviewLike called')
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
       select: {
@@ -157,11 +154,6 @@ export async function notifyReviewLike(reviewId: string, actorId: string) {
 
     if (!review) {
       logger.warn({ reviewId }, 'Review not found for like notification')
-      return null
-    }
-
-    if (review.userId === actorId) {
-      logger.debug({ reviewId, actorId }, 'Skipping like notification: user liked their own review')
       return null
     }
 
@@ -181,15 +173,14 @@ export async function notifyReviewLike(reviewId: string, actorId: string) {
       actorId,
       reviewId,
     })
-  } catch (error) {
-    logger.error({ error, reviewId, actorId }, 'Failed to notify review like')
+  } catch (err) {
+    logger.error({ err, reviewId, actorId }, 'Failed to notify review like')
     return null
   }
 }
 
 export async function notifyReviewComment(reviewId: string, commentId: string, actorId: string) {
   try {
-    logger.debug({ reviewId, commentId, actorId }, 'notifyReviewComment called')
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
       select: {
@@ -201,11 +192,6 @@ export async function notifyReviewComment(reviewId: string, commentId: string, a
 
     if (!review) {
       logger.warn({ reviewId }, 'Review not found for comment notification')
-      return null
-    }
-
-    if (review.userId === actorId) {
-      logger.debug({ reviewId, actorId }, 'Skipping comment notification: user commented on their own review')
       return null
     }
 
@@ -226,15 +212,14 @@ export async function notifyReviewComment(reviewId: string, commentId: string, a
       reviewId,
       commentId,
     })
-  } catch (error) {
-    logger.error({ error, reviewId, commentId, actorId }, 'Failed to notify review comment')
+  } catch (err) {
+    logger.error({ err, reviewId, commentId, actorId }, 'Failed to notify review comment')
     return null
   }
 }
 
 export async function notifyMention(mentionedUserId: string, reviewId: string, actorId: string) {
   try {
-    logger.debug({ mentionedUserId, reviewId, actorId }, 'notifyMention called')
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
       select: {
@@ -264,8 +249,8 @@ export async function notifyMention(mentionedUserId: string, reviewId: string, a
       actorId,
       reviewId,
     })
-  } catch (error) {
-    logger.error({ error, mentionedUserId, reviewId, actorId }, 'Failed to notify mention')
+  } catch (err) {
+    logger.error({ err, mentionedUserId, reviewId, actorId }, 'Failed to notify mention')
     return null
   }
 }
@@ -277,7 +262,6 @@ export async function notifyCommentMention(
   actorId: string,
 ) {
   try {
-    logger.debug({ mentionedUserId, reviewId, commentId, actorId }, 'notifyCommentMention called')
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
       select: {
@@ -307,8 +291,8 @@ export async function notifyCommentMention(
       reviewId,
       commentId,
     })
-  } catch (error) {
-    logger.error({ error, mentionedUserId, reviewId, commentId, actorId }, 'Failed to notify comment mention')
+  } catch (err) {
+    logger.error({ err, mentionedUserId, reviewId, commentId, actorId }, 'Failed to notify comment mention')
     return null
   }
 }
@@ -322,8 +306,8 @@ export async function notifyBadgeEarned(userId: string, badgeName: string) {
       message: `You unlocked "${badgeName}"`,
       link: '/profile',
     })
-  } catch (error) {
-    logger.error({ error, userId, badgeName }, 'Failed to notify badge earned')
+  } catch (err) {
+    logger.error({ err, userId, badgeName }, 'Failed to notify badge earned')
     return null
   }
 }

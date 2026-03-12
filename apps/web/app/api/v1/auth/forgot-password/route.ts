@@ -6,6 +6,7 @@ import { sendPasswordResetEmail } from '@/lib/email'
 import { ok, err, parseBody, serverError, isResponse, requireSameOrigin, withNoStore } from '@/lib/api-helpers'
 import { rateLimitIP, rateLimit, getClientIP } from '@/lib/rate-limit'
 import { env } from '@/lib/env'
+import { logger } from '@/lib/logger'
 
 // Response body factory — Response bodies are ReadableStreams consumed exactly once.
 // A module-level Response constant would return a drained stream on the second request.
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
     try {
       await sendPasswordResetEmail(user.email, resetUrl)
     } catch (e: unknown) {
-      console.error('[forgot-password] email send failed:', e instanceof Error ? e.message : String(e))
+      logger.warn({ err: e }, 'forgot-password: password reset email failed to send')
     }
 
     return genericOk()

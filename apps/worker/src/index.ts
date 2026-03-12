@@ -110,7 +110,6 @@ async function processPhoto(job: Job<PhotoJob>): Promise<void> {
     throw new Error(`Original too large: ${stat.size} bytes`)
   }
 
-  // 1. Download original
   let originalBuffer: Buffer
   try {
     originalBuffer = await downloadToBuffer(storageKey)
@@ -119,7 +118,6 @@ async function processPhoto(job: Job<PhotoJob>): Promise<void> {
     throw err
   }
 
-  // 2. Probe original metadata (before any transform)
   const meta = await sharp(originalBuffer, { limitInputPixels: MAX_INPUT_PIXELS }).metadata()
   const originalWidth  = meta.width ?? 0
   const originalHeight = meta.height ?? 0
@@ -131,7 +129,6 @@ async function processPhoto(job: Job<PhotoJob>): Promise<void> {
   const uuidMatch = storageKey.match(/[^/]+(?=\.[^.]+$)/)
   const uuid = uuidMatch ? uuidMatch[0] : photoId
 
-  // 3. Generate + upload variants
   const variantKeys: Record<string, string> = {}
 
   for (const variant of VARIANTS) {
@@ -149,7 +146,6 @@ async function processPhoto(job: Job<PhotoJob>): Promise<void> {
     jobLog.debug({ variant: variant.name, size: outputBuffer.length }, 'Variant uploaded')
   }
 
-  // 4. Update DB record
   await prisma.photo.update({
     where: { id: photoId },
     data: {

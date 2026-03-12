@@ -28,7 +28,6 @@ export async function POST(req: NextRequest) {
   if (isResponse(body)) return body
 
   try {
-    // Check for existing email / username
     const conflict = await prisma.user.findFirst({
       where: { OR: [{ email: body.email }, { username: body.username }] },
       select: { email: true, username: true },
@@ -57,7 +56,6 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Issue tokens
     const accessToken = signAccessToken({ sub: user.id, email: user.email, username: user.username, role: user.role })
     const rawRefresh = generateRefreshToken()
     const expiresAt = refreshTokenExpiresAt()

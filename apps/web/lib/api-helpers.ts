@@ -36,10 +36,6 @@ export function validationError(details: unknown): Response {
   return err('Validation error', 422, details)
 }
 
-export function rateLimited(): Response {
-  return err('Too many requests', 429)
-}
-
 // ─── Auth extraction helpers ─────────────────────────────────────────────────
 
 export function getAuthPayload(req: NextRequest): AccessTokenPayload | null {
