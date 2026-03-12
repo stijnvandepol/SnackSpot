@@ -44,6 +44,10 @@ ENV NODE_ENV=production \
     JWT_REFRESH_SECRET=placeholder-refresh-secret-at-least-32-chars-long \
     RESEND_API_KEY=placeholder-resend-api-key
 
+FROM base AS test
+RUN pnpm --filter web test
+
+FROM base AS build
 RUN pnpm --filter web build
 
 FROM node:20-alpine AS runner
@@ -57,9 +61,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-COPY --from=base --chown=app:app /app/apps/web/.next/standalone ./
-COPY --from=base --chown=app:app /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=base --chown=app:app /app/apps/web/public ./apps/web/public
+COPY --from=build --chown=app:app /app/apps/web/.next/standalone ./
+COPY --from=build --chown=app:app /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=build --chown=app:app /app/apps/web/public ./apps/web/public
 
 USER app
 

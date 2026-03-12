@@ -34,11 +34,13 @@ jobs:
           docker compose version
 
       - name: Run unit tests
-        working-directory: apps/web
         run: |
-          npm install -g pnpm@9.15.4 --quiet 2>/dev/null || true
-          pnpm install --frozen-lockfile --silent
-          pnpm test
+          docker build \
+            --target test \
+            --progress=plain \
+            --no-cache-filter test \
+            -f apps/web/Dockerfile \
+            .
 
       - name: Deploy stack
         run: docker compose up -d --build --remove-orphans
