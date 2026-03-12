@@ -1,5 +1,16 @@
+import webPush from 'web-push'
 import { prisma } from './db'
 import { logger } from './logger'
+import { env } from './env'
+
+// Configure VAPID credentials once at module load.
+// Push notifications are silently disabled when VAPID keys are absent so the
+// app starts cleanly without them (e.g. local dev without a service worker).
+// Generate keys with: npx web-push generate-vapid-keys
+const PUSH_ENABLED = !!(env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY && env.VAPID_SUBJECT)
+if (PUSH_ENABLED) {
+  webPush.setVapidDetails(env.VAPID_SUBJECT!, env.VAPID_PUBLIC_KEY!, env.VAPID_PRIVATE_KEY!)
+}
 
 type NotificationType = 'REVIEW_LIKE' | 'REVIEW_COMMENT' | 'REVIEW_MENTION' | 'COMMENT_MENTION' | 'BADGE_EARNED'
 
@@ -77,21 +88,58 @@ function shouldSendPush(
   }
 }
 
-async function sendPushNotification(userId: string, _notification: { title: string; message: string; link: string | null }) {
+async function sendPushNotification(
+  userId: string,
+  notification: { title: string; message: string; link: string | null },
+) {
+  if (!PUSH_ENABLED) return
+
+  let subscriptions: Array<{ id: string; endpoint: string; p256dhKey: string; authKey: string }>
   try {
-    const subscriptions = await prisma.pushSubscription.findMany({
+    subscriptions = await prisma.pushSubscription.findMany({
       where: { userId },
+      select: { id: true, endpoint: true, p256dhKey: true, authKey: true },
     })
-
-    if (subscriptions.length === 0) {
-      return
-    }
-
-    // We'll implement web-push in a moment
-    // For now, just log that we would send a push
-    logger.info({ userId, subscriptions: subscriptions.length }, 'Would send push notification')
   } catch (error) {
-    logger.error({ error, userId }, 'Failed to send push notification')
+    logger.error({ error, userId }, 'Failed to fetch push subscriptions')
+    return
+  }
+
+  if (subscriptions.length === 0) return
+
+  const payload = JSON.stringify({
+    title: notification.title,
+    body: notification.message,
+    url: notification.link ?? '/',
+  })
+
+  const expiredEndpoints: string[] = []
+
+  await Promise.allSettled(
+    subscriptions.map(async (sub) => {
+      try {
+        await webPush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dhKey, auth: sub.authKey } },
+          payload,
+        )
+        logger.debug({ userId, endpoint: sub.endpoint }, 'Push notification sent')
+      } catch (err) {
+        const status = (err as { statusCode?: number }).statusCode
+        if (status === 410 || status === 404) {
+          // Subscription has been revoked by the browser — remove it.
+          expiredEndpoints.push(sub.endpoint)
+          logger.debug({ userId, endpoint: sub.endpoint, status }, 'Removing expired push subscription')
+        } else {
+          logger.warn({ err, userId, endpoint: sub.endpoint }, 'Push notification delivery failed')
+        }
+      }
+    }),
+  )
+
+  if (expiredEndpoints.length > 0) {
+    await prisma.pushSubscription
+      .deleteMany({ where: { userId, endpoint: { in: expiredEndpoints } } })
+      .catch((err) => logger.error({ err, userId }, 'Failed to delete expired push subscriptions'))
   }
 }
 

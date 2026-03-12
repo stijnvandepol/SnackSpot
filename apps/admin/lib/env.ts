@@ -6,7 +6,8 @@ const envSchema = z.object({
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_SECRET: z.string().min(32),
-  JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
+  // The admin issues fixed 8-hour access tokens (see ADMIN_SESSION_HOURS in auth.ts)
+  // and does not use refresh-token rotation, so JWT_REFRESH_EXPIRES_DAYS/IN is not needed here.
   ADMIN_TOKEN: z.string().min(32).optional(),
   AUTH_COOKIE_SECURE: z
     .string()

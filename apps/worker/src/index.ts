@@ -9,7 +9,7 @@
  *   5. Updates the Photo record in Postgres with variant keys + metadata
  */
 
-import { Worker, type Job } from 'bullmq'
+import { Worker, Queue, type Job } from 'bullmq'
 import Redis from 'ioredis'
 import * as Minio from 'minio'
 import sharp from 'sharp'
@@ -168,7 +168,78 @@ async function processPhoto(job: Job<PhotoJob>): Promise<void> {
   jobLog.info({ variantKeys }, 'Photo processed successfully')
 }
 
-// ─── Worker ──────────────────────────────────────────────────────────────────
+// ─── Token cleanup ────────────────────────────────────────────────────────────
+// Expired refresh tokens and used password-reset tokens accumulate over time.
+// A repeatable BullMQ job runs once every 24 h to prune them in small batches,
+// keeping the tables lean without acquiring large table locks.
+
+const CLEANUP_QUEUE      = 'token-cleanup'
+const CLEANUP_BATCH_SIZE = 500
+// 24-hour interval expressed in milliseconds for BullMQ repeat option.
+const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000
+
+async function runTokenCleanup(): Promise<void> {
+  const now = new Date()
+
+  // Refresh tokens: delete in batches until none remain.
+  let refreshDeleted = 0
+  while (true) {
+    const expiredIds = await prisma.refreshToken.findMany({
+      where: { expiresAt: { lt: now } },
+      select: { id: true },
+      take: CLEANUP_BATCH_SIZE,
+    })
+    if (expiredIds.length === 0) break
+    const { count } = await prisma.refreshToken.deleteMany({
+      where: { id: { in: expiredIds.map((r) => r.id) } },
+    })
+    refreshDeleted += count
+  }
+
+  // Password reset tokens: delete used or expired ones in batches.
+  let resetDeleted = 0
+  while (true) {
+    const expiredIds = await prisma.passwordResetToken.findMany({
+      where: { OR: [{ expiresAt: { lt: now } }, { usedAt: { not: null } }] },
+      select: { id: true },
+      take: CLEANUP_BATCH_SIZE,
+    })
+    if (expiredIds.length === 0) break
+    const { count } = await prisma.passwordResetToken.deleteMany({
+      where: { id: { in: expiredIds.map((r) => r.id) } },
+    })
+    resetDeleted += count
+  }
+
+  log.info({ refreshDeleted, resetDeleted }, 'Token cleanup completed')
+}
+
+const cleanupQueue = new Queue(CLEANUP_QUEUE, {
+  connection: redis,
+  defaultJobOptions: {
+    removeOnComplete: { count: 5 },
+    removeOnFail: { count: 5 },
+  },
+})
+
+// Schedule the repeatable cleanup job. BullMQ deduplicates repeatable jobs by
+// name + every, so restarting the worker does not create duplicate schedules.
+// CommonJS does not support top-level await; any previously registered schedule
+// in Redis survives a failed registration and the job still runs on the next tick.
+cleanupQueue
+  .upsertJobScheduler('cleanup-tokens', { every: CLEANUP_INTERVAL_MS }, { name: 'cleanup-tokens' })
+  .catch((err) => log.error({ err }, 'Failed to schedule token cleanup job'))
+
+const cleanupWorker = new Worker(CLEANUP_QUEUE, runTokenCleanup, {
+  connection: redis,
+  concurrency: 1,
+})
+
+cleanupWorker.on('failed', (job, err) => {
+  log.error({ jobId: job?.id, err }, 'Token cleanup job failed')
+})
+
+// ─── Photo worker ─────────────────────────────────────────────────────────────
 
 const worker = new Worker<PhotoJob>(QUEUE_NAME, processPhoto, {
   connection: redis,
@@ -202,7 +273,8 @@ worker.on('error', (err) => {
 
 async function shutdown(signal: string) {
   log.info({ signal }, 'Shutting down worker')
-  await worker.close()
+  await Promise.all([worker.close(), cleanupWorker.close()])
+  await cleanupQueue.close()
   await prisma.$disconnect()
   await redis.quit()
   process.exit(0)

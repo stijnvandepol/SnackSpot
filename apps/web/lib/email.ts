@@ -3,6 +3,24 @@ import { env } from './env'
 
 const resend = new Resend(env.RESEND_API_KEY)
 
+// ─── Trusted HTML type ────────────────────────────────────────────────────────
+//
+// Fields in BrandedEmailOptions that are rendered WITHOUT escaping into the HTML
+// template are typed as TrustedHtml. A plain `string` is NOT assignable to this
+// type — the caller must explicitly wrap the value with the `html()` helper.
+//
+// RULE: only pass developer-controlled, static markup into `html()`.
+//       Never pass user-supplied data (names, addresses, URLs) directly.
+//       User data MUST be escaped first: html(`...${escapeHtml(userValue)}...`)
+//
+declare const __trustedHtmlBrand: unique symbol
+type TrustedHtml = string & { readonly [__trustedHtmlBrand]: true }
+
+/** Mark a developer-controlled HTML string as safe for unescaped rendering. */
+function html(markup: string): TrustedHtml {
+  return markup as TrustedHtml
+}
+
 const EMAIL_BACKGROUND = '#F6F7F9'
 const EMAIL_SURFACE = '#FFFFFF'
 const EMAIL_MUTED_SURFACE = '#F6F7F9'
@@ -46,17 +64,21 @@ function passwordResetHtml(resetUrl: string): string {
     previewText: 'Reset your SnackSpot password',
     eyebrow: 'Account security',
     title: 'Reset your password',
-    intro:
+    intro: html(
       'We received a request to reset the password for your SnackSpot account. Use the button below to choose a new password. This link stays valid for 15 minutes.',
+    ),
     action: {
       label: 'Reset password',
       href: resetUrl,
     },
     calloutTitle: 'Why you are seeing this',
-    calloutBody:
+    calloutBody: html(
       'Someone entered your email address in the SnackSpot reset flow. If that was you, continue below. If not, no action is needed and your password stays unchanged.',
+    ),
     secondaryBlockTitle: 'Manual link',
-    secondaryBlockBody: `Button not working? Copy and paste this link into your browser:<br /><span style="word-break:break-all;color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(resetUrl)}</span>`,
+    secondaryBlockBody: html(
+      `Button not working? Copy and paste this link into your browser:<br /><span style="word-break:break-all;color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(resetUrl)}</span>`,
+    ),
   })
 }
 
@@ -88,11 +110,17 @@ function passwordChangedHtml(username: string): string {
     previewText: 'Your SnackSpot password was changed',
     eyebrow: 'Account security',
     title: 'Password changed',
-    intro: `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(username)}</strong>, the password for your SnackSpot account has been updated successfully. All active sessions have been signed out.`,
+    intro: html(
+      `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(username)}</strong>, the password for your SnackSpot account has been updated successfully. All active sessions have been signed out.`,
+    ),
     calloutTitle: 'Confirmation',
-    calloutBody: 'This change is already complete. You can log in again with your new password on any device.',
+    calloutBody: html(
+      'This change is already complete. You can log in again with your new password on any device.',
+    ),
     secondaryBlockTitle: 'Did not do this?',
-    secondaryBlockBody: 'Reply to this email immediately so the SnackSpot team can help secure your account.',
+    secondaryBlockBody: html(
+      'Reply to this email immediately so the SnackSpot team can help secure your account.',
+    ),
   })
 }
 
@@ -100,15 +128,18 @@ type BrandedEmailOptions = {
   previewText: string
   eyebrow: string
   title: string
-  intro: string
+  /** Rendered unescaped — must be TrustedHtml. Use html() and escapeHtml() for any user data. */
+  intro: TrustedHtml
   action?: {
     label: string
     href: string
   }
   calloutTitle: string
-  calloutBody: string
+  /** Rendered unescaped — must be TrustedHtml. Use html() and escapeHtml() for any user data. */
+  calloutBody: TrustedHtml
   secondaryBlockTitle?: string
-  secondaryBlockBody?: string
+  /** Rendered unescaped — must be TrustedHtml. Use html() and escapeHtml() for any user data. */
+  secondaryBlockBody?: TrustedHtml
 }
 
 function renderBrandedEmail({
