@@ -83,6 +83,30 @@ export interface ObjectInfo {
   contentType: string | null
 }
 
+/** Read the first `n` bytes of an object. Returns null when object does not exist. */
+export async function getObjectHeaderBytes(key: string, n: number): Promise<Buffer | null> {
+  try {
+    const stream = await minioClient.getObject(BUCKET, key)
+    return await new Promise<Buffer>((resolve, reject) => {
+      const chunks: Buffer[] = []
+      let collected = 0
+      stream.on('data', (chunk: Buffer) => {
+        chunks.push(chunk)
+        collected += chunk.length
+        if (collected >= n) {
+          stream.destroy()
+          resolve(Buffer.concat(chunks).subarray(0, n))
+        }
+      })
+      stream.on('end', () => resolve(Buffer.concat(chunks).subarray(0, n)))
+      stream.on('error', reject)
+      stream.on('close', () => resolve(Buffer.concat(chunks).subarray(0, n)))
+    })
+  } catch {
+    return null
+  }
+}
+
 /** Read object metadata. Returns null when object does not exist. */
 export async function getObjectInfo(key: string): Promise<ObjectInfo | null> {
   try {

@@ -37,6 +37,25 @@ export async function POST(req: NextRequest) {
       return err('Refresh token invalid', 401)
     }
 
+    // Theft detection: token was already rotated but is being presented again.
+    // A legitimate client only ever holds the latest token in a family, so a
+    // previously-used token reappearing means two parties hold the same secret.
+    // Invalidate the entire family to force both parties to re-authenticate.
+    if (stored.usedAt !== null) {
+      const usedAgoMs = Date.now() - stored.usedAt.getTime()
+      if (usedAgoMs > 5 * 60 * 1000) {
+        // Used more than 5 minutes ago — strong theft signal, nuke the family.
+        await prisma.refreshToken.deleteMany({
+          where: { family: stored.family },
+        })
+        const res = err('Session invalidated – please log in again', 401)
+        res.headers.set('Set-Cookie', buildClearCookie())
+        return res
+      }
+      // Used very recently — likely a concurrent retry, not theft.
+      return err('Refresh token already used', 401)
+    }
+
     if (stored.expiresAt < new Date()) {
       const res = err('Refresh token expired', 401)
       res.headers.set('Set-Cookie', buildClearCookie())
@@ -44,19 +63,22 @@ export async function POST(req: NextRequest) {
     }
 
     if (stored.user.bannedAt) {
-      await prisma.refreshToken.delete({ where: { tokenHash } })
+      await prisma.refreshToken.deleteMany({ where: { family: stored.family } })
       const res = err('Account banned', 403)
       res.headers.set('Set-Cookie', buildClearCookie())
       return res
     }
 
-    // Rotate: delete old, issue new
-    await prisma.refreshToken.delete({ where: { tokenHash } })
+    // Rotate: mark old token as used (kept for theft detection window), issue new one.
+    await prisma.refreshToken.update({
+      where: { tokenHash },
+      data: { usedAt: new Date() },
+    })
 
     const newRaw = generateRefreshToken()
     const expiresAt = refreshTokenExpiresAt()
     await prisma.refreshToken.create({
-      data: { userId: stored.user.id, tokenHash: hashRefreshToken(newRaw), expiresAt },
+      data: { userId: stored.user.id, tokenHash: hashRefreshToken(newRaw), family: stored.family, expiresAt },
     })
 
     const accessToken = signAccessToken({

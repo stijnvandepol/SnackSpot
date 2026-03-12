@@ -6,12 +6,13 @@ import {
   hashPassword,
   signAccessToken,
   generateRefreshToken,
+  generateTokenFamily,
   hashRefreshToken,
   refreshTokenExpiresAt,
   buildSetCookie,
 } from '@/lib/auth'
 import { ok, err, parseBody, serverError, isResponse, requireSameOrigin, withNoStore } from '@/lib/api-helpers'
-import { rateLimitIP, getClientIP } from '@/lib/rate-limit'
+import { rateLimitIP, rateLimit, getClientIP } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
   const sameOrigin = requireSameOrigin(req)
@@ -26,6 +27,12 @@ export async function POST(req: NextRequest) {
 
   const body = await parseBody(req, LoginSchema)
   if (isResponse(body)) return body
+
+  // Rate limit: 5 login attempts per 10 min per account (catches proxy-rotating attackers)
+  const accountRl = await rateLimit(`rl:account:login:${body.email.toLowerCase()}`, 5, 600)
+  if (!accountRl.allowed) {
+    return err('Too many login attempts – try again later', 429)
+  }
 
   try {
     const user = await prisma.user.findUnique({
@@ -61,7 +68,7 @@ export async function POST(req: NextRequest) {
     const expiresAt = refreshTokenExpiresAt()
 
     await prisma.refreshToken.create({
-      data: { userId: user.id, tokenHash: hashRefreshToken(rawRefresh), expiresAt },
+      data: { userId: user.id, tokenHash: hashRefreshToken(rawRefresh), family: generateTokenFamily(), expiresAt },
     })
 
     const { passwordHash: _, ...safeUser } = user

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 import argon2 from 'argon2'
-import { createHash, randomBytes } from 'crypto'
+import { createHash, randomBytes, randomUUID } from 'crypto'
 import { env } from './env'
 import type { Role } from '@prisma/client'
 
@@ -55,6 +55,13 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
 
 export function generateRefreshToken(): string {
   return randomBytes(40).toString('hex')
+}
+
+/** Generates a unique family ID for a new login session.
+ *  All tokens rotated within the same session share this family.
+ *  Re-use of an already-rotated token from the same family signals theft. */
+export function generateTokenFamily(): string {
+  return randomUUID()
 }
 
 export function hashRefreshToken(token: string): string {

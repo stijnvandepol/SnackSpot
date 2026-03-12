@@ -177,11 +177,19 @@ const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000
 async function runTokenCleanup(): Promise<void> {
   const now = new Date()
 
-  // Refresh tokens: delete in batches until none remain.
+  // Refresh tokens: delete expired ones and used ones past the theft-detection window.
+  // Used tokens are kept for 10 minutes so the family-detection logic in the refresh
+  // route can distinguish a legitimate concurrent retry from an actual stolen token.
+  const usedTokenCutoff = new Date(now.getTime() - 10 * 60 * 1000)
   let refreshDeleted = 0
   while (true) {
     const expiredIds = await prisma.refreshToken.findMany({
-      where: { expiresAt: { lt: now } },
+      where: {
+        OR: [
+          { expiresAt: { lt: now } },
+          { usedAt: { lt: usedTokenCutoff } },
+        ],
+      },
       select: { id: true },
       take: CLEANUP_BATCH_SIZE,
     })
