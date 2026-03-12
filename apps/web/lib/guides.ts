@@ -6,10 +6,10 @@ export interface GuideDefinition {
 
 export const PILLAR_GUIDES: GuideDefinition[] = [
   {
-    href: '/guides/snackspot-toevoegen-aan-startscherm',
-    title: 'SnackSpot toevoegen aan je startscherm (iOS & Android)',
+    href: '/guides/add-snackspot-to-home-screen',
+    title: 'Add SnackSpot to your home screen (iOS & Android)',
     description:
-      'Stapsgewijze uitleg om SnackSpot als app-icoon op je mobiel te zetten, inclusief veelvoorkomende problemen.',
+      'Step-by-step instructions to add SnackSpot as a home screen icon on your phone, including troubleshooting tips.',
   },
   {
     href: '/guides/hidden-gem-restaurants-near-me',
