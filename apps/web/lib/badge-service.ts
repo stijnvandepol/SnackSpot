@@ -124,17 +124,17 @@ export async function recalculateUserBadges(userId: string, options?: Recalculat
   if (badges.length === 0) return
 
   const existingByBadgeId = new Map<string, { earnedAt: Date | null }>(
-    existingRows.map((row: { badgeId: string; earnedAt: Date | null }) => [row.badgeId, { earnedAt: row.earnedAt }]),
+    existingRows.map((row) => [row.badgeId, { earnedAt: row.earnedAt }]),
   )
 
-  const newlyEarnedBadges = badges.filter((badge: { id: string; criteriaType: BadgeCriteriaType; criteriaValue: number; name: string }) => {
+  const newlyEarnedBadges = badges.filter((badge) => {
     const progress = progressForCriteria(badge.criteriaType, snapshot)
     const existing = existingByBadgeId.get(badge.id)
     return progress >= badge.criteriaValue && !existing?.earnedAt
   })
 
   await prisma.$transaction(
-    badges.map((badge: { id: string; criteriaType: BadgeCriteriaType; criteriaValue: number }) => {
+    badges.map((badge) => {
       const progress = progressForCriteria(badge.criteriaType, snapshot)
       const existing = existingByBadgeId.get(badge.id)
       const earnedAt = progress >= badge.criteriaValue
@@ -162,6 +162,6 @@ export async function recalculateUserBadges(userId: string, options?: Recalculat
   )
 
   await Promise.allSettled(
-    newlyEarnedBadges.map((badge: { name: string }) => notifyBadgeEarned(userId, badge.name)),
+    newlyEarnedBadges.map((badge) => notifyBadgeEarned(userId, badge.name)),
   )
 }

@@ -100,7 +100,3 @@ export async function getObjectInfo(key: string): Promise<ObjectInfo | null> {
   }
 }
 
-/** Build the public URL for a stored variant */
-export function variantUrl(key: string): string {
-  return `${env.MINIO_PUBLIC_URL}/${BUCKET}/${key}`
-}
