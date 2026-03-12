@@ -115,7 +115,6 @@ export async function PATCH(
     })
     if (!review || review.status === ReviewStatus.DELETED) return err('Review not found', 404)
 
-    // Only the owner can edit
     if (review.userId !== auth.sub) return err('Forbidden', 403)
 
     if (nextPhotoIds !== null && dedupedPhotoIds !== null) {
