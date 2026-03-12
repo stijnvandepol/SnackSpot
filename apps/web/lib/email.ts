@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { env } from './env'
+import { escapeHtml } from './html'
 
 const resend = new Resend(env.RESEND_API_KEY)
 
@@ -418,11 +419,3 @@ async function sendEmailWithFallback({ to, subject, html, fallbackHtml, text, ca
   )
 }
 
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-}
