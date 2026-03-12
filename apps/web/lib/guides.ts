@@ -12,33 +12,33 @@ export const PILLAR_GUIDES: GuideDefinition[] = [
       'Step-by-step instructions to add SnackSpot as a home screen icon on your phone, including troubleshooting tips.',
   },
   {
-    href: '/guides/hidden-gem-restaurants-near-me',
-    title: 'Hidden Gem Restaurants Near Me',
+    href: '/guides/how-to-create-an-account',
+    title: 'How to create an account',
     description:
-      'A practical framework for finding underrated local food spots without relying on generic top lists.',
+      'Create a free SnackSpot account in under a minute so you can post reviews, like posts, and save your favourite spots.',
   },
   {
-    href: '/guides/how-to-find-underrated-restaurants',
-    title: 'How To Find Underrated Restaurants',
+    href: '/guides/how-to-change-your-password',
+    title: 'How to change your password',
     description:
-      'Step-by-step tactics to uncover overlooked places with strong quality, value, and consistency.',
+      'Reset or update your SnackSpot password using the forgot-password flow or your account settings.',
   },
   {
-    href: '/guides/how-to-avoid-tourist-trap-restaurants',
-    title: 'How To Avoid Tourist Trap Restaurants',
+    href: '/guides/how-to-delete-your-account',
+    title: 'How to delete your account',
     description:
-      'Signals and workflows to avoid overpriced low-quality picks and choose local favorites with confidence.',
+      'Permanently remove your SnackSpot account and all associated data from your profile settings.',
   },
   {
-    href: '/guides/how-to-find-restaurants-by-vibe',
-    title: 'How To Find Restaurants By Vibe',
+    href: '/guides/how-to-post-a-review',
+    title: 'How to post a review',
     description:
-      'Use mood, occasion, and environment signals to match the right place to the right moment.',
+      'Share a photo review of a local food spot — add a place, rate it, write your take, and publish in a few taps.',
   },
   {
-    href: '/guides/how-to-spot-fake-restaurant-reviews',
-    title: 'How To Spot Fake Restaurant Reviews',
+    href: '/guides/how-to-add-a-place',
+    title: 'How to add a place or restaurant',
     description:
-      'A review-quality checklist that helps you identify trustworthy feedback and avoid manipulated ratings.',
+      'If a spot is not on SnackSpot yet, you can add it yourself while posting a review.',
   },
 ]
