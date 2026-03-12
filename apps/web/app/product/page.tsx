@@ -12,43 +12,43 @@ export const metadata: Metadata = {
 
 const pillars = [
   {
-    title: 'Find places worth the detour',
-    body: 'Browse a live feed, search by place, or open nearby discovery to uncover smaller local spots that rarely show up in mainstream food guides.',
+    title: 'Find spots locals actually love',
+    body: 'Skip generic top lists and discover smaller places with personality through a feed made by people nearby.',
   },
   {
-    title: 'Review overlooked local gems',
-    body: 'Every post combines photos, place data, dish names, and category ratings so good lesser-known places get useful context instead of one-line praise.',
+    title: 'Know what to order before you go',
+    body: 'See real photos, dish tips, and clear ratings so you can choose confidently instead of guessing from random stars.',
   },
   {
-    title: 'Run the platform safely',
-    body: 'Moderation tools, reports, comment filtering, badges, notifications, and a separate admin app support ongoing community management.',
+    title: 'Share your own hidden gems',
+    body: 'Post your best finds, help others eat better, and build your own taste profile one review at a time.',
   },
 ]
 
 const features = [
-  'Photo-first feed with likes, comments, mentions, and user profiles',
-  'Nearby discovery to find local spots around you',
-  'Structured reviews with half-star ratings and discovery tags',
-  'Fast photo uploads for the feed and place pages',
-  'Notifications, badge progress, profile stats, and streak tracking',
-  'Separate admin panel for reports, reviews, users, places, and flagged comments',
+  'Photo-first feed full of real local recommendations',
+  'Nearby discovery to instantly find great places around you',
+  'Structured reviews with dish notes and detailed ratings',
+  'Fast photo uploads so sharing takes seconds, not minutes',
+  'Profiles, badges, and streaks that reward consistent contributors',
+  'Comments and likes that help good spots spread quickly',
 ]
 
 const flow = [
   {
     step: '01',
     title: 'Discover',
-    body: 'Users open the feed, search for a place, or scan a nearby list to find smaller spots worth trying.',
+    body: 'Open the feed, search, or explore nearby to find food spots that are still under the radar.',
   },
   {
     step: '02',
-    title: 'Review',
-    body: 'They add a place, rate multiple aspects, upload photos, and publish a post tied to a real local location.',
+    title: 'Choose',
+    body: 'Compare photos, dishes, and ratings to decide exactly where to go and what to try first.',
   },
   {
     step: '03',
-    title: 'Grow the community',
-    body: 'Other users engage through likes, comments, mentions, notifications, badges, and reporting flows that keep recommendations useful.',
+    title: 'Share',
+    body: 'Drop your own review after eating, so the next person can discover something worth the detour.',
   },
 ]
 
@@ -94,13 +94,13 @@ export default function ProductPage() {
         <section className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-[1.2fr_0.8fr] md:items-center md:py-24">
           <div>
             <p className="mb-4 inline-flex rounded-full border border-snack-primary/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-snack-primary">
-              Mobile-first hidden gem review app
+              Made for people who love finding good food first
             </p>
             <h1 className="max-w-3xl font-heading text-4xl font-bold leading-tight text-snack-text md:text-6xl">
-              A social product for finding and reviewing the local spots most people still miss.
+              Find your next hidden food gem in minutes.
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-snack-muted md:text-lg">
-              SnackSpot combines a community feed, place discovery, photo uploads, and moderation tooling into one focused product for under-the-radar food spots, hidden gems, and smaller places worth sharing.
+              SnackSpot helps you discover lesser-known local places, see what is actually worth ordering, and share your best finds with people who care about good food.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/auth/register" className="btn-primary text-sm">Start with an account</Link>
@@ -109,15 +109,15 @@ export default function ProductPage() {
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
               <div className="rounded-2xl border border-snack-border bg-white/90 p-4 shadow-sm">
                 <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Core value</p>
-                <p className="mt-2 text-sm font-semibold text-snack-text">Real hidden gems, real dishes, real community signals</p>
+                <p className="mt-2 text-sm font-semibold text-snack-text">Better food choices through real photos, dish tips, and honest ratings</p>
               </div>
               <div className="rounded-2xl border border-snack-border bg-white/90 p-4 shadow-sm">
                 <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Audience</p>
-                <p className="mt-2 text-sm font-semibold text-snack-text">Curious locals, spot hunters, reviewers, moderators, admins</p>
+                <p className="mt-2 text-sm font-semibold text-snack-text">Curious locals, food explorers, weekend wanderers, and everyday snack hunters</p>
               </div>
               <div className="rounded-2xl border border-snack-border bg-white/90 p-4 shadow-sm">
-                <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Deployment</p>
-                <p className="mt-2 text-sm font-semibold text-snack-text">Built for a clear flow from discovery to posting to community moderation</p>
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Outcome</p>
+                <p className="mt-2 text-sm font-semibold text-snack-text">More memorable meals and fewer disappointing picks</p>
               </div>
             </div>
           </div>
@@ -136,16 +136,16 @@ export default function ProductPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="rounded-2xl border border-snack-border p-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-snack-muted">Discovery</p>
-                    <p className="mt-2 text-sm font-semibold text-snack-text">Search, nearby discovery, featured places, tagged hidden gems</p>
+                    <p className="mt-2 text-sm font-semibold text-snack-text">Search, nearby spots, featured places, and hidden-gem tags</p>
                   </div>
                   <div className="rounded-2xl border border-snack-border p-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-snack-muted">Operations</p>
-                    <p className="mt-2 text-sm font-semibold text-snack-text">Reports, moderation tools, flagged comments, and user management</p>
+                    <p className="text-xs uppercase tracking-[0.16em] text-snack-muted">Community</p>
+                    <p className="mt-2 text-sm font-semibold text-snack-text">Profiles, reactions, comments, and trusted recommendations from real people</p>
                   </div>
                 </div>
                 <div className="rounded-2xl bg-gradient-to-r from-snack-primary to-snack-accent p-4 text-white">
                   <p className="text-xs uppercase tracking-[0.16em] text-white/80">Product focus</p>
-                  <p className="mt-2 text-sm font-semibold">The experience is built around surfacing overlooked places, posting useful reviews, and keeping the community trustworthy.</p>
+                  <p className="mt-2 text-sm font-semibold">The experience is built around finding better spots, choosing smarter, and sharing the places you would recommend to friends.</p>
                 </div>
               </div>
             </div>
@@ -156,7 +156,7 @@ export default function ProductPage() {
           <div className="mb-8 max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">Problem</p>
             <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
-              Smaller local food spots are easy to miss when discovery is dominated by mainstream listings, generic maps, and broad review sites.
+              Great local food is hard to find when most apps push the same popular places instead of personal, in-the-moment recommendations.
             </h2>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
@@ -173,7 +173,7 @@ export default function ProductPage() {
           <div className="mb-8 max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">Solution</p>
             <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
-              SnackSpot gives overlooked places a dedicated review flow built around discovery, context, and trusted community signals.
+              SnackSpot gives you a faster way to find food you will actually enjoy, backed by real experiences from people near you.
             </h2>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
@@ -190,7 +190,7 @@ export default function ProductPage() {
           <div className="mb-8 max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">How it works</p>
             <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
-              The product flow is built around discovering hidden spots, documenting why they matter, and passing them on.
+              A simple flow: discover a spot, decide what to try, and pass the recommendation on.
             </h2>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
@@ -209,9 +209,9 @@ export default function ProductPage() {
             <div className="grid gap-0 md:grid-cols-[0.95fr_1.05fr]">
               <div className="bg-gradient-to-br from-snack-primary to-snack-accent p-8 text-white">
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/75">Why this product</p>
-                <h2 className="mt-3 font-heading text-3xl font-bold">Built for lesser-known food spots, not generic top-10 lists.</h2>
+                <h2 className="mt-3 font-heading text-3xl font-bold">Built for real food discoveries, not generic top-10 lists.</h2>
                 <p className="mt-4 text-sm leading-6 text-white/85">
-                  The value comes from giving small standout places better visibility through structured ratings, authentic photos, local discovery, and community moderation.
+                  The value comes from helping great local places get discovered through authentic photos, useful dish context, and recommendations you can trust.
                 </p>
               </div>
               <div className="p-8">
@@ -222,7 +222,7 @@ export default function ProductPage() {
                   </div>
                   <div className="rounded-2xl bg-snack-surface p-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-snack-muted">Core use cases</p>
-                    <p className="mt-2 text-sm font-semibold text-snack-text">Discover overlooked spots, publish reviews, track engagement, resolve reports</p>
+                    <p className="mt-2 text-sm font-semibold text-snack-text">Discover new spots, pick better dishes, save favorites, and share reviews</p>
                   </div>
                 </div>
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row">
