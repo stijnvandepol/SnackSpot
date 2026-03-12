@@ -236,6 +236,14 @@ export default function ProductPage() {
       </main>
 
       <footer className="px-4 pb-10 pt-4 text-center">
+        <nav className="mb-3" aria-label="Footer navigation">
+          <Link
+            href="/guides"
+            className="text-sm font-medium text-snack-muted transition hover:text-snack-text"
+          >
+            Guides
+          </Link>
+        </nav>
         <a
           href="https://stijnvandepol.nl"
           target="_blank"

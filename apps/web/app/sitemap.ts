@@ -8,6 +8,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticEntries: MetadataRoute.Sitemap = [
     {
+      url: `${appUrl}/guides`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${appUrl}/guides/hidden-gem-restaurants-near-me`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${appUrl}/guides/how-to-find-underrated-restaurants`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${appUrl}/guides/how-to-avoid-tourist-trap-restaurants`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${appUrl}/guides/how-to-find-restaurants-by-vibe`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${appUrl}/guides/how-to-spot-fake-restaurant-reviews`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
       url: `${appUrl}/product`,
       lastModified: now,
       changeFrequency: 'weekly',
