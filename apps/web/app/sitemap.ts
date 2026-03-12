@@ -44,6 +44,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
+      url: `${appUrl}/guides/snackspot-toevoegen-aan-startscherm`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
       url: `${appUrl}/product`,
       lastModified: now,
       changeFrequency: 'weekly',
