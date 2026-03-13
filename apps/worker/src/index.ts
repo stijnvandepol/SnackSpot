@@ -218,6 +218,43 @@ async function runTokenCleanup(): Promise<void> {
   log.info({ refreshDeleted, resetDeleted }, 'Token cleanup completed')
 }
 
+// ─── Orphaned photo cleanup ───────────────────────────────────────────────────
+
+const ORPHAN_PHOTO_CUTOFF_MS = 10 * 60 * 1000
+
+async function runOrphanPhotoCleanup(): Promise<void> {
+  const cutoff = new Date(Date.now() - ORPHAN_PHOTO_CUTOFF_MS)
+  let photosDeleted = 0
+
+  while (true) {
+    const orphans = await prisma.photo.findMany({
+      where: { moderationStatus: PhotoModerationStatus.PENDING, createdAt: { lt: cutoff } },
+      select: { id: true, storageKey: true },
+      take: CLEANUP_BATCH_SIZE,
+    })
+    if (orphans.length === 0) break
+
+    // Remove originals from MinIO; the object may not exist — swallow the error.
+    await Promise.all(
+      orphans.map((o: { id: string; storageKey: string }) =>
+        minio.removeObject(BUCKET, o.storageKey).catch(() => undefined),
+      ),
+    )
+
+    const { count } = await prisma.photo.deleteMany({
+      where: { id: { in: orphans.map((o: { id: string; storageKey: string }) => o.id) } },
+    })
+    photosDeleted += count
+  }
+
+  log.info({ photosDeleted }, 'Orphaned photo cleanup completed')
+}
+
+async function runCleanup(): Promise<void> {
+  await runTokenCleanup()
+  await runOrphanPhotoCleanup()
+}
+
 const cleanupQueue = new Queue(CLEANUP_QUEUE, {
   connection: redis,
   defaultJobOptions: {
@@ -234,7 +271,7 @@ cleanupQueue
   .upsertJobScheduler('cleanup-tokens', { every: CLEANUP_INTERVAL_MS }, { name: 'cleanup-tokens' })
   .catch((err) => log.error({ err }, 'Failed to schedule token cleanup job'))
 
-const cleanupWorker = new Worker(CLEANUP_QUEUE, runTokenCleanup, {
+const cleanupWorker = new Worker(CLEANUP_QUEUE, runCleanup, {
   connection: redis,
   concurrency: 1,
 })
