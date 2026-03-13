@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
       .webp({ quality: 80 })
       .toBuffer()
 
-    return new Response(resized, {
+    return new Response(new Uint8Array(resized), {
       headers: {
         'Content-Type': 'image/webp',
         'Content-Length': String(resized.byteLength),
