@@ -32,10 +32,6 @@ const EMAIL_MUTED = '#64748B'
 const EMAIL_BORDER = '#E5E7EB'
 const EMAIL_SOFT_BORDER = '#F1F5F9'
 
-function appUrl(path: `/${string}`): string {
-  return `${env.NEXT_PUBLIC_APP_URL.replace(/\/+$/, '')}${path}`
-}
-
 // ─── Password reset email ─────────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string): Promise<void> {
@@ -59,22 +55,6 @@ export async function sendPasswordChangedEmail(to: string, username: string): Pr
     fallbackHtml: passwordChangedFallbackHtml(username),
     text: passwordChangedText(username),
     category: 'password-changed',
-  })
-}
-
-// ─── Welcome email ─────────────────────────────────────────────────────────────
-
-export async function sendWelcomeEmail(to: string, username: string): Promise<void> {
-  const nearbyUrl = appUrl('/nearby')
-  const feedUrl = appUrl('/feed')
-
-  await sendEmailWithFallback({
-    to,
-    subject: 'Welcome to SnackSpot',
-    html: welcomeHtml(username, nearbyUrl, feedUrl),
-    fallbackHtml: welcomeFallbackHtml(username, nearbyUrl),
-    text: welcomeText(username, nearbyUrl, feedUrl),
-    category: 'welcome',
   })
 }
 
@@ -142,53 +122,6 @@ function passwordChangedHtml(username: string): string {
     secondaryBlockBody: html(
       'Reply to this email immediately so the SnackSpot team can help secure your account.',
     ),
-  })
-}
-
-function welcomeHtml(username: string, nearbyUrl: string, feedUrl: string): string {
-  return renderBrandedEmail({
-    previewText: 'Welcome to SnackSpot - discover hidden food spots nearby',
-    eyebrow: 'Welcome',
-    title: `Welcome to SnackSpot, ${username}!`,
-    intro: html(
-      `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(username)}</strong>, welcome to SnackSpot. This is where locals share under-the-radar food spots, honest ratings, and real dish photos so you can decide what is actually worth your time.`,
-    ),
-    action: {
-      label: 'Discover spots nearby',
-      href: nearbyUrl,
-    },
-    calloutTitle: 'Ready for your first food mission?',
-    calloutBody: html(
-      'Are you ready to visit the coolest local spots? Open Nearby, pick a place that looks promising, and start building your personal list of must-try gems.',
-    ),
-    secondaryBlockTitle: 'Prefer browsing first?',
-    secondaryBlockBody: html(
-      `Open the discovery feed: <a href="${escapeHtml(feedUrl)}" style="color:${EMAIL_PRIMARY};font-weight:600;text-decoration:none;">${escapeHtml(feedUrl)}</a>`,
-    ),
-  })
-}
-
-function welcomeText(username: string, nearbyUrl: string, feedUrl: string): string {
-  return `Welcome to SnackSpot
-
-Hi ${username}, welcome to SnackSpot.
-
-SnackSpot is where locals share under-the-radar food spots, honest ratings, and real dish photos so you can quickly decide what is worth visiting.
-
-Ready to visit the coolest local spots? Start here:
-${nearbyUrl}
-
-Prefer browsing first? Open the discovery feed:
-${feedUrl}`
-}
-
-function welcomeFallbackHtml(username: string, nearbyUrl: string): string {
-  return renderFallbackEmail({
-    title: `Welcome to SnackSpot, ${username}!`,
-    body: `Welcome to SnackSpot. Discover hidden food gems, check real dish photos, and decide where to go next with confidence.`,
-    linkLabel: 'Discover spots nearby',
-    linkHref: nearbyUrl,
-    footer: 'Ready to explore? Start nearby and share your first great find.',
   })
 }
 
@@ -418,4 +351,3 @@ async function sendEmailWithFallback({ to, subject, html, fallbackHtml, text, ca
     `Failed to send ${category} email: primary=${primary.error.message}; fallback=${fallback.error.message}`,
   )
 }
-

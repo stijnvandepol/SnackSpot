@@ -12,7 +12,6 @@ import {
 } from '@/lib/auth'
 import { created, err, parseBody, serverError, isResponse, requireSameOrigin, withNoStore } from '@/lib/api-helpers'
 import { rateLimitIP, getClientIP } from '@/lib/rate-limit'
-import { sendWelcomeEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   const sameOrigin = requireSameOrigin(req)
@@ -64,12 +63,6 @@ export async function POST(req: NextRequest) {
     await prisma.refreshToken.create({
       data: { userId: user.id, tokenHash: hashRefreshToken(rawRefresh), family: generateTokenFamily(), expiresAt },
     })
-
-    try {
-      await sendWelcomeEmail(user.email, user.username)
-    } catch (e: unknown) {
-      console.error('[register] welcome email send failed:', e instanceof Error ? e.message : String(e))
-    }
 
     const response = withNoStore(created({ user, access_token: accessToken }))
     response.headers.set('Set-Cookie', buildSetCookie(rawRefresh, expiresAt))
