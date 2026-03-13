@@ -4,39 +4,13 @@ import { getSiteUrl } from '@/lib/site-url'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const appUrl = getSiteUrl()
-  const now = new Date()
 
   const staticEntries: MetadataRoute.Sitemap = [
-    {
-      url: `${appUrl}/product`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 1,
-    },
-    {
-      url: `${appUrl}/guides`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
-      url: `${appUrl}/feed`,
-      lastModified: now,
-      changeFrequency: 'hourly',
-      priority: 0.3,
-    },
-    {
-      url: `${appUrl}/search`,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.3,
-    },
-    {
-      url: `${appUrl}/nearby`,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.3,
-    },
+    { url: `${appUrl}/feed` },
+    { url: `${appUrl}/product` },
+    { url: `${appUrl}/guides` },
+    { url: `${appUrl}/search` },
+    { url: `${appUrl}/nearby` },
   ]
 
   try {
@@ -60,22 +34,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const placeEntries: MetadataRoute.Sitemap = places.map((place) => ({
       url: `${appUrl}/place/${place.id}`,
       lastModified: place.updatedAt,
-      changeFrequency: 'weekly',
-      priority: 0.7,
     }))
 
     const reviewEntries: MetadataRoute.Sitemap = reviews.map((review) => ({
       url: `${appUrl}/review/${review.id}`,
       lastModified: review.updatedAt,
-      changeFrequency: 'weekly',
-      priority: 0.8,
     }))
 
     const userEntries: MetadataRoute.Sitemap = users.map((user) => ({
       url: `${appUrl}/u/${encodeURIComponent(user.username)}`,
       lastModified: user.updatedAt,
-      changeFrequency: 'weekly',
-      priority: 0.6,
     }))
 
     return [...staticEntries, ...placeEntries, ...reviewEntries, ...userEntries]
