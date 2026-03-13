@@ -8,34 +8,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticEntries: MetadataRoute.Sitemap = [
     {
-      url: `${appUrl}/guides`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
       url: `${appUrl}/product`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 1,
     },
     {
+      url: `${appUrl}/guides`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
       url: `${appUrl}/feed`,
       lastModified: now,
       changeFrequency: 'hourly',
-      priority: 0.9,
+      priority: 0.3,
     },
     {
       url: `${appUrl}/search`,
       lastModified: now,
       changeFrequency: 'daily',
-      priority: 0.8,
+      priority: 0.3,
     },
     {
       url: `${appUrl}/nearby`,
       lastModified: now,
       changeFrequency: 'daily',
-      priority: 0.7,
+      priority: 0.3,
     },
   ]
 
