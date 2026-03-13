@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { ok, parseQuery, serverError, isResponse, getAuthPayload, withNoStore, withPublicCache } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
+import { buildCacheKey, getCachedJson, setCachedJson, stableSearchParams } from '@/lib/cache'
+import { getClientIP, rateLimitIP } from '@/lib/rate-limit'
 
 const FeedQuerySchema = z.object({
   cursor: z.string().optional(),
@@ -29,6 +31,23 @@ export async function GET(req: NextRequest) {
   if (isResponse(query)) return query
 
   try {
+    if (!auth) {
+      const ip = getClientIP(req)
+      const rl = await rateLimitIP(ip, 'feed_public', 120, 60)
+      if (!rl.allowed) {
+        return Response.json({ error: 'Too many feed requests - try again later' }, { status: 429 })
+      }
+
+      const cacheKey = buildCacheKey('feed-public', stableSearchParams(req.nextUrl.searchParams))
+      const cached = await getCachedJson<{
+        data: Array<Record<string, unknown>>
+        pagination: { nextCursor: string | null; hasMore: boolean }
+      }>(cacheKey)
+      if (cached) {
+        return withPublicCache(ok(cached), 60, 120)
+      }
+    }
+
     const cursor = parseCursor(query.cursor)
 
     const reviews = await prisma.review.findMany({
@@ -104,7 +123,14 @@ export async function GET(req: NextRequest) {
       ? encodeURIComponent(`${items.at(-1)!.createdAt.toISOString()}|${items.at(-1)!.id}`)
       : null
 
-    const res = ok({ data: withLikes, pagination: { nextCursor, hasMore } })
+    const payload = { data: withLikes, pagination: { nextCursor, hasMore } }
+
+    if (!auth) {
+      const cacheKey = buildCacheKey('feed-public', stableSearchParams(req.nextUrl.searchParams))
+      await setCachedJson(cacheKey, payload, 60)
+    }
+
+    const res = ok(payload)
     return auth ? withNoStore(res) : withPublicCache(res, 60, 120)
   } catch (e) {
     return serverError('feed', e)

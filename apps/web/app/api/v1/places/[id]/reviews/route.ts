@@ -3,6 +3,8 @@ import { ReviewsQuerySchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
 import { ok, parseQuery, serverError, isResponse, getAuthPayload, withNoStore, withPublicCache } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
+import { buildCacheKey, getCachedJson, setCachedJson, stableSearchParams } from '@/lib/cache'
+import { getClientIP, rateLimitIP } from '@/lib/rate-limit'
 
 export async function GET(
   req: NextRequest,
@@ -14,6 +16,26 @@ export async function GET(
   if (isResponse(query)) return query
 
   try {
+    if (!auth) {
+      const ip = getClientIP(req)
+      const rl = await rateLimitIP(ip, 'place_reviews_public', 120, 60)
+      if (!rl.allowed) {
+        return Response.json({ error: 'Too many requests - try again later' }, { status: 429 })
+      }
+
+      const cacheKey = buildCacheKey(
+        'place-reviews-public',
+        `${placeId}:${stableSearchParams(req.nextUrl.searchParams)}`,
+      )
+      const cached = await getCachedJson<{
+        data: Array<Record<string, unknown>>
+        pagination: { nextCursor: string | null; hasMore: boolean }
+      }>(cacheKey)
+      if (cached) {
+        return withPublicCache(ok(cached), 15, 60)
+      }
+    }
+
     const isTop = query.sort === 'top'
     const whereClause = {
       placeId,
@@ -88,7 +110,17 @@ export async function GET(
       ? encodeURIComponent(items.at(-1)!.createdAt.toISOString())
       : null
 
-    const res = ok({ data: withLikes, pagination: { nextCursor, hasMore } })
+    const payload = { data: withLikes, pagination: { nextCursor, hasMore } }
+
+    if (!auth) {
+      const cacheKey = buildCacheKey(
+        'place-reviews-public',
+        `${placeId}:${stableSearchParams(req.nextUrl.searchParams)}`,
+      )
+      await setCachedJson(cacheKey, payload, 15)
+    }
+
+    const res = ok(payload)
     return auth ? withNoStore(res) : withPublicCache(res, 15, 60)
   } catch (e) {
     return serverError('places/[id]/reviews', e)

@@ -16,6 +16,7 @@ import { ReviewStatus } from '@prisma/client'
 import { rateLimitUser } from '@/lib/rate-limit'
 import { recalculateUserBadges } from '@/lib/badge-service'
 import { notifyCommentMention, notifyReviewComment } from '@/lib/notification-service'
+import { getBlockedWords } from '@/lib/blocked-words'
 
 export async function GET(
   req: NextRequest,
@@ -109,13 +110,13 @@ export async function POST(
     })
 
     // Check comment text against blocked words and flag if matched
-    const blockedWords = await prisma.blockedWord.findMany({ select: { word: true } })
-    const matchedWord = blockedWords.find((bw) =>
-      text.toLowerCase().includes(bw.word.toLowerCase()),
+    const blockedWords = await getBlockedWords()
+    const matchedWord = blockedWords.find((word) =>
+      text.toLowerCase().includes(word.toLowerCase()),
     )
     if (matchedWord) {
       await prisma.flaggedComment.create({
-        data: { commentId: comment.id, matchedWord: matchedWord.word },
+        data: { commentId: comment.id, matchedWord },
       })
     }
 

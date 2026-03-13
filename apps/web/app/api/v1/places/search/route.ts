@@ -3,6 +3,8 @@ import { PlaceSearchSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
 import { ok, parseQuery, serverError, isResponse, withPublicCache } from '@/lib/api-helpers'
 import { Prisma } from '@prisma/client'
+import { buildCacheKey, getCachedJson, setCachedJson, stableSearchParams } from '@/lib/cache'
+import { getClientIP, rateLimitIP } from '@/lib/rate-limit'
 
 type PlaceRow = {
   id: string; name: string; address: string
@@ -17,6 +19,20 @@ export async function GET(req: NextRequest) {
   if (isResponse(query)) return query
 
   try {
+    const ip = getClientIP(req)
+    const rl = await rateLimitIP(ip, 'places_search', 120, 60)
+    if (!rl.allowed) {
+      return Response.json({ error: 'Too many search requests - try again later' }, { status: 429 })
+    }
+
+    const cacheKey = buildCacheKey('places-search', stableSearchParams(req.nextUrl.searchParams))
+    const cached = await getCachedJson<{ data: PlaceRow[]; pagination: { nextCursor: null; hasMore: false } }>(cacheKey)
+    if (cached) {
+      return withPublicCache(ok(cached), 15, 60)
+    }
+
+    let payload: { data: PlaceRow[]; pagination: { nextCursor: null; hasMore: false } }
+
     // ── Nearby search (with optional text filter) ──────────────────────────
     if (query.lat !== undefined && query.lng !== undefined) {
       let rows: PlaceRow[]
@@ -101,7 +117,9 @@ export async function GET(req: NextRequest) {
         `
       }
 
-      return withPublicCache(ok({ data: rows, pagination: { nextCursor: null, hasMore: false } }), 15, 60)
+      payload = { data: rows, pagination: { nextCursor: null, hasMore: false } }
+      await setCachedJson(cacheKey, payload, 15)
+      return withPublicCache(ok(payload), 15, 60)
     }
 
     // ── Text-only search ───────────────────────────────────────────────────
@@ -141,7 +159,9 @@ export async function GET(req: NextRequest) {
         ) rs ON TRUE
         ORDER BY c.rank DESC
       `
-      return withPublicCache(ok({ data: places, pagination: { nextCursor: null, hasMore: false } }), 30, 120)
+      payload = { data: places, pagination: { nextCursor: null, hasMore: false } }
+      await setCachedJson(cacheKey, payload, 30)
+      return withPublicCache(ok(payload), 30, 120)
     }
 
     // ── No filters – most-reviewed places ─────────────────────────────────
@@ -158,7 +178,9 @@ export async function GET(req: NextRequest) {
       ORDER BY review_count DESC, avg_rating DESC NULLS LAST
       LIMIT ${query.limit}
     `
-    return withPublicCache(ok({ data: places, pagination: { nextCursor: null, hasMore: false } }), 30, 120)
+    payload = { data: places, pagination: { nextCursor: null, hasMore: false } }
+    await setCachedJson(cacheKey, payload, 30)
+    return withPublicCache(ok(payload), 30, 120)
   } catch (e) {
     return serverError('places/search', e)
   }

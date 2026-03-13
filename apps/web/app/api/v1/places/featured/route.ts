@@ -2,6 +2,8 @@ import { type NextRequest } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { ok, parseQuery, serverError, isResponse, withPublicCache } from '@/lib/api-helpers'
+import { buildCacheKey, getCachedJson, setCachedJson, stableSearchParams } from '@/lib/cache'
+import { getClientIP, rateLimitIP } from '@/lib/rate-limit'
 
 type FeaturedPlaceRow = {
   id: string
@@ -21,6 +23,18 @@ export async function GET(req: NextRequest) {
   if (isResponse(query)) return query
 
   try {
+    const ip = getClientIP(req)
+    const rl = await rateLimitIP(ip, 'places_featured', 120, 60)
+    if (!rl.allowed) {
+      return Response.json({ error: 'Too many requests - try again later' }, { status: 429 })
+    }
+
+    const cacheKey = buildCacheKey('places-featured', stableSearchParams(req.nextUrl.searchParams))
+    const cached = await getCachedJson<{ data: FeaturedPlaceRow[] }>(cacheKey)
+    if (cached) {
+      return withPublicCache(ok(cached), 30, 120)
+    }
+
     const rows = await prisma.$queryRaw<FeaturedPlaceRow[]>`
       SELECT
         p.id,
@@ -36,7 +50,9 @@ export async function GET(req: NextRequest) {
       LIMIT ${query.limit}
     `
 
-    return withPublicCache(ok({ data: rows }), 30, 120)
+    const payload = { data: rows }
+    await setCachedJson(cacheKey, payload, 30)
+    return withPublicCache(ok(payload), 30, 120)
   } catch (e) {
     return serverError('places/featured', e)
   }

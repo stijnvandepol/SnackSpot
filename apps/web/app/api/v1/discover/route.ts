@@ -12,6 +12,8 @@ import {
   withNoStore,
   withPublicCache,
 } from '@/lib/api-helpers'
+import { buildCacheKey, getCachedJson, setCachedJson, stableSearchParams } from '@/lib/cache'
+import { getClientIP, rateLimitIP } from '@/lib/rate-limit'
 
 const DiscoverQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(12).default(4),
@@ -96,6 +98,23 @@ export async function GET(req: NextRequest) {
   if (isResponse(query)) return query
 
   try {
+    if (!auth) {
+      const ip = getClientIP(req)
+      const rl = await rateLimitIP(ip, 'discover_public', 90, 60)
+      if (!rl.allowed) {
+        return Response.json({ error: 'Too many discover requests - try again later' }, { status: 429 })
+      }
+
+      const cacheKey = buildCacheKey('discover-public', stableSearchParams(req.nextUrl.searchParams))
+      const cached = await getCachedJson<{
+        freshFinds: Array<Record<string, unknown>>
+        underTheRadar: Array<Record<string, unknown>>
+      }>(cacheKey)
+      if (cached) {
+        return withPublicCache(ok(cached), 20, 60)
+      }
+    }
+
     const tagFilter = query.tag
       ? {
           tags: {
@@ -153,10 +172,17 @@ export async function GET(req: NextRequest) {
 
     const underTheRadar = await getReviewsByIds(underTheRadarIds, auth?.sub)
 
-    const res = ok({
+    const payload = {
       freshFinds: freshFinds.map(serializeReview),
       underTheRadar,
-    })
+    }
+
+    if (!auth) {
+      const cacheKey = buildCacheKey('discover-public', stableSearchParams(req.nextUrl.searchParams))
+      await setCachedJson(cacheKey, payload, 20)
+    }
+
+    const res = ok(payload)
 
     return auth ? withNoStore(res) : withPublicCache(res, 20, 60)
   } catch (e) {

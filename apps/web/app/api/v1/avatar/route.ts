@@ -1,11 +1,10 @@
 import { type NextRequest } from 'next/server'
 import sharp from 'sharp'
 import { BUCKET, minioClient } from '@/lib/minio'
+import { AVATAR_VARIANT_SIZE, avatarVariantKey } from '@/lib/avatar'
 
 export const runtime = 'nodejs'
 
-// Avatars are displayed at 49–62 px; serve at 2× for HiDPI screens.
-const AVATAR_SIZE = 128
 // Cache for 7 days — avatars change infrequently.
 const CACHE_SECONDS = 7 * 24 * 60 * 60
 
@@ -42,6 +41,22 @@ export async function GET(req: NextRequest) {
   if (!key) return new Response('Invalid key', { status: 400 })
 
   try {
+    const variantKey = avatarVariantKey(key)
+    const variantStat = await minioClient.statObject(BUCKET, variantKey).catch(() => null)
+    if (variantStat) {
+      const variantStream = await minioClient.getObject(BUCKET, variantKey).catch(() => null)
+      if (variantStream) {
+        const variant = await streamToBuffer(variantStream)
+        return new Response(new Uint8Array(variant), {
+          headers: {
+            'Content-Type': 'image/webp',
+            'Content-Length': String(variant.byteLength),
+            'Cache-Control': `public, max-age=${CACHE_SECONDS}`,
+          },
+        })
+      }
+    }
+
     const stat = await minioClient.statObject(BUCKET, key).catch(() => null)
     if (!stat) return new Response('Not found', { status: 404 })
 
@@ -51,7 +66,7 @@ export async function GET(req: NextRequest) {
     const original = await streamToBuffer(objectStream)
 
     const resized = await sharp(original)
-      .resize(AVATAR_SIZE, AVATAR_SIZE, { fit: 'cover', position: 'centre' })
+      .resize(AVATAR_VARIANT_SIZE, AVATAR_VARIANT_SIZE, { fit: 'cover', position: 'centre' })
       .webp({ quality: 80 })
       .toBuffer()
 

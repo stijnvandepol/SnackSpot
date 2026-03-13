@@ -1,6 +1,8 @@
 import { type NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import { ok, err, serverError, withPublicCache } from '@/lib/api-helpers'
+import { buildCacheKey, getCachedJson, setCachedJson } from '@/lib/cache'
+import { getClientIP, rateLimitIP } from '@/lib/rate-limit'
 
 export async function GET(
   _req: NextRequest,
@@ -9,6 +11,27 @@ export async function GET(
   const { id } = await params
 
   try {
+    const ip = getClientIP(_req)
+    const rl = await rateLimitIP(ip, 'place_detail', 180, 60)
+    if (!rl.allowed) {
+      return Response.json({ error: 'Too many requests - try again later' }, { status: 429 })
+    }
+
+    const cacheKey = buildCacheKey('place-detail', id)
+    const cached = await getCachedJson<{
+      id: string
+      name: string
+      address: string
+      lat: number
+      lng: number
+      avg_rating: number | null
+      review_count: number
+      created_at: Date
+    }>(cacheKey)
+    if (cached) {
+      return withPublicCache(ok(cached), 30, 120)
+    }
+
     const [place] = await prisma.$queryRaw<
       Array<{
         id: string
@@ -38,6 +61,7 @@ export async function GET(
 
     if (!place) return err('Place not found', 404)
 
+    await setCachedJson(cacheKey, place, 30)
     return withPublicCache(ok(place), 30, 120)
   } catch (e) {
     return serverError('places/[id]', e)
