@@ -1,10 +1,13 @@
 import { type NextRequest } from 'next/server'
-import { Readable } from 'node:stream'
+import sharp from 'sharp'
 import { BUCKET, minioClient } from '@/lib/minio'
 
 export const runtime = 'nodejs'
 
-const ONE_DAY_SECONDS = 86400
+// Avatars are displayed at 49–62 px; serve at 2× for HiDPI screens.
+const AVATAR_SIZE = 128
+// Cache for 7 days — avatars change infrequently.
+const CACHE_SECONDS = 7 * 24 * 60 * 60
 
 function normalizeAvatarKey(rawKey: string): string | null {
   let key: string
@@ -23,9 +26,12 @@ function normalizeAvatarKey(rawKey: string): string | null {
   return key
 }
 
-function extractContentType(meta: Record<string, string | string[] | undefined>): string {
-  const value = meta['content-type'] ?? meta['Content-Type'] ?? 'application/octet-stream'
-  return Array.isArray(value) ? value[0] ?? 'application/octet-stream' : value
+async function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
+  const chunks: Buffer[] = []
+  for await (const chunk of stream) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as ArrayBuffer))
+  }
+  return Buffer.concat(chunks)
 }
 
 export async function GET(req: NextRequest) {
@@ -42,11 +48,18 @@ export async function GET(req: NextRequest) {
     const objectStream = await minioClient.getObject(BUCKET, key).catch(() => null)
     if (!objectStream) return new Response('Not found', { status: 404 })
 
-    return new Response(Readable.toWeb(objectStream) as ReadableStream, {
+    const original = await streamToBuffer(objectStream)
+
+    const resized = await sharp(original)
+      .resize(AVATAR_SIZE, AVATAR_SIZE, { fit: 'cover', position: 'centre' })
+      .webp({ quality: 80 })
+      .toBuffer()
+
+    return new Response(resized, {
       headers: {
-        'Content-Type': extractContentType(stat.metaData ?? {}),
-        'Content-Length': String(stat.size),
-        'Cache-Control': `public, max-age=${ONE_DAY_SECONDS}`,
+        'Content-Type': 'image/webp',
+        'Content-Length': String(resized.byteLength),
+        'Cache-Control': `public, max-age=${CACHE_SECONDS}`,
       },
     })
   } catch {

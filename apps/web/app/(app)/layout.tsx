@@ -38,7 +38,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      <footer className="border-t border-[#ececec] bg-white/90">
+      <footer className="hidden md:block border-t border-[#ececec] bg-white/90">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-center gap-3 px-4 py-4 text-sm">
           <Link href="/guides" className="btn-secondary text-sm">
             Guides

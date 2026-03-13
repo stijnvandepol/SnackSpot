@@ -119,7 +119,7 @@ export default function FeedPage() {
           <ReviewCard
             key={r.id}
             review={r}
-            photoVariantPreference={['medium', 'large', 'thumb']}
+            photoVariantPreference={['thumb', 'medium', 'large']}
             backContext="feed"
             priority={i === 0}
           />
