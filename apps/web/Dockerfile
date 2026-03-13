@@ -15,7 +15,7 @@ COPY packages/ui/package.json packages/ui/
 COPY apps/web/package.json apps/web/
 COPY tsconfig.base.json ./
 
-RUN pnpm install --frozen-lockfile && pnpm store prune && rm -rf /root/.cache/pnpm
+RUN pnpm install --no-frozen-lockfile && pnpm store prune && rm -rf /root/.cache/pnpm
 
 # Source
 COPY packages/ packages/
