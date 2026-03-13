@@ -10,6 +10,15 @@ let cache:
     }
   | null = null
 
+export function filterText(text: string, blockedWords: string[]): string {
+  let result = text
+  for (const word of blockedWords) {
+    const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    result = result.replace(new RegExp(escaped, 'gi'), '**')
+  }
+  return result
+}
+
 export async function getBlockedWords(): Promise<string[]> {
   if (cache && cache.expiresAt > Date.now()) {
     return cache.words

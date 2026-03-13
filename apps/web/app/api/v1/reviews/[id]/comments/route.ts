@@ -16,7 +16,7 @@ import { ReviewStatus } from '@prisma/client'
 import { rateLimitUser } from '@/lib/rate-limit'
 import { recalculateUserBadges } from '@/lib/badge-service'
 import { notifyCommentMention, notifyReviewComment } from '@/lib/notification-service'
-import { getBlockedWords } from '@/lib/blocked-words'
+import { getBlockedWords, filterText } from '@/lib/blocked-words'
 
 export async function GET(
   req: NextRequest,
@@ -82,8 +82,10 @@ export async function POST(
   const body = await parseBody<{ text: string }>(req, CreateCommentSchema)
   if (isResponse(body)) return body
 
-  const text = body.text.trim()
-  if (!text) return err('Comment text is required', 422)
+  const rawText = body.text.trim()
+  if (!rawText) return err('Comment text is required', 422)
+  const blockedWords = await getBlockedWords()
+  const text = filterText(rawText, blockedWords)
 
   try {
     const review = await prisma.review.findUnique({
@@ -108,17 +110,6 @@ export async function POST(
         user: { select: { id: true, username: true, avatarKey: true, role: true } },
       },
     })
-
-    // Check comment text against blocked words and flag if matched
-    const blockedWords = await getBlockedWords()
-    const matchedWord = blockedWords.find((word) =>
-      text.toLowerCase().includes(word.toLowerCase()),
-    )
-    if (matchedWord) {
-      await prisma.flaggedComment.create({
-        data: { commentId: comment.id, matchedWord },
-      })
-    }
 
     // Notify review owner about the comment
     await notifyReviewComment(id, comment.id, auth.sub)

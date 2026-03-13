@@ -9,6 +9,7 @@ import { recalculateUserBadges } from '@/lib/badge-service'
 import { normalizeDishName } from '@/lib/text'
 import { notifyMention } from '@/lib/notification-service'
 import { logger } from '@/lib/logger'
+import { getBlockedWords, filterText } from '@/lib/blocked-words'
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
@@ -36,6 +37,8 @@ export async function POST(req: NextRequest) {
           portion: body.rating!,
           service: null,
         })
+    const blockedWords = await getBlockedWords()
+    const filteredText = filterText(body.text, blockedWords)
     const normalizedDishName = normalizeDishName(body.dishName)
     const reviewTags = Array.from(new Set(body.tags))
 
@@ -92,7 +95,7 @@ export async function POST(req: NextRequest) {
         ratingPortion: normalizedRatings.portion,
         ratingService: normalizedRatings.service,
         ratingOverall: normalizedRatings.overall,
-        text: body.text,
+        text: filteredText,
         dishName: normalizedDishName,
         tags: reviewTags.length > 0
           ? {
