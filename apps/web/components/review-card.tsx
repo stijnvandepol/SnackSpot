@@ -64,7 +64,7 @@ export function ReviewCard({
     : `/review/${review.id}`
 
   return (
-    <article className="card overflow-hidden transition hover:shadow-md">
+    <article className="card isolate overflow-hidden transition hover:shadow-md">
       <div className="relative">
         <Link
           href={reviewHref}
