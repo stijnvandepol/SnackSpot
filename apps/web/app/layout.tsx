@@ -59,7 +59,7 @@ export const metadata: Metadata = {
   title: { default: 'SnackSpot', template: '%s | SnackSpot' },
   description: appDescription,
   alternates: {
-    canonical: '/',
+    canonical: getSiteUrl(),
   },
   robots: {
     index: true,
