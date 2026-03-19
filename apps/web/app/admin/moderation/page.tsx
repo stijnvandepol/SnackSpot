@@ -102,7 +102,7 @@ export default function ModerationPage() {
               <div className="flex items-center gap-3">
                 {report.photo.variants?.thumb && (
                   <img
-                    src={photoVariantUrl(report.photo.variants, ['thumb']) ?? undefined}
+                    src={photoVariantUrl(report.photo.variants as Record<string, string>, ['thumb']) ?? undefined}
                     alt=""
                     className="h-16 w-16 rounded-lg object-cover"
                   />
