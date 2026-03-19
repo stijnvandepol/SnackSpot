@@ -2,13 +2,46 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Poppins } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
 import { CookieConsent } from '@/components/cookie-consent'
-import { getSiteOrigin } from '@/lib/site-url'
+import { getSiteOrigin, getSiteUrl } from '@/lib/site-url'
 import './globals.css'
 
 const metadataBase = getSiteOrigin()
 const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim()
 const appDescription =
   'Discover under-the-radar food spots with SnackSpot. Share reviews of smaller local places, surface hidden gems, and help others find great food they would otherwise miss.'
+
+function buildJsonLd(appUrl: string) {
+  return [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'SnackSpot',
+      url: appUrl,
+      description: appDescription,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${appUrl}/search?q={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebApplication',
+      name: 'SnackSpot',
+      url: appUrl,
+      description: appDescription,
+      applicationCategory: 'LifestyleApplication',
+      operatingSystem: 'All',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+      },
+    },
+  ]
+}
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'optional' })
 const poppins = Poppins({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-poppins', display: 'optional' })
@@ -25,6 +58,9 @@ export const metadata: Metadata = {
   applicationName: 'SnackSpot',
   title: { default: 'SnackSpot', template: '%s | SnackSpot' },
   description: appDescription,
+  alternates: {
+    canonical: '/',
+  },
   robots: {
     index: true,
     follow: true,
@@ -67,9 +103,16 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const appUrl = getSiteUrl()
+  const jsonLd = buildJsonLd(appUrl)
   return (
     <html lang="en" className={`h-full ${inter.variable} ${poppins.variable}`}>
-      <head />
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="h-full font-body">
         <AuthProvider>
           {children}
