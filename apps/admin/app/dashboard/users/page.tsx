@@ -18,10 +18,6 @@ export default function UsersPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
-  const [showModal, setShowModal] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [newPassword, setNewPassword] = useState('')
-
   const loadUsers = async () => {
     setLoading(true)
     try {
@@ -39,32 +35,6 @@ export default function UsersPage() {
   useEffect(() => {
     loadUsers()
   }, [page, search])
-
-  const handleResetPassword = async () => {
-    if (!selectedUser || !newPassword) return
-
-    try {
-      const res = await fetch(`/api/users/${selectedUser.id}/reset-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password: newPassword }),
-      })
-
-      if (res.ok) {
-        alert('Wachtwoord succesvol gereset!')
-        setShowModal(false)
-        setNewPassword('')
-        setSelectedUser(null)
-      } else {
-        const data = await res.json()
-        alert(`Fout: ${data.error}`)
-      }
-    } catch (error) {
-      alert('Er is een fout opgetreden')
-    }
-  }
 
   const handleDeleteUser = async (userId: string, username: string) => {
     if (!confirm(`Weet je zeker dat je gebruiker "${username}" wilt verwijderen?`)) return
@@ -183,15 +153,6 @@ export default function UsersPage() {
                           Bewerk
                         </Link>
                         <button
-                          onClick={() => {
-                            setSelectedUser(user)
-                            setShowModal(true)
-                          }}
-                          className="text-purple-600 hover:text-purple-800 text-sm font-medium"
-                        >
-                          Reset PW
-                        </button>
-                        <button
                           onClick={() => handleToggleBan(user)}
                           className="text-yellow-600 hover:text-yellow-800 text-sm font-medium"
                         >
@@ -236,41 +197,6 @@ export default function UsersPage() {
         </>
       )}
 
-      {/* Reset Password Modal */}
-      {showModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold mb-4">
-              Wachtwoord resetten voor {selectedUser.username}
-            </h2>
-            <div className="mb-4">
-              <label className="label">Nieuw wachtwoord</label>
-              <input
-                type="password"
-                className="input"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Min. 8 karakters"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button onClick={handleResetPassword} className="btn btn-primary">
-                Reset wachtwoord
-              </button>
-              <button
-                onClick={() => {
-                  setShowModal(false)
-                  setNewPassword('')
-                  setSelectedUser(null)
-                }}
-                className="btn btn-secondary"
-              >
-                Annuleer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
