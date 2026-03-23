@@ -89,23 +89,6 @@ export function resetTokenExpiresAt(): Date {
   return new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60 * 1000)
 }
 
-// ─── Email verification token ─────────────────────────────────────────────────
-
-const VERIFICATION_TOKEN_BYTES = 32 // 256 bits → 64 hex chars
-const VERIFICATION_TOKEN_TTL_HOURS = 24
-
-export function generateVerificationToken(): string {
-  return randomBytes(VERIFICATION_TOKEN_BYTES).toString('hex')
-}
-
-export function hashVerificationToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex')
-}
-
-export function verificationTokenExpiresAt(): Date {
-  return new Date(Date.now() + VERIFICATION_TOKEN_TTL_HOURS * 60 * 60 * 1000)
-}
-
 // ─── Cookie helpers ──────────────────────────────────────────────────────────
 
 export const REFRESH_COOKIE = 'snackspot_rt'

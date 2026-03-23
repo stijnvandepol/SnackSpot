@@ -9,14 +9,10 @@ import {
   hashRefreshToken,
   refreshTokenExpiresAt,
   buildSetCookie,
-  generateVerificationToken,
-  hashVerificationToken,
-  verificationTokenExpiresAt,
 } from '@/lib/auth'
 import { created, err, parseBody, serverError, isResponse, requireSameOrigin, withNoStore } from '@/lib/api-helpers'
 import { rateLimitIP, getClientIP } from '@/lib/rate-limit'
-import { sendVerificationEmail } from '@/lib/email'
-import { env } from '@/lib/env'
+import { sendWelcomeEmail } from '@/lib/email'
 import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
@@ -66,23 +62,16 @@ export async function POST(req: NextRequest) {
     const rawRefresh = generateRefreshToken()
     const expiresAt = refreshTokenExpiresAt()
 
-    const rawVerification = generateVerificationToken()
-    const verificationExpiresAt = verificationTokenExpiresAt()
-
     await prisma.$transaction([
       prisma.refreshToken.create({
         data: { userId: user.id, tokenHash: hashRefreshToken(rawRefresh), family: generateTokenFamily(), expiresAt },
       }),
-      prisma.emailVerificationToken.create({
-        data: { userId: user.id, tokenHash: hashVerificationToken(rawVerification), expiresAt: verificationExpiresAt },
-      }),
     ])
 
-    const verifyUrl = `${env.NEXT_PUBLIC_APP_URL}/auth/verify-email?token=${rawVerification}`
     try {
-      await sendVerificationEmail(user.email, user.username, verifyUrl)
+      await sendWelcomeEmail(user.email, user.username)
     } catch (e: unknown) {
-      logger.warn({ err: e }, 'register: verification email failed to send')
+      logger.warn({ err: e }, 'register: welcome email failed to send')
     }
 
     const response = withNoStore(created({ user, access_token: accessToken }))
