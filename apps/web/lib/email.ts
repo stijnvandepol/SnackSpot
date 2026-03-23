@@ -32,16 +32,16 @@ const EMAIL_MUTED = '#64748B'
 const EMAIL_BORDER = '#E5E7EB'
 const EMAIL_SOFT_BORDER = '#F1F5F9'
 
-// ─── Email verification email ─────────────────────────────────────────────────
+// ─── Welcome email ────────────────────────────────────────────────────────────
 
-export async function sendVerificationEmail(to: string, username: string, verifyUrl: string): Promise<void> {
+export async function sendWelcomeEmail(to: string, username: string): Promise<void> {
   await sendEmailWithFallback({
     to,
-    subject: 'Verify your SnackSpot email address',
-    html: verificationEmailHtml(username, verifyUrl),
-    fallbackHtml: verificationEmailFallbackHtml(verifyUrl),
-    text: verificationEmailText(username, verifyUrl),
-    category: 'email-verification',
+    subject: 'Welcome to SnackSpot!',
+    html: welcomeEmailHtml(username),
+    fallbackHtml: welcomeEmailFallbackHtml(username),
+    text: welcomeEmailText(username),
+    category: 'welcome',
   })
 }
 
@@ -73,47 +73,35 @@ export async function sendPasswordChangedEmail(to: string, username: string): Pr
 
 // ─── Email templates ──────────────────────────────────────────────────────────
 
-function verificationEmailHtml(username: string, verifyUrl: string): string {
+function welcomeEmailHtml(username: string): string {
   return renderBrandedEmail({
-    previewText: 'Verify your SnackSpot email address',
-    eyebrow: 'Account setup',
-    title: 'Confirm your email',
+    previewText: 'Welcome to SnackSpot!',
+    eyebrow: 'Welcome',
+    title: 'Welcome to SnackSpot!',
     intro: html(
-      `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(username)}</strong>, thanks for joining SnackSpot! Click the button below to verify your email address. This link stays valid for 24 hours.`,
+      `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(username)}</strong>, thanks for joining SnackSpot! We're excited to have you. Start exploring hidden food spots near you right now.`,
     ),
-    action: {
-      label: 'Verify email address',
-      href: verifyUrl,
-    },
-    calloutTitle: 'Why you are seeing this',
+    calloutTitle: 'What is SnackSpot?',
     calloutBody: html(
-      'You recently created a SnackSpot account using this email address. Verifying confirms this address belongs to you.',
-    ),
-    secondaryBlockTitle: 'Manual link',
-    secondaryBlockBody: html(
-      `Button not working? Copy and paste this link into your browser:<br /><span style="word-break:break-all;color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(verifyUrl)}</span>`,
+      'SnackSpot helps you discover and share hidden food gems in your city. Browse spots shared by the community, leave reviews, and add your own favorites.',
     ),
   })
 }
 
-function verificationEmailText(username: string, verifyUrl: string): string {
-  return `Verify your SnackSpot email address
+function welcomeEmailText(username: string): string {
+  return `Welcome to SnackSpot!
 
 Hi ${username}, thanks for joining SnackSpot!
 
-Click the link below to verify your email address. This link is valid for 24 hours:
-
-${verifyUrl}
+We're excited to have you. Start exploring hidden food spots near you right now.
 
 If you did not create a SnackSpot account, you can safely ignore this email.`
 }
 
-function verificationEmailFallbackHtml(verifyUrl: string): string {
+function welcomeEmailFallbackHtml(username: string): string {
   return renderFallbackEmail({
-    title: 'Verify your email address',
-    body: 'Thanks for joining SnackSpot! Use the link below within 24 hours to verify your email address.',
-    linkLabel: 'Verify email address',
-    linkHref: verifyUrl,
+    title: 'Welcome to SnackSpot!',
+    body: `Hi <strong style="color:${EMAIL_TEXT};">${escapeHtml(username)}</strong>, thanks for joining SnackSpot! We're excited to have you on board.`,
     footer: 'If you did not create a SnackSpot account, you can safely ignore this email.',
   })
 }
