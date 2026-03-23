@@ -1,12 +1,12 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { prisma } from '@/lib/db'
 import { ReviewStatus } from '@prisma/client'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { getReviewTagLabel } from '@/lib/review-tags'
 import { extractCity } from '@/lib/utils'
 import { ReviewInteractions } from '@/components/review-interactions'
+import { ImageLightbox } from '@/components/image-lightbox'
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', {
   dateStyle: 'medium',
@@ -90,6 +90,14 @@ export default async function ReviewPage({
     : `/place/${review.place.id}?from=feed`
 
   const photos = review.reviewPhotos
+  const galleryImages = photos
+    .map((rp) => {
+      const src = photoVariantUrl(rp.photo.variants as Record<string, string>, ['large', 'medium', 'thumb'])
+      const thumbnail = photoVariantUrl(rp.photo.variants as Record<string, string>, ['medium', 'thumb', 'large'])
+      if (!src) return null
+      return { src, thumbnail: thumbnail ?? src, alt: review.dishName ?? 'Review photo', priority: rp.sortOrder === 0 }
+    })
+    .filter((img): img is NonNullable<typeof img> => img !== null)
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6 space-y-6">
@@ -100,24 +108,14 @@ export default async function ReviewPage({
       </div>
 
       {/* Photo gallery */}
-      {photos.length > 0 && (
-        <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(photos.length, 3)}, 1fr)` }}>
-          {photos.map((rp) => {
-            const src = photoVariantUrl(rp.photo.variants as Record<string, string>, ['large', 'medium', 'thumb'])
-            return src ? (
-              <div key={rp.photo.id} className="aspect-square rounded-2xl overflow-hidden bg-snack-surface">
-                <Image
-                  src={src}
-                  alt={review.dishName ?? 'Review photo'}
-                  width={400}
-                  height={400}
-                  className="h-full w-full object-cover"
-                  priority={rp.sortOrder === 0}
-                />
-              </div>
-            ) : null
-          })}
-        </div>
+      {galleryImages.length > 0 && (
+        <ImageLightbox
+          images={galleryImages}
+          containerClassName="grid gap-2"
+          containerStyle={{ gridTemplateColumns: `repeat(${Math.min(galleryImages.length, 3)}, 1fr)` }}
+          itemClassName="aspect-square rounded-2xl overflow-hidden bg-snack-surface cursor-zoom-in block w-full"
+          thumbnailClassName="h-full w-full object-cover"
+        />
       )}
 
       {/* Review body */}
