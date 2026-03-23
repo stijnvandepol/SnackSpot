@@ -32,6 +32,19 @@ const EMAIL_MUTED = '#64748B'
 const EMAIL_BORDER = '#E5E7EB'
 const EMAIL_SOFT_BORDER = '#F1F5F9'
 
+// ─── Email verification email ─────────────────────────────────────────────────
+
+export async function sendVerificationEmail(to: string, username: string, verifyUrl: string): Promise<void> {
+  await sendEmailWithFallback({
+    to,
+    subject: 'Verify your SnackSpot email address',
+    html: verificationEmailHtml(username, verifyUrl),
+    fallbackHtml: verificationEmailFallbackHtml(verifyUrl),
+    text: verificationEmailText(username, verifyUrl),
+    category: 'email-verification',
+  })
+}
+
 // ─── Password reset email ─────────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string): Promise<void> {
@@ -59,6 +72,51 @@ export async function sendPasswordChangedEmail(to: string, username: string): Pr
 }
 
 // ─── Email templates ──────────────────────────────────────────────────────────
+
+function verificationEmailHtml(username: string, verifyUrl: string): string {
+  return renderBrandedEmail({
+    previewText: 'Verify your SnackSpot email address',
+    eyebrow: 'Account setup',
+    title: 'Confirm your email',
+    intro: html(
+      `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(username)}</strong>, thanks for joining SnackSpot! Click the button below to verify your email address. This link stays valid for 24 hours.`,
+    ),
+    action: {
+      label: 'Verify email address',
+      href: verifyUrl,
+    },
+    calloutTitle: 'Why you are seeing this',
+    calloutBody: html(
+      'You recently created a SnackSpot account using this email address. Verifying confirms this address belongs to you.',
+    ),
+    secondaryBlockTitle: 'Manual link',
+    secondaryBlockBody: html(
+      `Button not working? Copy and paste this link into your browser:<br /><span style="word-break:break-all;color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(verifyUrl)}</span>`,
+    ),
+  })
+}
+
+function verificationEmailText(username: string, verifyUrl: string): string {
+  return `Verify your SnackSpot email address
+
+Hi ${username}, thanks for joining SnackSpot!
+
+Click the link below to verify your email address. This link is valid for 24 hours:
+
+${verifyUrl}
+
+If you did not create a SnackSpot account, you can safely ignore this email.`
+}
+
+function verificationEmailFallbackHtml(verifyUrl: string): string {
+  return renderFallbackEmail({
+    title: 'Verify your email address',
+    body: 'Thanks for joining SnackSpot! Use the link below within 24 hours to verify your email address.',
+    linkLabel: 'Verify email address',
+    linkHref: verifyUrl,
+    footer: 'If you did not create a SnackSpot account, you can safely ignore this email.',
+  })
+}
 
 function passwordResetHtml(resetUrl: string): string {
   return renderBrandedEmail({
