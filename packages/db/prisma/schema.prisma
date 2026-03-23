@@ -75,36 +75,38 @@ enum NotificationType {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  username     String    @unique
-  bio          String?
+  id               String    @id @default(cuid())
+  email            String    @unique
+  username         String    @unique
+  bio              String?
   usernameChangedAt DateTime? @map("username_changed_at")
-  passwordHash String    @map("password_hash")
-  role         Role      @default(USER)
-  avatarKey    String?   @map("avatar_key")
-  bannedAt     DateTime? @map("banned_at")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  passwordHash     String    @map("password_hash")
+  role             Role      @default(USER)
+  avatarKey        String?   @map("avatar_key")
+  bannedAt         DateTime? @map("banned_at")
+  emailVerifiedAt  DateTime? @map("email_verified_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  reviews           Review[]
-  comments          Comment[]
-  favorites         Favorite[]
-  photos            Photo[]
-  reviewLikes       ReviewLike[]
-  userBadges        UserBadge[]
-  reports           Report[]
-  moderationActions ModerationAction[]
-  refreshTokens     RefreshToken[]
-  passwordResetTokens PasswordResetToken[]
-  notifications     Notification[]
-  notificationPreferences NotificationPreferences?
-  reviewMentionsReceived ReviewMention[] @relation("MentionedUser")
-  reviewMentionsGiven    ReviewMention[] @relation("MentioningUser")
-  pushSubscriptions PushSubscription[]
-  actorNotifications Notification[] @relation("NotificationActor")
-  blockedWords       BlockedWord[]
-  reviewedFlags      FlaggedComment[] @relation("FlaggedCommentReviewer")
+  reviews                   Review[]
+  comments                  Comment[]
+  favorites                 Favorite[]
+  photos                    Photo[]
+  reviewLikes               ReviewLike[]
+  userBadges                UserBadge[]
+  reports                   Report[]
+  moderationActions         ModerationAction[]
+  refreshTokens             RefreshToken[]
+  passwordResetTokens       PasswordResetToken[]
+  emailVerificationTokens   EmailVerificationToken[]
+  notifications             Notification[]
+  notificationPreferences   NotificationPreferences?
+  reviewMentionsReceived    ReviewMention[] @relation("MentionedUser")
+  reviewMentionsGiven       ReviewMention[] @relation("MentioningUser")
+  pushSubscriptions         PushSubscription[]
+  actorNotifications        Notification[] @relation("NotificationActor")
+  blockedWords              BlockedWord[]
+  reviewedFlags             FlaggedComment[] @relation("FlaggedCommentReviewer")
 
   @@map("users")
 }
@@ -122,6 +124,20 @@ model RefreshToken {
 
   @@index([family])
   @@map("refresh_tokens")
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("email_verification_tokens")
 }
 
 model PasswordResetToken {

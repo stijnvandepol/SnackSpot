@@ -68,7 +68,7 @@ export default function HowToCreateAnAccountPage() {
             <li>Choose a username. This is shown publicly on your reviews and profile.</li>
             <li>Set a password.</li>
             <li>Click <strong>Create account</strong>.</li>
-            <li>You are signed in immediately — no email verification step required.</li>
+            <li>You are signed in immediately. Check your inbox for a verification email and click the link inside to confirm your address.</li>
           </ol>
 
           <h2>After creating your account</h2>
