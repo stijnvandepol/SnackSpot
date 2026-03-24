@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
+import { getSiteUrl } from '@/lib/site-url'
 import { PlaceReviewsSection } from '@/components/place-reviews-section'
 
 interface PlaceRow {
@@ -55,8 +56,36 @@ export default async function PlacePage({
 
   const backHref = resolveBackHref(from)
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: place.name,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: place.address,
+    },
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: place.lat,
+      longitude: place.lng,
+    },
+    url: `${getSiteUrl()}/place/${place.id}`,
+    ...(place.avg_rating !== null && place.review_count > 0
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: place.avg_rating,
+            reviewCount: place.review_count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
+  }
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Link href={backHref} className="btn-secondary text-sm">Back</Link>
         <Link href={`/add-review?placeId=${place.id}`} className="btn-primary text-sm">

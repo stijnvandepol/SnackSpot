@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PILLAR_GUIDES } from '@/lib/guides'
+import { getSiteUrl } from '@/lib/site-url'
 import { GuidesShell } from '@/components/guides-shell'
 
 export const metadata: Metadata = {
@@ -13,9 +14,20 @@ export const metadata: Metadata = {
 }
 
 export default function GuidesHubPage() {
+  const appUrl = getSiteUrl()
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: appUrl },
+      { '@type': 'ListItem', position: 2, name: 'Guides', item: `${appUrl}/guides` },
+    ],
+  }
+
   return (
     <GuidesShell>
       <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
         <header className="max-w-3xl">
           <p className="mb-3 inline-flex rounded-full border border-snack-primary/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-snack-primary">
             Help &amp; Guides

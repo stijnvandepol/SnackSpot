@@ -5,6 +5,7 @@ import { ReviewStatus } from '@prisma/client'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { getReviewTagLabel } from '@/lib/review-tags'
 import { extractCity } from '@/lib/utils'
+import { getSiteUrl } from '@/lib/site-url'
 import { ReviewInteractions } from '@/components/review-interactions'
 import { ImageLightbox } from '@/components/image-lightbox'
 
@@ -99,8 +100,35 @@ export default async function ReviewPage({
     })
     .filter((img): img is NonNullable<typeof img> => img !== null)
 
+  const appUrl = getSiteUrl()
+  const reviewJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Review',
+    itemReviewed: {
+      '@type': 'LocalBusiness',
+      name: review.place.name,
+      address: review.place.address,
+    },
+    author: {
+      '@type': 'Person',
+      name: review.user.username,
+      url: `${appUrl}/u/${encodeURIComponent(review.user.username)}`,
+    },
+    reviewRating: {
+      '@type': 'Rating',
+      ratingValue: overallRating,
+      bestRating: 5,
+      worstRating: 1,
+    },
+    reviewBody: review.text,
+    datePublished: review.createdAt.toISOString(),
+    url: `${appUrl}/review/${review.id}`,
+    ...(review.dishName ? { name: review.dishName } : {}),
+  }
+
   return (
     <div className="mx-auto max-w-lg px-4 py-6 space-y-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewJsonLd) }} />
       <div className="flex items-center gap-2">
         <Link href={backHref} className="btn-secondary text-sm">
           Back

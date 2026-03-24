@@ -26,7 +26,7 @@ export function GuidesShell({ children }: { children: React.ReactNode }) {
           <Link href="/product" className="shrink-0">
             <BrandMark />
           </Link>
-          <nav className="hidden items-center gap-5 text-sm text-snack-muted md:flex">
+          <nav aria-label="Guides navigation" className="hidden items-center gap-5 text-sm text-snack-muted md:flex">
             <Link href="/product#problem" className="hover:text-snack-text">Problem</Link>
             <Link href="/product#features" className="hover:text-snack-text">Features</Link>
             <Link href="/product#why" className="hover:text-snack-text">Why SnackSpot</Link>
