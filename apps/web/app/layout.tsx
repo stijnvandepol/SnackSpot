@@ -38,13 +38,14 @@ function buildJsonLd(appUrl: string) {
       offers: {
         '@type': 'Offer',
         price: '0',
+        priceCurrency: 'USD',
       },
     },
   ]
 }
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'optional' })
-const poppins = Poppins({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-poppins', display: 'optional' })
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
+const poppins = Poppins({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-poppins', display: 'swap' })
 
 export const viewport: Viewport = {
   themeColor: '#F97316',
@@ -90,8 +91,11 @@ export const metadata: Metadata = {
     'mobile-web-app-capable': 'yes',
   },
   openGraph: {
+    type: 'website',
     title: 'SnackSpot',
     description: appDescription,
+    siteName: 'SnackSpot',
+    locale: 'en_US',
     images: ['/opengraph-image'],
   },
   twitter: {

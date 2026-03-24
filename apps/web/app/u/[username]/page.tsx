@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
+import { getSiteUrl } from '@/lib/site-url'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { UserReviewsList } from '@/components/user-reviews-list'
 
@@ -38,8 +39,20 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
     WHERE r.user_id = ${user.id} AND r.status = 'PUBLISHED'
   `
 
+  const profileJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    mainEntity: {
+      '@type': 'Person',
+      name: user.username,
+      url: `${getSiteUrl()}/u/${encodeURIComponent(user.username)}`,
+      ...(user.bio?.trim() ? { description: user.bio.trim() } : {}),
+    },
+  }
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd) }} />
       <div className="card p-6 mb-6 flex items-center gap-4">
         <AvatarLightbox
           avatarKey={user.avatarKey}

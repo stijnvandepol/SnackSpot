@@ -193,8 +193,8 @@ export default function NearbyPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <div className="mb-6 space-y-1">
-        <h1 className="text-2xl md:text-3xl font-heading font-bold text-snack-text">Map View</h1>
-        <p className="text-sm text-snack-muted">Discover snack locations around you and open each location page.</p>
+        <h1 className="text-2xl md:text-3xl font-heading font-bold text-snack-text">Nearby Food Spots</h1>
+        <p className="text-sm text-snack-muted">Discover local snack bars, cafés, and hidden food gems around you on the map.</p>
       </div>
 
       {/* Controls */}

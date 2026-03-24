@@ -6,13 +6,14 @@ import { PILLAR_GUIDES } from '@/lib/guides'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const appUrl = getSiteUrl()
   // Use a stable date for static pages; bump this when static content changes.
-  const staticLastMod = new Date('2025-06-01')
+  const staticLastMod = new Date('2026-03-24')
 
   const staticEntries: MetadataRoute.Sitemap = [
     { url: `${appUrl}/product`, lastModified: staticLastMod, changeFrequency: 'monthly', priority: 1.0 },
     { url: `${appUrl}/feed`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
     { url: `${appUrl}/guides`, lastModified: staticLastMod, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${appUrl}/search`, lastModified: staticLastMod, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${appUrl}/nearby`, lastModified: staticLastMod, changeFrequency: 'weekly', priority: 0.6 },
     ...PILLAR_GUIDES.map((guide) => ({
       url: `${appUrl}${guide.href}`,
       lastModified: staticLastMod,
