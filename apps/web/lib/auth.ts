@@ -98,11 +98,10 @@ function shouldUseSecureCookie(): boolean {
   return env.NODE_ENV === 'production'
 }
 
-export function buildSetCookie(token: string, expires: Date): string {
+function cookieAttributes(expires: string): string {
   const secure = shouldUseSecureCookie()
   return [
-    `${REFRESH_COOKIE}=${token}`,
-    `Expires=${expires.toUTCString()}`,
+    `Expires=${expires}`,
     'Path=/',
     'HttpOnly',
     'SameSite=Strict',
@@ -110,14 +109,10 @@ export function buildSetCookie(token: string, expires: Date): string {
   ].join('; ')
 }
 
+export function buildSetCookie(token: string, expires: Date): string {
+  return `${REFRESH_COOKIE}=${token}; ${cookieAttributes(expires.toUTCString())}`
+}
+
 export function buildClearCookie(): string {
-  const secure = shouldUseSecureCookie()
-  return [
-    `${REFRESH_COOKIE}=`,
-    'Expires=Thu, 01 Jan 1970 00:00:00 GMT',
-    'Path=/',
-    'HttpOnly',
-    'SameSite=Strict',
-    ...(secure ? ['Secure'] : []),
-  ].join('; ')
+  return `${REFRESH_COOKIE}=; ${cookieAttributes('Thu, 01 Jan 1970 00:00:00 GMT')}`
 }

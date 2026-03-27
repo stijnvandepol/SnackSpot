@@ -4,6 +4,7 @@ import { ReviewTagSchema } from '@snackspot/shared'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import {
+  err,
   getAuthPayload,
   isResponse,
   ok,
@@ -14,78 +15,19 @@ import {
 } from '@/lib/api-helpers'
 import { buildCacheKey, getCachedJson, setCachedJson, stableSearchParams } from '@/lib/cache'
 import { getClientIP, rateLimitIP } from '@/lib/rate-limit'
+import { reviewListSelect, serializeReview } from '@/lib/review-helpers'
 
 const DiscoverQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(12).default(4),
   tag: ReviewTagSchema.optional(),
 })
 
-const reviewSelect = {
-  id: true,
-  rating: true,
-  ratingTaste: true,
-  ratingValue: true,
-  ratingPortion: true,
-  ratingService: true,
-  ratingOverall: true,
-  text: true,
-  dishName: true,
-  status: true,
-  createdAt: true,
-  tags: {
-    orderBy: { tag: 'asc' as const },
-    select: { tag: true },
-  },
-  user: { select: { id: true, username: true, avatarKey: true, role: true } },
-  place: { select: { id: true, name: true, address: true } },
-  _count: { select: { reviewLikes: true, comments: true } },
-  reviewLikes: {
-    where: { userId: '__no_user__' },
-    select: { userId: true },
-    take: 1,
-  },
-  reviewPhotos: {
-    take: 5,
-    orderBy: { sortOrder: 'asc' as const },
-    select: {
-      photo: { select: { id: true, variants: true } },
-    },
-  },
-}
-
-function serializeReview(item: any) {
-  return {
-    ...item,
-    rating: Number(item.rating),
-    likeCount: item._count.reviewLikes,
-    commentCount: item._count.comments,
-    likedByMe: item.reviewLikes.length > 0,
-    ratings: {
-      taste: Number(item.ratingTaste),
-      value: Number(item.ratingValue),
-      portion: Number(item.ratingPortion),
-      service: item.ratingService === null ? null : Number(item.ratingService),
-    },
-    overallRating: Number(item.ratingOverall),
-    tags: item.tags.map((tag: { tag: string }) => tag.tag),
-    _count: undefined,
-    reviewLikes: undefined,
-  }
-}
-
 async function getReviewsByIds(ids: string[], authSub?: string) {
   if (ids.length === 0) return []
 
   const reviews = await prisma.review.findMany({
     where: { id: { in: ids } },
-    select: {
-      ...reviewSelect,
-      reviewLikes: {
-        where: { userId: authSub ?? '__no_user__' },
-        select: { userId: true },
-        take: 1,
-      },
-    },
+    select: reviewListSelect(authSub),
   })
 
   const byId = new Map(reviews.map((review) => [review.id, serializeReview(review)]))
@@ -101,9 +43,7 @@ export async function GET(req: NextRequest) {
     if (!auth) {
       const ip = getClientIP(req)
       const rl = await rateLimitIP(ip, 'discover_public', 90, 60)
-      if (!rl.allowed) {
-        return Response.json({ error: 'Too many discover requests - try again later' }, { status: 429 })
-      }
+      if (!rl.allowed) return err('Too many discover requests - try again later', 429)
 
       const cacheKey = buildCacheKey('discover-public', stableSearchParams(req.nextUrl.searchParams))
       const cached = await getCachedJson<{
@@ -132,14 +72,7 @@ export async function GET(req: NextRequest) {
       },
       orderBy: { createdAt: 'desc' },
       take: query.limit,
-      select: {
-        ...reviewSelect,
-        reviewLikes: {
-          where: { userId: auth?.sub ?? '__no_user__' },
-          select: { userId: true },
-          take: 1,
-        },
-      },
+      select: reviewListSelect(auth?.sub),
     })
 
     const underTheRadarRows = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`

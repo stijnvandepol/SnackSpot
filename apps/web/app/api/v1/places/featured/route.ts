@@ -1,7 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
-import { ok, parseQuery, serverError, isResponse, withPublicCache } from '@/lib/api-helpers'
+import { ok, err, parseQuery, serverError, isResponse, withPublicCache } from '@/lib/api-helpers'
 import { buildCacheKey, getCachedJson, setCachedJson, stableSearchParams } from '@/lib/cache'
 import { getClientIP, rateLimitIP } from '@/lib/rate-limit'
 
@@ -25,9 +25,7 @@ export async function GET(req: NextRequest) {
   try {
     const ip = getClientIP(req)
     const rl = await rateLimitIP(ip, 'places_featured', 120, 60)
-    if (!rl.allowed) {
-      return Response.json({ error: 'Too many requests - try again later' }, { status: 429 })
-    }
+    if (!rl.allowed) return err('Too many requests - try again later', 429)
 
     const cacheKey = buildCacheKey('places-featured', stableSearchParams(req.nextUrl.searchParams))
     const cached = await getCachedJson<{ data: FeaturedPlaceRow[] }>(cacheKey)

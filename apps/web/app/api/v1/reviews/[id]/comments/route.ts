@@ -17,6 +17,7 @@ import { rateLimitUser } from '@/lib/rate-limit'
 import { recalculateUserBadges } from '@/lib/badge-service'
 import { notifyCommentMention, notifyReviewComment } from '@/lib/notification-service'
 import { getBlockedWords, filterText } from '@/lib/blocked-words'
+import { checkReviewVisibility, extractMentionedUsernames } from '@/lib/review-helpers'
 
 export async function GET(
   req: NextRequest,
@@ -34,12 +35,9 @@ export async function GET(
       select: { id: true, status: true, userId: true },
     })
 
-    if (!review || review.status === ReviewStatus.DELETED) return err('Review not found', 404)
-    if (review.status === ReviewStatus.HIDDEN) {
-      const isOwner = auth?.sub === review.userId
-      const isMod = auth?.role === 'MODERATOR' || auth?.role === 'ADMIN'
-      if (!isOwner && !isMod) return err('Review not found', 404)
-    }
+    if (!review) return err('Review not found', 404)
+    const visibilityError = checkReviewVisibility(review, auth)
+    if (visibilityError) return visibilityError
 
     const comments = await prisma.comment.findMany({
       where: { reviewId: id },
@@ -115,15 +113,14 @@ export async function POST(
     await notifyReviewComment(id, comment.id, auth.sub)
     await recalculateUserBadges(review.userId, { criteriaTypes: ['COMMENTS_RECEIVED_COUNT'] })
 
-    const mentionMatches = text.match(/@(\w{3,30})/g) ?? []
-    const mentionedUsernames = [...new Set(mentionMatches.map((match) => match.slice(1).toLowerCase()))]
+    const mentionedUsernames = extractMentionedUsernames(text)
 
     if (mentionedUsernames.length > 0) {
       const mentionedUsers = await prisma.user.findMany({
         where: {
           bannedAt: null,
           OR: mentionedUsernames.map((username) => ({
-            username: { equals: username, mode: 'insensitive' },
+            username: { equals: username, mode: 'insensitive' as const },
           })),
         },
         select: { id: true },

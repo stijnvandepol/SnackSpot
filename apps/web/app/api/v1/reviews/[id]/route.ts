@@ -18,6 +18,7 @@ import { normalizeRatings } from '@/lib/ratings'
 import { recalculateUserBadges } from '@/lib/badge-service'
 import { normalizeDishName } from '@/lib/text'
 import { getBlockedWords, filterText } from '@/lib/blocked-words'
+import { reviewListSelect, serializeReview, checkReviewVisibility, validatePhotos } from '@/lib/review-helpers'
 
 export async function GET(
   req: NextRequest,
@@ -30,62 +31,24 @@ export async function GET(
     const review = await prisma.review.findUnique({
       where: { id },
       select: {
-        id: true,
-        rating: true,
-        ratingTaste: true,
-        ratingValue: true,
-        ratingPortion: true,
-        ratingService: true,
-        ratingOverall: true,
-        text: true,
-        dishName: true,
-        status: true,
-        createdAt: true,
+        ...reviewListSelect(auth?.sub),
         updatedAt: true,
-        tags: {
-          orderBy: { tag: 'asc' },
-          select: { tag: true },
-        },
-        _count: { select: { reviewLikes: true, comments: true } },
-        user: { select: { id: true, username: true, avatarKey: true, role: true } },
-        place: { select: { id: true, name: true, address: true } },
-        reviewLikes: {
-          where: auth ? { userId: auth.sub } : { userId: '__no_user__' },
-          select: { userId: true },
-          take: 1,
-        },
         reviewPhotos: {
-          orderBy: { sortOrder: 'asc' },
+          orderBy: { sortOrder: 'asc' as const },
           select: { sortOrder: true, photo: { select: { id: true, variants: true } } },
         },
       },
     })
 
     if (!review) return err('Review not found', 404)
-    if (review.status === ReviewStatus.DELETED) return err('Review not found', 404)
-    if (review.status === ReviewStatus.HIDDEN) {
-      const isOwner = auth?.sub === review.user.id
-      const isMod = auth?.role === 'MODERATOR' || auth?.role === 'ADMIN'
-      if (!isOwner && !isMod) return err('Review not found', 404)
-    }
 
-    return withNoStore(ok({
-      ...review,
-      rating: Number(review.rating),
-      likeCount: review._count.reviewLikes,
-      commentCount: review._count.comments,
-      likedByMe: auth ? review.reviewLikes.length > 0 : false,
-      ratings: {
-        taste: Number(review.ratingTaste),
-        value: Number(review.ratingValue),
-        portion: Number(review.ratingPortion),
-        service: review.ratingService === null ? null : Number(review.ratingService),
-      },
-      overallRating: Number(review.ratingOverall),
-      tags: review.tags.map((item) => item.tag),
-      _count: undefined,
-      reviewLikes: undefined,
-    }))
+    const visibilityError = checkReviewVisibility(
+      { status: review.status as ReviewStatus, userId: review.user.id },
+      auth,
+    )
+    if (visibilityError) return visibilityError
+
+    return withNoStore(ok(serializeReview(review)))
   } catch (e) {
     return serverError('reviews/[id] GET', e)
   }
@@ -130,29 +93,8 @@ export async function PATCH(
       }
 
       if (dedupedPhotoIds.length > 0) {
-        const photos = await prisma.photo.findMany({
-          where: { id: { in: dedupedPhotoIds }, uploaderId: auth.sub },
-          select: {
-            id: true,
-            moderationStatus: true,
-            reviewPhotos: { select: { reviewId: true }, take: 1 },
-          },
-        })
-        if (photos.length !== dedupedPhotoIds.length) {
-          return err('One or more photo IDs are invalid', 422)
-        }
-
-        const notConfirmed = photos.filter((p) => p.moderationStatus === 'PENDING')
-        if (notConfirmed.length > 0) {
-          return err('One or more photos are not uploaded yet - please wait for upload confirmation', 409)
-        }
-
-        const attachedElsewhere = photos.filter(
-          (p) => p.reviewPhotos.length > 0 && p.reviewPhotos[0].reviewId !== id,
-        )
-        if (attachedElsewhere.length > 0) {
-          return err('One or more photos are already attached to another review', 409)
-        }
+        const photoError = await validatePhotos(dedupedPhotoIds, auth.sub, id)
+        if (photoError) return photoError
       }
     }
 

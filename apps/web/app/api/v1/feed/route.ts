@@ -1,10 +1,11 @@
 import { type NextRequest } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
-import { ok, parseQuery, serverError, isResponse, getAuthPayload, withNoStore, withPublicCache } from '@/lib/api-helpers'
+import { ok, err, parseQuery, serverError, isResponse, getAuthPayload, withNoStore, withPublicCache } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
 import { buildCacheKey, getCachedJson, setCachedJson, stableSearchParams } from '@/lib/cache'
 import { getClientIP, rateLimitIP } from '@/lib/rate-limit'
+import { reviewListSelect, serializeReview } from '@/lib/review-helpers'
 
 const FeedQuerySchema = z.object({
   cursor: z.string().optional(),
@@ -34,9 +35,7 @@ export async function GET(req: NextRequest) {
     if (!auth) {
       const ip = getClientIP(req)
       const rl = await rateLimitIP(ip, 'feed_public', 120, 60)
-      if (!rl.allowed) {
-        return Response.json({ error: 'Too many feed requests - try again later' }, { status: 429 })
-      }
+      if (!rl.allowed) return err('Too many feed requests - try again later', 429)
 
       const cacheKey = buildCacheKey('feed-public', stableSearchParams(req.nextUrl.searchParams))
       const cached = await getCachedJson<{
@@ -66,64 +65,16 @@ export async function GET(req: NextRequest) {
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: query.limit + 1,
-      select: {
-        id: true,
-        rating: true,
-        ratingTaste: true,
-        ratingValue: true,
-        ratingPortion: true,
-        ratingService: true,
-        ratingOverall: true,
-        text: true,
-        dishName: true,
-        status: true,
-        createdAt: true,
-        tags: {
-          orderBy: { tag: 'asc' },
-          select: { tag: true },
-        },
-        user: { select: { id: true, username: true, avatarKey: true, role: true } },
-        place: { select: { id: true, name: true, address: true } },
-        _count: { select: { reviewLikes: true, comments: true } },
-        reviewLikes: {
-          where: { userId: auth?.sub ?? '__no_user__' },
-          select: { userId: true },
-          take: 1,
-        },
-        reviewPhotos: {
-          take: 5,
-          orderBy: { sortOrder: 'asc' },
-          select: {
-            photo: { select: { id: true, variants: true } },
-          },
-        },
-      },
+      select: reviewListSelect(auth?.sub),
     })
 
     const hasMore = reviews.length > query.limit
     const items = hasMore ? reviews.slice(0, query.limit) : reviews
-    const withLikes = items.map((item) => ({
-      ...item,
-      rating: Number(item.rating),
-      likeCount: item._count.reviewLikes,
-      commentCount: item._count.comments,
-      likedByMe: item.reviewLikes.length > 0,
-      ratings: {
-        taste: Number(item.ratingTaste),
-        value: Number(item.ratingValue),
-        portion: Number(item.ratingPortion),
-        service: item.ratingService === null ? null : Number(item.ratingService),
-      },
-      overallRating: Number(item.ratingOverall),
-      tags: item.tags.map((tag) => tag.tag),
-      _count: undefined,
-      reviewLikes: undefined,
-    }))
     const nextCursor = hasMore
       ? encodeURIComponent(`${items.at(-1)!.createdAt.toISOString()}|${items.at(-1)!.id}`)
       : null
 
-    const payload = { data: withLikes, pagination: { nextCursor, hasMore } }
+    const payload = { data: items.map(serializeReview), pagination: { nextCursor, hasMore } }
 
     if (!auth) {
       const cacheKey = buildCacheKey('feed-public', stableSearchParams(req.nextUrl.searchParams))

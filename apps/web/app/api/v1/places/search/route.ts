@@ -1,7 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { PlaceSearchSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
-import { ok, parseQuery, serverError, isResponse, withPublicCache } from '@/lib/api-helpers'
+import { ok, err, parseQuery, serverError, isResponse, withPublicCache } from '@/lib/api-helpers'
 import { Prisma } from '@prisma/client'
 import { buildCacheKey, getCachedJson, setCachedJson, stableSearchParams } from '@/lib/cache'
 import { getClientIP, rateLimitIP } from '@/lib/rate-limit'
@@ -21,9 +21,7 @@ export async function GET(req: NextRequest) {
   try {
     const ip = getClientIP(req)
     const rl = await rateLimitIP(ip, 'places_search', 120, 60)
-    if (!rl.allowed) {
-      return Response.json({ error: 'Too many search requests - try again later' }, { status: 429 })
-    }
+    if (!rl.allowed) return err('Too many search requests - try again later', 429)
 
     const cacheKey = buildCacheKey('places-search', stableSearchParams(req.nextUrl.searchParams))
     const cached = await getCachedJson<{ data: PlaceRow[]; pagination: { nextCursor: null; hasMore: false } }>(cacheKey)

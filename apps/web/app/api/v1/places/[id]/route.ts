@@ -13,9 +13,7 @@ export async function GET(
   try {
     const ip = getClientIP(_req)
     const rl = await rateLimitIP(ip, 'place_detail', 180, 60)
-    if (!rl.allowed) {
-      return Response.json({ error: 'Too many requests - try again later' }, { status: 429 })
-    }
+    if (!rl.allowed) return err('Too many requests - try again later', 429)
 
     const cacheKey = buildCacheKey('place-detail', id)
     const cached = await getCachedJson<{

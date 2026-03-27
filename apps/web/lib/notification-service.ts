@@ -141,173 +141,155 @@ async function sendPushNotification(
   }
 }
 
-export async function notifyReviewLike(reviewId: string, actorId: string) {
+// ─── Shared lookup helpers ──────────────────────────────────────────────────
+
+async function findReviewForNotification(
+  reviewId: string,
+  select: Record<string, unknown>,
+  context: string,
+) {
+  const review = await prisma.review.findUnique({ where: { id: reviewId }, select })
+  if (!review) {
+    logger.warn({ reviewId }, `Review not found for ${context} notification`)
+  }
+  return review
+}
+
+async function findActorUsername(actorId: string): Promise<string | null> {
+  const actor = await prisma.user.findUnique({
+    where: { id: actorId },
+    select: { username: true },
+  })
+  return actor?.username ?? null
+}
+
+/** Wraps a notification builder so errors are logged but never thrown. */
+async function safeNotify(
+  context: string,
+  ids: Record<string, string>,
+  fn: () => ReturnType<typeof createNotification>,
+) {
   try {
-    const review = await prisma.review.findUnique({
-      where: { id: reviewId },
-      select: {
-        userId: true,
-        dishName: true,
-        user: { select: { username: true } },
-      },
-    })
+    return await fn()
+  } catch (err) {
+    logger.error({ err, ...ids }, `Failed to notify ${context}`)
+    return null
+  }
+}
 
-    if (!review) {
-      logger.warn({ reviewId }, 'Review not found for like notification')
-      return null
-    }
+// ─── Public notification functions ──────────────────────────────────────────
 
-    const actor = await prisma.user.findUnique({
-      where: { id: actorId },
-      select: { username: true },
-    })
+export function notifyReviewLike(reviewId: string, actorId: string) {
+  return safeNotify('review like', { reviewId, actorId }, async () => {
+    const review = await findReviewForNotification(
+      reviewId,
+      { userId: true, dishName: true },
+      'like',
+    ) as { userId: string; dishName: string | null } | null
+    if (!review) return null
 
-    if (!actor) return null
+    const actorName = await findActorUsername(actorId)
+    if (!actorName) return null
 
     return createNotification({
       userId: review.userId,
       type: 'REVIEW_LIKE',
       title: 'New like',
-      message: `${actor.username} liked your review${review.dishName ? ` of ${review.dishName}` : ''}`,
+      message: `${actorName} liked your review${review.dishName ? ` of ${review.dishName}` : ''}`,
       link: `/review/${reviewId}`,
       actorId,
       reviewId,
     })
-  } catch (err) {
-    logger.error({ err, reviewId, actorId }, 'Failed to notify review like')
-    return null
-  }
+  })
 }
 
-export async function notifyReviewComment(reviewId: string, commentId: string, actorId: string) {
-  try {
-    const review = await prisma.review.findUnique({
-      where: { id: reviewId },
-      select: {
-        userId: true,
-        dishName: true,
-        user: { select: { username: true } },
-      },
-    })
+export function notifyReviewComment(reviewId: string, commentId: string, actorId: string) {
+  return safeNotify('review comment', { reviewId, commentId, actorId }, async () => {
+    const review = await findReviewForNotification(
+      reviewId,
+      { userId: true, dishName: true },
+      'comment',
+    ) as { userId: string; dishName: string | null } | null
+    if (!review) return null
 
-    if (!review) {
-      logger.warn({ reviewId }, 'Review not found for comment notification')
-      return null
-    }
-
-    const actor = await prisma.user.findUnique({
-      where: { id: actorId },
-      select: { username: true },
-    })
-
-    if (!actor) return null
+    const actorName = await findActorUsername(actorId)
+    if (!actorName) return null
 
     return createNotification({
       userId: review.userId,
       type: 'REVIEW_COMMENT',
       title: 'New comment',
-      message: `${actor.username} commented on your review${review.dishName ? ` of ${review.dishName}` : ''}`,
+      message: `${actorName} commented on your review${review.dishName ? ` of ${review.dishName}` : ''}`,
       link: `/review/${reviewId}`,
       actorId,
       reviewId,
       commentId,
     })
-  } catch (err) {
-    logger.error({ err, reviewId, commentId, actorId }, 'Failed to notify review comment')
-    return null
-  }
+  })
 }
 
-export async function notifyMention(mentionedUserId: string, reviewId: string, actorId: string) {
-  try {
-    const review = await prisma.review.findUnique({
-      where: { id: reviewId },
-      select: {
-        dishName: true,
-        place: { select: { name: true } },
-      },
-    })
+export function notifyMention(mentionedUserId: string, reviewId: string, actorId: string) {
+  return safeNotify('mention', { mentionedUserId, reviewId, actorId }, async () => {
+    const review = await findReviewForNotification(
+      reviewId,
+      { place: { select: { name: true } } },
+      'mention',
+    ) as { place: { name: string } | null } | null
+    if (!review) return null
 
-    if (!review) {
-      logger.warn({ reviewId }, 'Review not found for mention notification')
-      return null
-    }
-
-    const actor = await prisma.user.findUnique({
-      where: { id: actorId },
-      select: { username: true },
-    })
-
-    if (!actor) return null
+    const actorName = await findActorUsername(actorId)
+    if (!actorName) return null
 
     return createNotification({
       userId: mentionedUserId,
       type: 'REVIEW_MENTION',
       title: 'You were mentioned',
-      message: `${actor.username} mentioned you in a review${review.place ? ` at ${review.place.name}` : ''}`,
+      message: `${actorName} mentioned you in a review${review.place ? ` at ${review.place.name}` : ''}`,
       link: `/review/${reviewId}`,
       actorId,
       reviewId,
     })
-  } catch (err) {
-    logger.error({ err, mentionedUserId, reviewId, actorId }, 'Failed to notify mention')
-    return null
-  }
+  })
 }
 
-export async function notifyCommentMention(
+export function notifyCommentMention(
   mentionedUserId: string,
   reviewId: string,
   commentId: string,
   actorId: string,
 ) {
-  try {
-    const review = await prisma.review.findUnique({
-      where: { id: reviewId },
-      select: {
-        place: { select: { name: true } },
-      },
-    })
+  return safeNotify('comment mention', { mentionedUserId, reviewId, commentId, actorId }, async () => {
+    const review = await findReviewForNotification(
+      reviewId,
+      { place: { select: { name: true } } },
+      'comment mention',
+    ) as { place: { name: string } | null } | null
+    if (!review) return null
 
-    if (!review) {
-      logger.warn({ reviewId, commentId }, 'Review not found for comment mention notification')
-      return null
-    }
-
-    const actor = await prisma.user.findUnique({
-      where: { id: actorId },
-      select: { username: true },
-    })
-
-    if (!actor) return null
+    const actorName = await findActorUsername(actorId)
+    if (!actorName) return null
 
     return createNotification({
       userId: mentionedUserId,
       type: 'COMMENT_MENTION',
       title: 'You were mentioned',
-      message: `${actor.username} mentioned you in a comment${review.place ? ` at ${review.place.name}` : ''}`,
+      message: `${actorName} mentioned you in a comment${review.place ? ` at ${review.place.name}` : ''}`,
       link: `/review/${reviewId}`,
       actorId,
       reviewId,
       commentId,
     })
-  } catch (err) {
-    logger.error({ err, mentionedUserId, reviewId, commentId, actorId }, 'Failed to notify comment mention')
-    return null
-  }
+  })
 }
 
-export async function notifyBadgeEarned(userId: string, badgeName: string) {
-  try {
-    return createNotification({
+export function notifyBadgeEarned(userId: string, badgeName: string) {
+  return safeNotify('badge earned', { userId, badgeName }, () =>
+    createNotification({
       userId,
       type: 'BADGE_EARNED',
       title: 'Achievement unlocked',
       message: `You unlocked "${badgeName}"`,
       link: '/profile',
-    })
-  } catch (err) {
-    logger.error({ err, userId, badgeName }, 'Failed to notify badge earned')
-    return null
-  }
+    }),
+  )
 }

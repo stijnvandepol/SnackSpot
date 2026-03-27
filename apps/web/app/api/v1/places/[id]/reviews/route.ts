@@ -1,10 +1,11 @@
 import { type NextRequest } from 'next/server'
 import { ReviewsQuerySchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
-import { ok, parseQuery, serverError, isResponse, getAuthPayload, withNoStore, withPublicCache } from '@/lib/api-helpers'
+import { ok, err, parseQuery, serverError, isResponse, getAuthPayload, withNoStore, withPublicCache } from '@/lib/api-helpers'
 import { ReviewStatus } from '@prisma/client'
 import { buildCacheKey, getCachedJson, setCachedJson, stableSearchParams } from '@/lib/cache'
 import { getClientIP, rateLimitIP } from '@/lib/rate-limit'
+import { reviewListSelect, serializeReview } from '@/lib/review-helpers'
 
 export async function GET(
   req: NextRequest,
@@ -19,9 +20,7 @@ export async function GET(
     if (!auth) {
       const ip = getClientIP(req)
       const rl = await rateLimitIP(ip, 'place_reviews_public', 120, 60)
-      if (!rl.allowed) {
-        return Response.json({ error: 'Too many requests - try again later' }, { status: 429 })
-      }
+      if (!rl.allowed) return err('Too many requests - try again later', 429)
 
       const cacheKey = buildCacheKey(
         'place-reviews-public',
@@ -57,60 +56,16 @@ export async function GET(
       where: whereClause,
       orderBy: isTop ? { rating: 'desc' } : { createdAt: 'desc' },
       take: query.limit + 1,
-      select: {
-        id: true,
-        rating: true,
-        ratingTaste: true,
-        ratingValue: true,
-        ratingPortion: true,
-        ratingService: true,
-        ratingOverall: true,
-        text: true,
-        dishName: true,
-        status: true,
-        createdAt: true,
-        tags: {
-          orderBy: { tag: 'asc' },
-          select: { tag: true },
-        },
-        _count: { select: { reviewLikes: true, comments: true } },
-        reviewLikes: {
-          where: { userId: auth?.sub ?? '__no_user__' },
-          select: { userId: true },
-          take: 1,
-        },
-        user: { select: { id: true, username: true, avatarKey: true, role: true } },
-        reviewPhotos: {
-          orderBy: { sortOrder: 'asc' },
-          select: { photo: { select: { id: true, variants: true } } },
-        },
-      },
+      select: reviewListSelect(auth?.sub),
     })
 
     const hasMore = reviews.length > query.limit
     const items = hasMore ? reviews.slice(0, query.limit) : reviews
-    const withLikes = items.map((item) => ({
-      ...item,
-      rating: Number(item.rating),
-      likeCount: item._count.reviewLikes,
-      commentCount: item._count.comments,
-      likedByMe: item.reviewLikes.length > 0,
-      ratings: {
-        taste: Number(item.ratingTaste),
-        value: Number(item.ratingValue),
-        portion: Number(item.ratingPortion),
-        service: item.ratingService === null ? null : Number(item.ratingService),
-      },
-      overallRating: Number(item.ratingOverall),
-      tags: item.tags.map((tag) => tag.tag),
-      _count: undefined,
-      reviewLikes: undefined,
-    }))
     const nextCursor = !isTop && hasMore
       ? encodeURIComponent(items.at(-1)!.createdAt.toISOString())
       : null
 
-    const payload = { data: withLikes, pagination: { nextCursor, hasMore } }
+    const payload = { data: items.map(serializeReview), pagination: { nextCursor, hasMore } }
 
     if (!auth) {
       const cacheKey = buildCacheKey(

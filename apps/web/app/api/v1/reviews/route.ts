@@ -10,6 +10,7 @@ import { normalizeDishName } from '@/lib/text'
 import { notifyMention } from '@/lib/notification-service'
 import { logger } from '@/lib/logger'
 import { getBlockedWords, filterText } from '@/lib/blocked-words'
+import { validatePhotos, processMentions } from '@/lib/review-helpers'
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
@@ -60,25 +61,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate photos belong to this user and are not yet attached to any review
-    const photos = await prisma.photo.findMany({
-      where: { id: { in: body.photoIds }, uploaderId: auth.sub },
-      select: {
-        id: true,
-        moderationStatus: true,
-        reviewPhotos: { select: { reviewId: true }, take: 1 },
-      },
-    })
-    if (photos.length !== body.photoIds.length) {
-      return err('One or more photo IDs are invalid', 422)
-    }
-    const notConfirmed = photos.filter((p) => p.moderationStatus === 'PENDING')
-    if (notConfirmed.length > 0) {
-      return err('One or more photos are not uploaded yet - please wait for upload confirmation', 409)
-    }
-    const alreadyUsed = photos.filter((p) => p.reviewPhotos.length > 0)
-    if (alreadyUsed.length > 0) {
-      return err('One or more photos are already attached to a review', 409)
-    }
+    const photoError = await validatePhotos(body.photoIds, auth.sub)
+    if (photoError) return photoError
 
     // Run rate-limit after payload/photo validation so failed attempts don't burn quota as quickly.
     // Allow higher throughput for power users posting multiple reviews in a short session.
@@ -137,51 +121,7 @@ export async function POST(req: NextRequest) {
     })
 
     // Create mentions and send notifications
-    try {
-      const mentionMatches = body.text.match(/@(\w{3,30})/g) ?? []
-      const mentionedUsernames = [...new Set(mentionMatches.map((m) => m.slice(1).toLowerCase()))]
-
-      const mentionedUsersByUsername = mentionedUsernames.length > 0
-        ? await prisma.user.findMany({
-            where: {
-              bannedAt: null,
-              OR: mentionedUsernames.map((username) => ({
-                username: { equals: username, mode: 'insensitive' },
-              })),
-            },
-            select: { id: true },
-          })
-        : []
-
-      const mentionedUserIds = [
-        ...new Set([
-          ...body.mentionedUserIds,
-          ...mentionedUsersByUsername.map((u) => u.id),
-        ]),
-      ].filter((id) => id !== auth.sub)
-
-      if (mentionedUserIds.length > 0) {
-        const validUsers = await prisma.user.findMany({
-          where: { id: { in: mentionedUserIds }, bannedAt: null },
-          select: { id: true },
-        })
-
-        const validUserIds = validUsers.map((u) => u.id)
-
-        await prisma.reviewMention.createMany({
-          data: validUserIds.map((userId) => ({
-            reviewId: review.id,
-            mentionedUserId: userId,
-            mentionedByUserId: auth.sub,
-          })),
-          skipDuplicates: true,
-        })
-
-        await Promise.allSettled(validUserIds.map((userId) => notifyMention(userId, review.id, auth.sub)))
-      }
-    } catch (error) {
-      logger.error({ err: error, userId: auth.sub, reviewId: review.id }, 'Mention processing failed after review create')
-    }
+    await processMentions(body.text, review.id, auth.sub, body.mentionedUserIds, notifyMention)
 
     return created({
       ...review,
