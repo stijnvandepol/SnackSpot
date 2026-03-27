@@ -71,6 +71,11 @@ export function FeedClient({ initialReviews, initialCursor, initialHasMore }: Fe
     }
   }, [hasMore, cursor, accessToken])
 
+  // Fallback: if SSR returned no data, do a client-side initial fetch
+  useEffect(() => {
+    if (initialReviews.length === 0) loadMore()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Infinite scroll via IntersectionObserver
   useEffect(() => {
     if (!sentinel.current) return
@@ -84,10 +89,18 @@ export function FeedClient({ initialReviews, initialCursor, initialHasMore }: Fe
 
   return (
     <>
-      {reviews.length === 0 && (
+      {reviews.length === 0 && !loading && (
         <div className="text-center py-20">
           <p className="text-snack-muted">No posts available yet.</p>
           <Link href="/add-review" className="btn-primary mt-4 hidden md:inline-block">Create first post</Link>
+        </div>
+      )}
+
+      {reviews.length === 0 && loading && (
+        <div className="space-y-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="card h-56 animate-pulse bg-snack-surface" />
+          ))}
         </div>
       )}
 
