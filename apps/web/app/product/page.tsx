@@ -2,11 +2,25 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Product',
+  title: 'SnackSpot – Discover Hidden Food Gems Near You',
   description:
-    'SnackSpot is a mobile-first community app for discovering under-the-radar food spots, posting photo reviews, and sharing smaller local places worth knowing.',
+    'SnackSpot is a community app for discovering under-the-radar food spots, posting photo reviews, and sharing smaller local places worth knowing.',
   alternates: {
     canonical: '/product',
+  },
+  openGraph: {
+    type: 'website',
+    title: 'SnackSpot – Discover Hidden Food Gems Near You',
+    description:
+      'SnackSpot is a community app for discovering under-the-radar food spots, posting photo reviews, and sharing smaller local places worth knowing.',
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SnackSpot – Discover Hidden Food Gems Near You',
+    description:
+      'SnackSpot is a community app for discovering under-the-radar food spots, posting photo reviews, and sharing smaller local places worth knowing.',
+    images: ['/twitter-image'],
   },
 }
 
@@ -78,7 +92,7 @@ export default function ProductPage() {
           <Link href="/feed" className="shrink-0">
             <BrandMark />
           </Link>
-          <nav className="hidden items-center gap-5 text-sm text-snack-muted md:flex">
+          <nav aria-label="Product page navigation" className="hidden items-center gap-5 text-sm text-snack-muted md:flex">
             <a href="#problem" className="hover:text-snack-text">Problem</a>
             <a href="#features" className="hover:text-snack-text">Features</a>
             <a href="#why" className="hover:text-snack-text">Why SnackSpot</a>

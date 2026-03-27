@@ -1,21 +1,32 @@
 import type { MetadataRoute } from 'next'
 import { prisma } from '@/lib/db'
 import { getSiteUrl } from '@/lib/site-url'
+import { PILLAR_GUIDES } from '@/lib/guides'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const appUrl = getSiteUrl()
+  // Use a stable date for static pages; bump this when static content changes.
+  const staticLastMod = new Date('2026-03-24')
 
   const staticEntries: MetadataRoute.Sitemap = [
-    { url: `${appUrl}/feed` },
-    { url: `${appUrl}/product` },
-    { url: `${appUrl}/guides` },
-    { url: `${appUrl}/search` },
-    { url: `${appUrl}/nearby` },
+    { url: `${appUrl}/product`, lastModified: staticLastMod, changeFrequency: 'monthly', priority: 1.0 },
+    { url: `${appUrl}/feed`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
+    { url: `${appUrl}/guides`, lastModified: staticLastMod, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${appUrl}/search`, lastModified: staticLastMod, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${appUrl}/nearby`, lastModified: staticLastMod, changeFrequency: 'weekly', priority: 0.6 },
+    ...PILLAR_GUIDES.map((guide) => ({
+      url: `${appUrl}${guide.href}`,
+      lastModified: staticLastMod,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    })),
   ]
 
   try {
     const [places, reviews, users] = await Promise.all([
+      // Only include places that have at least one published review — avoids thin content pages
       prisma.place.findMany({
+        where: { reviews: { some: { status: 'PUBLISHED' } } },
         select: { id: true, updatedAt: true },
         orderBy: { updatedAt: 'desc' },
       }),
@@ -34,16 +45,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const placeEntries: MetadataRoute.Sitemap = places.map((place) => ({
       url: `${appUrl}/place/${place.id}`,
       lastModified: place.updatedAt,
+      changeFrequency: 'weekly',
+      priority: 0.8,
     }))
 
     const reviewEntries: MetadataRoute.Sitemap = reviews.map((review) => ({
       url: `${appUrl}/review/${review.id}`,
       lastModified: review.updatedAt,
+      changeFrequency: 'monthly',
+      priority: 0.7,
     }))
 
     const userEntries: MetadataRoute.Sitemap = users.map((user) => ({
       url: `${appUrl}/u/${encodeURIComponent(user.username)}`,
       lastModified: user.updatedAt,
+      changeFrequency: 'weekly',
+      priority: 0.5,
     }))
 
     return [...staticEntries, ...placeEntries, ...reviewEntries, ...userEntries]

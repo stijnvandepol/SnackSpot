@@ -32,6 +32,19 @@ const EMAIL_MUTED = '#64748B'
 const EMAIL_BORDER = '#E5E7EB'
 const EMAIL_SOFT_BORDER = '#F1F5F9'
 
+// ─── Welcome email ────────────────────────────────────────────────────────────
+
+export async function sendWelcomeEmail(to: string, username: string): Promise<void> {
+  await sendEmailWithFallback({
+    to,
+    subject: 'Welcome to SnackSpot!',
+    html: welcomeEmailHtml(username),
+    fallbackHtml: welcomeEmailFallbackHtml(username),
+    text: welcomeEmailText(username),
+    category: 'welcome',
+  })
+}
+
 // ─── Password reset email ─────────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string): Promise<void> {
@@ -59,6 +72,39 @@ export async function sendPasswordChangedEmail(to: string, username: string): Pr
 }
 
 // ─── Email templates ──────────────────────────────────────────────────────────
+
+function welcomeEmailHtml(username: string): string {
+  return renderBrandedEmail({
+    previewText: 'Welcome to SnackSpot!',
+    eyebrow: 'Welcome',
+    title: 'Welcome to SnackSpot!',
+    intro: html(
+      `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(username)}</strong>, thanks for joining SnackSpot! We're excited to have you. Start exploring hidden food spots near you right now.`,
+    ),
+    calloutTitle: 'What is SnackSpot?',
+    calloutBody: html(
+      'SnackSpot helps you discover and share hidden food gems in your city. Browse spots shared by the community, leave reviews, and add your own favorites.',
+    ),
+  })
+}
+
+function welcomeEmailText(username: string): string {
+  return `Welcome to SnackSpot!
+
+Hi ${username}, thanks for joining SnackSpot!
+
+We're excited to have you. Start exploring hidden food spots near you right now.
+
+If you did not create a SnackSpot account, you can safely ignore this email.`
+}
+
+function welcomeEmailFallbackHtml(username: string): string {
+  return renderFallbackEmail({
+    title: 'Welcome to SnackSpot!',
+    body: `Hi <strong style="color:${EMAIL_TEXT};">${escapeHtml(username)}</strong>, thanks for joining SnackSpot! We're excited to have you on board.`,
+    footer: 'If you did not create a SnackSpot account, you can safely ignore this email.',
+  })
+}
 
 function passwordResetHtml(resetUrl: string): string {
   return renderBrandedEmail({

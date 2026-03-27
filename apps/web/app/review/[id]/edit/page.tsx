@@ -196,7 +196,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
         const existingPhotos = data.reviewPhotos
           .sort((a, b) => a.sortOrder - b.sortOrder)
           .reduce<UploadedPhoto[]>((acc, rp) => {
-            const previewUrl = photoVariantUrl(rp.photo.variants, ['medium', 'thumb'])
+            const previewUrl = photoVariantUrl(rp.photo.variants as Record<string, string>, ['medium', 'thumb'])
             if (!previewUrl) return acc
 
             acc.push({

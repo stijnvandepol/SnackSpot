@@ -1,150 +1,89 @@
-'use client'
-import { use, useEffect, useState } from 'react'
-import { ReviewCard } from '@/components/review-card'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { useAuth } from '@/components/auth-provider'
-import { TopNav } from '@/components/top-nav'
-import { BottomNav } from '@/components/bottom-nav'
+import { prisma } from '@/lib/db'
+import { getSiteUrl } from '@/lib/site-url'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
-
-interface UserProfile {
-  id: string
-  username: string
-  bio: string | null
-  avatarKey: string | null
-  role: string
-  createdAt: string
-  _count: { reviews: number; favorites: number }
-  totalLikesReceived: number
-}
-
-interface Review {
-  id: string
-  rating: number
-  text: string
-  dishName?: string | null
-  createdAt: string
-  status: string
-  likeCount?: number
-  likedByMe?: boolean
-  overallRating?: number
-  user: { id: string; username: string; avatarKey?: string | null; role: string }
-  place: { id: string; name: string; address: string }
-  reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
-}
+import { UserReviewsList } from '@/components/user-reviews-list'
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', {
   dateStyle: 'medium',
   timeZone: 'UTC',
 })
 
-function formatDate(dateInput: string) {
-  return dateFormatter.format(new Date(dateInput))
+function formatDate(dateInput: Date) {
+  return dateFormatter.format(dateInput)
 }
 
-export default function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
-  const { username } = use(params)
-  const { accessToken } = useAuth()
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [reviews, setReviews] = useState<Review[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+export default async function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
+  const { username } = await params
 
-  useEffect(() => {
-    setLoading(true)
-    Promise.all([
-      fetch(`/api/v1/users/${encodeURIComponent(username)}`),
-      fetch(`/api/v1/users/${encodeURIComponent(username)}/reviews?limit=50`, {
-        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
-      }),
-    ])
-      .then(async ([profileRes, reviewsRes]) => {
-        const profileJson = await profileRes.json()
-        const reviewsJson = await reviewsRes.json()
+  const user = await prisma.user.findFirst({
+    where: { username: { equals: username, mode: 'insensitive' }, bannedAt: null },
+    select: {
+      id: true,
+      username: true,
+      bio: true,
+      avatarKey: true,
+      role: true,
+      createdAt: true,
+      _count: { select: { reviews: { where: { status: 'PUBLISHED' } }, favorites: true } },
+    },
+  })
 
-        if (!profileRes.ok) {
-          setError(profileJson.error ?? 'User not found')
-          return
-        }
+  if (!user) notFound()
 
-        setProfile(profileJson.data)
-        setReviews(reviewsJson.data?.data ?? [])
-      })
-      .catch(() => setError('Failed to load profile'))
-      .finally(() => setLoading(false))
-  }, [username, accessToken])
+  const [{ total_likes }] = await prisma.$queryRaw<Array<{ total_likes: number }>>`
+    SELECT COUNT(rl.review_id)::int AS total_likes
+    FROM review_likes rl
+    INNER JOIN reviews r ON r.id = rl.review_id
+    WHERE r.user_id = ${user.id} AND r.status = 'PUBLISHED'
+  `
 
-  if (error) return (
-    <div className="flex min-h-full flex-col">
-      <TopNav />
-      <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="font-semibold text-snack-text">{error}</p>
-        <Link href="/feed" className="btn-primary mt-4 inline-block">Back to Feed</Link>
-      </div>
-      <BottomNav />
-    </div>
-  )
+  const profileJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    mainEntity: {
+      '@type': 'Person',
+      name: user.username,
+      url: `${getSiteUrl()}/u/${encodeURIComponent(user.username)}`,
+      ...(user.bio?.trim() ? { description: user.bio.trim() } : {}),
+    },
+  }
 
   return (
-    <div className="flex min-h-full flex-col">
-      <TopNav />
-      <main className="flex-1 pb-nav md:pb-0">
-        <div className="mx-auto max-w-2xl px-4 py-6">
-          {loading ? (
-            <div className="animate-pulse space-y-4">
-              <div className="h-20 bg-snack-surface rounded-2xl" />
-            </div>
-          ) : (
-            profile ? (
-              <>
-                <div className="card p-6 mb-6 flex items-center gap-4">
-                  <AvatarLightbox
-                    avatarKey={profile.avatarKey}
-                    username={profile.username}
-                    size="lg"
-                  />
-                  <div className="min-w-0">
-                    <h1 className="font-heading font-bold text-xl text-snack-text">{profile.username}</h1>
-                    <p className="text-sm text-snack-muted">@{profile.username}</p>
-                    <p className="text-xs text-snack-muted mt-1">{profile.bio?.trim() || 'SnackSpot member'}</p>
-                    <p className="text-xs text-snack-muted mt-1">Joined {formatDate(profile.createdAt)}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="card p-3 text-center">
-                    <p className="text-lg font-bold text-snack-text">{profile._count.reviews}</p>
-                    <p className="text-xs text-snack-muted">Posts</p>
-                  </div>
-                  <div className="card p-3 text-center">
-                    <p className="text-lg font-bold text-snack-text">{profile.totalLikesReceived}</p>
-                    <p className="text-xs text-snack-muted">Likes received</p>
-                  </div>
-                </div>
-
-                <h2 className="font-heading font-semibold text-snack-text mb-4">Reviews</h2>
-                {reviews.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-snack-muted text-sm">No reviews yet.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {reviews.map((r) => (
-                      <ReviewCard
-                        key={r.id}
-                        review={r}
-                        photoVariantPreference={['large', 'medium', 'thumb']}
-                        backContext={`user:${username}`}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : null
-          )}
+    <div className="mx-auto max-w-2xl px-4 py-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd) }} />
+      <div className="card p-6 mb-6 flex items-center gap-4">
+        <AvatarLightbox
+          avatarKey={user.avatarKey}
+          username={user.username}
+          size="lg"
+        />
+        <div className="min-w-0">
+          <h1 className="font-heading font-bold text-xl text-snack-text">{user.username}</h1>
+          <p className="text-sm text-snack-muted">@{user.username}</p>
+          <p className="text-xs text-snack-muted mt-1">{user.bio?.trim() || 'SnackSpot member'}</p>
+          <p className="text-xs text-snack-muted mt-1">Joined {formatDate(user.createdAt)}</p>
         </div>
-      </main>
-      <BottomNav />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="card p-3 text-center">
+          <p className="text-lg font-bold text-snack-text">{user._count.reviews}</p>
+          <p className="text-xs text-snack-muted">Posts</p>
+        </div>
+        <div className="card p-3 text-center">
+          <p className="text-lg font-bold text-snack-text">{total_likes}</p>
+          <p className="text-xs text-snack-muted">Likes received</p>
+        </div>
+      </div>
+
+      <h2 className="font-heading font-semibold text-snack-text mb-4">Reviews</h2>
+      <UserReviewsList username={user.username} />
+
+      <div className="mt-6 text-center">
+        <Link href="/feed" className="btn-secondary text-sm">Back to Feed</Link>
+      </div>
     </div>
   )
 }

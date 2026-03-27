@@ -92,8 +92,9 @@ describe('token family theft detection — business logic', () => {
   })
 
   it('does not flag theft at exactly the 5-minute boundary', () => {
-    const usedAt = new Date(Date.now() - FIVE_MINUTES_MS)
-    expect(isTheft(usedAt, new Date())).toBe(false)
+    const now = new Date()
+    const usedAt = new Date(now.getTime() - FIVE_MINUTES_MS)
+    expect(isTheft(usedAt, now)).toBe(false)
   })
 
   it('flags theft when token was used 10 minutes ago', () => {

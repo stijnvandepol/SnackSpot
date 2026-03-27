@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Poppins } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
 import { CookieConsent } from '@/components/cookie-consent'
-import { getSiteOrigin } from '@/lib/site-url'
+import { getSiteOrigin, getSiteUrl } from '@/lib/site-url'
 import './globals.css'
 
 const metadataBase = getSiteOrigin()
@@ -10,8 +10,42 @@ const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?
 const appDescription =
   'Discover under-the-radar food spots with SnackSpot. Share reviews of smaller local places, surface hidden gems, and help others find great food they would otherwise miss.'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'optional' })
-const poppins = Poppins({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-poppins', display: 'optional' })
+function buildJsonLd(appUrl: string) {
+  return [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'SnackSpot',
+      url: appUrl,
+      description: appDescription,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${appUrl}/search?q={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebApplication',
+      name: 'SnackSpot',
+      url: appUrl,
+      description: appDescription,
+      applicationCategory: 'LifestyleApplication',
+      operatingSystem: 'All',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+      },
+    },
+  ]
+}
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
+const poppins = Poppins({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-poppins', display: 'swap' })
 
 export const viewport: Viewport = {
   themeColor: '#F97316',
@@ -25,6 +59,9 @@ export const metadata: Metadata = {
   applicationName: 'SnackSpot',
   title: { default: 'SnackSpot', template: '%s | SnackSpot' },
   description: appDescription,
+  alternates: {
+    canonical: getSiteUrl(),
+  },
   robots: {
     index: true,
     follow: true,
@@ -42,26 +79,23 @@ export const metadata: Metadata = {
   manifest: '/manifest.webmanifest',
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icons/favicon-64x64.png', sizes: '64x64', type: 'image/png' },
+      { url: '/favicon.ico', sizes: '48x48 32x32' },
       { url: '/icons/favicon-48x48.png', sizes: '48x48', type: 'image/png' },
       { url: '/icons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
       { url: '/icons/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/icon.png', sizes: '1024x1024', type: 'image/png' },
     ],
-    shortcut: ['/favicon.ico'],
-    apple: [
-      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
-      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
+    apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
   },
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Snack Spot' },
   other: {
     'mobile-web-app-capable': 'yes',
   },
   openGraph: {
+    type: 'website',
     title: 'SnackSpot',
     description: appDescription,
+    siteName: 'SnackSpot',
+    locale: 'en_US',
     images: ['/opengraph-image'],
   },
   twitter: {
@@ -73,9 +107,16 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const appUrl = getSiteUrl()
+  const jsonLd = buildJsonLd(appUrl)
   return (
     <html lang="en" className={`h-full ${inter.variable} ${poppins.variable}`}>
-      <head />
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="h-full font-body">
         <AuthProvider>
           {children}
