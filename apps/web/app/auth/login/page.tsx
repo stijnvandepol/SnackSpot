@@ -22,7 +22,7 @@ export default function LoginPage() {
       setError(result.error ?? 'Login failed')
       return
     }
-    router.push('/feed')
+    router.push('/')
   }
 
   return (

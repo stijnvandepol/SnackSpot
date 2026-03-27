@@ -21,7 +21,7 @@ export default function RegisterPage() {
     const result = await register(form)
     setLoading(false)
     if (!result.ok) { setError(result.error ?? 'Registration failed'); return }
-    router.push('/feed')
+    router.push('/')
   }
 
   return (

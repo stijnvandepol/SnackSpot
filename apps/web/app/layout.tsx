@@ -14,6 +14,14 @@ function buildJsonLd(appUrl: string) {
   return [
     {
       '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'SnackSpot',
+      url: appUrl,
+      logo: `${appUrl}/icons/favicon-48x48.png`,
+      description: appDescription,
+    },
+    {
+      '@context': 'https://schema.org',
       '@type': 'WebSite',
       name: 'SnackSpot',
       url: appUrl,
@@ -37,8 +45,9 @@ function buildJsonLd(appUrl: string) {
       operatingSystem: 'All',
       offers: {
         '@type': 'Offer',
-        price: '0',
+        price: 0,
         priceCurrency: 'USD',
+        availability: 'https://schema.org/InStock',
       },
     },
   ]
@@ -87,9 +96,6 @@ export const metadata: Metadata = {
     apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
   },
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Snack Spot' },
-  other: {
-    'mobile-web-app-capable': 'yes',
-  },
   openGraph: {
     type: 'website',
     title: 'SnackSpot',

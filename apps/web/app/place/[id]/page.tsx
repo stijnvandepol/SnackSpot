@@ -18,7 +18,7 @@ function resolveBackHref(from: string | undefined): string {
   if (!from) return '/search'
   if (from === 'search') return '/search'
   if (from === 'nearby') return '/nearby'
-  if (from === 'feed') return '/feed'
+  if (from === 'feed') return '/'
   if (from === 'profile') return '/profile'
   if (from.startsWith('user:')) {
     const username = from.slice('user:'.length)

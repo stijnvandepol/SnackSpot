@@ -11,6 +11,15 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: ['/api/', '/auth/', '/admin/', '/profile', '/add-review', '/review/*/edit'],
       },
+      // Allow AI search crawlers explicitly
+      { userAgent: 'GPTBot', allow: '/' },
+      { userAgent: 'OAI-SearchBot', allow: '/' },
+      { userAgent: 'ClaudeBot', allow: '/' },
+      { userAgent: 'PerplexityBot', allow: '/' },
+      { userAgent: 'Google-Extended', allow: '/' },
+      // Block AI training-only crawlers
+      { userAgent: 'CCBot', disallow: '/' },
+      { userAgent: 'anthropic-ai', disallow: '/' },
     ],
     sitemap: `${appUrl}/sitemap.xml`,
   }

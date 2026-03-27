@@ -18,7 +18,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile brand bar */}
       <div className="md:hidden sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-[#ececec]">
         <div className="h-14 px-4 flex items-center">
-          <Link href="/feed" className="font-heading font-bold text-xl leading-none">
+          <Link href="/" className="font-heading font-bold text-xl leading-none">
             <span className="text-snack-primary">Snack</span>
             <span className="text-snack-accent inline-flex items-center">
               Sp

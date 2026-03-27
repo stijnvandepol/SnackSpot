@@ -11,7 +11,7 @@ export function TopNav() {
   const router = useRouter()
 
   const navLinks = [
-    { href: '/feed', label: 'Home' },
+    { href: '/', label: 'Home' },
     { href: '/search', label: 'Explore' },
     { href: '/nearby', label: 'Nearby' },
   ]
@@ -19,7 +19,7 @@ export function TopNav() {
   return (
     <header className="hidden md:block sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-[#ececec]">
       <div className="mx-auto max-w-6xl px-4 flex h-16 items-center justify-between gap-4">
-        <Link href="/feed" className="font-heading font-bold text-xl leading-none">
+        <Link href="/" className="font-heading font-bold text-xl leading-none">
           <span className="text-snack-primary">Snack</span>
           <span className="text-snack-accent inline-flex items-center">
             Sp
@@ -38,9 +38,9 @@ export function TopNav() {
             <Link
               key={l.href}
               href={l.href}
-              aria-current={pathname.startsWith(l.href) ? 'page' : undefined}
+              aria-current={(l.href === '/' ? pathname === '/' : pathname.startsWith(l.href)) ? 'page' : undefined}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
-                pathname.startsWith(l.href)
+                (l.href === '/' ? pathname === '/' : pathname.startsWith(l.href))
                   ? 'bg-snack-surface text-snack-primary'
                   : 'text-snack-muted hover:bg-snack-surface'
               }`}

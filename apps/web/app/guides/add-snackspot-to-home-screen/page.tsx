@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { RelatedGuides } from '@/components/RelatedGuides'
 import { GuidesShell } from '@/components/guides-shell'
+import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
 const faqItems = [
   {
@@ -47,6 +48,7 @@ export default function AddSnackSpotToHomescreenGuidePage() {
   return (
     <GuidesShell>
       <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
+        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/guides' }, { name: 'Add SnackSpot to Home Screen', path: '/guides/add-snackspot-to-home-screen' }]} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
         <article className="guide-content guide-article prose prose-slate">
@@ -74,7 +76,7 @@ export default function AddSnackSpotToHomescreenGuidePage() {
         <h3>Better daily flow</h3>
         <p>
           It is ideal if you frequently want to <Link href="/nearby">find hidden gem restaurants near you</Link>,{' '}
-          <Link href="/feed">see real food reviews on SnackSpot</Link>, or quickly <Link href="/search">discover restaurants nearby</Link>.
+          <Link href="/">see real food reviews on SnackSpot</Link>, or quickly <Link href="/search">discover restaurants nearby</Link>.
         </p>
 
         <h2>Android: add SnackSpot to home screen</h2>
@@ -155,7 +157,7 @@ export default function AddSnackSpotToHomescreenGuidePage() {
         <h3>Use a simple decision flow</h3>
         <p>
           Start in <Link href="/search">search</Link>, validate options in <Link href="/nearby">nearby</Link>, and check
-          context in the <Link href="/feed">live review feed</Link>.
+          context in the <Link href="/">live review feed</Link>.
         </p>
         <h3>Create an account for faster return visits</h3>
         <p>
@@ -182,7 +184,7 @@ export default function AddSnackSpotToHomescreenGuidePage() {
           <p className="mt-3">
             Open <Link href="/nearby">find hidden gem restaurants near you</Link>, continue with{' '}
             <Link href="/search">discover restaurants nearby</Link>, and verify your pick in{' '}
-            <Link href="/feed">real SnackSpot reviews</Link>. Need an account first?{' '}
+            <Link href="/">real SnackSpot reviews</Link>. Need an account first?{' '}
             <Link href="/auth/register">Create one here</Link>.
           </p>
         </section>

@@ -19,17 +19,17 @@ function formatDate(dateInput: Date) {
 }
 
 function resolveBackHref(from: string | undefined, parsedPlaceContext: { placeId: string; origin: string } | null): string {
-  if (!from) return '/feed'
-  if (from === 'feed') return '/feed'
+  if (!from) return '/'
+  if (from === 'feed') return '/'
   if (from === 'profile') return '/profile'
   if (parsedPlaceContext) {
     return `/place/${encodeURIComponent(parsedPlaceContext.placeId)}?from=${encodeURIComponent(parsedPlaceContext.origin)}`
   }
   if (from.startsWith('user:')) {
     const username = from.slice('user:'.length)
-    return username ? `/u/${encodeURIComponent(username)}` : '/feed'
+    return username ? `/u/${encodeURIComponent(username)}` : '/'
   }
-  return '/feed'
+  return '/'
 }
 
 function parsePlaceContext(from: string | undefined) {

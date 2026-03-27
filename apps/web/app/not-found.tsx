@@ -15,7 +15,7 @@ export default function NotFound() {
         This page does not exist or has been removed.
       </p>
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-        <Link href="/feed" className="btn-primary text-sm">
+        <Link href="/" className="btn-primary text-sm">
           Go to Feed
         </Link>
         <Link href="/product" className="btn-secondary text-sm">

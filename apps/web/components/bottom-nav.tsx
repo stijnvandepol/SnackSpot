@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 type IconName = 'home' | 'search' | 'plus' | 'map' | 'user'
 
 const links = [
-  { href: '/feed',       icon: 'home' as IconName, label: 'Home' },
+  { href: '/',       icon: 'home' as IconName, label: 'Home' },
   { href: '/search',     icon: 'search' as IconName, label: 'Explore' },
   { href: '/add-review', icon: 'plus' as IconName, label: 'Post', accent: true },
   { href: '/nearby',     icon: 'map' as IconName, label: 'Nearby' },
@@ -35,7 +35,7 @@ export function BottomNav() {
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-[#ececec] pb-[env(safe-area-inset-bottom)]">
       <ul className="flex h-[4.5rem] items-end pb-2">
         {links.map((l) => {
-          const active = pathname.startsWith(l.href)
+          const active = l.href === '/' ? pathname === '/' : pathname.startsWith(l.href)
           return (
             <li key={l.href} className="flex-1">
               <Link

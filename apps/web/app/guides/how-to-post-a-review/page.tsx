@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { RelatedGuides } from '@/components/RelatedGuides'
 import { GuidesShell } from '@/components/guides-shell'
+import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
 const faqItems = [
   {
@@ -47,6 +48,7 @@ export default function HowToPostAReviewPage() {
   return (
     <GuidesShell>
       <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
+        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/guides' }, { name: 'How to Post a Review', path: '/guides/how-to-post-a-review' }]} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
         <article className="guide-content guide-article prose prose-slate">
@@ -89,7 +91,7 @@ export default function HowToPostAReviewPage() {
 
           <h2>After posting</h2>
           <p>
-            Your review appears immediately on the <Link href="/feed">feed</Link> and on the place page. Other users
+            Your review appears immediately on the <Link href="/">feed</Link> and on the place page. Other users
             can like it, comment on it, and use it to decide where to eat.
           </p>
           <p>

@@ -82,7 +82,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
       <UserReviewsList username={user.username} />
 
       <div className="mt-6 text-center">
-        <Link href="/feed" className="btn-secondary text-sm">Back to Feed</Link>
+        <Link href="/" className="btn-secondary text-sm">Back to Feed</Link>
       </div>
     </div>
   )

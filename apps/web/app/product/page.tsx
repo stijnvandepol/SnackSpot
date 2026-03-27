@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
 export const metadata: Metadata = {
   title: 'SnackSpot – Discover Hidden Food Gems Near You',
@@ -89,7 +90,7 @@ export default function ProductPage() {
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.14),_transparent_32%),linear-gradient(180deg,#fff7ed_0%,#ffffff_28%,#ffffff_100%)] text-snack-text">
       <header className="sticky top-0 z-30 border-b border-black/5 bg-white/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
-          <Link href="/feed" className="shrink-0">
+          <Link href="/" className="shrink-0">
             <BrandMark />
           </Link>
           <nav aria-label="Product page navigation" className="hidden items-center gap-5 text-sm text-snack-muted md:flex">
@@ -105,6 +106,8 @@ export default function ProductPage() {
         </div>
       </header>
 
+      <BreadcrumbJsonLd items={[{ name: 'About SnackSpot', path: '/product' }]} />
+
       <main>
         <section className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-[1.2fr_0.8fr] md:items-center md:py-24">
           <div>
@@ -119,7 +122,7 @@ export default function ProductPage() {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/auth/register" className="btn-primary text-sm">Start with an account</Link>
-              <Link href="/feed" className="btn-secondary text-sm">Open the app feed</Link>
+              <Link href="/" className="btn-secondary text-sm">Open the app feed</Link>
               <Link href="/guides" className="btn-secondary text-sm">Read guides</Link>
             </div>
             <div className="mt-8 grid gap-3 sm:grid-cols-3">

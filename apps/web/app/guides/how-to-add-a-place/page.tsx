@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { RelatedGuides } from '@/components/RelatedGuides'
 import { GuidesShell } from '@/components/guides-shell'
+import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
 const faqItems = [
   {
@@ -44,6 +45,7 @@ export default function HowToAddAPlacePage() {
   return (
     <GuidesShell>
       <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
+        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/guides' }, { name: 'How to Add a Place', path: '/guides/how-to-add-a-place' }]} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
         <article className="guide-content guide-article prose prose-slate">

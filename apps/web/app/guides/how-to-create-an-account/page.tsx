@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { RelatedGuides } from '@/components/RelatedGuides'
 import { GuidesShell } from '@/components/guides-shell'
+import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
 const faqItems = [
   {
@@ -42,6 +43,7 @@ export default function HowToCreateAnAccountPage() {
   return (
     <GuidesShell>
       <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
+        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/guides' }, { name: 'How to Create an Account', path: '/guides/how-to-create-an-account' }]} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
         <article className="guide-content guide-article prose prose-slate">
@@ -80,7 +82,7 @@ export default function HowToCreateAnAccountPage() {
               <Link href="/add-review">Post your first review</Link> by tapping the Post button.
             </li>
             <li>
-              <Link href="/feed">Browse the feed</Link> and like posts from other users.
+              <Link href="/">Browse the feed</Link> and like posts from other users.
             </li>
             <li>
               <Link href="/nearby">Discover places near you</Link> on the map.

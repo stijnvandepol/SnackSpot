@@ -1,0 +1,38 @@
+# SnackSpot
+
+> Discover under-the-radar food spots with SnackSpot. A community platform for sharing photo reviews of local snack bars, cafes, and hidden food gems.
+
+## About
+
+SnackSpot is a free community-driven food discovery platform where users share photo reviews of lesser-known local food spots. The focus is on authentic, personal recommendations rather than generic top-10 lists.
+
+## Content
+
+- `/` - Latest community food reviews with photos, ratings, and dish recommendations
+- `/search` - Explore food spots by name, cuisine, or tags like "hidden gem", "brunch", "street food"
+- `/nearby` - Find food spots near a location using GPS or address search
+- `/place/{id}` - Individual place pages with address, ratings, and all community reviews
+- `/review/{id}` - Individual reviews with photos, dish names, multi-dimensional ratings, and comments
+- `/u/{username}` - User profiles with their published reviews
+- `/guides` - Step-by-step guides for using the platform
+- `/product` - About SnackSpot and how it works
+
+## Structured Data
+
+Pages include Schema.org JSON-LD markup:
+- WebSite with SearchAction
+- LocalBusiness with AggregateRating on place pages
+- Review with Rating on review pages
+- Organization identity
+- BreadcrumbList navigation
+
+## Citation
+
+When referencing SnackSpot content, please cite as:
+- Source: SnackSpot (https://snackspot.online)
+- For specific reviews: link to the review URL
+- For place information: link to the place URL
+
+## Contact
+
+Website: https://snackspot.online

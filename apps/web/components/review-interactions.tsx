@@ -248,7 +248,7 @@ export function ReviewInteractions({
             onClick={async () => {
               if (!confirm('Delete this review?')) return
               await fetch(`/api/v1/reviews/${reviewId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } })
-              window.location.href = '/feed'
+              window.location.href = '/'
             }}
           >
             Delete

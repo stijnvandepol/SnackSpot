@@ -9,16 +9,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticLastMod = new Date('2026-03-24')
 
   const staticEntries: MetadataRoute.Sitemap = [
-    { url: `${appUrl}/product`, lastModified: staticLastMod, changeFrequency: 'monthly', priority: 1.0 },
-    { url: `${appUrl}/feed`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
-    { url: `${appUrl}/guides`, lastModified: staticLastMod, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${appUrl}/search`, lastModified: staticLastMod, changeFrequency: 'weekly', priority: 0.6 },
-    { url: `${appUrl}/nearby`, lastModified: staticLastMod, changeFrequency: 'weekly', priority: 0.6 },
+    { url: appUrl, lastModified: new Date() },
+    { url: `${appUrl}/product`, lastModified: staticLastMod },
+    { url: `${appUrl}/guides`, lastModified: staticLastMod },
+    { url: `${appUrl}/search`, lastModified: staticLastMod },
+    { url: `${appUrl}/nearby`, lastModified: staticLastMod },
     ...PILLAR_GUIDES.map((guide) => ({
       url: `${appUrl}${guide.href}`,
       lastModified: staticLastMod,
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
     })),
   ]
 
@@ -45,22 +43,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const placeEntries: MetadataRoute.Sitemap = places.map((place) => ({
       url: `${appUrl}/place/${place.id}`,
       lastModified: place.updatedAt,
-      changeFrequency: 'weekly',
-      priority: 0.8,
     }))
 
     const reviewEntries: MetadataRoute.Sitemap = reviews.map((review) => ({
       url: `${appUrl}/review/${review.id}`,
       lastModified: review.updatedAt,
-      changeFrequency: 'monthly',
-      priority: 0.7,
     }))
 
     const userEntries: MetadataRoute.Sitemap = users.map((user) => ({
       url: `${appUrl}/u/${encodeURIComponent(user.username)}`,
       lastModified: user.updatedAt,
-      changeFrequency: 'weekly',
-      priority: 0.5,
     }))
 
     return [...staticEntries, ...placeEntries, ...reviewEntries, ...userEntries]

@@ -240,7 +240,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <p className="font-semibold text-snack-text">{error}</p>
-        <Link href="/feed" className="btn-primary mt-4 inline-block">Back to Feed</Link>
+        <Link href="/" className="btn-primary mt-4 inline-block">Back to Feed</Link>
       </div>
     )
   }
