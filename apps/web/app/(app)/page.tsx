@@ -1,11 +1,6 @@
 import type { Metadata } from 'next'
-import { prisma } from '@/lib/db'
-import { ReviewStatus } from '@prisma/client'
-import { reviewListSelect, serializeReview } from '@/lib/review-helpers'
 import { FeedClient } from '@/components/feed-client'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
-
-const INITIAL_FEED_LIMIT = 15
 
 const title = 'SnackSpot — Discover Local Food Spots'
 const description =
@@ -19,34 +14,7 @@ export const metadata: Metadata = {
   twitter: { title, description },
 }
 
-async function getInitialFeed() {
-  try {
-    const reviews = await prisma.review.findMany({
-      where: { status: ReviewStatus.PUBLISHED },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-      take: INITIAL_FEED_LIMIT + 1,
-      select: reviewListSelect(),
-    })
-
-    const hasMore = reviews.length > INITIAL_FEED_LIMIT
-    const items = hasMore ? reviews.slice(0, INITIAL_FEED_LIMIT) : reviews
-    const nextCursor = hasMore
-      ? encodeURIComponent(`${items.at(-1)!.createdAt.toISOString()}|${items.at(-1)!.id}`)
-      : null
-
-    return {
-      reviews: items.map((r) => JSON.parse(JSON.stringify(serializeReview(r)))),
-      nextCursor,
-      hasMore,
-    }
-  } catch {
-    return { reviews: [], nextCursor: null, hasMore: false }
-  }
-}
-
-export default async function FeedPage() {
-  const { reviews, nextCursor, hasMore } = await getInitialFeed()
-
+export default function FeedPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <BreadcrumbJsonLd items={[]} />
@@ -56,11 +24,7 @@ export default async function FeedPage() {
         <p className="text-sm text-snack-muted">Discover photo reviews of local food spots near you — scroll, like, and find your next meal.</p>
       </div>
 
-      <FeedClient
-        initialReviews={reviews}
-        initialCursor={nextCursor}
-        initialHasMore={hasMore}
-      />
+      <FeedClient />
     </div>
   )
 }

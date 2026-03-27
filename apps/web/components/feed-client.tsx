@@ -18,18 +18,13 @@ interface Review {
   reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
 }
 
-interface FeedClientProps {
-  initialReviews: Review[]
-  initialCursor: string | null
-  initialHasMore: boolean
-}
-
-export function FeedClient({ initialReviews, initialCursor, initialHasMore }: FeedClientProps) {
+export function FeedClient() {
   const { accessToken } = useAuth()
-  const [reviews, setReviews] = useState<Review[]>(initialReviews)
-  const [cursor, setCursor] = useState<string | null>(initialCursor)
-  const [hasMore, setHasMore] = useState(initialHasMore)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [cursor, setCursor] = useState<string | null>(null)
+  const [hasMore, setHasMore] = useState(true)
   const [loading, setLoading] = useState(false)
+  const [initial, setInitial] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const sentinel = useRef<HTMLDivElement>(null)
   const inFlightRef = useRef(false)
@@ -68,12 +63,13 @@ export function FeedClient({ initialReviews, initialCursor, initialHasMore }: Fe
     } finally {
       inFlightRef.current = false
       setLoading(false)
+      setInitial(false)
     }
   }, [hasMore, cursor, accessToken])
 
-  // Fallback: if SSR returned no data, do a client-side initial fetch
+  // Initial load
   useEffect(() => {
-    if (initialReviews.length === 0) loadMore()
+    loadMore()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Infinite scroll via IntersectionObserver
@@ -89,18 +85,18 @@ export function FeedClient({ initialReviews, initialCursor, initialHasMore }: Fe
 
   return (
     <>
-      {reviews.length === 0 && !loading && (
-        <div className="text-center py-20">
-          <p className="text-snack-muted">No posts available yet.</p>
-          <Link href="/add-review" className="btn-primary mt-4 hidden md:inline-block">Create first post</Link>
-        </div>
-      )}
-
-      {reviews.length === 0 && loading && (
+      {initial && loading && (
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="card h-56 animate-pulse bg-snack-surface" />
           ))}
+        </div>
+      )}
+
+      {!initial && reviews.length === 0 && (
+        <div className="text-center py-20">
+          <p className="text-snack-muted">No posts available yet.</p>
+          <Link href="/add-review" className="btn-primary mt-4 hidden md:inline-block">Create first post</Link>
         </div>
       )}
 
@@ -128,7 +124,7 @@ export function FeedClient({ initialReviews, initialCursor, initialHasMore }: Fe
       {/* Infinite scroll sentinel */}
       <div ref={sentinel} className="h-4 mt-4" />
 
-      {loading && (
+      {loading && !initial && (
         <div className="flex justify-center py-6">
           <div className="h-6 w-6 border-2 border-snack-primary border-t-transparent rounded-full animate-spin" />
         </div>
