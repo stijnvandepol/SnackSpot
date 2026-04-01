@@ -4,6 +4,10 @@ import { db } from '@/lib/db'
 
 type Params = { params: { id: string } }
 
+function hasPrismaCode(error: unknown, code: string): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === code
+}
+
 // GET /api/reviews/[id] - Get review details
 export async function GET(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
@@ -55,7 +59,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     }
 
     return NextResponse.json({ review })
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
       { error: 'Error fetching review' },
       { status: 500 }
@@ -88,8 +92,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     })
 
     return NextResponse.json({ review })
-  } catch (error: any) {
-    if (error.code === 'P2025') {
+  } catch (error: unknown) {
+    if (hasPrismaCode(error, 'P2025')) {
       return NextResponse.json(
         { error: 'Review niet gevonden' },
         { status: 404 }
@@ -113,8 +117,8 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     })
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
-    if (error.code === 'P2025') {
+  } catch (error: unknown) {
+    if (hasPrismaCode(error, 'P2025')) {
       return NextResponse.json(
         { error: 'Review niet gevonden' },
         { status: 404 }

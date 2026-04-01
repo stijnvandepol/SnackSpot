@@ -5,9 +5,12 @@ import argon2 from 'argon2'
 import { buildSetAdminCookie, signAdminAccessToken } from '@/lib/auth'
 import { getClientIp, rateLimit } from '@/lib/rate-limit'
 
+const LOGIN_RATE_LIMIT = 5
+const LOGIN_RATE_WINDOW_SECONDS = 15 * 60
+
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers)
-  const rl = rateLimit(`admin-login:${ip}`, 5, 15 * 60)
+  const rl = rateLimit(`admin-login:${ip}`, LOGIN_RATE_LIMIT, LOGIN_RATE_WINDOW_SECONDS)
   if (!rl.allowed) {
     return NextResponse.json(
       { error: 'Te veel inlogpogingen. Probeer het later opnieuw.' },

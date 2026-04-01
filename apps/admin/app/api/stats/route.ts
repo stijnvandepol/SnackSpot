@@ -2,13 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 
+const RECENT_WINDOW_DAYS = 7
+
 export async function GET(req: NextRequest) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
 
   try {
-    const sevenDaysAgo = new Date()
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    const recentCutoff = new Date()
+    recentCutoff.setDate(recentCutoff.getDate() - RECENT_WINDOW_DAYS)
 
     const [
       totalUsers,
@@ -22,10 +24,10 @@ export async function GET(req: NextRequest) {
       db.user.count(),
       db.place.count(),
       db.review.count({ where: { status: { not: 'DELETED' } } }),
-      db.user.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+      db.user.count({ where: { createdAt: { gte: recentCutoff } } }),
       db.review.count({
         where: {
-          createdAt: { gte: sevenDaysAgo },
+          createdAt: { gte: recentCutoff },
           status: { not: 'DELETED' },
         },
       }),

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type { Prisma } from '@prisma/client'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+
+const DEFAULT_PAGE = 1
+const DEFAULT_LIMIT = 50
+const MAX_LIMIT = 100
 
 // GET /api/reviews - List all reviews
 export async function GET(req: NextRequest) {
@@ -9,12 +14,12 @@ export async function GET(req: NextRequest) {
 
   try {
     const url = new URL(req.url)
-    const page = parseInt(url.searchParams.get('page') || '1')
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100)
+    const page = parseInt(url.searchParams.get('page') || String(DEFAULT_PAGE))
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || String(DEFAULT_LIMIT)), MAX_LIMIT)
     const search = url.searchParams.get('search') || ''
     const status = url.searchParams.get('status') || ''
 
-    const where: any = {}
+    const where: Prisma.ReviewWhereInput = {}
     
     if (search) {
       where.OR = [
@@ -25,7 +30,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (status) {
-      where.status = status
+      where.status = status as Prisma.ReviewWhereInput['status']
     }
 
     const [reviews, total] = await Promise.all([
@@ -72,7 +77,7 @@ export async function GET(req: NextRequest) {
         pages: Math.ceil(total / limit),
       },
     })
-  } catch (error: any) {
+  } catch {
     return NextResponse.json(
       { error: 'Error fetching reviews' },
       { status: 500 }

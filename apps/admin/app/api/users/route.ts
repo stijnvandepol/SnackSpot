@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
         pages: Math.ceil(total / limit),
       },
     })
-  } catch (error: any) {
+  } catch {
     return NextResponse.json(
       { error: 'Error fetching users' },
       { status: 500 }
@@ -110,8 +110,8 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ user }, { status: 201 })
-  } catch (error: any) {
-    if (error.code === 'P2002') {
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2002') {
       return NextResponse.json(
         { error: 'Email of username bestaat al' },
         { status: 400 }

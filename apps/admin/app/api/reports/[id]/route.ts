@@ -4,6 +4,12 @@ import { db } from '@/lib/db'
 
 type Params = { params: { id: string } }
 
+function hasPrismaCode(error: unknown, code: string): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === code
+}
+
+const VALID_REPORT_STATUSES = ['OPEN', 'RESOLVED', 'DISMISSED'] as const
+
 // GET /api/reports/[id] - Get report details
 export async function GET(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
@@ -68,7 +74,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     }
 
     return NextResponse.json({ report })
-  } catch (error: any) {
+  } catch {
     return NextResponse.json(
       { error: 'Error fetching report' },
       { status: 500 }
@@ -89,7 +95,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     // Update report status
-    if (status && ['OPEN', 'RESOLVED', 'DISMISSED'].includes(status)) {
+    if (status && (VALID_REPORT_STATUSES as readonly string[]).includes(status)) {
       const report = await db.report.update({
         where: { id: params.id },
         data: { status },
@@ -177,8 +183,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       { error: 'Ongeldige request' },
       { status: 400 }
     )
-  } catch (error: any) {
-    if (error.code === 'P2025') {
+  } catch (error: unknown) {
+    if (hasPrismaCode(error, 'P2025')) {
       return NextResponse.json(
         { error: 'Report niet gevonden' },
         { status: 404 }
@@ -202,8 +208,8 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     })
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
-    if (error.code === 'P2025') {
+  } catch (error: unknown) {
+    if (hasPrismaCode(error, 'P2025')) {
       return NextResponse.json(
         { error: 'Report niet gevonden' },
         { status: 404 }

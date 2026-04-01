@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import type { Prisma } from '@prisma/client'
 
 type Params = { params: { id: string } }
+
+function isPrismaError(error: unknown): error is { code: string } {
+  return typeof error === 'object' && error !== null && 'code' in error
+}
 
 // GET /api/users/[id] - Get user details
 export async function GET(req: NextRequest, { params }: Params) {
@@ -43,12 +48,20 @@ export async function GET(req: NextRequest, { params }: Params) {
     }
 
     return NextResponse.json({ user })
-  } catch (error: any) {
+  } catch {
     return NextResponse.json(
       { error: 'Error fetching user' },
       { status: 500 }
     )
   }
+}
+
+interface UpdateUserBody {
+  email?: string
+  username?: string
+  role?: 'USER' | 'ADMIN'
+  isVerified?: boolean
+  bannedAt?: string | null
 }
 
 // PATCH /api/users/[id] - Update user
@@ -57,16 +70,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (admin instanceof Response) return admin
 
   try {
-    const body = (await req.json()) as {
-      email?: string
-      username?: string
-      role?: 'USER' | 'ADMIN'
-      isVerified?: boolean
-      bannedAt?: string | null
-    }
+    const body = (await req.json()) as UpdateUserBody
     const { email, username, role, isVerified, bannedAt } = body
 
-    const updateData: any = {}
+    const updateData: Prisma.UserUpdateInput = {}
     if (email !== undefined) updateData.email = email
     if (username !== undefined) updateData.username = username
     if (role !== undefined) updateData.role = role
@@ -89,14 +96,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     })
 
     return NextResponse.json({ user })
-  } catch (error: any) {
-    if (error.code === 'P2002') {
+  } catch (error: unknown) {
+    if (isPrismaError(error) && error.code === 'P2002') {
       return NextResponse.json(
         { error: 'Email of username bestaat al' },
         { status: 400 }
       )
     }
-    if (error.code === 'P2025') {
+    if (isPrismaError(error) && error.code === 'P2025') {
       return NextResponse.json(
         { error: 'Gebruiker niet gevonden' },
         { status: 404 }
@@ -128,8 +135,8 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     })
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
-    if (error.code === 'P2025') {
+  } catch (error: unknown) {
+    if (isPrismaError(error) && error.code === 'P2025') {
       return NextResponse.json(
         { error: 'Gebruiker niet gevonden' },
         { status: 404 }

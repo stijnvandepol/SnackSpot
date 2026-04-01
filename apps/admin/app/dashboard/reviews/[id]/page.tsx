@@ -3,9 +3,27 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+interface AdminReview {
+  id: string
+  rating: string | number
+  ratingTaste: string | number
+  ratingValue: string | number
+  ratingPortion: string | number
+  ratingService: string | number | null
+  ratingOverall: string | number
+  text: string
+  dishName: string | null
+  status: string
+  createdAt: string
+  updatedAt: string
+  user: { id: string; username: string; email: string }
+  place: { id: string; name: string; address: string }
+  _count: { reviewLikes: number }
+}
+
 export default function ReviewDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const [review, setReview] = useState<any>(null)
+  const [review, setReview] = useState<AdminReview | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -82,7 +100,7 @@ export default function ReviewDetailsPage({ params }: { params: { id: string } }
             <div>
               <p className="text-sm text-gray-600">Overall</p>
               <p className="text-2xl font-bold text-yellow-600">
-                ⭐ {parseFloat(review.ratingOverall).toFixed(1)}/5.0
+                ⭐ {Number(review.ratingOverall).toFixed(1)}/5.0
               </p>
             </div>
             <div>

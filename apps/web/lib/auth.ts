@@ -69,13 +69,15 @@ export function hashRefreshToken(token: string): string {
 }
 
 export function refreshTokenExpiresAt(): Date {
-  return new Date(Date.now() + env.JWT_REFRESH_EXPIRES_DAYS * 24 * 60 * 60 * 1000)
+  return new Date(Date.now() + env.JWT_REFRESH_EXPIRES_DAYS * MS_PER_DAY)
 }
 
 // ─── Password reset token ────────────────────────────────────────────────────
 
-const RESET_TOKEN_BYTES = 32 // 256 bits → 64 hex chars
+const RESET_TOKEN_BYTES = 32 // 256 bits -> 64 hex chars
 const RESET_TOKEN_TTL_MINUTES = 15
+const MS_PER_MINUTE = 60 * 1000
+const MS_PER_DAY = 24 * 60 * 60 * 1000
 
 export function generateResetToken(): string {
   return randomBytes(RESET_TOKEN_BYTES).toString('hex')
@@ -86,7 +88,7 @@ export function hashResetToken(token: string): string {
 }
 
 export function resetTokenExpiresAt(): Date {
-  return new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60 * 1000)
+  return new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * MS_PER_MINUTE)
 }
 
 // ─── Cookie helpers ──────────────────────────────────────────────────────────

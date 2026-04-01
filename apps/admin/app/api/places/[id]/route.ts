@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type { Prisma } from '@prisma/client'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 
 type Params = { params: { id: string } }
+
+const RECENT_REVIEWS_LIMIT = 10
+
+function hasPrismaCode(error: unknown, code: string): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === code
+}
 
 // GET /api/places/[id] - Get place details
 export async function GET(req: NextRequest, { params }: Params) {
@@ -32,7 +39,7 @@ export async function GET(req: NextRequest, { params }: Params) {
           where: {
             status: { not: 'DELETED' },
           },
-          take: 10,
+          take: RECENT_REVIEWS_LIMIT,
           orderBy: { createdAt: 'desc' },
           select: {
             id: true,
@@ -57,12 +64,19 @@ export async function GET(req: NextRequest, { params }: Params) {
     }
 
     return NextResponse.json({ place })
-  } catch (error: any) {
+  } catch {
     return NextResponse.json(
       { error: 'Error fetching place' },
       { status: 500 }
     )
   }
+}
+
+interface UpdatePlaceBody {
+  name?: string
+  address?: string
+  lat?: number
+  lng?: number
 }
 
 // PATCH /api/places/[id] - Update place
@@ -71,19 +85,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (admin instanceof Response) return admin
 
   try {
-    const body = (await req.json()) as {
-      name?: string
-      address?: string
-      lat?: number
-      lng?: number
-    }
+    const body = (await req.json()) as UpdatePlaceBody
     const { name, address, lat, lng } = body
 
     if (lat !== undefined && lng !== undefined) {
-      // Update with new location
       await db.$executeRaw`
         UPDATE places
-        SET 
+        SET
           name = COALESCE(${name}, name),
           address = COALESCE(${address}, address),
           location = ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
@@ -91,8 +99,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         WHERE id = ${params.id}
       `
     } else {
-      // Update without location
-      const updateData: any = {}
+      const updateData: Prisma.PlaceUpdateInput = {}
       if (name !== undefined) updateData.name = name
       if (address !== undefined) updateData.address = address
 
@@ -114,8 +121,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     })
 
     return NextResponse.json({ place })
-  } catch (error: any) {
-    if (error.code === 'P2025') {
+  } catch (error: unknown) {
+    if (hasPrismaCode(error, 'P2025')) {
       return NextResponse.json(
         { error: 'Restaurant niet gevonden' },
         { status: 404 }
@@ -139,8 +146,8 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     })
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
-    if (error.code === 'P2025') {
+  } catch (error: unknown) {
+    if (hasPrismaCode(error, 'P2025')) {
       return NextResponse.json(
         { error: 'Restaurant niet gevonden' },
         { status: 404 }

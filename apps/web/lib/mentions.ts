@@ -2,7 +2,9 @@ export type MentionSegment =
   | { type: 'text'; value: string }
   | { type: 'mention'; value: string; username: string }
 
-const mentionRegex = /(?<![a-zA-Z0-9_])@([a-zA-Z0-9_]{3,30})\b/g
+const USERNAME_MIN = 3
+const USERNAME_MAX = 30
+const mentionRegex = new RegExp(`(?<![a-zA-Z0-9_])@([a-zA-Z0-9_]{${USERNAME_MIN},${USERNAME_MAX}})\\b`, 'g')
 
 export function parseMentions(text: string): MentionSegment[] {
   const segments: MentionSegment[] = []

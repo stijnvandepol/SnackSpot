@@ -2,9 +2,23 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+interface AdminUser {
+  id: string
+  email: string
+  username: string
+  role: string
+  isVerified: boolean
+  bannedAt: string | null
+  createdAt: string
+  updatedAt: string
+  _count: { reviews: number; reviewLikes: number; favorites: number }
+}
+
+const ROLE_OPTIONS = ['USER', 'MODERATOR', 'ADMIN'] as const
+
 export default function EditUserPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<AdminUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
@@ -88,9 +102,9 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
               value={role}
               onChange={(e) => setRole(e.target.value)}
             >
-              <option value="USER">USER</option>
-              <option value="MODERATOR">MODERATOR</option>
-              <option value="ADMIN">ADMIN</option>
+              {ROLE_OPTIONS.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
             </select>
           </div>
 

@@ -257,4 +257,8 @@ export interface ReviewSummary {
   photos: Array<{ id: string; variants: PhotoVariants }>
 }
 
-export type z = typeof import('zod').z
+// ─── Shared constants ───────────────────────────────────────────────────────
+
+export const USERNAME_MIN_LENGTH = 3
+export const USERNAME_MAX_LENGTH = 30
+export const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/

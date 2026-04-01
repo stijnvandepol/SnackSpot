@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 
+const DEFAULT_LIMIT = 50
+const VALID_STATUSES = ['PENDING', 'APPROVED', 'DELETED'] as const
+
 // GET /api/comments/flagged - List flagged comments
 export async function GET(req: NextRequest) {
   const admin = requireAdmin(req)
@@ -10,10 +13,10 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url)
     const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'))
-    const limit = Math.min(50, parseInt(url.searchParams.get('limit') || '50'))
+    const limit = Math.min(DEFAULT_LIMIT, parseInt(url.searchParams.get('limit') || String(DEFAULT_LIMIT)))
     const status = url.searchParams.get('status') || 'PENDING'
 
-    const where = ['PENDING', 'APPROVED', 'DELETED'].includes(status)
+    const where = (VALID_STATUSES as readonly string[]).includes(status)
       ? { status }
       : {}
 

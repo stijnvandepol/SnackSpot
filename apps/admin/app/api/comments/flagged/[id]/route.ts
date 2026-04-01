@@ -4,15 +4,18 @@ import { db } from '@/lib/db'
 
 type Params = { params: { id: string } }
 
+const VALID_ACTIONS = ['APPROVE', 'DELETE'] as const
+type FlagAction = (typeof VALID_ACTIONS)[number]
+
 // PATCH /api/comments/flagged/[id] - Approve or delete a flagged comment
 export async function PATCH(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
 
   try {
-    const { action } = (await req.json()) as { action: 'APPROVE' | 'DELETE' }
+    const { action } = (await req.json()) as { action: FlagAction }
 
-    if (!['APPROVE', 'DELETE'].includes(action)) {
+    if (!(VALID_ACTIONS as readonly string[]).includes(action)) {
       return NextResponse.json({ error: 'Ongeldige actie' }, { status: 400 })
     }
 
@@ -51,8 +54,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     })
 
     return NextResponse.json({ success: true, action })
-  } catch (err: any) {
-    if (err.code === 'P2025') {
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2025') {
       return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
     }
     return NextResponse.json({ error: 'Error processing action' }, { status: 500 })

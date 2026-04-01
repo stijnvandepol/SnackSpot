@@ -3,6 +3,22 @@ import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 
+interface AdminSessionUser {
+  id: string
+  email: string
+  username: string
+  role: string
+}
+
+const NAV_ITEMS = [
+  { href: '/dashboard', label: '📊 Dashboard' },
+  { href: '/dashboard/users', label: '👥 Gebruikers' },
+  { href: '/dashboard/places', label: '🏪 Restaurants' },
+  { href: '/dashboard/reviews', label: '⭐ Reviews' },
+  { href: '/dashboard/reports', label: '🚨 Meldingen' },
+  { href: '/dashboard/comments', label: '💬 Comments' },
+] as const
+
 export default function DashboardLayout({
   children,
 }: {
@@ -10,7 +26,7 @@ export default function DashboardLayout({
 }) {
   const router = useRouter()
   const pathname = usePathname()
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<AdminSessionUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -44,15 +60,6 @@ export default function DashboardLayout({
     )
   }
 
-  const navItems = [
-    { href: '/dashboard', label: '📊 Dashboard', icon: '📊' },
-    { href: '/dashboard/users', label: '👥 Gebruikers', icon: '👥' },
-    { href: '/dashboard/places', label: '🏪 Restaurants', icon: '🏪' },
-    { href: '/dashboard/reviews', label: '⭐ Reviews', icon: '⭐' },
-    { href: '/dashboard/reports', label: '🚨 Meldingen', icon: '🚨' },
-    { href: '/dashboard/comments', label: '💬 Comments', icon: '💬' },
-  ]
-
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
@@ -64,7 +71,7 @@ export default function DashboardLayout({
 
         <nav className="flex-1 p-4">
           <ul className="space-y-2">
-            {navItems.map((item) => (
+            {NAV_ITEMS.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}

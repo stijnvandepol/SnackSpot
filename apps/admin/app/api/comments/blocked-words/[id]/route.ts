@@ -12,8 +12,8 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   try {
     await db.blockedWord.delete({ where: { id: params.id } })
     return NextResponse.json({ success: true })
-  } catch (err: any) {
-    if (err.code === 'P2025') {
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2025') {
       return NextResponse.json({ error: 'Woord niet gevonden' }, { status: 404 })
     }
     return NextResponse.json({ error: 'Error deleting blocked word' }, { status: 500 })

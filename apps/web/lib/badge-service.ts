@@ -2,6 +2,9 @@ import { BadgeCriteriaType } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { notifyBadgeEarned } from '@/lib/notification-service'
 
+const ACTIVITY_WINDOW_DAYS = 30
+const MS_PER_DAY = 24 * 60 * 60 * 1000
+
 interface ActivitySnapshot {
   postsCount: number
   postsLast30Days: number
@@ -23,7 +26,7 @@ async function getActivitySnapshot(userId: string): Promise<ActivitySnapshot> {
       where: {
         userId,
         status: 'PUBLISHED',
-        createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+        createdAt: { gte: new Date(Date.now() - ACTIVITY_WINDOW_DAYS * MS_PER_DAY) },
       },
     }),
     prisma.$queryRaw<Array<{ count: number }>>`
@@ -62,7 +65,7 @@ async function getActivitySnapshot(userId: string): Promise<ActivitySnapshot> {
     let best = 1
     let running = 1
     for (let i = 1; i < sorted.length; i++) {
-      const diffDays = Math.round((sorted[i].getTime() - sorted[i - 1].getTime()) / (24 * 60 * 60 * 1000))
+      const diffDays = Math.round((sorted[i].getTime() - sorted[i - 1].getTime()) / MS_PER_DAY)
       if (diffDays === 1) {
         running += 1
         best = Math.max(best, running)

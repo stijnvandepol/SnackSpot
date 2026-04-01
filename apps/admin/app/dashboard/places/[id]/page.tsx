@@ -2,9 +2,27 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+interface PlaceReview {
+  id: string
+  rating: number
+  text: string
+  createdAt: string
+  user: { username: string }
+}
+
+interface AdminPlace {
+  id: string
+  name: string
+  address: string
+  createdAt: string
+  updatedAt: string
+  _count: { reviews: number; favorites: number }
+  reviews: PlaceReview[]
+}
+
 export default function EditPlacePage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const [place, setPlace] = useState<any>(null)
+  const [place, setPlace] = useState<AdminPlace | null>(null)
   const [loading, setLoading] = useState(true)
   const [name, setName] = useState('')
   const [address, setAddress] = useState('')
@@ -93,7 +111,7 @@ export default function EditPlacePage({ params }: { params: { id: string } }) {
               <div className="mt-4">
                 <h3 className="font-semibold mb-2">Recente reviews:</h3>
                 <div className="space-y-2">
-                  {place.reviews.map((review: any) => (
+                  {place.reviews.map((review) => (
                     <div key={review.id} className="bg-gray-50 p-3 rounded">
                       <p className="text-sm">
                         <strong>{review.user.username}</strong> - ⭐ {review.rating}/5

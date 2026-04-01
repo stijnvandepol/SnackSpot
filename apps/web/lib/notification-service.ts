@@ -12,6 +12,9 @@ if (PUSH_ENABLED) {
   webPush.setVapidDetails(env.VAPID_SUBJECT!, env.VAPID_PUBLIC_KEY!, env.VAPID_PRIVATE_KEY!)
 }
 
+/** HTTP status codes indicating a push subscription has been revoked. */
+const EXPIRED_SUBSCRIPTION_STATUSES = new Set([404, 410])
+
 type NotificationType = 'REVIEW_LIKE' | 'REVIEW_COMMENT' | 'REVIEW_MENTION' | 'COMMENT_MENTION' | 'BADGE_EARNED'
 
 interface CreateNotificationParams {
@@ -25,7 +28,7 @@ interface CreateNotificationParams {
   commentId?: string
 }
 
-export async function createNotification(params: CreateNotificationParams) {
+export async function createNotification(params: CreateNotificationParams): Promise<Awaited<ReturnType<typeof prisma.notification.create>> | null> {
   try {
     // Don't notify users about their own actions
     if (params.userId === params.actorId) {
@@ -122,8 +125,8 @@ async function sendPushNotification(
         )
         logger.debug({ userId, endpoint: sub.endpoint }, 'Push notification sent')
       } catch (err) {
-        const status = (err as { statusCode?: number }).statusCode
-        if (status === 410 || status === 404) {
+        const status = (err as { statusCode?: number }).statusCode ?? 0
+        if (EXPIRED_SUBSCRIPTION_STATUSES.has(status)) {
           // Subscription has been revoked by the browser — remove it.
           expiredEndpoints.push(sub.endpoint)
           logger.debug({ userId, endpoint: sub.endpoint, status }, 'Removing expired push subscription')

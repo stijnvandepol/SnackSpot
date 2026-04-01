@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 
+const MAX_WORD_LENGTH = 100
+
 // GET /api/comments/blocked-words - List all blocked words
 export async function GET(req: NextRequest) {
   const admin = requireAdmin(req)
@@ -30,8 +32,8 @@ export async function POST(req: NextRequest) {
     }
 
     const normalized = word.trim().toLowerCase()
-    if (normalized.length > 100) {
-      return NextResponse.json({ error: 'Woord mag maximaal 100 tekens zijn' }, { status: 400 })
+    if (normalized.length > MAX_WORD_LENGTH) {
+      return NextResponse.json({ error: `Woord mag maximaal ${MAX_WORD_LENGTH} tekens zijn` }, { status: 400 })
     }
 
     const created = await db.blockedWord.create({
@@ -40,8 +42,8 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ word: created }, { status: 201 })
-  } catch (err: any) {
-    if (err.code === 'P2002') {
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2002') {
       return NextResponse.json({ error: 'Dit woord bestaat al' }, { status: 409 })
     }
     return NextResponse.json({ error: 'Error adding blocked word' }, { status: 500 })
