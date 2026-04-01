@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 function hasPrismaCode(error: unknown, code: string): boolean {
   return typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === code
@@ -14,10 +14,11 @@ const VALID_REPORT_STATUSES = ['OPEN', 'RESOLVED', 'DISMISSED'] as const
 export async function GET(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
+  const { id } = await params
 
   try {
     const report = await db.report.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         targetType: true,
@@ -86,6 +87,7 @@ export async function GET(req: NextRequest, { params }: Params) {
 export async function PATCH(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
+  const { id } = await params
 
   try {
     const { status, action, targetId } = (await req.json()) as {
@@ -97,7 +99,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     // Update report status
     if (status && (VALID_REPORT_STATUSES as readonly string[]).includes(status)) {
       const report = await db.report.update({
-        where: { id: params.id },
+        where: { id: id },
         data: { status },
         select: {
           id: true,
@@ -111,7 +113,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     // Perform moderation action
     if (action && targetId) {
       const report = await db.report.findUnique({
-        where: { id: params.id },
+        where: { id: id },
         select: { targetType: true, reviewId: true, photoId: true },
       })
 
@@ -132,7 +134,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
               data: { status: 'DELETED' },
             })
             await db.report.update({
-              where: { id: params.id },
+              where: { id: id },
               data: { status: 'RESOLVED' },
             })
           }
@@ -145,7 +147,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
               data: { moderationStatus: 'REJECTED' },
             })
             await db.report.update({
-              where: { id: params.id },
+              where: { id: id },
               data: { status: 'RESOLVED' },
             })
           }
@@ -153,7 +155,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
         case 'DISMISS':
           await db.report.update({
-            where: { id: params.id },
+            where: { id: id },
             data: { status: 'DISMISSED' },
           })
           break
@@ -201,10 +203,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 export async function DELETE(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
+  const { id } = await params
 
   try {
     await db.report.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({ success: true })

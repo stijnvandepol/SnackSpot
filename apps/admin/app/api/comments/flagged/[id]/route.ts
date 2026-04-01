@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 const VALID_ACTIONS = ['APPROVE', 'DELETE'] as const
 type FlagAction = (typeof VALID_ACTIONS)[number]
@@ -11,6 +11,7 @@ type FlagAction = (typeof VALID_ACTIONS)[number]
 export async function PATCH(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
+  const { id } = await params
 
   try {
     const { action } = (await req.json()) as { action: FlagAction }
@@ -20,7 +21,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     const flagged = await db.flaggedComment.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: { commentId: true, status: true },
     })
 
@@ -38,7 +39,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     } else {
       // Approve: just update the flag status
       await db.flaggedComment.update({
-        where: { id: params.id },
+        where: { id: id },
         data: { status: 'APPROVED', reviewedBy: admin.sub, reviewedAt: new Date() },
       })
     }

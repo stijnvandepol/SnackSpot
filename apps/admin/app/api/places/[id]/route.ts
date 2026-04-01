@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 const RECENT_REVIEWS_LIMIT = 10
 
@@ -15,10 +15,11 @@ function hasPrismaCode(error: unknown, code: string): boolean {
 export async function GET(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
+  const { id } = await params
 
   try {
     const place = await db.place.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         name: true,
@@ -83,6 +84,7 @@ interface UpdatePlaceBody {
 export async function PATCH(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
+  const { id } = await params
 
   try {
     const body = (await req.json()) as UpdatePlaceBody
@@ -96,7 +98,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
           address = COALESCE(${address}, address),
           location = ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
           updated_at = NOW()
-        WHERE id = ${params.id}
+        WHERE id = ${id}
       `
     } else {
       const updateData: Prisma.PlaceUpdateInput = {}
@@ -104,13 +106,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       if (address !== undefined) updateData.address = address
 
       await db.place.update({
-        where: { id: params.id },
+        where: { id },
         data: updateData,
       })
     }
 
     const place = await db.place.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         name: true,
@@ -139,10 +141,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 export async function DELETE(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
+  const { id } = await params
 
   try {
     await db.place.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({ success: true })

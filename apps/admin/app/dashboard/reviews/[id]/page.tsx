@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -21,20 +21,21 @@ interface AdminReview {
   _count: { reviewLikes: number }
 }
 
-export default function ReviewDetailsPage({ params }: { params: { id: string } }) {
+export default function ReviewDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
   const [review, setReview] = useState<AdminReview | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`/api/reviews/${params.id}`)
+    fetch(`/api/reviews/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setReview(data.review)
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [params.id])
+  }, [id])
 
   if (loading) {
     return <div className="text-center py-12">Laden...</div>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 function hasPrismaCode(error: unknown, code: string): boolean {
   return typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === code
@@ -12,10 +12,11 @@ function hasPrismaCode(error: unknown, code: string): boolean {
 export async function GET(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
+  const { id } = await params
 
   try {
     const review = await db.review.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         rating: true,
@@ -71,6 +72,7 @@ export async function GET(req: NextRequest, { params }: Params) {
 export async function PATCH(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
+  const { id } = await params
 
   try {
     const { status } = (await req.json()) as { status: 'PUBLISHED' | 'HIDDEN' | 'DELETED' }
@@ -83,7 +85,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     const review = await db.review.update({
-      where: { id: params.id },
+      where: { id },
       data: { status },
       select: {
         id: true,
@@ -110,10 +112,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 export async function DELETE(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
+  const { id } = await params
 
   try {
     await db.review.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({ success: true })

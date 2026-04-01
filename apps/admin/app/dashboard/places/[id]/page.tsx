@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface PlaceReview {
@@ -20,7 +20,8 @@ interface AdminPlace {
   reviews: PlaceReview[]
 }
 
-export default function EditPlacePage({ params }: { params: { id: string } }) {
+export default function EditPlacePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
   const [place, setPlace] = useState<AdminPlace | null>(null)
   const [loading, setLoading] = useState(true)
@@ -28,7 +29,7 @@ export default function EditPlacePage({ params }: { params: { id: string } }) {
   const [address, setAddress] = useState('')
 
   useEffect(() => {
-    fetch(`/api/places/${params.id}`)
+    fetch(`/api/places/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setPlace(data.place)
@@ -37,11 +38,11 @@ export default function EditPlacePage({ params }: { params: { id: string } }) {
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [params.id])
+  }, [id])
 
   const handleSave = async () => {
     try {
-      const res = await fetch(`/api/places/${params.id}`, {
+      const res = await fetch(`/api/places/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

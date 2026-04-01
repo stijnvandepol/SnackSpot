@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface AdminUser {
@@ -16,7 +16,8 @@ interface AdminUser {
 
 const ROLE_OPTIONS = ['USER', 'MODERATOR', 'ADMIN'] as const
 
-export default function EditUserPage({ params }: { params: { id: string } }) {
+export default function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
   const [user, setUser] = useState<AdminUser | null>(null)
   const [loading, setLoading] = useState(true)
@@ -26,7 +27,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   const [isVerified, setIsVerified] = useState(false)
 
   useEffect(() => {
-    fetch(`/api/users/${params.id}`)
+    fetch(`/api/users/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setUser(data.user)
@@ -37,11 +38,11 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [params.id])
+  }, [id])
 
   const handleSave = async () => {
     try {
-      const res = await fetch(`/api/users/${params.id}`, {
+      const res = await fetch(`/api/users/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

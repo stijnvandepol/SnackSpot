@@ -3,7 +3,7 @@ import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import type { Prisma } from '@prisma/client'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 function isPrismaError(error: unknown): error is { code: string } {
   return typeof error === 'object' && error !== null && 'code' in error
@@ -13,10 +13,11 @@ function isPrismaError(error: unknown): error is { code: string } {
 export async function GET(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
+  const { id } = await params
 
   try {
     const user = await db.user.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         email: true,
@@ -68,6 +69,7 @@ interface UpdateUserBody {
 export async function PATCH(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
+  const { id } = await params
 
   try {
     const body = (await req.json()) as UpdateUserBody
@@ -81,7 +83,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (bannedAt !== undefined) updateData.bannedAt = bannedAt ? new Date(bannedAt) : null
 
     const user = await db.user.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       select: {
         id: true,
@@ -120,10 +122,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 export async function DELETE(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
+  const { id } = await params
 
   try {
     // Prevent self-deletion
-    if (admin.sub === params.id) {
+    if (admin.sub === id) {
       return NextResponse.json(
         { error: 'Je kunt jezelf niet verwijderen' },
         { status: 400 }
@@ -131,7 +134,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     }
 
     await db.user.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({ success: true })
