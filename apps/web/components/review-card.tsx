@@ -5,6 +5,7 @@ import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { MentionText } from '@/components/mention-text'
 import { getReviewTagLabel } from '@/lib/review-tags'
 import { extractCity } from '@/lib/utils'
+import { VerifiedBadge } from '@/components/verified-badge'
 
 interface ReviewCardProps {
   review: {
@@ -16,7 +17,7 @@ interface ReviewCardProps {
     overallRating?: number
     ratings?: { taste: number; value: number; portion: number; service?: number | null }
     tags?: string[]
-    user: { id: string; username: string; avatarKey?: string | null }
+    user: { id: string; username: string; avatarKey?: string | null; isVerified?: boolean }
     place?: { id: string; name: string; address: string }
     likeCount?: number
     commentCount?: number
@@ -132,8 +133,9 @@ export function ReviewCard({
           <div className="flex items-center justify-between pt-1">
             <div className="pointer-events-auto flex items-center gap-2">
               <AvatarLightbox avatarKey={review.user.avatarKey} username={review.user.username} size="sm" />
-              <Link href={`/u/${review.user.username}`} className="text-xs text-snack-muted hover:underline">
+              <Link href={`/u/${review.user.username}`} className="text-xs text-snack-muted hover:underline flex items-center gap-1">
                 {review.user.username}
+                {review.user.isVerified && <VerifiedBadge className="w-3.5 h-3.5" />}
               </Link>
             </div>
             <time className="text-xs text-snack-muted">{timeAgo(review.createdAt)}</time>

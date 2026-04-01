@@ -9,6 +9,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [role, setRole] = useState('USER')
+  const [isVerified, setIsVerified] = useState(false)
 
   useEffect(() => {
     fetch(`/api/users/${params.id}`)
@@ -18,6 +19,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
         setEmail(data.user.email)
         setUsername(data.user.username)
         setRole(data.user.role)
+        setIsVerified(data.user.isVerified ?? false)
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -30,7 +32,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, username, role }),
+        body: JSON.stringify({ email, username, role, isVerified }),
       })
 
       if (res.ok) {
@@ -90,6 +92,27 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
               <option value="MODERATOR">MODERATOR</option>
               <option value="ADMIN">ADMIN</option>
             </select>
+          </div>
+
+          <div>
+            <label className="label flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isVerified}
+                onChange={(e) => setIsVerified(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="flex items-center gap-2">
+                Geverifieerd
+                <svg className="w-5 h-5 text-blue-500" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+                  <circle cx="11" cy="11" r="11" fill="currentColor" />
+                  <path d="M6.5 11.5L9.5 14.5L15.5 8.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+            </label>
+            <p className="text-xs text-gray-500 mt-1">
+              Toon een verificatiebadge naast de gebruikersnaam (zoals Instagram)
+            </p>
           </div>
 
           <div className="border-t pt-4">

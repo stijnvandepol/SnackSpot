@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
           email: true,
           username: true,
           role: true,
+          isVerified: true,
           bannedAt: true,
           createdAt: true,
           _count: {

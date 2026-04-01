@@ -49,7 +49,7 @@ export async function GET(
         createdAt: true,
         updatedAt: true,
         userId: true,
-        user: { select: { id: true, username: true, avatarKey: true, role: true } },
+        user: { select: { id: true, username: true, avatarKey: true, role: true, isVerified: true } },
       },
     })
 
@@ -105,7 +105,7 @@ export async function POST(
         text: true,
         createdAt: true,
         updatedAt: true,
-        user: { select: { id: true, username: true, avatarKey: true, role: true } },
+        user: { select: { id: true, username: true, avatarKey: true, role: true, isVerified: true } },
       },
     })
 

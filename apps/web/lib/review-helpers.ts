@@ -27,7 +27,7 @@ export function reviewListSelect(authUserId?: string) {
       orderBy: { tag: 'asc' as const },
       select: { tag: true },
     },
-    user: { select: { id: true, username: true, avatarKey: true, role: true } },
+    user: { select: { id: true, username: true, avatarKey: true, role: true, isVerified: true } },
     place: { select: { id: true, name: true, address: true } },
     _count: { select: { reviewLikes: true, comments: true } },
     reviewLikes: {

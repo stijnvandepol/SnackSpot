@@ -7,6 +7,7 @@ interface User {
   email: string
   username: string
   role: string
+  isVerified: boolean
   bannedAt: string | null
   createdAt: string
   _count: { reviews: number }
@@ -120,7 +121,14 @@ export default function UsersPage() {
               <tbody>
                 {users.map((user) => (
                   <tr key={user.id}>
-                    <td className="font-medium">{user.username}</td>
+                    <td className="font-medium">
+                      {user.username}
+                      {user.isVerified && (
+                        <svg className="inline-block ml-1 w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor" aria-label="Geverifieerd">
+                          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+                        </svg>
+                      )}
+                    </td>
                     <td>{user.email}</td>
                     <td>
                       <span

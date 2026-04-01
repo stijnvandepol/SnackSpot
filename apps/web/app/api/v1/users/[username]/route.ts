@@ -12,7 +12,7 @@ export async function GET(
   try {
     const user = await prisma.user.findFirst({
       where: { username: { equals: username, mode: 'insensitive' } },
-      select: { id: true, username: true, bio: true, avatarKey: true, role: true, createdAt: true },
+      select: { id: true, username: true, bio: true, avatarKey: true, role: true, isVerified: true, createdAt: true },
     })
     if (!user) return err('User not found', 404)
 

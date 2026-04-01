@@ -5,6 +5,7 @@ import { ReviewCard } from '@/components/review-card'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
+import { VerifiedBadge } from '@/components/verified-badge'
 import { NotificationSettings } from '@/components/notification-settings'
 import dynamic from 'next/dynamic'
 
@@ -62,6 +63,7 @@ interface MeProfile {
   usernameCanChangeNow: boolean
   nextUsernameChangeAt: string | null
   role: string
+  isVerified: boolean
 }
 
 function ProfileContent() {
@@ -374,7 +376,10 @@ function ProfileContent() {
               size="md"
             />
             <div className="flex-1 min-w-0">
-              <h1 className="font-heading font-bold text-lg text-snack-text truncate">{meProfile?.username ?? user.username}</h1>
+              <h1 className="font-heading font-bold text-lg text-snack-text truncate flex items-center gap-1">
+                {meProfile?.username ?? user.username}
+                {meProfile?.isVerified && <VerifiedBadge className="w-4 h-4" />}
+              </h1>
               <p className="text-xs text-snack-muted">@{meProfile?.username ?? user.username}</p>
               <p className="mt-1 text-xs text-snack-muted line-clamp-2">{meProfile?.bio?.trim() || 'Snack hunter & reviewer'}</p>
             </div>
@@ -542,7 +547,10 @@ function ProfileContent() {
           size="lg"
         />
         <div className="min-w-0">
-          <h1 className="font-heading font-bold text-xl text-snack-text">{meProfile?.username ?? user.username}</h1>
+          <h1 className="font-heading font-bold text-xl text-snack-text flex items-center gap-1.5">
+            {meProfile?.username ?? user.username}
+            {meProfile?.isVerified && <VerifiedBadge className="w-5 h-5" />}
+          </h1>
           <p className="text-sm text-snack-muted">@{meProfile?.username ?? user.username}</p>
           <p className="text-xs text-snack-muted mt-1">{meProfile?.bio?.trim() || 'Snack hunter & reviewer'}</p>
           <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${

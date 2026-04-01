@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
         avatarKey: true,
         usernameChangedAt: true,
         role: true,
+        isVerified: true,
       },
     })
 
@@ -94,6 +95,7 @@ export async function PATCH(req: NextRequest) {
         avatarKey: true,
         usernameChangedAt: true,
         role: true,
+        isVerified: true,
       },
     })
 

@@ -82,6 +82,7 @@ model User {
   usernameChangedAt DateTime? @map("username_changed_at")
   passwordHash     String    @map("password_hash")
   role             Role      @default(USER)
+  isVerified       Boolean   @default(false) @map("is_verified")
   avatarKey        String?   @map("avatar_key")
   bannedAt         DateTime? @map("banned_at")
   emailVerifiedAt  DateTime? @map("email_verified_at")

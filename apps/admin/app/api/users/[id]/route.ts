@@ -17,6 +17,7 @@ export async function GET(req: NextRequest, { params }: Params) {
         email: true,
         username: true,
         role: true,
+        isVerified: true,
         bannedAt: true,
         createdAt: true,
         updatedAt: true,
@@ -60,14 +61,16 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       email?: string
       username?: string
       role?: 'USER' | 'ADMIN'
+      isVerified?: boolean
       bannedAt?: string | null
     }
-    const { email, username, role, bannedAt } = body
+    const { email, username, role, isVerified, bannedAt } = body
 
     const updateData: any = {}
     if (email !== undefined) updateData.email = email
     if (username !== undefined) updateData.username = username
     if (role !== undefined) updateData.role = role
+    if (isVerified !== undefined) updateData.isVerified = isVerified
     if (bannedAt !== undefined) updateData.bannedAt = bannedAt ? new Date(bannedAt) : null
 
     const user = await db.user.update({
@@ -78,6 +81,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         email: true,
         username: true,
         role: true,
+        isVerified: true,
         bannedAt: true,
         createdAt: true,
         updatedAt: true,
