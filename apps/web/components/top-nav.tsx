@@ -17,7 +17,7 @@ export function TopNav() {
   ]
 
   return (
-    <header className="hidden md:block sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-[#ececec]">
+    <header className="hidden md:block sticky top-0 z-30 backdrop-blur border-b" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>
       <div className="mx-auto max-w-6xl px-4 flex h-16 items-center justify-between gap-4">
         <Link href="/" className="font-heading font-bold text-xl leading-none">
           <span className="text-snack-primary">Snack</span>

@@ -32,7 +32,7 @@ export function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-[#ececec] pb-[env(safe-area-inset-bottom)]">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 backdrop-blur border-t pb-[env(safe-area-inset-bottom)]" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>
       <ul className="flex h-[4.5rem] items-end pb-2">
         {links.map((l) => {
           const active = l.href === '/' ? pathname === '/' : pathname.startsWith(l.href)

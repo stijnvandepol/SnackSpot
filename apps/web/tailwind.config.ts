@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss'
 
 const config: Config = {
+  darkMode: 'class',
   content: [
     './app/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
@@ -10,14 +11,14 @@ const config: Config = {
     extend: {
       colors: {
         snack: {
-          primary: '#F97316',
-          accent: '#DC2626',
-          rating: '#F59E0B',
-          border: '#E5E7EB',
-          background: '#FFFFFF',
-          surface: '#F6F7F9',
-          text: '#0F172A',
-          muted: '#64748B',
+          primary: 'var(--snack-primary)',
+          accent: 'var(--snack-accent)',
+          rating: 'var(--snack-rating)',
+          border: 'var(--snack-border)',
+          background: 'var(--snack-bg)',
+          surface: 'var(--snack-surface)',
+          text: 'var(--snack-text)',
+          muted: 'var(--snack-muted)',
         },
       },
       fontFamily: {

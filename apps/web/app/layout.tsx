@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Poppins } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
+import { ThemeProvider } from '@/components/theme-provider'
 import { CookieConsent } from '@/components/cookie-consent'
 import { getSiteOrigin, getSiteUrl } from '@/lib/site-url'
 import './globals.css'
@@ -116,18 +117,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const appUrl = getSiteUrl()
   const jsonLd = buildJsonLd(appUrl)
   return (
-    <html lang="en" className={`h-full ${inter.variable} ${poppins.variable}`}>
+    <html lang="en" className={`h-full ${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('snackspot-theme');var d=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches);if(d)document.documentElement.classList.add('dark')}catch(e){}})()`,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
       <body className="h-full font-body">
-        <AuthProvider>
-          {children}
-          <CookieConsent />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            {children}
+            <CookieConsent />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

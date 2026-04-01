@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { VerifiedBadge } from '@/components/verified-badge'
 import { NotificationSettings } from '@/components/notification-settings'
+import { ThemeSettings } from '@/components/theme-settings'
 import dynamic from 'next/dynamic'
 
 const NotificationsList = dynamic(() => import('@/components/notifications-list'), {
@@ -523,6 +524,12 @@ function ProfileContent() {
                 )}
               </div>
 
+              {/* Appearance */}
+              <div className="card p-4">
+                <h3 className="font-heading font-semibold text-snack-text mb-3">Appearance</h3>
+                <ThemeSettings />
+              </div>
+
               {/* Notification Preferences */}
               <div className="card p-4">
                 <h3 className="font-heading font-semibold text-snack-text mb-3">Notification Preferences</h3>
@@ -814,6 +821,11 @@ function ProfileContent() {
               </div>
             </div>
           )}
+
+          <div className="mb-6">
+            <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Appearance</h2>
+            <ThemeSettings />
+          </div>
 
           <div className="mb-6">
             <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Notification Settings</h2>

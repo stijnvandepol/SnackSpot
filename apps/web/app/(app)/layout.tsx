@@ -7,7 +7,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-full flex-col">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:shadow"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:px-3 focus:py-2 focus:text-sm focus:shadow"
+        style={{ backgroundColor: 'var(--snack-bg)', color: 'var(--snack-text)' }}
       >
         Skip to content
       </a>
@@ -16,7 +17,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <TopNav />
 
       {/* Mobile brand bar */}
-      <div className="md:hidden sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-[#ececec]">
+      <div className="md:hidden sticky top-0 z-40 backdrop-blur border-b" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>
         <div className="h-14 px-4 flex items-center">
           <Link href="/" className="font-heading font-bold text-xl leading-none">
             <span className="text-snack-primary">Snack</span>
@@ -38,7 +39,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      <footer className="hidden md:block border-t border-[#ececec] bg-white/90">
+      <footer className="hidden md:block border-t" style={{ borderColor: 'var(--snack-border-soft)', backgroundColor: 'var(--snack-footer-bg)' }}>
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-center gap-3 px-4 py-4 text-sm">
           <Link href="/guides" className="btn-secondary text-sm">
             Guides
