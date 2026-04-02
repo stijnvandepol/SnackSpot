@@ -48,7 +48,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Generate Prisma client
-        run: pnpm --filter @snackspot/db generate
+        run: node node_modules/prisma/build/index.js generate --schema=packages/db/prisma/schema.prisma
 
       - name: Run unit tests
         run: pnpm --filter web test
@@ -98,7 +98,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Generate Prisma client
-        run: pnpm --filter @snackspot/db generate
+        run: node node_modules/prisma/build/index.js generate --schema=packages/db/prisma/schema.prisma
 
       - name: Build web app
         run: pnpm --filter web build
