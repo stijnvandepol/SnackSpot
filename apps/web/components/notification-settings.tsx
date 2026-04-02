@@ -110,7 +110,7 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
 
   if (loading) {
     return (
-      <div className={embedded ? 'rounded-xl border border-snack-border bg-white p-4' : 'card p-4'}>
+      <div className={embedded ? 'rounded-xl border border-snack-border bg-snack-background p-4' : 'card p-4'}>
         <p className="text-sm text-snack-muted">Loading settings...</p>
       </div>
     )
@@ -118,14 +118,14 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
 
   if (!preferences) {
     return (
-      <div className={embedded ? 'rounded-xl border border-snack-border bg-white p-4' : 'card p-4'}>
+      <div className={embedded ? 'rounded-xl border border-snack-border bg-snack-background p-4' : 'card p-4'}>
         <p className="text-sm text-snack-muted">Could not load notification settings</p>
       </div>
     )
   }
 
   return (
-    <div className={`${embedded ? 'rounded-xl border border-snack-border bg-white p-4' : 'card p-6'} space-y-6`}>
+    <div className={`${embedded ? 'rounded-xl border border-snack-border bg-snack-background p-4' : 'card p-6'} space-y-6`}>
       <div>
         {!embedded && (
           <h2 className="mb-2 text-lg font-heading font-semibold text-snack-text">
@@ -169,7 +169,7 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
             onChange={(e) =>
               setPreferences({ ...preferences, emailOnLike: e.target.checked })
             }
-            className="h-5 w-5 rounded border-gray-300 text-snack-primary focus:ring-snack-primary"
+            className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
           />
         </label>
 
@@ -184,7 +184,7 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
             onChange={(e) =>
               setPreferences({ ...preferences, emailOnComment: e.target.checked })
             }
-            className="h-5 w-5 rounded border-gray-300 text-snack-primary focus:ring-snack-primary"
+            className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
           />
         </label>
 
@@ -199,7 +199,7 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
             onChange={(e) =>
               setPreferences({ ...preferences, emailOnMention: e.target.checked })
             }
-            className="h-5 w-5 rounded border-gray-300 text-snack-primary focus:ring-snack-primary"
+            className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
           />
         </label>
 
@@ -214,7 +214,7 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
             onChange={(e) =>
               setPreferences({ ...preferences, emailOnBadge: e.target.checked })
             }
-            className="h-5 w-5 rounded border-gray-300 text-snack-primary focus:ring-snack-primary"
+            className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
           />
         </label>
       </div>
@@ -233,7 +233,7 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
             onChange={(e) =>
               setPreferences({ ...preferences, pushOnLike: e.target.checked })
             }
-            className="h-5 w-5 rounded border-gray-300 text-snack-primary focus:ring-snack-primary"
+            className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
           />
         </label>
 
@@ -248,7 +248,7 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
             onChange={(e) =>
               setPreferences({ ...preferences, pushOnComment: e.target.checked })
             }
-            className="h-5 w-5 rounded border-gray-300 text-snack-primary focus:ring-snack-primary"
+            className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
           />
         </label>
 
@@ -263,7 +263,7 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
             onChange={(e) =>
               setPreferences({ ...preferences, pushOnMention: e.target.checked })
             }
-            className="h-5 w-5 rounded border-gray-300 text-snack-primary focus:ring-snack-primary"
+            className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
           />
         </label>
 
@@ -278,7 +278,7 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
             onChange={(e) =>
               setPreferences({ ...preferences, pushOnBadge: e.target.checked })
             }
-            className="h-5 w-5 rounded border-gray-300 text-snack-primary focus:ring-snack-primary"
+            className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
           />
         </label>
       </div>

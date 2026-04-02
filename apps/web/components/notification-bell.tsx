@@ -154,8 +154,8 @@ export function NotificationBell() {
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-xl border border-[#ececec] z-50 max-h-[600px] flex flex-col">
-            <div className="p-4 border-b border-[#ececec] flex items-center justify-between">
+          <div className="absolute right-0 mt-2 w-96 bg-snack-background rounded-xl shadow-xl border border-snack-border z-50 max-h-[600px] flex flex-col">
+            <div className="p-4 border-b border-snack-border flex items-center justify-between">
               <h3 className="font-heading font-semibold text-snack-text">
                 Notifications
               </h3>
@@ -213,7 +213,7 @@ export function NotificationBell() {
               )}
             </div>
 
-            <div className="p-3 border-t border-[#ececec]">
+            <div className="p-3 border-t border-snack-border">
               <Link
                 href="/profile?tab=notifications"
                 onClick={() => setIsOpen(false)}
