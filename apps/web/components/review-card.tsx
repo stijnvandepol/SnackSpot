@@ -43,7 +43,7 @@ function Stars({ rating }: { rating: number }) {
   return (
     <span className="text-sm text-snack-rating">
       {'★'.repeat(rating)}
-      <span className="text-[#e0e0e0]">{'★'.repeat(5 - rating)}</span>
+      <span className="text-snack-border">{'★'.repeat(5 - rating)}</span>
     </span>
   )
 }
@@ -116,7 +116,7 @@ export function ReviewCard({
               {review.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full bg-white/90 px-2 py-1 text-[11px] font-medium text-snack-primary shadow-sm"
+                  className="rounded-full bg-snack-surface/90 px-2 py-1 text-[11px] font-medium text-snack-primary shadow-sm"
                 >
                   {getReviewTagLabel(tag)}
                 </span>

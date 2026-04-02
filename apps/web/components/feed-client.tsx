@@ -101,8 +101,8 @@ export function FeedClient() {
       )}
 
       {error && (
-        <div className="card p-4 mb-4 border-red-200 bg-red-50/50" role="status" aria-live="polite">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="card p-4 mb-4 border-red-200 bg-red-50/50 dark:border-red-900 dark:bg-red-950/30" role="status" aria-live="polite">
+          <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
           <button type="button" className="btn-secondary mt-3 text-sm" onClick={() => { void loadMore() }}>
             Try again
           </button>
