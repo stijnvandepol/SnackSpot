@@ -8,6 +8,7 @@ import { extractCity } from '@/lib/utils'
 import { getSiteUrl } from '@/lib/site-url'
 import { ReviewInteractions } from '@/components/review-interactions'
 import { ImageLightbox } from '@/components/image-lightbox'
+import { Breadcrumb } from '@/components/breadcrumb'
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', {
   dateStyle: 'medium',
@@ -39,6 +40,33 @@ function parsePlaceContext(from: string | undefined) {
   const encodedOrigin = parts.slice(2).join(':')
   const origin = encodedOrigin ? decodeURIComponent(encodedOrigin) : 'search'
   return placeId ? { placeId, origin } : null
+}
+
+function buildReviewBreadcrumb(
+  from: string | undefined,
+  placeName: string,
+  placeId: string,
+  parsedPlaceContext: { placeId: string; origin: string } | null,
+): Array<{ label: string; href?: string }> {
+  const crumbs: Array<{ label: string; href?: string }> = []
+
+  if (parsedPlaceContext) {
+    // Came from a place page — show the place as the parent
+    crumbs.push({
+      label: placeName,
+      href: `/place/${encodeURIComponent(parsedPlaceContext.placeId)}?from=${encodeURIComponent(parsedPlaceContext.origin)}`,
+    })
+  } else if (from === 'feed' || !from) {
+    crumbs.push({ label: 'Feed', href: '/' })
+  } else if (from === 'profile') {
+    crumbs.push({ label: 'Profile', href: '/profile' })
+  } else if (from.startsWith('user:')) {
+    const username = from.slice('user:'.length)
+    crumbs.push({ label: `@${username}`, href: `/u/${encodeURIComponent(username)}` })
+  }
+
+  crumbs.push({ label: 'Review' })
+  return crumbs
 }
 
 export default async function ReviewPage({
@@ -129,6 +157,7 @@ export default async function ReviewPage({
   return (
     <div className="mx-auto max-w-lg px-4 py-6 space-y-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewJsonLd) }} />
+      <Breadcrumb items={buildReviewBreadcrumb(from, review.place.name, review.place.id, parsedPlaceContext)} />
       <div className="flex items-center gap-2">
         <Link href={backHref} className="btn-secondary text-sm">
           Back
