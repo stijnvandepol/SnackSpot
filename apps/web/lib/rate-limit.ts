@@ -101,3 +101,42 @@ export function getClientIP(req: Request): string {
   }
   return '127.0.0.1'
 }
+
+// ─── Login failure counters ──────────────────────────────────────────────────
+// Simple INCR-based counters (not sliding-window). Used to decide when to
+// require a CAPTCHA challenge. Each counter expires after the login window.
+
+const LOGIN_FAIL_TTL = 900 // 15 minutes
+
+function loginFailIPKey(ip: string): string {
+  return `login:fail:ip:${ip}`
+}
+
+function loginFailEmailKey(email: string): string {
+  return `login:fail:email:${email.toLowerCase()}`
+}
+
+export async function incrementLoginFailures(ip: string, email: string): Promise<void> {
+  const pipeline = redis.pipeline()
+  pipeline.incr(loginFailIPKey(ip))
+  pipeline.expire(loginFailIPKey(ip), LOGIN_FAIL_TTL)
+  pipeline.incr(loginFailEmailKey(email))
+  pipeline.expire(loginFailEmailKey(email), LOGIN_FAIL_TTL)
+  await pipeline.exec()
+}
+
+export async function resetLoginFailures(ip: string, email: string): Promise<void> {
+  await redis.del(loginFailIPKey(ip), loginFailEmailKey(email))
+}
+
+export async function getLoginFailureCount(
+  ip: string,
+  email: string,
+): Promise<{ ip: number; email: number }> {
+  const [ipCount, emailCount] = await redis.mget(loginFailIPKey(ip), loginFailEmailKey(email))
+  return {
+    ip: Number(ipCount ?? 0),
+    email: Number(emailCount ?? 0),
+  }
+}
+
