@@ -547,7 +547,6 @@ function ProfileContent() {
   // Desktop Layout
   return (
     <div className="hidden md:block mx-auto max-w-2xl px-4 py-6 space-y-6">
-      <h1 className="sr-only">My profile</h1>
       <div className="card p-6 flex items-center gap-4">
         <AvatarLightbox
           avatarKey={meProfile?.avatarKey}
