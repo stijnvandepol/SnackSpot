@@ -131,28 +131,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string, captchaToken?: string) => {
-      const res = await fetch('/api/v1/auth/login', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          ...(captchaToken ? { captchaToken } : {}),
-        }),
-      })
-      const json = await res.json()
-      if (!res.ok) {
-        return {
-          ok: false,
-          error: json.error ?? 'Login failed',
-          captchaRequired: json.captchaRequired === true,
+      try {
+        const res = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            password,
+            ...(captchaToken ? { captchaToken } : {}),
+          }),
+        })
+        const json = await res.json()
+        if (!res.ok) {
+          return {
+            ok: false,
+            error: json.error ?? 'Login failed',
+            captchaRequired: json.captchaRequired === true,
+          }
         }
+        tokenRef.current = json.data.access_token
+        setAccessToken(json.data.access_token)
+        setUser(json.data.user)
+        return { ok: true }
+      } catch {
+        return { ok: false, error: 'Network error' }
       }
-      tokenRef.current = json.data.access_token
-      setAccessToken(json.data.access_token)
-      setUser(json.data.user)
-      return { ok: true }
     },
     [],
   )
