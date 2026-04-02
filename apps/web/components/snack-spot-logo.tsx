@@ -10,7 +10,7 @@ interface SnackSpotLogoProps {
  */
 export function SnackSpotLogo({ className }: SnackSpotLogoProps) {
   return (
-    <span className={`font-heading font-bold leading-none ${className ?? ''}`}>
+    <span className={['font-heading font-bold leading-none', className].filter(Boolean).join(' ')}>
       <span className="text-snack-primary">Snack</span>
       <span className="text-snack-accent inline-flex items-center">
         Sp

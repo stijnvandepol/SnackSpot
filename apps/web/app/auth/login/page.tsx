@@ -30,7 +30,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-b from-snack-surface to-white flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <SnackSpotLogo className="mb-3 text-2xl" />
+          <div className="mb-3">
+            <SnackSpotLogo className="text-2xl" />
+          </div>
           <h2 className="text-2xl font-heading font-bold text-snack-text">Welcome back</h2>
           <p className="text-sm text-snack-muted mt-1">Log in to your SnackSpot account</p>
         </div>

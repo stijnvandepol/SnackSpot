@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth-provider'
+import { SnackSpotLogo } from '@/components/snack-spot-logo'
 
 export default function RegisterPage() {
   const { register } = useAuth()
@@ -28,18 +29,8 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gradient-to-b from-snack-surface to-white flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="mb-3 text-2xl font-heading font-bold">
-            <span className="text-snack-primary">Snack</span>
-            <span className="text-snack-accent inline-flex items-center">
-              Sp
-              <span className="inline-flex h-[0.95em] w-[0.75em] items-center justify-center align-middle">
-                <svg viewBox="0 0 16 20" fill="none" className="h-[0.95em] w-[0.75em]" aria-hidden="true">
-                  <path d="M8 19c2.6-3.5 6-7.5 6-11a6 6 0 1 0-12 0c0 3.5 3.4 7.5 6 11Z" fill="currentColor"/>
-                  <circle cx="8" cy="8" r="2.25" fill="white"/>
-                </svg>
-              </span>
-              t
-            </span>
+          <div className="mb-3">
+            <SnackSpotLogo className="text-2xl" />
           </div>
           <h2 className="text-2xl font-heading font-bold text-snack-text">Join SnackSpot</h2>
           <p className="text-sm text-snack-muted mt-1">Create your free account</p>
