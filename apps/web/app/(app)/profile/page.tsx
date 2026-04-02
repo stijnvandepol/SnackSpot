@@ -85,14 +85,12 @@ function ProfileContent() {
   const [profileMessage, setProfileMessage] = useState<string | null>(null)
   const [profileError, setProfileError] = useState<string | null>(null)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
-  const [selectedBadge, setSelectedBadge] = useState<BadgeRow | null>(null)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deletePassword, setDeletePassword] = useState('')
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [isMobileViewport, setIsMobileViewport] = useState<boolean | null>(null)
-  const maxWeeklyPosts = Math.max(1, ...(stats?.weeklyActivity.map((week) => week.posts) ?? [0]))
 
   useEffect(() => {
     if (!user || !accessToken) return
@@ -245,106 +243,82 @@ function ProfileContent() {
     </div>
   )
 
-  const statsSummaryCards = (
-    <div className="grid grid-cols-2 gap-3 mb-6">
-      <div className="card p-3 text-center">
-        <p className="text-lg font-bold text-snack-text">{stats?.totalPosts ?? reviews.length}</p>
-        <p className="text-xs text-snack-muted">Posts</p>
-      </div>
-      <div className="card p-3 text-center">
-        <p className="text-lg font-bold text-snack-text">{stats?.totalLikesReceived ?? 0}</p>
-        <p className="text-xs text-snack-muted">Likes received</p>
-      </div>
-    </div>
-  )
+  const TIER_LABEL: Record<string, string> = { BRONZE: 'Bronze', SILVER: 'Silver', GOLD: 'Gold' }
+  const TIER_CLASS: Record<string, string> = {
+    BRONZE: 'text-amber-700 bg-amber-50 border-amber-200',
+    SILVER: 'text-slate-500 bg-slate-50 border-slate-200',
+    GOLD: 'text-yellow-600 bg-yellow-50 border-yellow-300',
+  }
 
-  const achievementsPanel = (
-    <div className="card p-4 mb-6">
-      <h2 className="font-heading font-semibold text-snack-text mb-3">Achievements</h2>
-      {earnedBadges.length === 0 && inProgressBadges.length === 0 ? (
-        <p className="text-sm text-snack-muted">No achievement progress yet.</p>
-      ) : (
-        <>
-          {earnedBadges.length > 0 && (
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              {earnedBadges.map((row) => (
-                <button
-                  key={row.badge.id}
-                  type="button"
-                  onClick={() => setSelectedBadge(row)}
-                  className="text-left border border-snack-border rounded-xl p-2"
-                >
-                  <p className="text-sm font-semibold text-snack-text">{row.badge.name}</p>
-                  <p className="text-xs text-snack-muted">{row.badge.tier}</p>
-                </button>
-              ))}
-            </div>
-          )}
-          {inProgressBadges.length > 0 && (
-            <div className="space-y-2">
-              {inProgressBadges.map((row) => {
-                const pct = Math.min(100, Math.round((row.progressCurrent / Math.max(1, row.progressTarget)) * 100))
-                return (
-                  <button
-                    key={row.badge.id}
-                    type="button"
-                    onClick={() => setSelectedBadge(row)}
-                    className="w-full text-left"
-                  >
-                    <div className="flex justify-between text-xs text-snack-muted mb-1">
-                      <span>{row.badge.name}</span>
-                      <span>{row.progressCurrent}/{row.progressTarget}</span>
-                    </div>
-                    <div className="h-2 bg-snack-surface rounded-full overflow-hidden">
-                      <div className="h-full bg-snack-primary" style={{ width: `${pct}%` }} />
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  )
+  const allBadgeRows = [
+    ...earnedBadges.map((b) => ({ ...b, earned: true as const })),
+    ...inProgressBadges.map((b) => ({ ...b, earned: false as const })),
+  ].sort((a, b) => {
+    if (a.earned !== b.earned) return a.earned ? -1 : 1
+    return (b.progressCurrent / Math.max(1, b.progressTarget)) - (a.progressCurrent / Math.max(1, a.progressTarget))
+  })
 
   const statsPanel = stats ? (
     <div className="card p-4 mb-6">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="font-heading font-semibold text-snack-text">My Stats</h2>
-        <span className="text-xs text-snack-muted">
-          Avg rating given {stats.averageOverallRatingGiven?.toFixed(1) ?? '—'}
-        </span>
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-        <div>
-          <p className="text-snack-muted">Unique locations</p>
-          <p className="font-semibold text-snack-text">{stats.uniqueLocationsVisited}</p>
-        </div>
-        <div>
-          <p className="text-snack-muted">Current streak</p>
-          <p className="font-semibold text-snack-text">{stats.streak.current} days</p>
-        </div>
-        <div>
-          <p className="text-snack-muted">Best streak</p>
-          <p className="font-semibold text-snack-text">{stats.streak.best} days</p>
-        </div>
-      </div>
-      <div className="mt-3">
-        <p className="text-xs text-snack-muted mb-1">Last 8 weeks</p>
-        <div className="flex items-end gap-1 h-12">
-          {stats.weeklyActivity.map((week) => (
-            <div
-              key={week.weekStart}
-              className={`rounded-sm flex-1 ${week.posts > 0 ? 'bg-snack-primary/70' : 'bg-snack-surface'}`}
-              style={{ height: `${week.posts > 0 ? Math.max(8, Math.round((week.posts / maxWeeklyPosts) * 48)) : 4}px` }}
-              title={`${new Date(week.weekStart).toLocaleDateString()}: ${week.posts}`}
-            />
-          ))}
-        </div>
+      <h2 className="font-heading font-semibold text-snack-text mb-4">Stats</h2>
+      <div className="grid grid-cols-2 gap-3">
+        {[
+          { value: stats.totalPosts, label: 'Reviews written' },
+          { value: stats.totalLikesReceived, label: 'Likes received' },
+          { value: stats.uniqueLocationsVisited, label: 'Locations visited' },
+          { value: stats.streak.best, label: 'Best streak (days)' },
+        ].map(({ value, label }) => (
+          <div key={label} className="rounded-xl bg-snack-surface p-3">
+            <p className="text-2xl font-bold text-snack-text">{value}</p>
+            <p className="text-xs text-snack-muted mt-0.5">{label}</p>
+          </div>
+        ))}
       </div>
     </div>
   ) : null
+
+  const achievementsPanel = (
+    <div className="card p-4 mb-6">
+      <h2 className="font-heading font-semibold text-snack-text mb-4">Achievements</h2>
+      {allBadgeRows.length === 0 ? (
+        <p className="text-sm text-snack-muted">Write your first review to start earning achievements.</p>
+      ) : (
+        <div className="space-y-3">
+          {allBadgeRows.map((row) => {
+            const pct = Math.min(100, Math.round((row.progressCurrent / Math.max(1, row.progressTarget)) * 100))
+            const tierClass = TIER_CLASS[row.badge.tier] ?? 'text-snack-muted bg-snack-surface border-snack-border'
+            return (
+              <div
+                key={row.badge.id}
+                className={`rounded-xl border p-3 ${row.earned ? 'border-snack-border' : 'border-snack-border opacity-70'}`}
+              >
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <p className={`text-sm font-semibold leading-snug ${row.earned ? 'text-snack-text' : 'text-snack-muted'}`}>
+                    {row.badge.name}
+                  </p>
+                  <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border ${tierClass}`}>
+                    {row.earned ? `✓ ${TIER_LABEL[row.badge.tier] ?? row.badge.tier}` : (TIER_LABEL[row.badge.tier] ?? row.badge.tier)}
+                  </span>
+                </div>
+                <p className="text-xs text-snack-muted mb-2">{row.badge.description}</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 bg-snack-surface rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${row.earned ? 'bg-snack-primary' : 'bg-snack-primary/50'}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-snack-muted shrink-0 tabular-nums">
+                    {row.progressCurrent}/{row.progressTarget}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
 
   if (!user) {
     return (
@@ -451,7 +425,6 @@ function ProfileContent() {
 
           {tab === 'stats' && (
             <div className="space-y-4">
-              {statsSummaryCards}
               {statsPanel}
               {achievementsPanel}
             </div>
@@ -636,8 +609,6 @@ function ProfileContent() {
 
       {tab === 'stats' && (
         <>
-          <h2 className="font-heading font-semibold text-lg text-snack-text">My Stats</h2>
-          {statsSummaryCards}
           {statsPanel}
           {achievementsPanel}
         </>
@@ -834,20 +805,6 @@ function ProfileContent() {
 
           {dangerZone}
         </>
-      )}
-
-      {selectedBadge && (
-        <div className="fixed inset-0 z-50 bg-black/35 flex items-end sm:items-center justify-center p-4" onClick={() => setSelectedBadge(null)}>
-          <div className="w-full max-w-sm card p-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-heading font-semibold text-snack-text">{selectedBadge.badge.name}</h3>
-            <p className="text-xs text-snack-muted mt-1">Tier: {selectedBadge.badge.tier}</p>
-            <p className="text-sm text-snack-muted mt-2">{selectedBadge.badge.description}</p>
-            <p className="text-sm text-snack-text mt-3">
-              Progress: {selectedBadge.progressCurrent}/{selectedBadge.progressTarget}
-            </p>
-            <button className="btn-secondary w-full mt-4" onClick={() => setSelectedBadge(null)}>Close</button>
-          </div>
-        </div>
       )}
 
       {deleteModalOpen && (
