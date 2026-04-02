@@ -29,7 +29,6 @@ export const RegisterSchema = z.object({
 export const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
-  captchaToken: z.string().max(2048).optional(),
 })
 
 // ─── Place schemas ───────────────────────────────────────────────────────────
