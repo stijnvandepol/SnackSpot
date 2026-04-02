@@ -5,6 +5,7 @@ import { getSiteUrl } from '@/lib/site-url'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { UserReviewsList } from '@/components/user-reviews-list'
 import { VerifiedBadge } from '@/components/verified-badge'
+import { Breadcrumb } from '@/components/breadcrumb'
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', {
   dateStyle: 'medium',
@@ -55,6 +56,10 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd) }} />
+      <Breadcrumb items={[{ label: 'Feed', href: '/' }, { label: `@${user.username}` }]} />
+      <div className="md:hidden mb-4">
+        <Link href="/" className="btn-secondary text-sm">← Back</Link>
+      </div>
       <div className="card p-6 mb-6 flex items-center gap-4">
         <AvatarLightbox
           avatarKey={user.avatarKey}
