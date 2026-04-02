@@ -16,6 +16,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
+    env:
+      DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+      REDIS_URL: redis://localhost:6379
+      MINIO_ENDPOINT: localhost
+      MINIO_ACCESS_KEY: placeholder-key
+      MINIO_SECRET_KEY: placeholder-secret-key-min
+      MINIO_PUBLIC_URL: https://snackspot.online
+      JWT_ACCESS_SECRET: placeholder-access-secret-at-least-32-chars-long
+      JWT_REFRESH_SECRET: placeholder-refresh-secret-at-least-32-chars-long
+      RESEND_API_KEY: re_placeholder_key
+      RESEND_FROM_EMAIL: SnackSpot <noreply@snackspot.online>
+      NEXT_PUBLIC_APP_URL: https://snackspot.online
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -41,13 +54,14 @@ jobs:
         run: pnpm --filter web test
 
   # ─── Job 2: Build verification ───────────────────────────────────────────────
-  # Runs in parallel with the test job.
+  # Runs after tests pass.
   # Uses the same placeholder env vars as the Dockerfiles so Next.js env
   # validation passes without real secrets.
   build:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    needs: test
 
     env:
       NODE_ENV: production
@@ -59,7 +73,8 @@ jobs:
       MINIO_PUBLIC_URL: https://snackspot.online
       JWT_ACCESS_SECRET: placeholder-access-secret-at-least-32-chars-long
       JWT_REFRESH_SECRET: placeholder-refresh-secret-at-least-32-chars-long
-      RESEND_API_KEY: placeholder-resend-api-key
+      RESEND_API_KEY: re_placeholder_key
+      RESEND_FROM_EMAIL: SnackSpot <noreply@snackspot.online>
       NEXT_PUBLIC_APP_URL: https://snackspot.online
       NEXT_PUBLIC_MINIO_PUBLIC_URL: https://snackspot.online
       NEXT_PUBLIC_MINIO_BUCKET: snackspot
