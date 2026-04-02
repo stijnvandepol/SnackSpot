@@ -369,7 +369,7 @@ function ProfileContent() {
     return (
       <div className="md:hidden flex min-h-full flex-col">
         {/* Header */}
-        <div className="sticky top-0 z-20 bg-white border-b border-[#ececec] px-4 py-4">
+        <div className="sticky top-0 z-20 bg-snack-background border-b border-snack-border px-4 py-4">
           <div className="flex items-center gap-3 mb-4">
             <AvatarLightbox
               avatarKey={meProfile?.avatarKey}
@@ -393,7 +393,7 @@ function ProfileContent() {
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex gap-2 border-b border-[#ececec] -mx-4 px-4 overflow-x-auto">
+          <div className="flex gap-2 border-b border-snack-border -mx-4 px-4 overflow-x-auto">
             {profileTabs.map((t) => (
               <Link
                 key={t}
@@ -578,7 +578,7 @@ function ProfileContent() {
         </div>
       </div>
 
-      <div className="flex gap-2 border-b border-[#ececec] overflow-x-auto">
+      <div className="flex gap-2 border-b border-snack-border overflow-x-auto">
         {profileTabs.map((t) => (
           <Link
             key={t}
