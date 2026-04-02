@@ -12,7 +12,7 @@ export function RelatedGuides({ currentHref, maxItems = 4 }: RelatedGuidesProps)
   if (guides.length === 0) return null
 
   return (
-    <aside className="mt-10 rounded-2xl border border-snack-border bg-white p-6">
+    <aside className="mt-10 rounded-2xl border border-snack-border bg-snack-background p-6">
       <h2 className="font-heading text-xl font-semibold text-snack-text">Related Guides</h2>
       <p className="mt-1 text-sm text-snack-muted">
         Continue learning with practical playbooks for finding better local food.
