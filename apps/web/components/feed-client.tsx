@@ -27,6 +27,10 @@ export function FeedClient() {
   const [initial, setInitial] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const sentinel = useRef<HTMLDivElement>(null)
+  // Two refs prevent duplicate fetches:
+  // - inFlightRef blocks a second call while one is already in progress
+  // - requestedCursorsRef prevents re-fetching a cursor we already requested,
+  //   even after inFlightRef resets between React renders
   const inFlightRef = useRef(false)
   const requestedCursorsRef = useRef<Set<string>>(new Set())
 

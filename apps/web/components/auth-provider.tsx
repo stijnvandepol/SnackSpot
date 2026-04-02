@@ -60,7 +60,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(timeout)
 
       if (!res.ok) {
-        // 401 can be a token-rotation race. Retry once before logging out.
+        // Token-rotation race: two tabs can refresh simultaneously. The second
+        // request arrives after the first already rotated the cookie, so it gets
+        // a 401. One retry after a short delay is enough to recover.
         if (res.status === 401) {
           await new Promise((resolve) => setTimeout(resolve, 250))
           const retryRes = await doRefresh()
