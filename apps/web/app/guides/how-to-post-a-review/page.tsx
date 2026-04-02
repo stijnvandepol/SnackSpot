@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { RelatedGuides } from '@/components/RelatedGuides'
+import { RelatedGuides } from '@/components/related-guides'
 import { GuidesShell } from '@/components/guides-shell'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
