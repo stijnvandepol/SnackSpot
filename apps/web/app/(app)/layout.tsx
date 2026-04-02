@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { TopNav } from '@/components/top-nav'
 import { BottomNav } from '@/components/bottom-nav'
+import { SnackSpotLogo } from '@/components/snack-spot-logo'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,18 +20,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile brand bar */}
       <div className="md:hidden sticky top-0 z-40 backdrop-blur border-b" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>
         <div className="h-14 px-4 flex items-center">
-          <Link href="/" className="font-heading font-bold text-xl leading-none">
-            <span className="text-snack-primary">Snack</span>
-            <span className="text-snack-accent inline-flex items-center">
-              Sp
-              <span className="inline-flex h-[0.95em] w-[0.75em] items-center justify-center align-middle">
-                <svg viewBox="0 0 16 20" fill="none" className="h-[0.95em] w-[0.75em]" aria-hidden="true">
-                  <path d="M8 19c2.6-3.5 6-7.5 6-11a6 6 0 1 0-12 0c0 3.5 3.4 7.5 6 11Z" fill="currentColor"/>
-                  <circle cx="8" cy="8" r="2.25" fill="white"/>
-                </svg>
-              </span>
-              t
-            </span>
+          <Link href="/" aria-label="SnackSpot home">
+            <SnackSpotLogo className="text-xl" />
           </Link>
         </div>
       </div>

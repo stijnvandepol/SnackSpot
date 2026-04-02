@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from './auth-provider'
 import { avatarUrl } from '@/lib/avatar'
 import { NotificationBell } from './notification-bell'
+import { SnackSpotLogo } from './snack-spot-logo'
 
 export function TopNav() {
   const { user, logout } = useAuth()
@@ -19,18 +20,8 @@ export function TopNav() {
   return (
     <header className="hidden md:block sticky top-0 z-30 backdrop-blur border-b" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>
       <div className="mx-auto max-w-6xl px-4 flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="font-heading font-bold text-xl leading-none">
-          <span className="text-snack-primary">Snack</span>
-          <span className="text-snack-accent inline-flex items-center">
-            Sp
-            <span className="inline-flex h-[0.95em] w-[0.75em] items-center justify-center align-middle">
-              <svg viewBox="0 0 16 20" fill="none" className="h-[0.95em] w-[0.75em]" aria-hidden="true">
-                <path d="M8 19c2.6-3.5 6-7.5 6-11a6 6 0 1 0-12 0c0 3.5 3.4 7.5 6 11Z" fill="currentColor"/>
-                <circle cx="8" cy="8" r="2.25" fill="white"/>
-              </svg>
-            </span>
-            t
-          </span>
+        <Link href="/" aria-label="SnackSpot home">
+          <SnackSpotLogo className="text-xl" />
         </Link>
 
         <nav className="flex items-center gap-1">
