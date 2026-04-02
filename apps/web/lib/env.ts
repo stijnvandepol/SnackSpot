@@ -45,13 +45,6 @@ const envSchema = z.object({
 
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).optional(),
 
-  // Web Push (VAPID) — required when sending browser push notifications.
-  // Generate with: npx web-push generate-vapid-keys
-  // VAPID_PUBLIC_KEY is also exposed client-side (safe — it is a public key).
-  VAPID_PUBLIC_KEY: z.string().optional(),
-  VAPID_PRIVATE_KEY: z.string().optional(),
-  // Typically a mailto: URL or your app's URL, identifies your server to push services.
-  VAPID_SUBJECT: z.string().optional(),
 })
 
 const _env = envSchema.safeParse(process.env)

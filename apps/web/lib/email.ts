@@ -32,6 +32,146 @@ const EMAIL_MUTED = '#64748B'
 const EMAIL_BORDER = '#E5E7EB'
 const EMAIL_SOFT_BORDER = '#F1F5F9'
 
+// ─── Notification emails ──────────────────────────────────────────────────────
+
+export async function sendNotificationLikeEmail(
+  to: string,
+  recipientUsername: string,
+  actorUsername: string,
+  dishName: string | null,
+  reviewUrl: string,
+): Promise<void> {
+  const dish = dishName ? ` of ${dishName}` : ''
+  const subject = `${actorUsername} liked your review${dish}`
+  await sendEmailWithFallback({
+    to,
+    subject,
+    html: renderBrandedEmail({
+      previewText: subject,
+      eyebrow: 'New like',
+      title: 'Someone liked your review',
+      intro: html(
+        `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(recipientUsername)}</strong>, <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(actorUsername)}</strong> liked your review${escapeHtml(dish)} on SnackSpot.`,
+      ),
+      action: { label: 'View review', href: reviewUrl },
+      calloutTitle: 'Keep sharing',
+      calloutBody: html('Every review you write helps others discover great food spots. Thank you for contributing!'),
+    }),
+    fallbackHtml: renderFallbackEmail({
+      title: 'Someone liked your review',
+      body: `Hi ${escapeHtml(recipientUsername)}, ${escapeHtml(actorUsername)} liked your review${escapeHtml(dish)} on SnackSpot.`,
+      linkLabel: 'View review',
+      linkHref: reviewUrl,
+      footer: 'You can manage notification preferences in your profile settings.',
+    }),
+    text: `${actorUsername} liked your review${dish} on SnackSpot.\n\nView it here: ${reviewUrl}\n\nManage notifications in your profile settings.`,
+    category: 'notification-like',
+  })
+}
+
+export async function sendNotificationCommentEmail(
+  to: string,
+  recipientUsername: string,
+  actorUsername: string,
+  dishName: string | null,
+  reviewUrl: string,
+): Promise<void> {
+  const dish = dishName ? ` of ${dishName}` : ''
+  const subject = `${actorUsername} commented on your review${dish}`
+  await sendEmailWithFallback({
+    to,
+    subject,
+    html: renderBrandedEmail({
+      previewText: subject,
+      eyebrow: 'New comment',
+      title: 'Someone commented on your review',
+      intro: html(
+        `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(recipientUsername)}</strong>, <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(actorUsername)}</strong> left a comment on your review${escapeHtml(dish)} on SnackSpot.`,
+      ),
+      action: { label: 'View comment', href: reviewUrl },
+      calloutTitle: 'Join the conversation',
+      calloutBody: html('Reply to keep the discussion going and help others find great food!'),
+    }),
+    fallbackHtml: renderFallbackEmail({
+      title: 'New comment on your review',
+      body: `Hi ${escapeHtml(recipientUsername)}, ${escapeHtml(actorUsername)} commented on your review${escapeHtml(dish)} on SnackSpot.`,
+      linkLabel: 'View comment',
+      linkHref: reviewUrl,
+      footer: 'You can manage notification preferences in your profile settings.',
+    }),
+    text: `${actorUsername} commented on your review${dish} on SnackSpot.\n\nView it here: ${reviewUrl}\n\nManage notifications in your profile settings.`,
+    category: 'notification-comment',
+  })
+}
+
+export async function sendNotificationMentionEmail(
+  to: string,
+  recipientUsername: string,
+  actorUsername: string,
+  placeName: string | null,
+  reviewUrl: string,
+): Promise<void> {
+  const place = placeName ? ` at ${placeName}` : ''
+  const subject = `${actorUsername} mentioned you in a review${place}`
+  await sendEmailWithFallback({
+    to,
+    subject,
+    html: renderBrandedEmail({
+      previewText: subject,
+      eyebrow: 'You were mentioned',
+      title: 'Someone mentioned you',
+      intro: html(
+        `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(recipientUsername)}</strong>, <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(actorUsername)}</strong> mentioned you in a review${escapeHtml(place)} on SnackSpot.`,
+      ),
+      action: { label: 'View review', href: reviewUrl },
+      calloutTitle: 'Your community',
+      calloutBody: html('SnackSpot members are talking about you. Click the button above to see what they said.'),
+    }),
+    fallbackHtml: renderFallbackEmail({
+      title: 'You were mentioned',
+      body: `Hi ${escapeHtml(recipientUsername)}, ${escapeHtml(actorUsername)} mentioned you in a review${escapeHtml(place)} on SnackSpot.`,
+      linkLabel: 'View review',
+      linkHref: reviewUrl,
+      footer: 'You can manage notification preferences in your profile settings.',
+    }),
+    text: `${actorUsername} mentioned you in a review${place} on SnackSpot.\n\nView it here: ${reviewUrl}\n\nManage notifications in your profile settings.`,
+    category: 'notification-mention',
+  })
+}
+
+export async function sendNotificationBadgeEmail(
+  to: string,
+  recipientUsername: string,
+  badgeName: string,
+  profileUrl: string,
+): Promise<void> {
+  const subject = `You unlocked "${badgeName}" on SnackSpot!`
+  await sendEmailWithFallback({
+    to,
+    subject,
+    html: renderBrandedEmail({
+      previewText: subject,
+      eyebrow: 'Achievement unlocked',
+      title: 'New badge earned!',
+      intro: html(
+        `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(recipientUsername)}</strong>, you just unlocked the <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(badgeName)}</strong> badge on SnackSpot. Keep exploring and reviewing food spots to earn more!`,
+      ),
+      action: { label: 'View your profile', href: profileUrl },
+      calloutTitle: 'Keep going',
+      calloutBody: html('Every review you write and place you discover brings you closer to new achievements.'),
+    }),
+    fallbackHtml: renderFallbackEmail({
+      title: 'Achievement unlocked!',
+      body: `Hi ${escapeHtml(recipientUsername)}, you just unlocked the "${escapeHtml(badgeName)}" badge on SnackSpot!`,
+      linkLabel: 'View your profile',
+      linkHref: profileUrl,
+      footer: 'You can manage notification preferences in your profile settings.',
+    }),
+    text: `You unlocked "${badgeName}" on SnackSpot!\n\nView your profile: ${profileUrl}\n\nManage notifications in your profile settings.`,
+    category: 'notification-badge',
+  })
+}
+
 // ─── Welcome email ────────────────────────────────────────────────────────────
 
 export async function sendWelcomeEmail(to: string, username: string): Promise<void> {

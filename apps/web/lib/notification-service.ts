@@ -1,19 +1,12 @@
-import webPush from 'web-push'
 import { prisma } from './db'
 import { logger } from './logger'
-import { env } from './env'
-
-// Configure VAPID credentials once at module load.
-// Push notifications are silently disabled when VAPID keys are absent so the
-// app starts cleanly without them (e.g. local dev without a service worker).
-// Generate keys with: npx web-push generate-vapid-keys
-const PUSH_ENABLED = !!(env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY && env.VAPID_SUBJECT)
-if (PUSH_ENABLED) {
-  webPush.setVapidDetails(env.VAPID_SUBJECT!, env.VAPID_PUBLIC_KEY!, env.VAPID_PRIVATE_KEY!)
-}
-
-/** HTTP status codes indicating a push subscription has been revoked. */
-const EXPIRED_SUBSCRIPTION_STATUSES = new Set([404, 410])
+import { getSiteUrl } from './site-url'
+import {
+  sendNotificationLikeEmail,
+  sendNotificationCommentEmail,
+  sendNotificationMentionEmail,
+  sendNotificationBadgeEmail,
+} from './email'
 
 type NotificationType = 'REVIEW_LIKE' | 'REVIEW_COMMENT' | 'REVIEW_MENTION' | 'COMMENT_MENTION' | 'BADGE_EARNED'
 
@@ -26,6 +19,11 @@ interface CreateNotificationParams {
   actorId?: string
   reviewId?: string
   commentId?: string
+  // Extra context for email sending — not stored in DB
+  actorName?: string
+  dishName?: string | null
+  placeName?: string | null
+  badgeName?: string
 }
 
 export async function createNotification(params: CreateNotificationParams): Promise<Awaited<ReturnType<typeof prisma.notification.create>> | null> {
@@ -50,18 +48,10 @@ export async function createNotification(params: CreateNotificationParams): Prom
     })
     logger.debug({ notificationId: notification.id, userId: params.userId }, 'Notification created successfully')
 
-    try {
-      const preferences = await prisma.notificationPreferences.findUnique({
-        where: { userId: params.userId },
-      })
-
-      if (preferences && shouldSendPush(params.type, preferences)) {
-        await sendPushNotification(params.userId, notification)
-      }
-    } catch (prefError) {
-      logger.error({ err: prefError, userId: params.userId }, 'Failed to check notification preferences')
-      // Continue anyway - notification was created successfully
-    }
+    // Fire-and-forget email — never block or throw on failure
+    void sendEmailForNotification(params).catch((err) =>
+      logger.error({ err, userId: params.userId, type: params.type }, 'Failed to send notification email'),
+    )
 
     return notification
   } catch (err) {
@@ -70,77 +60,68 @@ export async function createNotification(params: CreateNotificationParams): Prom
   }
 }
 
-function shouldSendPush(
-  type: NotificationType,
-  preferences: { pushOnLike: boolean; pushOnComment: boolean; pushOnMention: boolean; pushOnBadge: boolean }
-): boolean {
-  switch (type) {
-    case 'REVIEW_LIKE':
-      return preferences.pushOnLike
-    case 'REVIEW_COMMENT':
-      return preferences.pushOnComment
-    case 'REVIEW_MENTION':
-    case 'COMMENT_MENTION':
-      return preferences.pushOnMention
-    case 'BADGE_EARNED':
-      return preferences.pushOnBadge
-    default:
-      return false
-  }
-}
-
-async function sendPushNotification(
-  userId: string,
-  notification: { title: string; message: string; link: string | null },
-) {
-  if (!PUSH_ENABLED) return
-
-  let subscriptions: Array<{ id: string; endpoint: string; p256dhKey: string; authKey: string }>
-  try {
-    subscriptions = await prisma.pushSubscription.findMany({
-      where: { userId },
-      select: { id: true, endpoint: true, p256dhKey: true, authKey: true },
-    })
-  } catch (err) {
-    logger.error({ err, userId }, 'Failed to fetch push subscriptions')
-    return
-  }
-
-  if (subscriptions.length === 0) return
-
-  const payload = JSON.stringify({
-    title: notification.title,
-    body: notification.message,
-    url: notification.link ?? '/',
+async function sendEmailForNotification(params: CreateNotificationParams): Promise<void> {
+  const recipient = await prisma.user.findUnique({
+    where: { id: params.userId },
+    select: {
+      email: true,
+      username: true,
+      notificationPreferences: true,
+    },
   })
 
-  const expiredEndpoints: string[] = []
+  if (!recipient) return
 
-  await Promise.allSettled(
-    subscriptions.map(async (sub) => {
-      try {
-        await webPush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dhKey, auth: sub.authKey } },
-          payload,
+  const prefs = recipient.notificationPreferences
+  const appUrl = getSiteUrl()
+  const reviewUrl = params.link ? `${appUrl}${params.link}` : `${appUrl}/`
+  const profileUrl = `${appUrl}/profile`
+
+  switch (params.type) {
+    case 'REVIEW_LIKE':
+      if (prefs?.emailOnLike) {
+        await sendNotificationLikeEmail(
+          recipient.email,
+          recipient.username,
+          params.actorName ?? 'Someone',
+          params.dishName ?? null,
+          reviewUrl,
         )
-        logger.debug({ userId, endpoint: sub.endpoint }, 'Push notification sent')
-      } catch (err) {
-        const status = (err as { statusCode?: number }).statusCode ?? 0
-        if (EXPIRED_SUBSCRIPTION_STATUSES.has(status)) {
-          // Subscription has been revoked by the browser — remove it.
-          expiredEndpoints.push(sub.endpoint)
-          logger.debug({ userId, endpoint: sub.endpoint, status }, 'Removing expired push subscription')
-        } else {
-          logger.warn({ err, userId, endpoint: sub.endpoint }, 'Push notification delivery failed')
-        }
       }
-    }),
-  )
-
-  if (expiredEndpoints.length > 0) {
-    await prisma.pushSubscription
-      .deleteMany({ where: { userId, endpoint: { in: expiredEndpoints } } })
-      .catch((err) => logger.error({ err, userId }, 'Failed to delete expired push subscriptions'))
+      break
+    case 'REVIEW_COMMENT':
+      if (prefs?.emailOnComment) {
+        await sendNotificationCommentEmail(
+          recipient.email,
+          recipient.username,
+          params.actorName ?? 'Someone',
+          params.dishName ?? null,
+          reviewUrl,
+        )
+      }
+      break
+    case 'REVIEW_MENTION':
+    case 'COMMENT_MENTION':
+      if (prefs?.emailOnMention) {
+        await sendNotificationMentionEmail(
+          recipient.email,
+          recipient.username,
+          params.actorName ?? 'Someone',
+          params.placeName ?? null,
+          reviewUrl,
+        )
+      }
+      break
+    case 'BADGE_EARNED':
+      if (prefs?.emailOnBadge) {
+        await sendNotificationBadgeEmail(
+          recipient.email,
+          recipient.username,
+          params.badgeName ?? 'New badge',
+          profileUrl,
+        )
+      }
+      break
   }
 }
 
@@ -202,6 +183,8 @@ export function notifyReviewLike(reviewId: string, actorId: string) {
       link: `/review/${reviewId}`,
       actorId,
       reviewId,
+      actorName,
+      dishName: review.dishName,
     })
   })
 }
@@ -227,6 +210,8 @@ export function notifyReviewComment(reviewId: string, commentId: string, actorId
       actorId,
       reviewId,
       commentId,
+      actorName,
+      dishName: review.dishName,
     })
   })
 }
@@ -251,6 +236,8 @@ export function notifyMention(mentionedUserId: string, reviewId: string, actorId
       link: `/review/${reviewId}`,
       actorId,
       reviewId,
+      actorName,
+      placeName: review.place?.name ?? null,
     })
   })
 }
@@ -281,6 +268,8 @@ export function notifyCommentMention(
       actorId,
       reviewId,
       commentId,
+      actorName,
+      placeName: review.place?.name ?? null,
     })
   })
 }
@@ -293,6 +282,7 @@ export function notifyBadgeEarned(userId: string, badgeName: string) {
       title: 'Achievement unlocked',
       message: `You unlocked "${badgeName}"`,
       link: '/profile',
+      badgeName,
     }),
   )
 }

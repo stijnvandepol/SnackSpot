@@ -7,10 +7,6 @@ interface NotificationPreferences {
   emailOnComment: boolean
   emailOnMention: boolean
   emailOnBadge: boolean
-  pushOnLike: boolean
-  pushOnComment: boolean
-  pushOnMention: boolean
-  pushOnBadge: boolean
 }
 
 interface NotificationSettingsProps {
@@ -24,19 +20,10 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [messageTone, setMessageTone] = useState<'success' | 'error' | null>(null)
-  const [pushSupported, setPushSupported] = useState(false)
-  const [pushPermission, setPushPermission] = useState<NotificationPermission>('default')
 
   useEffect(() => {
     if (!accessToken) return
 
-    // Check if push notifications are supported
-    if (typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window) {
-      setPushSupported(true)
-      setPushPermission(Notification.permission)
-    }
-
-    // Load preferences
     const loadPreferences = async () => {
       try {
         const res = await fetch('/api/v1/me/notification-preferences', {
@@ -89,25 +76,6 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
     }
   }
 
-  const requestPushPermission = async () => {
-    if (typeof window === 'undefined' || !('Notification' in window)) return
-
-    try {
-      const permission = await Notification.requestPermission()
-      setPushPermission(permission)
-
-      if (permission === 'granted') {
-        setMessage('Push notifications enabled. You will receive notifications for new activity.')
-        setMessageTone('success')
-        setTimeout(() => setMessage(null), 5000)
-      }
-    } catch (error) {
-      console.error('Failed to request push permission', error)
-      setMessage('Could not enable push notifications right now.')
-      setMessageTone('error')
-    }
-  }
-
   if (loading) {
     return (
       <div className={embedded ? 'rounded-xl border border-snack-border bg-snack-background p-4' : 'card p-4'}>
@@ -133,27 +101,9 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
           </h2>
         )}
         <p className="text-sm text-snack-muted">
-          Choose which alerts SnackSpot sends and through which channel.
+          Choose which alerts SnackSpot sends you by email.
         </p>
       </div>
-
-      {pushSupported && pushPermission !== 'granted' && (
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-          <p className="text-sm text-blue-900 mb-2">Enable push notifications to receive real-time alerts.</p>
-          <button
-            onClick={requestPushPermission}
-            className="btn-primary text-sm"
-          >
-            Enable Push Notifications
-          </button>
-        </div>
-      )}
-
-      {pushSupported && pushPermission === 'granted' && (
-        <div className="p-3 bg-green-50 border border-green-200 rounded-xl">
-          <p className="text-sm text-green-900">Push notifications are enabled.</p>
-        </div>
-      )}
 
       <div className="space-y-4">
         <h3 className="font-medium text-snack-text">Email Notifications</h3>
@@ -213,70 +163,6 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
             checked={preferences.emailOnBadge}
             onChange={(e) =>
               setPreferences({ ...preferences, emailOnBadge: e.target.checked })
-            }
-            className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
-          />
-        </label>
-      </div>
-
-      <div className="space-y-4">
-        <h3 className="font-medium text-snack-text">Push Notifications</h3>
-        
-        <label className="flex items-center justify-between p-3 rounded-xl hover:bg-snack-surface transition cursor-pointer">
-          <div>
-            <p className="text-sm font-medium text-snack-text">Likes</p>
-            <p className="text-xs text-snack-muted">When someone likes your review</p>
-          </div>
-          <input
-            type="checkbox"
-            checked={preferences.pushOnLike}
-            onChange={(e) =>
-              setPreferences({ ...preferences, pushOnLike: e.target.checked })
-            }
-            className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
-          />
-        </label>
-
-        <label className="flex items-center justify-between p-3 rounded-xl hover:bg-snack-surface transition cursor-pointer">
-          <div>
-            <p className="text-sm font-medium text-snack-text">Comments</p>
-            <p className="text-xs text-snack-muted">When someone comments on your review</p>
-          </div>
-          <input
-            type="checkbox"
-            checked={preferences.pushOnComment}
-            onChange={(e) =>
-              setPreferences({ ...preferences, pushOnComment: e.target.checked })
-            }
-            className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
-          />
-        </label>
-
-        <label className="flex items-center justify-between p-3 rounded-xl hover:bg-snack-surface transition cursor-pointer">
-          <div>
-            <p className="text-sm font-medium text-snack-text">Mentions</p>
-            <p className="text-xs text-snack-muted">When someone mentions you in a review</p>
-          </div>
-          <input
-            type="checkbox"
-            checked={preferences.pushOnMention}
-            onChange={(e) =>
-              setPreferences({ ...preferences, pushOnMention: e.target.checked })
-            }
-            className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
-          />
-        </label>
-
-        <label className="flex items-center justify-between p-3 rounded-xl hover:bg-snack-surface transition cursor-pointer">
-          <div>
-            <p className="text-sm font-medium text-snack-text">Achievements</p>
-            <p className="text-xs text-snack-muted">When you unlock a new achievement</p>
-          </div>
-          <input
-            type="checkbox"
-            checked={preferences.pushOnBadge}
-            onChange={(e) =>
-              setPreferences({ ...preferences, pushOnBadge: e.target.checked })
             }
             className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
           />
