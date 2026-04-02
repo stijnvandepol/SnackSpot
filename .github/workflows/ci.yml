@@ -45,7 +45,11 @@ jobs:
           cache: 'pnpm'
 
       - name: Configure pnpm for CI
-        run: echo "node-linker=hoisted" >> .npmrc
+        # node-linker=hoisted gives each workspace package its own flat real
+        # node_modules (no symlinks, no hoisting to root). This ensures packages
+        # like tailwindcss are directly in apps/web/node_modules/ where Next.js
+        # can find them via its require hook.
+        run: sed -i 's/shamefully-hoist=true/node-linker=hoisted/' .npmrc
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile --ignore-scripts
@@ -98,10 +102,19 @@ jobs:
           cache: 'pnpm'
 
       - name: Configure pnpm for CI
-        run: echo "node-linker=hoisted" >> .npmrc
+        run: sed -i 's/shamefully-hoist=true/node-linker=hoisted/' .npmrc
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile --ignore-scripts
+
+      - name: Debug package locations
+        run: |
+          echo "=== apps/web/node_modules/tailwindcss ==="
+          ls apps/web/node_modules/tailwindcss/package.json 2>/dev/null && echo "EXISTS" || echo "MISSING"
+          echo "=== root node_modules/tailwindcss ==="
+          ls node_modules/tailwindcss/package.json 2>/dev/null && echo "EXISTS" || echo "MISSING"
+          echo "=== .npmrc used ==="
+          cat .npmrc
 
       - name: Generate Prisma client
         run: node node_modules/prisma/build/index.js generate --schema=packages/db/prisma/schema.prisma
