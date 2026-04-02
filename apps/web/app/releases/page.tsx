@@ -5,7 +5,7 @@ import { SnackSpotLogo } from '@/components/snack-spot-logo'
 
 export const metadata: Metadata = {
   title: 'Release Notes – SnackSpot',
-  description: 'What's new in SnackSpot — features, improvements, and fixes.',
+  description: "What's new in SnackSpot — features, improvements, and fixes.",
   alternates: { canonical: '/releases' },
   robots: { index: true, follow: true },
 }
@@ -35,7 +35,7 @@ const CHANGE_TYPE_CONFIG: Record<ChangeType, { label: string; className: string 
 const releases: Release[] = [
   {
     version: '1.3.0',
-    date: '2 April 2025',
+    date: '2 April 2026',
     summary: 'Email notifications, simplified stats, and SEO improvements.',
     changes: [
       { type: 'new',      text: 'Email notifications for likes, comments, mentions, and badges.' },

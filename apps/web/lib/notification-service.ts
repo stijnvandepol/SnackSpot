@@ -127,15 +127,21 @@ async function sendEmailForNotification(params: CreateNotificationParams): Promi
 
 // ─── Shared lookup helpers ──────────────────────────────────────────────────
 
-async function findReviewForNotification(
-  reviewId: string,
-  select: Record<string, unknown>,
-  context: string,
-) {
-  const review = await prisma.review.findUnique({ where: { id: reviewId }, select })
-  if (!review) {
-    logger.warn({ reviewId }, `Review not found for ${context} notification`)
-  }
+async function findReviewOwnerForNotification(reviewId: string, context: string) {
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId },
+    select: { userId: true, dishName: true },
+  })
+  if (!review) logger.warn({ reviewId }, `Review not found for ${context} notification`)
+  return review
+}
+
+async function findReviewPlaceForNotification(reviewId: string, context: string) {
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId },
+    select: { place: { select: { name: true } } },
+  })
+  if (!review) logger.warn({ reviewId }, `Review not found for ${context} notification`)
   return review
 }
 
@@ -165,11 +171,7 @@ async function safeNotify(
 
 export function notifyReviewLike(reviewId: string, actorId: string) {
   return safeNotify('review like', { reviewId, actorId }, async () => {
-    const review = await findReviewForNotification(
-      reviewId,
-      { userId: true, dishName: true },
-      'like',
-    ) as { userId: string; dishName: string | null } | null
+    const review = await findReviewOwnerForNotification(reviewId, 'like')
     if (!review) return null
 
     const actorName = await findActorUsername(actorId)
@@ -191,11 +193,7 @@ export function notifyReviewLike(reviewId: string, actorId: string) {
 
 export function notifyReviewComment(reviewId: string, commentId: string, actorId: string) {
   return safeNotify('review comment', { reviewId, commentId, actorId }, async () => {
-    const review = await findReviewForNotification(
-      reviewId,
-      { userId: true, dishName: true },
-      'comment',
-    ) as { userId: string; dishName: string | null } | null
+    const review = await findReviewOwnerForNotification(reviewId, 'comment')
     if (!review) return null
 
     const actorName = await findActorUsername(actorId)
@@ -218,11 +216,7 @@ export function notifyReviewComment(reviewId: string, commentId: string, actorId
 
 export function notifyMention(mentionedUserId: string, reviewId: string, actorId: string) {
   return safeNotify('mention', { mentionedUserId, reviewId, actorId }, async () => {
-    const review = await findReviewForNotification(
-      reviewId,
-      { place: { select: { name: true } } },
-      'mention',
-    ) as { place: { name: string } | null } | null
+    const review = await findReviewPlaceForNotification(reviewId, 'mention')
     if (!review) return null
 
     const actorName = await findActorUsername(actorId)
@@ -249,11 +243,7 @@ export function notifyCommentMention(
   actorId: string,
 ) {
   return safeNotify('comment mention', { mentionedUserId, reviewId, commentId, actorId }, async () => {
-    const review = await findReviewForNotification(
-      reviewId,
-      { place: { select: { name: true } } },
-      'comment mention',
-    ) as { place: { name: string } | null } | null
+    const review = await findReviewPlaceForNotification(reviewId, 'comment mention')
     if (!review) return null
 
     const actorName = await findActorUsername(actorId)

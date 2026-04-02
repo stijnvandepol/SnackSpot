@@ -177,6 +177,42 @@ export async function sendNotificationBadgeEmail(
   })
 }
 
+// ─── Marketing / broadcast email ─────────────────────────────────────────────
+
+export async function sendMarketingEmail(
+  to: string,
+  subject: string,
+  eyebrow: string,
+  title: string,
+  introText: string,
+  calloutTitle: string,
+  calloutText: string,
+  action?: { label: string; href: string },
+): Promise<void> {
+  const safeSubject = safeSubjectPart(subject)
+  await sendEmailWithFallback({
+    to,
+    subject: safeSubject,
+    html: renderBrandedEmail({
+      previewText: safeSubject,
+      eyebrow,
+      title,
+      intro: html(escapeHtml(introText).replace(/\n/g, '<br />')),
+      action,
+      calloutTitle,
+      calloutBody: html(escapeHtml(calloutText).replace(/\n/g, '<br />')),
+    }),
+    fallbackHtml: renderFallbackEmail({
+      title,
+      body: escapeHtml(introText),
+      ...(action ? { linkLabel: action.label, linkHref: action.href } : {}),
+      footer: escapeHtml(calloutText),
+    }),
+    text: `${introText}\n\n${calloutTitle}\n${calloutText}${action ? `\n\n${action.href}` : ''}`,
+    category: 'marketing',
+  })
+}
+
 // ─── Welcome email ────────────────────────────────────────────────────────────
 
 export async function sendWelcomeEmail(to: string, username: string): Promise<void> {
