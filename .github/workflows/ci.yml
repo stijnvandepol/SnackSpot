@@ -55,8 +55,8 @@ jobs:
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Generate Prisma client
-        # With node-linker=hoisted, prisma is a real file in packages/db/node_modules
-        run: node packages/db/node_modules/prisma/build/index.js generate --schema=packages/db/prisma/schema.prisma
+        # Resolve Prisma via pnpm workspace scripts so CI is independent of node_modules layout.
+        run: pnpm --filter @snackspot/db generate
 
       - name: Run unit tests
         run: pnpm --filter web test
@@ -127,7 +127,7 @@ jobs:
           "
 
       - name: Generate Prisma client
-        run: node packages/db/node_modules/prisma/build/index.js generate --schema=packages/db/prisma/schema.prisma
+        run: pnpm --filter @snackspot/db generate
 
       - name: Build web app
         run: pnpm --filter web build
