@@ -150,15 +150,22 @@ export default async function ReviewPage({
       <div className="card p-5 space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div>
+            <h1 className="font-heading font-bold text-lg text-snack-text">
+              {review.dishName ?? review.place.name}
+            </h1>
             {review.dishName && (
-              <h1 className="font-heading font-bold text-lg text-snack-text">{review.dishName}</h1>
+              <Link href={placeLinkHref} className="text-sm text-snack-primary hover:underline">
+                {review.place.name}
+                {extractCity(review.place.address) && (
+                  <span className="text-snack-muted font-normal"> · {extractCity(review.place.address)}</span>
+                )}
+              </Link>
             )}
-            <Link href={placeLinkHref} className="text-sm text-snack-primary hover:underline">
-              {review.place.name}
-              {extractCity(review.place.address) && (
-                <span className="text-snack-muted font-normal"> · {extractCity(review.place.address)}</span>
-              )}
-            </Link>
+            {!review.dishName && (
+              <Link href={placeLinkHref} className="text-sm text-snack-primary hover:underline">
+                {extractCity(review.place.address) ?? review.place.address}
+              </Link>
+            )}
           </div>
           <div className="text-snack-rating text-lg flex-shrink-0">
             {'★'.repeat(Math.round(overallRating))}
