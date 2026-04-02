@@ -54,7 +54,10 @@ export default function ModerationPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">🛡️ Moderation Queue</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-900">🛡️ Moderation Queue</h1>
+        <Link href="/admin/marketing" className="btn-secondary text-sm">📣 Marketing email</Link>
+      </div>
 
       {loading && (
         <div className="space-y-3">
