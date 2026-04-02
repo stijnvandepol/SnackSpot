@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import { prisma } from '@/lib/db'
 import { getSiteUrl } from '@/lib/site-url'
 import { PlaceReviewsSection } from '@/components/place-reviews-section'
+import { Breadcrumb } from '@/components/breadcrumb'
 
 const PlaceMap = dynamic(
   () => import('@/components/ui/map').then((m) => m.Map),
@@ -31,6 +32,20 @@ interface PlaceRow {
   lng: number
   avg_rating: number | null
   review_count: number
+}
+
+function buildPlaceBreadcrumb(from: string | undefined, placeName: string): Array<{ label: string; href?: string }> {
+  const crumbs: Array<{ label: string; href?: string }> = []
+  if (from === 'search' || !from) crumbs.push({ label: 'Explore', href: '/search' })
+  else if (from === 'nearby') crumbs.push({ label: 'Nearby', href: '/nearby' })
+  else if (from === 'feed') crumbs.push({ label: 'Feed', href: '/' })
+  else if (from === 'profile') crumbs.push({ label: 'Profile', href: '/profile' })
+  else if (from.startsWith('user:')) {
+    const username = from.slice('user:'.length)
+    crumbs.push({ label: `@${username}`, href: `/u/${encodeURIComponent(username)}` })
+  }
+  crumbs.push({ label: placeName })
+  return crumbs
 }
 
 function resolveBackHref(from: string | undefined): string {
@@ -105,6 +120,7 @@ export default async function PlacePage({
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <Breadcrumb items={buildPlaceBreadcrumb(from, place.name)} />
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Link href={backHref} className="btn-secondary text-sm">Back</Link>
         <Link href={`/add-review?placeId=${place.id}`} className="btn-primary text-sm">
