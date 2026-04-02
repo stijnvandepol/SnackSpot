@@ -1,9 +1,13 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Turnstile } from '@marsidev/react-turnstile'
+import type { TurnstileInstance } from '@marsidev/react-turnstile'
 import { useAuth } from '@/components/auth-provider'
 import { SnackSpotLogo } from '@/components/snack-spot-logo'
+
+const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ''
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -12,17 +16,47 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [captchaRequired, setCaptchaRequired] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const turnstileRef = useRef<TurnstileInstance | null>(null)
+
+  const checkCaptchaStatus = async (emailValue?: string) => {
+    try {
+      const url = emailValue
+        ? `/api/v1/auth/captcha-required?email=${encodeURIComponent(emailValue)}`
+        : '/api/v1/auth/captcha-required'
+      const res = await fetch(url)
+      const json = await res.json()
+      if (json.data?.captchaRequired) setCaptchaRequired(true)
+    } catch {
+      // Fail open: if the status check errors, don't block login
+    }
+  }
+
+  // Check on mount using IP only — catches IPs already flagged before page load
+  useEffect(() => {
+    void checkCaptchaStatus()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
-    const result = await login(email, password)
+
+    const result = await login(email, password, captchaToken ?? undefined)
     setLoading(false)
+
     if (!result.ok) {
+      if (result.captchaRequired) {
+        // Token was rejected (expired or replayed) — show widget and wait for a fresh token
+        setCaptchaRequired(true)
+        setCaptchaToken(null)
+        turnstileRef.current?.reset()
+      }
       setError(result.error ?? 'Login failed')
       return
     }
+
     router.push('/')
   }
 
@@ -53,6 +87,7 @@ export default function LoginPage() {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onBlur={(e) => { if (e.target.value) void checkCaptchaStatus(e.target.value) }}
               required
               autoComplete="email"
             />
@@ -72,7 +107,21 @@ export default function LoginPage() {
             />
           </div>
 
-          <button type="submit" className="btn-primary w-full" disabled={loading}>
+          {captchaRequired && (
+            <Turnstile
+              ref={turnstileRef}
+              siteKey={SITE_KEY}
+              options={{ action: 'login' }}
+              onSuccess={(token) => setCaptchaToken(token)}
+              onExpire={() => setCaptchaToken(null)}
+            />
+          )}
+
+          <button
+            type="submit"
+            className="btn-primary w-full"
+            disabled={loading || (captchaRequired && !captchaToken)}
+          >
             {loading ? 'Logging in…' : 'Log in'}
           </button>
         </form>

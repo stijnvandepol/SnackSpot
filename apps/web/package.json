@@ -11,6 +11,7 @@
     "postinstall": "pnpm exec prisma generate --schema=../../packages/db/prisma/schema.prisma || true"
   },
   "dependencies": {
+    "@marsidev/react-turnstile": "^1.5.0",
     "@prisma/client": "^5.22.0",
     "@snackspot/shared": "workspace:*",
     "@snackspot/ui": "workspace:*",
@@ -28,8 +29,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "resend": "^6.9.3",
-    "tailwind-merge": "^3.5.0",
     "sharp": "^0.33.5",
+    "tailwind-merge": "^3.5.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
