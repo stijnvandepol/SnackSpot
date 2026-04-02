@@ -42,7 +42,7 @@ export function BottomNav() {
                 href={l.href}
                 aria-current={active ? 'page' : undefined}
                 aria-label={l.label}
-                className={`flex flex-col items-center gap-0.5 py-1 text-xs font-medium transition ${
+                className={`flex flex-col items-center gap-0.5 py-1 text-xs font-medium transition min-h-[44px] justify-center ${
                   l.accent
                     ? 'text-white'
                     : active
