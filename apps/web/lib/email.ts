@@ -34,6 +34,11 @@ const EMAIL_SOFT_BORDER = '#F1F5F9'
 
 // ─── Notification emails ──────────────────────────────────────────────────────
 
+/** Strip CR/LF from user-supplied strings before placing them in email subjects or plain-text bodies. */
+function safeSubjectPart(value: string): string {
+  return value.replace(/[\r\n]/g, ' ').trim()
+}
+
 export async function sendNotificationLikeEmail(
   to: string,
   recipientUsername: string,
@@ -41,8 +46,8 @@ export async function sendNotificationLikeEmail(
   dishName: string | null,
   reviewUrl: string,
 ): Promise<void> {
-  const dish = dishName ? ` of ${dishName}` : ''
-  const subject = `${actorUsername} liked your review${dish}`
+  const dish = dishName ? ` of ${safeSubjectPart(dishName)}` : ''
+  const subject = `${safeSubjectPart(actorUsername)} liked your review${dish}`
   await sendEmailWithFallback({
     to,
     subject,
@@ -64,7 +69,7 @@ export async function sendNotificationLikeEmail(
       linkHref: reviewUrl,
       footer: 'You can manage notification preferences in your profile settings.',
     }),
-    text: `${actorUsername} liked your review${dish} on SnackSpot.\n\nView it here: ${reviewUrl}\n\nManage notifications in your profile settings.`,
+    text: `${safeSubjectPart(actorUsername)} liked your review${dish} on SnackSpot.\n\nView it here: ${reviewUrl}\n\nManage notifications in your profile settings.`,
     category: 'notification-like',
   })
 }
@@ -76,8 +81,8 @@ export async function sendNotificationCommentEmail(
   dishName: string | null,
   reviewUrl: string,
 ): Promise<void> {
-  const dish = dishName ? ` of ${dishName}` : ''
-  const subject = `${actorUsername} commented on your review${dish}`
+  const dish = dishName ? ` of ${safeSubjectPart(dishName)}` : ''
+  const subject = `${safeSubjectPart(actorUsername)} commented on your review${dish}`
   await sendEmailWithFallback({
     to,
     subject,
@@ -99,7 +104,7 @@ export async function sendNotificationCommentEmail(
       linkHref: reviewUrl,
       footer: 'You can manage notification preferences in your profile settings.',
     }),
-    text: `${actorUsername} commented on your review${dish} on SnackSpot.\n\nView it here: ${reviewUrl}\n\nManage notifications in your profile settings.`,
+    text: `${safeSubjectPart(actorUsername)} commented on your review${dish} on SnackSpot.\n\nView it here: ${reviewUrl}\n\nManage notifications in your profile settings.`,
     category: 'notification-comment',
   })
 }
@@ -111,8 +116,8 @@ export async function sendNotificationMentionEmail(
   placeName: string | null,
   reviewUrl: string,
 ): Promise<void> {
-  const place = placeName ? ` at ${placeName}` : ''
-  const subject = `${actorUsername} mentioned you in a review${place}`
+  const place = placeName ? ` at ${safeSubjectPart(placeName)}` : ''
+  const subject = `${safeSubjectPart(actorUsername)} mentioned you in a review${place}`
   await sendEmailWithFallback({
     to,
     subject,
@@ -134,7 +139,7 @@ export async function sendNotificationMentionEmail(
       linkHref: reviewUrl,
       footer: 'You can manage notification preferences in your profile settings.',
     }),
-    text: `${actorUsername} mentioned you in a review${place} on SnackSpot.\n\nView it here: ${reviewUrl}\n\nManage notifications in your profile settings.`,
+    text: `${safeSubjectPart(actorUsername)} mentioned you in a review${place} on SnackSpot.\n\nView it here: ${reviewUrl}\n\nManage notifications in your profile settings.`,
     category: 'notification-mention',
   })
 }
@@ -145,7 +150,7 @@ export async function sendNotificationBadgeEmail(
   badgeName: string,
   profileUrl: string,
 ): Promise<void> {
-  const subject = `You unlocked "${badgeName}" on SnackSpot!`
+  const subject = `You unlocked "${safeSubjectPart(badgeName)}" on SnackSpot!`
   await sendEmailWithFallback({
     to,
     subject,
@@ -167,7 +172,7 @@ export async function sendNotificationBadgeEmail(
       linkHref: profileUrl,
       footer: 'You can manage notification preferences in your profile settings.',
     }),
-    text: `You unlocked "${badgeName}" on SnackSpot!\n\nView your profile: ${profileUrl}\n\nManage notifications in your profile settings.`,
+    text: `You unlocked "${safeSubjectPart(badgeName)}" on SnackSpot!\n\nView your profile: ${profileUrl}\n\nManage notifications in your profile settings.`,
     category: 'notification-badge',
   })
 }
