@@ -23,12 +23,13 @@ interface UserReviewsListProps {
 }
 
 export function UserReviewsList({ username }: UserReviewsListProps) {
-  const { accessToken } = useAuth()
+  const { accessToken, loading: authLoading } = useAuth()
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (authLoading) return
     fetch(`/api/v1/users/${encodeURIComponent(username)}/reviews?limit=50`, {
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
     })
@@ -36,7 +37,7 @@ export function UserReviewsList({ username }: UserReviewsListProps) {
       .then((json) => setReviews(json.data?.data ?? []))
       .catch(() => setError('Could not load reviews.'))
       .finally(() => setLoading(false))
-  }, [username, accessToken])
+  }, [username, accessToken, authLoading])
 
   if (loading) {
     return (
