@@ -117,12 +117,19 @@ function loginFailEmailKey(email: string): string {
 }
 
 export async function incrementLoginFailures(ip: string, email: string): Promise<void> {
+  // EXPIRE is only set when the key is newly created (INCR returns 1) to prevent
+  // an attacker from resetting the TTL on every attempt and keeping the counter
+  // alive indefinitely. Two keys share the same TTL constant but are set independently.
   const pipeline = redis.pipeline()
   pipeline.incr(loginFailIPKey(ip))
-  pipeline.expire(loginFailIPKey(ip), LOGIN_FAIL_TTL)
   pipeline.incr(loginFailEmailKey(email))
-  pipeline.expire(loginFailEmailKey(email), LOGIN_FAIL_TTL)
-  await pipeline.exec()
+  const results = await pipeline.exec()
+  const ipNew = (results?.[0]?.[1] as number) === 1
+  const emailNew = (results?.[1]?.[1] as number) === 1
+  const expirePipeline = redis.pipeline()
+  if (ipNew) expirePipeline.expire(loginFailIPKey(ip), LOGIN_FAIL_TTL)
+  if (emailNew) expirePipeline.expire(loginFailEmailKey(email), LOGIN_FAIL_TTL)
+  if (ipNew || emailNew) await expirePipeline.exec()
 }
 
 export async function resetLoginFailures(ip: string, email: string): Promise<void> {
@@ -133,6 +140,7 @@ export async function getLoginFailureCount(
   ip: string,
   email: string,
 ): Promise<{ ip: number; email: number }> {
+  if (!email) return { ip: Number((await redis.get(loginFailIPKey(ip))) ?? 0), email: 0 }
   const [ipCount, emailCount] = await redis.mget(loginFailIPKey(ip), loginFailEmailKey(email))
   return {
     ip: Number(ipCount ?? 0),
