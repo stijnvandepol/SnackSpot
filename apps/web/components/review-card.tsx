@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { ReviewLikeButton } from '@/components/review-like-button'
@@ -74,12 +75,13 @@ export function ReviewCard({
         />
         {thumb && (
           <div className="relative h-64 w-full bg-snack-surface md:h-72">
-            <img
+            <Image
               src={thumb}
               alt={review.dishName ?? 'Review photo'}
-              className="h-full w-full object-cover"
-              loading={priority ? 'eager' : 'lazy'}
-              fetchPriority={priority ? 'high' : 'auto'}
+              fill
+              sizes="(max-width: 672px) 100vw, 672px"
+              className="object-cover"
+              priority={priority}
             />
           </div>
         )}
