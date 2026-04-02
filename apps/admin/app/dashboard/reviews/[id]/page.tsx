@@ -3,6 +3,11 @@ import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+function toSentenceCase(str: string): string {
+  if (!str) return str
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+}
+
 interface AdminReview {
   id: string
   rating: string | number
@@ -30,11 +35,6 @@ export default function ReviewDetailsPage({ params }: { params: Promise<{ id: st
   const [dishNameInput, setDishNameInput] = useState('')
   const [textInput, setTextInput] = useState('')
   const [saving, setSaving] = useState(false)
-
-  function toSentenceCase(str: string): string {
-    if (!str) return str
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
-  }
 
   async function handleSave() {
     if (!review) return
