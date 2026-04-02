@@ -52,7 +52,7 @@ jobs:
         run: sed -i 's/shamefully-hoist=true/node-linker=hoisted/' .npmrc
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile --ignore-scripts
+        run: pnpm install --no-frozen-lockfile --ignore-scripts --prod=false
 
       - name: Generate Prisma client
         # Resolve Prisma via pnpm workspace scripts so CI is independent of node_modules layout.
@@ -103,7 +103,7 @@ jobs:
         run: sed -i 's/shamefully-hoist=true/node-linker=hoisted/' .npmrc
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile --ignore-scripts
+        run: pnpm install --no-frozen-lockfile --ignore-scripts --prod=false
 
       - name: Debug — package locations after install
         run: |
