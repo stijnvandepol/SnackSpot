@@ -19,7 +19,7 @@ interface Review {
 }
 
 export function FeedClient() {
-  const { accessToken } = useAuth()
+  const { accessToken, loading: authLoading } = useAuth()
   const [reviews, setReviews] = useState<Review[]>([])
   const [cursor, setCursor] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
@@ -71,10 +71,12 @@ export function FeedClient() {
     }
   }, [hasMore, cursor, accessToken])
 
-  // Initial load
+  // Initial load: wait for auth to finish restoring so likedByMe is accurate.
+  // If we load before the token is ready, the feed returns likedByMe: false for
+  // every card and never refreshes — likes appear gone after reopening the app.
   useEffect(() => {
-    loadMore()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    if (!authLoading) loadMore()
+  }, [authLoading]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Infinite scroll via IntersectionObserver
   useEffect(() => {
