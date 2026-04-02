@@ -44,11 +44,19 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
 
+      - name: Configure pnpm for CI
+        # Replace shamefully-hoist with node-linker=hoisted.
+        # This gives each workspace package its own flat REAL node_modules
+        # (no symlinks). prisma lands in packages/db/node_modules/,
+        # tailwindcss lands in apps/web/node_modules/.
+        run: sed -i 's/shamefully-hoist=true/node-linker=hoisted/' .npmrc
+
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Generate Prisma client
-        run: node node_modules/prisma/build/index.js generate --schema=packages/db/prisma/schema.prisma
+        # With node-linker=hoisted, prisma is a real file in packages/db/node_modules
+        run: node packages/db/node_modules/prisma/build/index.js generate --schema=packages/db/prisma/schema.prisma
 
       - name: Run unit tests
         run: pnpm --filter web test
@@ -91,40 +99,35 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
 
+      - name: Configure pnpm for CI
+        run: sed -i 's/shamefully-hoist=true/node-linker=hoisted/' .npmrc
+
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
-      - name: Debug — find tailwindcss after install
+      - name: Debug — package locations after install
         run: |
-          echo "=== All tailwindcss locations ==="
-          find . -name "package.json" -path "*/tailwindcss/package.json" ! -path "*/.git/*" 2>/dev/null | head -10 || echo "none found"
-          echo ""
-          echo "=== apps/web/node_modules/ (filtered) ==="
-          ls apps/web/node_modules/ 2>/dev/null | grep -E "tailwind|postcss|autoprefixer" || echo "not in apps/web/node_modules"
-          echo ""
-          echo "=== root node_modules/ (filtered) ==="
-          ls node_modules/ 2>/dev/null | grep -E "tailwind|postcss|autoprefixer" || echo "not in root node_modules"
-          echo ""
-          echo "=== .pnpm store (filtered) ==="
-          ls node_modules/.pnpm/ 2>/dev/null | grep tailwind | head -5 || echo "no .pnpm store"
-          echo ""
           echo "=== .npmrc ==="
           cat .npmrc
           echo ""
-          echo "=== Node.js require.resolve test ==="
+          echo "=== tailwindcss locations ==="
+          find . -name "package.json" -path "*/tailwindcss/package.json" ! -path "*/.git/*" 2>/dev/null | head -10 || echo "not found"
+          echo ""
+          echo "=== prisma locations ==="
+          find . -path "*/prisma/build/index.js" ! -path "*/.git/*" 2>/dev/null | head -5 || echo "not found"
+          echo ""
+          echo "=== require.resolve test from apps/web ==="
           node -e "
             const path = require('path');
             const dir = path.resolve('apps/web');
-            try {
-              const r = require.resolve('tailwindcss', { paths: [dir] });
-              console.log('RESOLVED:', r);
-            } catch(e) {
-              console.log('FAILED:', e.message.split('\n')[0]);
-            }
+            ['tailwindcss','postcss','autoprefixer'].forEach(pkg => {
+              try { console.log(pkg + ': FOUND at ' + require.resolve(pkg, { paths: [dir] })); }
+              catch(e) { console.log(pkg + ': MISSING'); }
+            });
           "
 
       - name: Generate Prisma client
-        run: node node_modules/prisma/build/index.js generate --schema=packages/db/prisma/schema.prisma
+        run: node packages/db/node_modules/prisma/build/index.js generate --schema=packages/db/prisma/schema.prisma
 
       - name: Build web app
         run: pnpm --filter web build
