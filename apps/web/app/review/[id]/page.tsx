@@ -162,7 +162,7 @@ export default async function ReviewPage({
           </div>
           <div className="text-snack-rating text-lg flex-shrink-0">
             {'★'.repeat(Math.round(overallRating))}
-            <span className="text-[#e0e0e0]">{'★'.repeat(5 - Math.round(overallRating))}</span>
+            <span className="text-snack-border">{'★'.repeat(5 - Math.round(overallRating))}</span>
             <p className="text-xs text-snack-muted text-right mt-0.5">{overallRating.toFixed(1)}</p>
           </div>
         </div>

@@ -62,7 +62,7 @@ function ResetPasswordForm() {
   if (!token) return null
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-snack-surface to-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-b from-snack-surface to-snack-background flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="mb-3">
@@ -92,7 +92,7 @@ function ResetPasswordForm() {
         ) : (
           <form onSubmit={handleSubmit} className="card p-6 space-y-4">
             {error && (
-              <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-xl border border-red-100">
+              <div className="bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl border border-red-100 dark:border-red-900">
                 {error}
               </div>
             )}
