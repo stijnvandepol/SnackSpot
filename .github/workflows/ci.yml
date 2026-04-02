@@ -45,7 +45,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile --ignore-scripts
+        run: pnpm install --no-frozen-lockfile --ignore-scripts --config.node-linker=hoisted
 
       - name: Generate Prisma client
         run: node node_modules/prisma/build/index.js generate --schema=packages/db/prisma/schema.prisma
@@ -95,7 +95,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile --ignore-scripts
+        run: pnpm install --no-frozen-lockfile --ignore-scripts --config.node-linker=hoisted
 
       - name: Generate Prisma client
         run: node node_modules/prisma/build/index.js generate --schema=packages/db/prisma/schema.prisma
