@@ -101,7 +101,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       }
       const data: { text?: string; dishName?: string | null } = {}
       if (body.text !== undefined) data.text = body.text.trim()
-      if (body.dishName !== undefined) data.dishName = body.dishName || null
+      if (body.dishName !== undefined) data.dishName = typeof body.dishName === 'string' ? body.dishName || null : null
 
       const review = await db.review.update({
         where: { id },
