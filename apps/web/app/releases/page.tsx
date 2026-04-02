@@ -4,10 +4,22 @@ import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 import { SnackSpotLogo } from '@/components/snack-spot-logo'
 
 export const metadata: Metadata = {
-  title: 'Release Notes – SnackSpot',
+  title: { absolute: 'Release Notes | SnackSpot' },
   description: "What's new in SnackSpot — features, improvements, and fixes.",
   alternates: { canonical: '/releases' },
   robots: { index: true, follow: true },
+  openGraph: {
+    type: 'website',
+    title: 'Release Notes | SnackSpot',
+    description: "What's new in SnackSpot — features, improvements, and fixes.",
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Release Notes | SnackSpot',
+    description: "What's new in SnackSpot — features, improvements, and fixes.",
+    images: ['/twitter-image'],
+  },
 }
 
 type ChangeType = 'new' | 'improved' | 'fixed' | 'removed'
@@ -78,8 +90,8 @@ const releases: Release[] = [
 export default function ReleasesPage() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.14),_transparent_32%),linear-gradient(180deg,#fff7ed_0%,#ffffff_28%,#ffffff_100%)] text-snack-text">
-      <header className="sticky top-0 z-30 border-b border-black/5 bg-white/85 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
+      <header className="sticky top-0 z-30 border-b backdrop-blur" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 h-16">
           <Link href="/" className="shrink-0">
             <SnackSpotLogo className="text-xl" />
           </Link>

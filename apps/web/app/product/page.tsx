@@ -4,7 +4,7 @@ import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 import { SnackSpotLogo } from '@/components/snack-spot-logo'
 
 export const metadata: Metadata = {
-  title: 'SnackSpot – Discover Hidden Food Gems Near You',
+  title: { absolute: 'Discover Hidden Food Gems Near You | SnackSpot' },
   description:
     'SnackSpot is a community app for discovering under-the-radar food spots, posting photo reviews, and sharing smaller local places worth knowing.',
   alternates: {
@@ -12,14 +12,14 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    title: 'SnackSpot – Discover Hidden Food Gems Near You',
+    title: 'Discover Hidden Food Gems Near You | SnackSpot',
     description:
       'SnackSpot is a community app for discovering under-the-radar food spots, posting photo reviews, and sharing smaller local places worth knowing.',
     images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SnackSpot – Discover Hidden Food Gems Near You',
+    title: 'Discover Hidden Food Gems Near You | SnackSpot',
     description:
       'SnackSpot is a community app for discovering under-the-radar food spots, posting photo reviews, and sharing smaller local places worth knowing.',
     images: ['/twitter-image'],
@@ -71,8 +71,8 @@ const flow = [
 export default function ProductPage() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.14),_transparent_32%),linear-gradient(180deg,#fff7ed_0%,#ffffff_28%,#ffffff_100%)] text-snack-text">
-      <header className="sticky top-0 z-30 border-b border-black/5 bg-white/85 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
+      <header className="sticky top-0 z-30 border-b backdrop-blur" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 h-16">
           <Link href="/" className="shrink-0">
             <SnackSpotLogo className="text-xl" />
           </Link>

@@ -39,6 +39,18 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/guides/how-to-add-a-place',
   },
+  openGraph: {
+    type: 'article',
+    title: 'How to add a place or restaurant on SnackSpot',
+    description: 'Add a new place or restaurant on SnackSpot during the posting flow when the location is not listed yet.',
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'How to add a place or restaurant on SnackSpot',
+    description: 'Add a new place or restaurant on SnackSpot during the posting flow when the location is not listed yet.',
+    images: ['/twitter-image'],
+  },
 }
 
 export default function HowToAddAPlacePage() {

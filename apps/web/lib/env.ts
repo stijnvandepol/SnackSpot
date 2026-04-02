@@ -36,6 +36,10 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().min(1),
   RESEND_FROM_EMAIL: z.string().default('SnackSpot <noreply@snackspot.online>'),
 
+  // Cloudflare Turnstile
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(1),
+  TURNSTILE_SECRET_KEY: z.string().min(1),
+
   CORS_ORIGINS: z.string().default('https://snackspot.online'),
   ALLOWED_HOSTS: z.string().optional(),
   MAX_JSON_BODY_BYTES: z.coerce.number().int().positive().default(256 * 1024),

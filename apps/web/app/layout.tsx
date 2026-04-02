@@ -12,46 +12,37 @@ const appDescription =
   'Discover under-the-radar food spots with SnackSpot. Share reviews of smaller local places, surface hidden gems, and help others find great food they would otherwise miss.'
 
 function buildJsonLd(appUrl: string) {
-  return [
-    {
-      '@context': 'https://schema.org',
-      '@type': 'Organization',
-      name: 'SnackSpot',
-      url: appUrl,
-      logo: `${appUrl}/icons/favicon-48x48.png`,
-      description: appDescription,
+  const organization = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'SnackSpot',
+    url: appUrl,
+    logo: `${appUrl}/icons/icon-512.png`,
+    description: appDescription,
+  }
+  const website = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'SnackSpot',
+    url: appUrl,
+    description: appDescription,
+  }
+  const webApp = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'SnackSpot',
+    url: appUrl,
+    description: appDescription,
+    applicationCategory: 'LifestyleApplication',
+    operatingSystem: 'All',
+    offers: {
+      '@type': 'Offer',
+      price: 0,
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
     },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      name: 'SnackSpot',
-      url: appUrl,
-      description: appDescription,
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: {
-          '@type': 'EntryPoint',
-          urlTemplate: `${appUrl}/search?q={search_term_string}`,
-        },
-        'query-input': 'required name=search_term_string',
-      },
-    },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'WebApplication',
-      name: 'SnackSpot',
-      url: appUrl,
-      description: appDescription,
-      applicationCategory: 'LifestyleApplication',
-      operatingSystem: 'All',
-      offers: {
-        '@type': 'Offer',
-        price: 0,
-        priceCurrency: 'USD',
-        availability: 'https://schema.org/InStock',
-      },
-    },
-  ]
+  }
+  return { organization, website, webApp }
 }
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
@@ -115,7 +106,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const appUrl = getSiteUrl()
-  const jsonLd = buildJsonLd(appUrl)
+  const { organization, website, webApp } = buildJsonLd(appUrl)
   return (
     <html lang="en" className={`h-full ${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
       <head>
@@ -126,10 +117,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `(function(){try{var t=localStorage.getItem('snackspot-theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}})()`,
           }}
         />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organization) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(website) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webApp) }} />
       </head>
       <body className="h-full font-body">
         <ThemeProvider>

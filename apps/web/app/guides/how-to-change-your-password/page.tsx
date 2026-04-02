@@ -38,6 +38,18 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/guides/how-to-change-your-password',
   },
+  openGraph: {
+    type: 'article',
+    title: 'How to change your SnackSpot password',
+    description: 'Reset or update your SnackSpot password using the forgot-password flow. Step-by-step instructions and common fixes.',
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'How to change your SnackSpot password',
+    description: 'Reset or update your SnackSpot password using the forgot-password flow. Step-by-step instructions and common fixes.',
+    images: ['/twitter-image'],
+  },
 }
 
 export default function HowToChangeYourPasswordPage() {

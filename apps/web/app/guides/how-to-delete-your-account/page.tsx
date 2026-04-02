@@ -37,6 +37,18 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/guides/how-to-delete-your-account',
   },
+  openGraph: {
+    type: 'article',
+    title: 'How to delete your SnackSpot account',
+    description: 'Permanently delete your SnackSpot account and all associated data from your profile settings.',
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'How to delete your SnackSpot account',
+    description: 'Permanently delete your SnackSpot account and all associated data from your profile settings.',
+    images: ['/twitter-image'],
+  },
 }
 
 export default function HowToDeleteYourAccountPage() {

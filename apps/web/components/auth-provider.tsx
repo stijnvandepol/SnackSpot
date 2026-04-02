@@ -15,7 +15,7 @@ interface AuthCtx {
   user: AuthUser | null
   accessToken: string | null
   loading: boolean
-  login(email: string, password: string): Promise<{ ok: boolean; error?: string }>
+  login(email: string, password: string, captchaToken?: string): Promise<{ ok: boolean; error?: string; captchaRequired?: boolean }>
   register(data: {
     email: string
     username: string
@@ -130,19 +130,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [accessToken, refreshToken])
 
   const login = useCallback(
-    async (email: string, password: string) => {
-      const res = await fetch('/api/v1/auth/login', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-      const json = await res.json()
-      if (!res.ok) return { ok: false, error: json.error ?? 'Login failed' }
-      tokenRef.current = json.data.access_token
-      setAccessToken(json.data.access_token)
-      setUser(json.data.user)
-      return { ok: true }
+    async (email: string, password: string, captchaToken?: string) => {
+      try {
+        const res = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            password,
+            ...(captchaToken ? { captchaToken } : {}),
+          }),
+        })
+        const json = await res.json()
+        if (!res.ok) {
+          return {
+            ok: false,
+            error: json.error ?? 'Login failed',
+            captchaRequired: json.captchaRequired === true,
+          }
+        }
+        tokenRef.current = json.data.access_token
+        setAccessToken(json.data.access_token)
+        setUser(json.data.user)
+        return { ok: true }
+      } catch {
+        return { ok: false, error: 'Network error' }
+      }
     },
     [],
   )
