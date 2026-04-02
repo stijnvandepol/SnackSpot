@@ -100,7 +100,7 @@ export function FeedClient() {
       {!initial && reviews.length === 0 && (
         <div className="text-center py-20">
           <p className="text-snack-muted">No posts available yet.</p>
-          <Link href="/add-review" className="btn-primary mt-4 hidden md:inline-block">Create first post</Link>
+          <Link href="/add-review" className="btn-primary mt-4 inline-block">Create first post</Link>
         </div>
       )}
 
