@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "generate": "pnpm exec prisma generate --schema=prisma/schema.prisma",
+    "generate": "prisma generate --schema=prisma/schema.prisma",
     "migrate": "node scripts/migrate.mjs",
     "seed": "node scripts/seed.mjs",
     "studio": "pnpm exec prisma studio --schema=prisma/schema.prisma"
