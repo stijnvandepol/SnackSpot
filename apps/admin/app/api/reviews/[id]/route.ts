@@ -68,43 +68,55 @@ export async function GET(req: NextRequest, { params }: Params) {
   }
 }
 
-// PATCH /api/reviews/[id] - Update review status
+// PATCH /api/reviews/[id] - Update review status or content
 export async function PATCH(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
   if (admin instanceof Response) return admin
   const { id } = await params
 
   try {
-    const { status } = (await req.json()) as { status: 'PUBLISHED' | 'HIDDEN' | 'DELETED' }
-
-    if (!['PUBLISHED', 'HIDDEN', 'DELETED'].includes(status)) {
-      return NextResponse.json(
-        { error: 'Ongeldige status' },
-        { status: 400 }
-      )
+    const body = (await req.json()) as {
+      status?: 'PUBLISHED' | 'HIDDEN' | 'DELETED'
+      text?: string
+      dishName?: string | null
     }
 
-    const review = await db.review.update({
-      where: { id },
-      data: { status },
-      select: {
-        id: true,
-        status: true,
-      },
-    })
+    // Status update
+    if (body.status !== undefined) {
+      if (!['PUBLISHED', 'HIDDEN', 'DELETED'].includes(body.status)) {
+        return NextResponse.json({ error: 'Ongeldige status' }, { status: 400 })
+      }
+      const review = await db.review.update({
+        where: { id },
+        data: { status: body.status },
+        select: { id: true, status: true },
+      })
+      return NextResponse.json({ review })
+    }
 
-    return NextResponse.json({ review })
+    // Content update
+    if (body.text !== undefined || body.dishName !== undefined) {
+      if (body.text !== undefined && body.text.trim() === '') {
+        return NextResponse.json({ error: 'Review tekst mag niet leeg zijn' }, { status: 400 })
+      }
+      const data: { text?: string; dishName?: string | null } = {}
+      if (body.text !== undefined) data.text = body.text.trim()
+      if (body.dishName !== undefined) data.dishName = body.dishName || null
+
+      const review = await db.review.update({
+        where: { id },
+        data,
+        select: { id: true, text: true, dishName: true, updatedAt: true },
+      })
+      return NextResponse.json({ review })
+    }
+
+    return NextResponse.json({ error: 'Geen geldige velden opgegeven' }, { status: 400 })
   } catch (error: unknown) {
     if (hasPrismaCode(error, 'P2025')) {
-      return NextResponse.json(
-        { error: 'Review niet gevonden' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Review niet gevonden' }, { status: 404 })
     }
-    return NextResponse.json(
-      { error: 'Error updating review' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Error updating review' }, { status: 500 })
   }
 }
 
