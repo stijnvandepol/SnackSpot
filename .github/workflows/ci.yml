@@ -28,8 +28,6 @@ jobs:
       RESEND_API_KEY: re_placeholder_key
       RESEND_FROM_EMAIL: SnackSpot <noreply@snackspot.online>
       NEXT_PUBLIC_APP_URL: https://snackspot.online
-      NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
-      TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
 
     steps:
       - name: Check out repository
@@ -85,8 +83,6 @@ jobs:
       NEXT_PUBLIC_APP_URL: https://snackspot.online
       NEXT_PUBLIC_MINIO_PUBLIC_URL: https://snackspot.online
       NEXT_PUBLIC_MINIO_BUCKET: snackspot
-      NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
-      TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
 
     steps:
       - name: Check out repository
