@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, MouseEvent } from 'react'
+import Image from 'next/image'
 import { avatarUrl } from '@/lib/avatar'
 
 interface AvatarLightboxProps {
@@ -56,7 +57,15 @@ export function AvatarLightbox({ avatarKey, username, size = 'md' }: AvatarLight
         disabled={!avatar}
       >
         {avatar ? (
-          <img src={avatar} alt="" className="h-full w-full object-cover" />
+          <span className="relative block h-full w-full">
+            <Image
+              src={avatar}
+              alt={`${username}'s profile picture`}
+              fill
+              sizes="64px"
+              className="object-cover"
+            />
+          </span>
         ) : (
           username[0]
         )}
