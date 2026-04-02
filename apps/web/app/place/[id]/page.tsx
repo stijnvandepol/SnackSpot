@@ -1,8 +1,27 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { prisma } from '@/lib/db'
 import { getSiteUrl } from '@/lib/site-url'
 import { PlaceReviewsSection } from '@/components/place-reviews-section'
+
+const PlaceMap = dynamic(
+  () => import('@/components/ui/map').then((m) => m.Map),
+  {
+    ssr: false,
+    loading: () => <div className="h-48 rounded-xl bg-snack-surface animate-pulse" />,
+  }
+)
+
+const PlaceMarker = dynamic(
+  () => import('@/components/ui/map').then((m) => m.MapMarker),
+  { ssr: false }
+)
+
+const PlaceMarkerContent = dynamic(
+  () => import('@/components/ui/map').then((m) => m.MarkerContent),
+  { ssr: false }
+)
 
 interface PlaceRow {
   id: string
@@ -84,7 +103,7 @@ export default async function PlacePage({
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
+    <div className="mx-auto max-w-5xl px-4 py-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Link href={backHref} className="btn-secondary text-sm">Back</Link>
@@ -93,42 +112,58 @@ export default async function PlacePage({
         </Link>
       </div>
 
-      <div className="card mb-6 p-5">
-        <h1 className="text-2xl font-heading font-bold text-snack-text">{place.name}</h1>
-        <p className="mt-1 text-sm text-snack-muted">{place.address}</p>
+      <div className="md:grid md:grid-cols-12 md:gap-6 md:items-start">
+        {/* Left column: place info card + map */}
+        <div className="md:col-span-5 mb-6 md:mb-0 space-y-4">
+          <div className="card p-5">
+            <h1 className="text-2xl font-heading font-bold text-snack-text">{place.name}</h1>
+            <p className="mt-1 text-sm text-snack-muted">{place.address}</p>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl bg-snack-surface px-4 py-3">
-            <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Rating</p>
-            <div className="mt-1 flex items-center gap-2">
-              <span className="text-snack-rating">{place.avg_rating !== null ? '★'.repeat(Math.max(1, Math.round(place.avg_rating ?? 0))) : '—'}</span>
-              <span className="font-semibold text-snack-text">{place.avg_rating?.toFixed(1) ?? 'No rating yet'}</span>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl bg-snack-surface px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Rating</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="text-snack-rating">{place.avg_rating !== null ? '★'.repeat(Math.max(1, Math.round(place.avg_rating ?? 0))) : '—'}</span>
+                  <span className="font-semibold text-snack-text">{place.avg_rating?.toFixed(1) ?? 'No rating yet'}</span>
+                </div>
+              </div>
+              <div className="rounded-xl bg-snack-surface px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Reviews</p>
+                <p className="mt-1 font-semibold text-snack-text">{place.review_count} {place.review_count === 1 ? 'post' : 'posts'}</p>
+              </div>
+              <a
+                href={`https://www.google.com/maps?q=${place.lat},${place.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl bg-snack-surface px-4 py-3 transition hover:bg-[#eef2f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2"
+                aria-label={`Open ${place.name} in maps`}
+              >
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Directions</p>
+                <p className="mt-1 font-semibold text-snack-primary">Open in maps</p>
+              </a>
             </div>
           </div>
-          <div className="rounded-xl bg-snack-surface px-4 py-3">
-            <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Reviews</p>
-            <p className="mt-1 font-semibold text-snack-text">{place.review_count} {place.review_count === 1 ? 'post' : 'posts'}</p>
-          </div>
-          <a
-            href={`https://www.google.com/maps?q=${place.lat},${place.lng}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-xl bg-snack-surface px-4 py-3 transition hover:bg-[#eef2f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2"
-            aria-label={`Open ${place.name} in maps`}
+          <PlaceMap
+            viewport={{ center: [place.lng, place.lat], zoom: 14 }}
+            className="h-48 rounded-xl overflow-hidden"
           >
-            <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Directions</p>
-            <p className="mt-1 font-semibold text-snack-primary">Open in maps</p>
-          </a>
+            <PlaceMarker longitude={place.lng} latitude={place.lat}>
+              <PlaceMarkerContent />
+            </PlaceMarker>
+          </PlaceMap>
+        </div>
+
+        {/* Right column: reviews */}
+        <div className="md:col-span-7">
+          <h2 className="text-base font-semibold text-snack-text mb-3">Reviews</h2>
+          <PlaceReviewsSection
+            placeId={place.id}
+            placeName={place.name}
+            placeAddress={place.address}
+            from={from}
+          />
         </div>
       </div>
-
-      <h2 className="text-base font-semibold text-snack-text mb-3">Reviews</h2>
-      <PlaceReviewsSection
-        placeId={place.id}
-        placeName={place.name}
-        placeAddress={place.address}
-        from={from}
-      />
     </div>
   )
 }
