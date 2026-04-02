@@ -81,6 +81,7 @@ export default function ProductPage() {
             <a href="#features" className="hover:text-snack-text">Features</a>
             <a href="#why" className="hover:text-snack-text">Why SnackSpot</a>
             <Link href="/guides" className="hover:text-snack-text">Guides</Link>
+            <Link href="/releases" className="hover:text-snack-text">Release Notes</Link>
           </nav>
           <div className="flex items-center gap-2">
             <Link href="/auth/login" className="btn-ghost text-sm">Log in</Link>

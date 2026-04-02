@@ -1,0 +1,139 @@
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
+import { SnackSpotLogo } from '@/components/snack-spot-logo'
+
+export const metadata: Metadata = {
+  title: 'Release Notes – SnackSpot',
+  description: 'What's new in SnackSpot — features, improvements, and fixes.',
+  alternates: { canonical: '/releases' },
+  robots: { index: true, follow: true },
+}
+
+type ChangeType = 'new' | 'improved' | 'fixed' | 'removed'
+
+interface Change {
+  type: ChangeType
+  text: string
+}
+
+interface Release {
+  version: string
+  date: string
+  summary: string
+  changes: Change[]
+}
+
+const CHANGE_TYPE_CONFIG: Record<ChangeType, { label: string; className: string }> = {
+  new:      { label: 'New',      className: 'bg-green-100 text-green-700' },
+  improved: { label: 'Improved', className: 'bg-blue-100 text-blue-700' },
+  fixed:    { label: 'Fixed',    className: 'bg-amber-100 text-amber-700' },
+  removed:  { label: 'Removed',  className: 'bg-red-100 text-red-700' },
+}
+
+// Add new releases at the top of this array.
+const releases: Release[] = [
+  {
+    version: '1.3.0',
+    date: '2 April 2025',
+    summary: 'Email notifications, simplified stats, and SEO improvements.',
+    changes: [
+      { type: 'new',      text: 'Email notifications for likes, comments, mentions, and badges.' },
+      { type: 'new',      text: 'Dynamic Open Graph images for places, reviews, and user profiles.' },
+      { type: 'new',      text: 'BreadcrumbList structured data on place, review, and profile pages.' },
+      { type: 'improved', text: 'Stats and achievements page redesigned with inline descriptions and unified earned/in-progress list.' },
+      { type: 'improved', text: 'Place page titles now include the city name for better SEO.' },
+      { type: 'improved', text: 'User profile titles now show @username.' },
+      { type: 'removed',  text: 'Push notification settings — push was never fully functional and has been removed.' },
+    ],
+  },
+  {
+    version: '1.2.0',
+    date: '18 March 2025',
+    summary: 'Dark mode, verification badges, and code quality improvements.',
+    changes: [
+      { type: 'new',      text: 'Dark mode support across the entire app.' },
+      { type: 'new',      text: 'Verification badge for trusted contributors.' },
+      { type: 'improved', text: 'General code cleanup and performance improvements.' },
+    ],
+  },
+]
+
+export default function ReleasesPage() {
+  return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.14),_transparent_32%),linear-gradient(180deg,#fff7ed_0%,#ffffff_28%,#ffffff_100%)] text-snack-text">
+      <header className="sticky top-0 z-30 border-b border-black/5 bg-white/85 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
+          <Link href="/" className="shrink-0">
+            <SnackSpotLogo className="text-xl" />
+          </Link>
+          <nav aria-label="Release notes navigation" className="hidden items-center gap-5 text-sm text-snack-muted md:flex">
+            <Link href="/product" className="hover:text-snack-text">About</Link>
+            <Link href="/guides" className="hover:text-snack-text">Guides</Link>
+            <span className="font-semibold text-snack-text">Release Notes</span>
+          </nav>
+          <div className="flex items-center gap-2">
+            <Link href="/auth/login" className="btn-ghost text-sm">Log in</Link>
+            <Link href="/auth/register" className="btn-primary text-sm">Create account</Link>
+          </div>
+        </div>
+      </header>
+
+      <BreadcrumbJsonLd items={[{ name: 'Release Notes', path: '/releases' }]} />
+
+      <main className="mx-auto max-w-3xl px-4 py-16 md:py-24">
+        <div className="mb-12">
+          <p className="mb-4 inline-flex rounded-full border border-snack-primary/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-snack-primary">
+            Changelog
+          </p>
+          <h1 className="font-heading text-4xl font-bold leading-tight text-snack-text md:text-5xl">
+            Release Notes
+          </h1>
+          <p className="mt-4 text-base leading-7 text-snack-muted">
+            What we've shipped — new features, improvements, and fixes.
+          </p>
+        </div>
+
+        <ol className="relative border-l border-snack-border">
+          {releases.map((release) => (
+            <li key={release.version} className="mb-12 ml-6">
+              <span
+                className="absolute -left-2.5 mt-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-snack-primary shadow-sm"
+                aria-hidden="true"
+              />
+
+              <div className="flex flex-wrap items-center gap-3 mb-3">
+                <span className="rounded-full bg-snack-primary px-3 py-0.5 text-xs font-bold text-white">
+                  v{release.version}
+                </span>
+                <time className="text-sm text-snack-muted">{release.date}</time>
+              </div>
+
+              <p className="mb-4 text-base font-semibold text-snack-text">{release.summary}</p>
+
+              <ul className="space-y-2">
+                {release.changes.map((change, i) => {
+                  const config = CHANGE_TYPE_CONFIG[change.type]
+                  return (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${config.className}`}>
+                        {config.label}
+                      </span>
+                      <span className="text-sm leading-5 text-snack-text">{change.text}</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </li>
+          ))}
+        </ol>
+      </main>
+
+      <footer className="px-4 pb-10 pt-4 text-center">
+        <p className="text-sm font-medium text-snack-muted">
+          &copy; {new Date().getFullYear()} SnackSpot
+        </p>
+      </footer>
+    </div>
+  )
+}
