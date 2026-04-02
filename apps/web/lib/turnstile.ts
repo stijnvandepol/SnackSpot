@@ -21,6 +21,7 @@ export async function verifyTurnstileToken(token: string, ip: string): Promise<b
         response: token,
         remoteip: ip,
       }),
+      signal: AbortSignal.timeout(5000),
     })
 
     if (!res.ok) {
