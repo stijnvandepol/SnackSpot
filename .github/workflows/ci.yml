@@ -1,0 +1,95 @@
+name: CI — Pull Request Checks
+
+on:
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress CI runs for the same PR branch when a new commit is pushed.
+concurrency:
+  group: ci-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── Job 1: Unit tests ──────────────────────────────────────────────────────
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @snackspot/db generate
+
+      - name: Run unit tests
+        run: pnpm --filter web test
+
+  # ─── Job 2: Build verification ───────────────────────────────────────────────
+  # Runs in parallel with the test job.
+  # Uses the same placeholder env vars as the Dockerfiles so Next.js env
+  # validation passes without real secrets.
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+      REDIS_URL: redis://localhost:6379
+      MINIO_ENDPOINT: localhost
+      MINIO_ACCESS_KEY: placeholder-key
+      MINIO_SECRET_KEY: placeholder-secret-key-min
+      MINIO_PUBLIC_URL: https://snackspot.online
+      JWT_ACCESS_SECRET: placeholder-access-secret-at-least-32-chars-long
+      JWT_REFRESH_SECRET: placeholder-refresh-secret-at-least-32-chars-long
+      RESEND_API_KEY: placeholder-resend-api-key
+      NEXT_PUBLIC_APP_URL: https://snackspot.online
+      NEXT_PUBLIC_MINIO_PUBLIC_URL: https://snackspot.online
+      NEXT_PUBLIC_MINIO_BUCKET: snackspot
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @snackspot/db generate
+
+      - name: Build web app
+        run: pnpm --filter web build
+
+      - name: Build worker
+        run: pnpm --filter worker build
+
+      - name: Build admin app
+        run: pnpm --filter @snackspot/admin build

@@ -1,4 +1,4 @@
-name: Deploy SnackSpot
+name: CD — Deploy to Production
 
 on:
   workflow_dispatch:
@@ -10,12 +10,12 @@ on:
         type: string
 
 concurrency:
-  group: deploy-snackspot
+  group: cd-deploy
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Deploy
+    name: Deploy to Production
     runs-on:
       - self-hosted
     timeout-minutes: 30
@@ -32,15 +32,6 @@ jobs:
         run: |
           docker --version
           docker compose version
-
-      - name: Run unit tests
-        run: |
-          docker build \
-            --target test \
-            --progress=plain \
-            --no-cache-filter test \
-            -f apps/web/Dockerfile \
-            .
 
       - name: Deploy stack
         run: docker compose up -d --build --remove-orphans
