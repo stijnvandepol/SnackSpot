@@ -47,7 +47,7 @@ export function ReviewInteractions({
   editHref,
   isOwnerAllowed,
 }: ReviewInteractionsProps) {
-  const { user, accessToken } = useAuth()
+  const { user, accessToken, loading: authLoading } = useAuth()
   const isOwner = !!user && user.id === reviewUserId
 
   const [likedByMe, setLikedByMe] = useState(false)
@@ -64,6 +64,7 @@ export function ReviewInteractions({
   const [reportError, setReportError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (authLoading) return
     if (!accessToken) {
       setLikeStatusLoaded(true)
       return
@@ -75,7 +76,7 @@ export function ReviewInteractions({
       .then((json) => setLikedByMe(Boolean(json.data?.likedByMe)))
       .catch(() => {})
       .finally(() => setLikeStatusLoaded(true))
-  }, [reviewId, accessToken])
+  }, [reviewId, accessToken, authLoading])
 
   useEffect(() => {
     fetch(`/api/v1/reviews/${reviewId}/comments?limit=50`, {

@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    return ok({ data: preferences })
+    return ok(preferences)
   } catch (e) {
     return serverError('notification-preferences/get', e)
   }
@@ -49,7 +49,7 @@ export async function PATCH(req: NextRequest) {
       },
     })
 
-    return ok({ data: preferences })
+    return ok(preferences)
   } catch (e) {
     return serverError('notification-preferences/update', e)
   }

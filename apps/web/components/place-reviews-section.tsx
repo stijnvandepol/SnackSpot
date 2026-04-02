@@ -29,13 +29,14 @@ interface PlaceReviewsSectionProps {
 }
 
 export function PlaceReviewsSection({ placeId, placeName, placeAddress, from }: PlaceReviewsSectionProps) {
-  const { accessToken } = useAuth()
+  const { accessToken, loading: authLoading } = useAuth()
   const [reviews, setReviews] = useState<Review[]>([])
   const [sort, setSort] = useState<'new' | 'top'>('new')
   const [loading, setLoading] = useState(true)
   const [reviewsError, setReviewsError] = useState<string | null>(null)
 
   const fetchReviews = useCallback(() => {
+    if (authLoading) return
     setLoading(true)
     setReviewsError(null)
     fetch(`/api/v1/places/${placeId}/reviews?sort=${sort}&limit=20`, {
@@ -45,7 +46,7 @@ export function PlaceReviewsSection({ placeId, placeName, placeAddress, from }: 
       .then((json) => setReviews(json.data?.data ?? []))
       .catch(() => setReviewsError('Could not load reviews for this place.'))
       .finally(() => setLoading(false))
-  }, [placeId, sort, accessToken])
+  }, [placeId, sort, accessToken, authLoading])
 
   useEffect(() => {
     fetchReviews()
