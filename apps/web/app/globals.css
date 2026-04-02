@@ -5,7 +5,7 @@
 @layer base {
   :root {
     --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
-    --snack-primary: #C2410C;
+    --snack-primary: #F97316;
     --snack-accent: #DC2626;
     --snack-rating: #F59E0B;
     --snack-bg: #FFFFFF;
