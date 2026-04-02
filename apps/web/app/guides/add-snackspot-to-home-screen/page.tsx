@@ -42,6 +42,18 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/guides/add-snackspot-to-home-screen',
   },
+  openGraph: {
+    type: 'article',
+    title: 'Add SnackSpot to your home screen (Android & iPhone)',
+    description: 'Step-by-step guide to add SnackSpot to your mobile home screen on Android and iOS, including fixes for common issues.',
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Add SnackSpot to your home screen (Android & iPhone)',
+    description: 'Step-by-step guide to add SnackSpot to your mobile home screen on Android and iOS, including fixes for common issues.',
+    images: ['/twitter-image'],
+  },
 }
 
 export default function AddSnackSpotToHomescreenGuidePage() {

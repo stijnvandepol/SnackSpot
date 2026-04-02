@@ -37,6 +37,18 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/guides/how-to-create-an-account',
   },
+  openGraph: {
+    type: 'article',
+    title: 'How to create a SnackSpot account',
+    description: 'Create a free SnackSpot account in under a minute. All you need is an email address and a username.',
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'How to create a SnackSpot account',
+    description: 'Create a free SnackSpot account in under a minute. All you need is an email address and a username.',
+    images: ['/twitter-image'],
+  },
 }
 
 export default function HowToCreateAnAccountPage() {

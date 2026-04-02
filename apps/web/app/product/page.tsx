@@ -4,7 +4,7 @@ import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 import { SnackSpotLogo } from '@/components/snack-spot-logo'
 
 export const metadata: Metadata = {
-  title: 'SnackSpot – Discover Hidden Food Gems Near You',
+  title: { absolute: 'Discover Hidden Food Gems Near You | SnackSpot' },
   description:
     'SnackSpot is a community app for discovering under-the-radar food spots, posting photo reviews, and sharing smaller local places worth knowing.',
   alternates: {
@@ -12,14 +12,14 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    title: 'SnackSpot – Discover Hidden Food Gems Near You',
+    title: 'Discover Hidden Food Gems Near You | SnackSpot',
     description:
       'SnackSpot is a community app for discovering under-the-radar food spots, posting photo reviews, and sharing smaller local places worth knowing.',
     images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SnackSpot – Discover Hidden Food Gems Near You',
+    title: 'Discover Hidden Food Gems Near You | SnackSpot',
     description:
       'SnackSpot is a community app for discovering under-the-radar food spots, posting photo reviews, and sharing smaller local places worth knowing.',
     images: ['/twitter-image'],

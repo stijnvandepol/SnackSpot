@@ -42,6 +42,18 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/guides/how-to-post-a-review',
   },
+  openGraph: {
+    type: 'article',
+    title: 'How to post a review on SnackSpot',
+    description: 'Share a photo review of a local food spot on SnackSpot. Step-by-step instructions for posting your first review.',
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'How to post a review on SnackSpot',
+    description: 'Share a photo review of a local food spot on SnackSpot. Step-by-step instructions for posting your first review.',
+    images: ['/twitter-image'],
+  },
 }
 
 export default function HowToPostAReviewPage() {

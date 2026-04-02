@@ -4,10 +4,22 @@ import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 import { SnackSpotLogo } from '@/components/snack-spot-logo'
 
 export const metadata: Metadata = {
-  title: 'Release Notes – SnackSpot',
+  title: { absolute: 'Release Notes | SnackSpot' },
   description: "What's new in SnackSpot — features, improvements, and fixes.",
   alternates: { canonical: '/releases' },
   robots: { index: true, follow: true },
+  openGraph: {
+    type: 'website',
+    title: 'Release Notes | SnackSpot',
+    description: "What's new in SnackSpot — features, improvements, and fixes.",
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Release Notes | SnackSpot',
+    description: "What's new in SnackSpot — features, improvements, and fixes.",
+    images: ['/twitter-image'],
+  },
 }
 
 type ChangeType = 'new' | 'improved' | 'fixed' | 'removed'
