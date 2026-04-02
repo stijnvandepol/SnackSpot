@@ -1,28 +1,10 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
 import { prisma } from '@/lib/db'
 import { getSiteUrl } from '@/lib/site-url'
 import { PlaceReviewsSection } from '@/components/place-reviews-section'
 import { Breadcrumb } from '@/components/breadcrumb'
-
-const PlaceMap = dynamic(
-  () => import('@/components/ui/map').then((m) => m.Map),
-  {
-    ssr: false,
-    loading: () => <div className="h-48 rounded-xl bg-snack-surface animate-pulse" />,
-  }
-)
-
-const PlaceMarker = dynamic(
-  () => import('@/components/ui/map').then((m) => m.MapMarker),
-  { ssr: false }
-)
-
-const PlaceMarkerContent = dynamic(
-  () => import('@/components/ui/map').then((m) => m.MarkerContent),
-  { ssr: false }
-)
+import { PlaceMapEmbed } from '@/components/place-map-embed'
 
 interface PlaceRow {
   id: string
@@ -159,14 +141,11 @@ export default async function PlacePage({
               </a>
             </div>
           </div>
-          <PlaceMap
-            viewport={{ center: [place.lng, place.lat], zoom: 14 }}
+          <PlaceMapEmbed
+            lat={place.lat}
+            lng={place.lng}
             className="h-48 rounded-xl overflow-hidden"
-          >
-            <PlaceMarker longitude={place.lng} latitude={place.lat}>
-              <PlaceMarkerContent />
-            </PlaceMarker>
-          </PlaceMap>
+          />
         </div>
 
         {/* Right column: reviews */}
