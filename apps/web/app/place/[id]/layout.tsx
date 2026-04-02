@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/db'
+import { extractCity } from '@/lib/utils'
 
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> },
@@ -31,18 +32,20 @@ export async function generateMetadata(
     }
   }
 
+  const city = extractCity(place.address)
+  const titleBase = city ? `${place.name} in ${city}` : place.name
   const reviewLabel = place._count.reviews === 1 ? '1 review' : `${place._count.reviews} reviews`
   const description = `${place.name} on SnackSpot. View ${reviewLabel}, the address, and community recommendations for this food spot.`
 
   return {
-    title: `${place.name}`,
+    title: titleBase,
     description,
     openGraph: {
-      title: `${place.name} | SnackSpot`,
+      title: `${titleBase} | SnackSpot`,
       description,
     },
     twitter: {
-      title: `${place.name} | SnackSpot`,
+      title: `${titleBase} | SnackSpot`,
       description,
     },
     alternates: {

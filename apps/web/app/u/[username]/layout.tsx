@@ -49,14 +49,14 @@ export async function generateMetadata(
     `${user.username} on SnackSpot. View ${reviewLabel} and recent food spot recommendations from this profile.`
 
   return {
-    title: `${user.username}`,
+    title: `@${user.username}`,
     description,
     openGraph: {
-      title: `${user.username} | SnackSpot`,
+      title: `@${user.username} | SnackSpot`,
       description,
     },
     twitter: {
-      title: `${user.username} | SnackSpot`,
+      title: `@${user.username} | SnackSpot`,
       description,
     },
     alternates: {

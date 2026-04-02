@@ -72,6 +72,7 @@ export default async function PlacePage({
 
   const backHref = resolveBackHref(from)
 
+  const appUrl = getSiteUrl()
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
@@ -85,7 +86,7 @@ export default async function PlacePage({
       latitude: place.lat,
       longitude: place.lng,
     },
-    url: `${getSiteUrl()}/place/${place.id}`,
+    url: `${appUrl}/place/${place.id}`,
     ...(place.avg_rating !== null && place.review_count > 0
       ? {
           aggregateRating: {
@@ -99,9 +100,19 @@ export default async function PlacePage({
       : {}),
   }
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'SnackSpot', item: appUrl },
+      { '@type': 'ListItem', position: 2, name: place.name, item: `${appUrl}/place/${place.id}` },
+    ],
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <Breadcrumb items={buildPlaceBreadcrumb(from, place.name)} />
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Link href={backHref} className="btn-secondary text-sm">Back</Link>

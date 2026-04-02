@@ -129,6 +129,15 @@ export default async function ReviewPage({
     .filter((img): img is NonNullable<typeof img> => img !== null)
 
   const appUrl = getSiteUrl()
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'SnackSpot', item: appUrl },
+      { '@type': 'ListItem', position: 2, name: review.place.name, item: `${appUrl}/place/${review.place.id}` },
+      { '@type': 'ListItem', position: 3, name: review.dishName ?? `Review of ${review.place.name}`, item: `${appUrl}/review/${review.id}` },
+    ],
+  }
   const reviewJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Review',
@@ -156,6 +165,7 @@ export default async function ReviewPage({
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6 space-y-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewJsonLd) }} />
       <Breadcrumb items={buildReviewBreadcrumb(from, review.place.name, review.place.id, parsedPlaceContext)} />
       <div className="flex items-center gap-2">
