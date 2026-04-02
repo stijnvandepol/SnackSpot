@@ -183,7 +183,7 @@ export function UserMentionInput({
         <div
           id="mention-suggestions"
           role="listbox"
-          className="absolute z-50 w-full mt-1 bg-white border border-[#ececec] rounded-xl shadow-lg max-h-48 overflow-y-auto"
+          className="absolute z-50 w-full mt-1 bg-snack-background border border-snack-border rounded-xl shadow-lg max-h-48 overflow-y-auto"
         >
           {suggestions.map((user, index) => (
             <button

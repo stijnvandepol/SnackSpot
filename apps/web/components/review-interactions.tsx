@@ -161,7 +161,7 @@ export function ReviewInteractions({
           <p className="text-xs text-snack-muted">{commentCount} comments</p>
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-[#ededed]">
+        <div className="flex items-center justify-between pt-2 border-t border-snack-border">
           <div className="flex items-center gap-2">
             <AvatarLightbox avatarKey={avatarKey} username={reviewUsername} size="md" />
             <Link href={`/u/${reviewUsername}`} className="text-sm text-snack-muted hover:underline">
@@ -213,7 +213,7 @@ export function ReviewInteractions({
         ) : (
           <div className="space-y-3">
             {comments.map((comment) => (
-              <div key={comment.id} className="rounded-xl border border-[#ececec] p-3">
+              <div key={comment.id} className="rounded-xl border border-snack-border p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <AvatarLightbox avatarKey={comment.user.avatarKey} username={comment.user.username} size="sm" />
@@ -259,7 +259,7 @@ export function ReviewInteractions({
       {user && !isOwner && !reported && (
         <details className="rounded-xl border border-snack-border px-4 py-3 text-sm">
           <summary className="cursor-pointer font-medium text-snack-muted hover:text-snack-text">Report this review</summary>
-          <div className="mt-3 space-y-2 pl-2 border-l-2 border-[#ececec]">
+          <div className="mt-3 space-y-2 pl-2 border-l-2 border-snack-border">
             <textarea
               className="input text-sm min-h-[80px]"
               placeholder="Describe the issue…"
