@@ -413,10 +413,10 @@ model Notification {
 
 model NotificationPreferences {
   userId         String   @id @map("user_id")
-  emailOnLike    Boolean  @default(true) @map("email_on_like")
-  emailOnComment Boolean  @default(true) @map("email_on_comment")
-  emailOnMention Boolean  @default(true) @map("email_on_mention")
-  emailOnBadge   Boolean  @default(true) @map("email_on_badge")
+  emailOnLike    Boolean  @default(false) @map("email_on_like")
+  emailOnComment Boolean  @default(true)  @map("email_on_comment")
+  emailOnMention Boolean  @default(false) @map("email_on_mention")
+  emailOnBadge   Boolean  @default(false) @map("email_on_badge")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
