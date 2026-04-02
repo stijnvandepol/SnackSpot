@@ -44,8 +44,11 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
 
+      - name: Configure pnpm for CI
+        run: echo "node-linker=hoisted" >> .npmrc
+
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile --ignore-scripts --config.node-linker=hoisted
+        run: pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Generate Prisma client
         run: node node_modules/prisma/build/index.js generate --schema=packages/db/prisma/schema.prisma
@@ -94,8 +97,11 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
 
+      - name: Configure pnpm for CI
+        run: echo "node-linker=hoisted" >> .npmrc
+
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile --ignore-scripts --config.node-linker=hoisted
+        run: pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Generate Prisma client
         run: node node_modules/prisma/build/index.js generate --schema=packages/db/prisma/schema.prisma
