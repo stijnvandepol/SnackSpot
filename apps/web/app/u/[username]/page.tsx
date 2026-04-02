@@ -83,7 +83,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
         </div>
       </div>
 
-      <h2 className="font-heading font-semibold text-snack-text mb-4">Reviews</h2>
+      <h2 className="text-base font-semibold text-snack-text mb-3">Reviews</h2>
       <UserReviewsList username={user.username} />
 
       <div className="mt-6 text-center">
