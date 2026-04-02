@@ -104,7 +104,6 @@ model User {
   notificationPreferences   NotificationPreferences?
   reviewMentionsReceived    ReviewMention[] @relation("MentionedUser")
   reviewMentionsGiven       ReviewMention[] @relation("MentioningUser")
-  pushSubscriptions         PushSubscription[]
   actorNotifications        Notification[] @relation("NotificationActor")
   blockedWords              BlockedWord[]
   reviewedFlags             FlaggedComment[] @relation("FlaggedCommentReviewer")
@@ -418,10 +417,6 @@ model NotificationPreferences {
   emailOnComment Boolean  @default(true) @map("email_on_comment")
   emailOnMention Boolean  @default(true) @map("email_on_mention")
   emailOnBadge   Boolean  @default(true) @map("email_on_badge")
-  pushOnLike     Boolean  @default(true) @map("push_on_like")
-  pushOnComment  Boolean  @default(true) @map("push_on_comment")
-  pushOnMention  Boolean  @default(true) @map("push_on_mention")
-  pushOnBadge    Boolean  @default(true) @map("push_on_badge")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -446,18 +441,3 @@ model ReviewMention {
   @@map("review_mentions")
 }
 
-model PushSubscription {
-  id        String   @id @default(cuid())
-  userId    String   @map("user_id")
-  endpoint  String   @unique
-  p256dhKey String   @map("p256dh_key")
-  authKey   String   @map("auth_key")
-  userAgent String?  @map("user_agent")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@map("push_subscriptions")
-}
