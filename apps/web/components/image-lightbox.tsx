@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback, useRef, MouseEvent, CSSProperties, TouchEvent } from 'react'
+import Image from 'next/image'
 
 export interface LightboxImage {
   src: string
@@ -90,15 +91,16 @@ export function ImageLightbox({
             key={img.src}
             type="button"
             onClick={() => setOpenIndex(idx)}
-            className={itemClassName ?? 'cursor-zoom-in'}
+            className={`relative ${itemClassName ?? 'cursor-zoom-in'}`}
             aria-label={`View ${img.alt} in full size`}
           >
-            <img
+            <Image
               src={img.thumbnail}
               alt={img.alt}
+              fill
+              sizes="(max-width: 512px) 33vw, 170px"
               className={thumbnailClassName}
-              loading={img.priority ? 'eager' : 'lazy'}
-              fetchPriority={img.priority ? 'high' : 'auto'}
+              priority={img.priority}
             />
           </button>
         ))}

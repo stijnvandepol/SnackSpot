@@ -1,3 +1,7 @@
+#claude
+.claude/
+docs/
+
 # Dependencies
 node_modules/
 .pnpm-store/
