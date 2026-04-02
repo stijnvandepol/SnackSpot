@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from './auth-provider'
 import { avatarUrl } from '@/lib/avatar'
@@ -51,10 +52,16 @@ export function TopNav() {
               <Link
                 href="/profile"
                 aria-label="Open profile"
-                className="h-9 w-9 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-sm uppercase"
+                className="h-11 w-11 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-sm uppercase overflow-hidden"
               >
                 {user.avatarKey ? (
-                  <img src={avatarUrl(user.avatarKey) ?? undefined} alt="Profile avatar" className="h-full w-full rounded-full object-cover" />
+                  <Image
+                    src={avatarUrl(user.avatarKey) ?? ''}
+                    alt="Profile avatar"
+                    width={44}
+                    height={44}
+                    className="rounded-full object-cover"
+                  />
                 ) : (
                   user.username[0]
                 )}
