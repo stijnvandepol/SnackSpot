@@ -87,7 +87,7 @@ export function PlaceMap({ position, places, radius }: PlaceMapProps) {
   }
 
   return (
-    <div className="w-full rounded-xl overflow-hidden border border-[#ececec] mb-6 shadow-sm" style={{ height: '420px' }}>
+    <div className="w-full rounded-xl overflow-hidden border border-snack-border mb-6 shadow-sm" style={{ height: '420px' }}>
       <Map
         theme="light"
         center={[position.lng, position.lat]}
@@ -103,7 +103,7 @@ export function PlaceMap({ position, places, radius }: PlaceMapProps) {
           </MarkerContent>
           <MarkerPopup closeButton>
             <p className="font-semibold text-sm">Your location</p>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-snack-muted mt-0.5">
               Search radius: {radius >= 1000 ? `${radius / 1000} km` : `${radius} m`}
             </p>
           </MarkerPopup>
@@ -121,18 +121,18 @@ export function PlaceMap({ position, places, radius }: PlaceMapProps) {
             <MarkerPopup closeButton>
               <div className="min-w-[180px]">
                 <p className="font-semibold text-sm">{place.name}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{place.address}</p>
-                <div className="mt-2 pt-2 border-t border-gray-100 space-y-1">
+                <p className="text-xs text-snack-muted mt-0.5">{place.address}</p>
+                <div className="mt-2 pt-2 border-t border-snack-border space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-500">Distance</span>
+                    <span className="text-snack-muted">Distance</span>
                     <span className="font-medium text-[#FF712F]">{formatDistance(place.distance_m)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-500">Rating</span>
+                    <span className="text-snack-muted">Rating</span>
                     <span className="font-medium">{formatRating(place.avg_rating)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-500">Reviews</span>
+                    <span className="text-snack-muted">Reviews</span>
                     <span className="font-medium">{place.review_count}</span>
                   </div>
                 </div>

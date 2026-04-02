@@ -575,7 +575,7 @@ export default function AddReviewPage() {
               }`}>
                 {i + 1}
               </div>
-              {i < 2 && <div className="h-0.5 w-8 flex-1 bg-[#e6e6e6]" />}
+              {i < 2 && <div className="h-0.5 w-8 flex-1 bg-snack-border" />}
             </div>
           ))}
         </div>
@@ -597,7 +597,7 @@ export default function AddReviewPage() {
                 setSearchQuery('')
                 setSearchResults([])
               }}
-              className={`flex-1 rounded-xl border px-4 py-2 text-sm font-medium transition ${place.mode === 'existing' ? 'border-snack-primary bg-snack-surface text-snack-primary' : 'border-[#e4e4e4] text-snack-muted'}`}
+              className={`flex-1 rounded-xl border px-4 py-2 text-sm font-medium transition ${place.mode === 'existing' ? 'border-snack-primary bg-snack-surface text-snack-primary' : 'border-snack-border text-snack-muted'}`}
             >
               Existing place
             </button>
@@ -608,7 +608,7 @@ export default function AddReviewPage() {
                 setSearchQuery('')
                 setSearchResults([])
               }}
-              className={`flex-1 rounded-xl border px-4 py-2 text-sm font-medium transition ${place.mode === 'new' ? 'border-snack-primary bg-snack-surface text-snack-primary' : 'border-[#e4e4e4] text-snack-muted'}`}
+              className={`flex-1 rounded-xl border px-4 py-2 text-sm font-medium transition ${place.mode === 'new' ? 'border-snack-primary bg-snack-surface text-snack-primary' : 'border-snack-border text-snack-muted'}`}
             >
               New place
             </button>
@@ -634,7 +634,7 @@ export default function AddReviewPage() {
                 
                 {/* Search results dropdown */}
                 {searchResults.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-snack-border rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-snack-background border border-snack-border rounded-xl shadow-lg max-h-64 overflow-y-auto">
                     {searchResults.map((result) => (
                       <button
                         key={result.id}
@@ -827,7 +827,7 @@ export default function AddReviewPage() {
                     className={`rounded-full border px-3 py-2 text-xs font-medium transition ${
                       isActive
                         ? 'border-snack-primary bg-snack-primary text-white'
-                        : 'border-snack-border bg-white text-snack-muted hover:border-snack-primary hover:text-snack-primary'
+                        : 'border-snack-border bg-snack-background text-snack-muted hover:border-snack-primary hover:text-snack-primary'
                     }`}
                     title={option.hint}
                     aria-pressed={isActive}

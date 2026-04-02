@@ -235,7 +235,7 @@ export default function SearchPage() {
                   className={`shrink-0 rounded-full border px-3 py-2 text-xs font-medium transition ${
                     isActive
                       ? 'border-snack-primary bg-snack-primary text-white'
-                      : 'border-snack-border bg-white text-snack-muted hover:border-snack-primary hover:text-snack-primary'
+                      : 'border-snack-border bg-snack-background text-snack-muted hover:border-snack-primary hover:text-snack-primary'
                   }`}
                   title={option.hint}
                   aria-pressed={isActive}
