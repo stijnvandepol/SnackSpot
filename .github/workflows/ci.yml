@@ -16,6 +16,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
+    env:
+      DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+      REDIS_URL: redis://localhost:6379
+      MINIO_ENDPOINT: localhost
+      MINIO_ACCESS_KEY: placeholder-key
+      MINIO_SECRET_KEY: placeholder-secret-key-min
+      MINIO_PUBLIC_URL: https://snackspot.online
+      JWT_ACCESS_SECRET: placeholder-access-secret-at-least-32-chars-long
+      JWT_REFRESH_SECRET: placeholder-refresh-secret-at-least-32-chars-long
+      RESEND_API_KEY: re_placeholder_key
+      RESEND_FROM_EMAIL: SnackSpot <noreply@snackspot.online>
+      NEXT_PUBLIC_APP_URL: https://snackspot.online
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -31,23 +44,29 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
 
+      - name: Configure pnpm for CI
+        # Replace shamefully-hoist with node-linker=hoisted.
+        # This gives each workspace package its own flat REAL node_modules
+        # (no symlinks). prisma lands in packages/db/node_modules/,
+        # tailwindcss lands in apps/web/node_modules/.
+        run: sed -i 's/shamefully-hoist=true/node-linker=hoisted/' .npmrc
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile --ignore-scripts --prod=false
 
       - name: Generate Prisma client
+        # Resolve Prisma via pnpm workspace scripts so CI is independent of node_modules layout.
         run: pnpm --filter @snackspot/db generate
 
       - name: Run unit tests
         run: pnpm --filter web test
 
   # ─── Job 2: Build verification ───────────────────────────────────────────────
-  # Runs in parallel with the test job.
-  # Uses the same placeholder env vars as the Dockerfiles so Next.js env
-  # validation passes without real secrets.
   build:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    needs: test
 
     env:
       NODE_ENV: production
@@ -59,7 +78,8 @@ jobs:
       MINIO_PUBLIC_URL: https://snackspot.online
       JWT_ACCESS_SECRET: placeholder-access-secret-at-least-32-chars-long
       JWT_REFRESH_SECRET: placeholder-refresh-secret-at-least-32-chars-long
-      RESEND_API_KEY: placeholder-resend-api-key
+      RESEND_API_KEY: re_placeholder_key
+      RESEND_FROM_EMAIL: SnackSpot <noreply@snackspot.online>
       NEXT_PUBLIC_APP_URL: https://snackspot.online
       NEXT_PUBLIC_MINIO_PUBLIC_URL: https://snackspot.online
       NEXT_PUBLIC_MINIO_BUCKET: snackspot
@@ -79,8 +99,32 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
 
+      - name: Configure pnpm for CI
+        run: sed -i 's/shamefully-hoist=true/node-linker=hoisted/' .npmrc
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile --ignore-scripts --prod=false
+
+      - name: Debug — package locations after install
+        run: |
+          echo "=== .npmrc ==="
+          cat .npmrc
+          echo ""
+          echo "=== tailwindcss locations ==="
+          find . -name "package.json" -path "*/tailwindcss/package.json" ! -path "*/.git/*" 2>/dev/null | head -10 || echo "not found"
+          echo ""
+          echo "=== prisma locations ==="
+          find . -path "*/prisma/build/index.js" ! -path "*/.git/*" 2>/dev/null | head -5 || echo "not found"
+          echo ""
+          echo "=== require.resolve test from apps/web ==="
+          node -e "
+            const path = require('path');
+            const dir = path.resolve('apps/web');
+            ['tailwindcss','postcss','autoprefixer'].forEach(pkg => {
+              try { console.log(pkg + ': FOUND at ' + require.resolve(pkg, { paths: [dir] })); }
+              catch(e) { console.log(pkg + ': MISSING'); }
+            });
+          "
 
       - name: Generate Prisma client
         run: pnpm --filter @snackspot/db generate

@@ -2,7 +2,11 @@ import { Resend } from 'resend'
 import { env } from './env'
 import { escapeHtml } from './html'
 
-const resend = new Resend(env.RESEND_API_KEY)
+let _resend: Resend | null = null
+function getResend(): Resend {
+  if (!_resend) _resend = new Resend(env.RESEND_API_KEY)
+  return _resend
+}
 
 // ─── Trusted HTML type ────────────────────────────────────────────────────────
 //
@@ -545,7 +549,7 @@ type SendEmailWithFallbackOptions = {
 }
 
 async function sendEmailWithFallback({ to, subject, html, fallbackHtml, text, category }: SendEmailWithFallbackOptions): Promise<void> {
-  const primary = await resend.emails.send({
+  const primary = await getResend().emails.send({
     from: env.RESEND_FROM_EMAIL,
     to: [to],
     subject,
@@ -558,7 +562,7 @@ async function sendEmailWithFallback({ to, subject, html, fallbackHtml, text, ca
     return
   }
 
-  const fallback = await resend.emails.send({
+  const fallback = await getResend().emails.send({
     from: env.RESEND_FROM_EMAIL,
     to: [to],
     subject,

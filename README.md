@@ -34,7 +34,8 @@
 - Like and comment on reviews; mention other users with `@username`
 - Discover places via text search or geolocation (nearby radius search)
 - Earn badges for milestones: post streaks, unique locations, engagement, and more
-- Receive notifications for likes, comments, mentions, and badge awards
+- Receive in-app and email notifications for likes, comments, mentions, and badge awards
+- Dark mode support — toggle in profile settings
 - Browse user profiles and their review history
 
 **For moderators and admins:**
@@ -463,7 +464,7 @@ pnpm test:watch
 
 ## Contributing
 
-1. Fork the repository and create a branch: `git checkout -b feat/your-feature`
+1. Fork the repository and create a branch from `dev`: `git checkout -b feat/your-feature`
 2. Make your changes and run tests: `pnpm test`
-3. Ensure the Docker build passes: `docker compose build`
-4. Open a pull request with a clear description of the change
+3. Open a pull request targeting `main` — the CI pipeline runs automatically and must pass before merging
+4. The CI checks: unit tests (Vitest) + full build verification for all three apps
