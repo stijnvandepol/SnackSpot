@@ -129,22 +129,24 @@ async function processPhoto(job: Job<PhotoJob>): Promise<void> {
   const uuidMatch = storageKey.match(/[^/]+(?=\.[^.]+$)/)
   const uuid = uuidMatch ? uuidMatch[0] : photoId
 
-  const variantKeys: Record<string, string> = {}
+  const variantEntries = await Promise.all(
+    VARIANTS.map(async (variant) => {
+      const destKey = `variants/${uuid}/${variant.name}.webp`
 
-  for (const variant of VARIANTS) {
-    const destKey = `variants/${uuid}/${variant.name}.webp`
+      const outputBuffer = await sharp(originalBuffer, { limitInputPixels: MAX_INPUT_PIXELS })
+        .rotate() // auto-rotate from EXIF orientation, then discard EXIF
+        .resize({ width: variant.width, withoutEnlargement: true })
+        // withMetadata() intentionally omitted: Sharp strips all metadata (incl. GPS) by default
+        .webp({ quality: variant.quality, effort: 4 })
+        .toBuffer()
 
-    const outputBuffer = await sharp(originalBuffer, { limitInputPixels: MAX_INPUT_PIXELS })
-      .rotate() // auto-rotate from EXIF orientation, then discard EXIF
-      .resize({ width: variant.width, withoutEnlargement: true })
-      // withMetadata() intentionally omitted: Sharp strips all metadata (incl. GPS) by default
-      .webp({ quality: variant.quality, effort: 4 })
-      .toBuffer()
+      await uploadBuffer(destKey, outputBuffer, 'image/webp')
+      jobLog.debug({ variant: variant.name, size: outputBuffer.length }, 'Variant uploaded')
+      return [variant.name, destKey] as const
+    }),
+  )
 
-    await uploadBuffer(destKey, outputBuffer, 'image/webp')
-    variantKeys[variant.name] = destKey
-    jobLog.debug({ variant: variant.name, size: outputBuffer.length }, 'Variant uploaded')
-  }
+  const variantKeys: Record<string, string> = Object.fromEntries(variantEntries)
 
   await prisma.photo.update({
     where: { id: photoId },
