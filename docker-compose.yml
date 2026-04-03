@@ -166,6 +166,8 @@ services:
       JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
       JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS:-7}
       AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+      RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-SnackSpot <noreply@snackspot.online>}
       NODE_ENV: production
     depends_on:
       db:
