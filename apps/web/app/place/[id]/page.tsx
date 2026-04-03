@@ -161,7 +161,6 @@ export default async function PlacePage({
 
         {/* Right column: reviews */}
         <div className="md:col-span-7">
-          <h2 className="text-base font-semibold text-snack-text mb-3">Reviews</h2>
           <PlaceReviewsSection
             placeId={place.id}
             placeName={place.name}
