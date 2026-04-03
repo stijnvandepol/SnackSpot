@@ -90,17 +90,23 @@ export async function getObjectHeaderBytes(key: string, n: number): Promise<Buff
     return await new Promise<Buffer>((resolve, reject) => {
       const chunks: Buffer[] = []
       let collected = 0
+      let settled = false
+      const settle = (buf: Buffer) => {
+        if (settled) return
+        settled = true
+        resolve(buf)
+      }
       stream.on('data', (chunk: Buffer) => {
         chunks.push(chunk)
         collected += chunk.length
         if (collected >= n) {
           stream.destroy()
-          resolve(Buffer.concat(chunks).subarray(0, n))
+          settle(Buffer.concat(chunks).subarray(0, n))
         }
       })
-      stream.on('end', () => resolve(Buffer.concat(chunks).subarray(0, n)))
-      stream.on('error', reject)
-      stream.on('close', () => resolve(Buffer.concat(chunks).subarray(0, n)))
+      stream.on('end', () => settle(Buffer.concat(chunks).subarray(0, n)))
+      stream.on('error', (err) => { if (!settled) { settled = true; reject(err) } })
+      stream.on('close', () => settle(Buffer.concat(chunks).subarray(0, n)))
     })
   } catch {
     return null
