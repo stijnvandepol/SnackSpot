@@ -3,7 +3,7 @@ import { CreateReviewSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
 import { env } from '@/lib/env'
 import { created, err, parseBody, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
-import { rateLimitUser } from '@/lib/rate-limit'
+import { rateLimit, rateLimitUser } from '@/lib/rate-limit'
 import { normalizeRatings } from '@/lib/ratings'
 import { recalculateUserBadges } from '@/lib/badge-service'
 import { normalizeDishName } from '@/lib/text'
@@ -65,9 +65,12 @@ export async function POST(req: NextRequest) {
     if (photoError) return photoError
 
     // Run rate-limit after payload/photo validation so failed attempts don't burn quota as quickly.
-    // Allow higher throughput for power users posting multiple reviews in a short session.
     const rl = await rateLimitUser(auth.sub, 'review_create', 60, 3600)
     if (!rl.allowed) return err('Review rate limit exceeded', 429)
+
+    // Per-place limit: max 5 reviews per user per place per day to prevent spam on a single location.
+    const placeRl = await rateLimit(`rl:place_review:${auth.sub}:${placeId}`, 5, 86400)
+    if (!placeRl.allowed) return err('Too many reviews for this place', 429)
 
     const review = await prisma.review.create({
       data: {

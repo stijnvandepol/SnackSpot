@@ -12,6 +12,7 @@
     "@snackspot/db": "workspace:*",
     "@snackspot/shared": "workspace:*",
     "argon2": "^0.41.1",
+    "ioredis": "^5.4.2",
     "jsonwebtoken": "^9.0.2",
     "next": "^15.1.6",
     "react": "^19.0.0",

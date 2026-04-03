@@ -3,6 +3,7 @@ import { z } from 'zod'
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   DATABASE_URL: z.string().min(1),
+  REDIS_URL: z.string().min(1),
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_SECRET: z.string().min(32),
@@ -13,6 +14,8 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((v) => (v === undefined ? undefined : v === 'true')),
+  RESEND_API_KEY: z.string().min(1).optional(),
+  RESEND_FROM_EMAIL: z.string().default('SnackSpot <noreply@snackspot.online>'),
 })
 
 const parsed = envSchema.safeParse(process.env)

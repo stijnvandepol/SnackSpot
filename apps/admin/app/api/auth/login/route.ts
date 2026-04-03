@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'node:crypto'
 import { LoginSchema } from '@snackspot/shared'
 import { db } from '@/lib/db'
 import argon2 from 'argon2'
-import { buildSetAdminCookie, signAdminAccessToken } from '@/lib/auth'
+import {
+  buildSetAdminCookie,
+  buildSetRefreshCookie,
+  signAdminAccessToken,
+  generateRefreshToken,
+  storeRefreshToken,
+} from '@/lib/auth'
 import { getClientIp, rateLimit } from '@/lib/rate-limit'
 
 const LOGIN_RATE_LIMIT = 5
@@ -10,7 +17,7 @@ const LOGIN_RATE_WINDOW_SECONDS = 15 * 60
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers)
-  const rl = rateLimit(`admin-login:${ip}`, LOGIN_RATE_LIMIT, LOGIN_RATE_WINDOW_SECONDS)
+  const rl = await rateLimit(`admin-login:${ip}`, LOGIN_RATE_LIMIT, LOGIN_RATE_WINDOW_SECONDS)
   if (!rl.allowed) {
     return NextResponse.json(
       { error: 'Te veel inlogpogingen. Probeer het later opnieuw.' },
@@ -29,7 +36,6 @@ export async function POST(req: NextRequest) {
     }
     const { email, password } = parsed.data
 
-    // Find user
     const user = await db.user.findUnique({
       where: { email },
       select: {
@@ -52,15 +58,17 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Generate JWT token
-    const accessToken = signAdminAccessToken(
-      {
-        sub: user.id,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-      },
-    )
+    const accessToken = signAdminAccessToken({
+      sub: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+    })
+
+    // Issue refresh token for rotation
+    const rawRefreshToken = generateRefreshToken()
+    const family = crypto.randomUUID()
+    await storeRefreshToken(user.id, rawRefreshToken, family)
 
     const response = NextResponse.json({
       user: {
@@ -70,9 +78,10 @@ export async function POST(req: NextRequest) {
         role: user.role,
       },
     })
-    response.headers.set('Set-Cookie', buildSetAdminCookie(accessToken))
+    response.headers.append('Set-Cookie', buildSetAdminCookie(accessToken))
+    response.headers.append('Set-Cookie', buildSetRefreshCookie(rawRefreshToken))
     return response
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Er is een fout opgetreden' },
       { status: 500 }
