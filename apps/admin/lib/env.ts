@@ -14,7 +14,7 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((v) => (v === undefined ? undefined : v === 'true')),
-  RESEND_API_KEY: z.string().min(1).optional(),
+  RESEND_API_KEY: z.string().min(1),
   RESEND_FROM_EMAIL: z.string().default('SnackSpot <noreply@snackspot.online>'),
 })
 
