@@ -81,7 +81,6 @@ export function PlaceMap({ position, places, radius }: PlaceMapProps) {
   return (
     <div className="w-full rounded-xl overflow-hidden border border-snack-border mb-6 shadow-sm" style={{ height: '420px' }}>
       <Map
-        theme="light"
         center={[position.lng, position.lat]}
         zoom={13}
       >
