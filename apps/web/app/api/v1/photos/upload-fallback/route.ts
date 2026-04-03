@@ -4,6 +4,7 @@ import { env } from '@/lib/env'
 import { BUCKET, minioClient } from '@/lib/minio'
 import { ok, err, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
 import { rateLimitUser } from '@/lib/rate-limit'
+import { matchesMagicBytes } from '@/lib/magic-bytes'
 
 const ALLOWED_MIMES = new Set([
   'image/jpeg',
@@ -44,6 +45,10 @@ export async function POST(req: NextRequest) {
     const maxFallbackBytes = Math.min(env.MAX_FILE_SIZE_BYTES, 5 * 1024 * 1024)
     if (buffer.length > maxFallbackBytes) {
       return err(`Fallback upload too large - max ${maxFallbackBytes / 1024 / 1024} MB`, 413)
+    }
+
+    if (!matchesMagicBytes(contentTypeRaw, buffer.subarray(0, 12))) {
+      return err('File contents do not match declared type', 415)
     }
 
     await minioClient.putObject(BUCKET, photo.storageKey, buffer, buffer.length, {
