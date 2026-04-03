@@ -21,9 +21,14 @@ const envSchema = z.object({
 const parsed = envSchema.safeParse(process.env)
 
 if (!parsed.success) {
-  console.error('❌ Invalid environment variables:')
-  console.error(JSON.stringify(parsed.error.format(), null, 2))
-  process.exit(1)
+  const fieldErrors = parsed.error.flatten().fieldErrors
+  const failedVars = Object.keys(fieldErrors).join(', ')
+  // eslint-disable-next-line no-console -- startup validation must be visible before logger is available
+  console.error(`Invalid environment variables (${failedVars}):`, JSON.stringify(fieldErrors, null, 2))
+  // Only throw at runtime, not during Next.js build analysis
+  if (process.env.NODE_ENV !== 'test') {
+    throw new Error(`Invalid environment variables: ${failedVars} – check .env`)
+  }
 }
 
-export const env = parsed.data
+export const env = parsed.success ? parsed.data : ({} as z.infer<typeof envSchema>)

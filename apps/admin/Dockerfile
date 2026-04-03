@@ -25,6 +25,7 @@ RUN pnpm --filter @snackspot/db generate
 # Placeholder server-side env vars for Next.js build analysis.
 ENV NODE_ENV=production \
     DATABASE_URL=postgresql://placeholder:placeholder@db:5432/placeholder \
+    REDIS_URL=redis://placeholder:6379 \
     JWT_ACCESS_SECRET=placeholder-access-secret-at-least-32-chars-long \
     JWT_REFRESH_SECRET=placeholder-refresh-secret-at-least-32-chars-long
 
