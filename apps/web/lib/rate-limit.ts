@@ -1,46 +1,6 @@
 import { redis } from './redis'
 import { env } from './env'
-
-export interface RateLimitResult {
-  allowed: boolean
-  remaining: number
-  resetIn: number  // seconds
-}
-
-// Lua script for an atomic sliding-window rate limit.
-//
-// The previous pipeline approach unconditionally added the new member before
-// checking the count.  This meant that over-limit (blocked) requests still
-// consumed a slot, allowing a flood of rejected requests to hold legitimate
-// callers over the threshold for the entire window duration.
-//
-// The Lua script runs atomically on a single Redis shard:
-//   1. Remove expired entries from the sorted set.
-//   2. Count how many entries currently exist.
-//   3. Only insert the new member when the count is still below the limit.
-//   4. (Re-)set the TTL so the key is cleaned up after the window expires.
-//   5. Return [currentCount, wasAdded] to the caller.
-const RATE_LIMIT_SCRIPT = `
-local key   = KEYS[1]
-local now   = tonumber(ARGV[1])
-local winMs = tonumber(ARGV[2])
-local limit = tonumber(ARGV[3])
-local member = ARGV[4]
-local winSec = tonumber(ARGV[5])
-
-redis.call('ZREMRANGEBYSCORE', key, 0, now - winMs)
-local count = redis.call('ZCARD', key)
-
-local added = 0
-if count < limit then
-  redis.call('ZADD', key, now, member)
-  added = 1
-  count = count + 1
-end
-
-redis.call('EXPIRE', key, winSec)
-return {count, added}
-`
+import { SLIDING_WINDOW_LUA, type RateLimitResult } from '@snackspot/shared'
 
 /**
  * Sliding-window rate limiter backed by Redis sorted sets.
@@ -61,7 +21,7 @@ export async function rateLimit(
   const member = `${now}-${Math.random().toString(36).slice(2)}`
 
   const result = await redis.eval(
-    RATE_LIMIT_SCRIPT,
+    SLIDING_WINDOW_LUA,
     1,
     key,
     String(now),
@@ -77,7 +37,7 @@ export async function rateLimit(
   return {
     allowed,
     remaining: Math.max(0, limit - count),
-    resetIn: windowSeconds,
+    resetInSeconds: windowSeconds,
   }
 }
 

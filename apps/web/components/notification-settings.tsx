@@ -32,11 +32,9 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
         const json = await res.json()
         if (res.ok && json.data) {
           setPreferences(json.data)
-        } else {
-          console.error('Failed to load notification preferences:', json.error)
         }
-      } catch (error) {
-        console.error('Error loading notification preferences:', error)
+      } catch {
+        // handled by loading state
       } finally {
         setLoading(false)
       }

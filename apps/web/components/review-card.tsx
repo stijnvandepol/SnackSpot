@@ -7,6 +7,7 @@ import { MentionText } from '@/components/mention-text'
 import { getReviewTagLabel } from '@/lib/review-tags'
 import { extractCity } from '@/lib/utils'
 import { VerifiedBadge } from '@/components/verified-badge'
+import { timeAgo } from '@/lib/time'
 
 interface ReviewCardProps {
   review: {
@@ -29,15 +30,6 @@ interface ReviewCardProps {
   photoVariantPreference?: ReadonlyArray<'thumb' | 'medium' | 'large'>
   backContext?: string
   priority?: boolean
-}
-
-function timeAgo(dateInput: Date | string): string {
-  const date = new Date(dateInput)
-  const secs = Math.floor((Date.now() - date.getTime()) / 1000)
-  if (secs < 60) return 'just now'
-  if (secs < 3600) return `${Math.floor(secs / 60)}m ago`
-  if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`
-  return `${Math.floor(secs / 86400)}d ago`
 }
 
 function Stars({ rating }: { rating: number }) {
@@ -118,7 +110,7 @@ export function ReviewCard({
               {review.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full bg-snack-surface/90 px-2 py-1 text-[11px] font-medium text-snack-primary shadow-sm"
+                  className="rounded-full bg-snack-surface px-2.5 py-1 text-[11px] font-medium text-snack-primary ring-1 ring-snack-border"
                 >
                   {getReviewTagLabel(tag)}
                 </span>
