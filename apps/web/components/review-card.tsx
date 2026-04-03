@@ -118,7 +118,7 @@ export function ReviewCard({
               {review.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full bg-snack-surface/90 px-2 py-1 text-[11px] font-medium text-snack-primary shadow-sm"
+                  className="rounded-full bg-snack-surface px-2.5 py-1 text-[11px] font-medium text-snack-primary ring-1 ring-snack-border"
                 >
                   {getReviewTagLabel(tag)}
                 </span>
