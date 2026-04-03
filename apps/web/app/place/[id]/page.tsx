@@ -128,35 +128,38 @@ export default async function PlacePage({
             <h1 className="text-2xl font-heading font-bold text-snack-text">{place.name}</h1>
             <p className="mt-1 text-sm text-snack-muted">{place.address}</p>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl bg-snack-surface px-4 py-3">
+            <div className="mt-4 flex items-center gap-4 rounded-xl bg-snack-surface px-4 py-3">
+              <div>
                 <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Rating</p>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="text-snack-rating">{place.avg_rating !== null ? '★'.repeat(Math.max(1, Math.round(place.avg_rating ?? 0))) : '—'}</span>
-                  <span className="font-semibold text-snack-text">{place.avg_rating?.toFixed(1) ?? 'No rating yet'}</span>
+                <div className="mt-1 flex items-center gap-1.5">
+                  <span className="text-snack-rating text-sm">{place.avg_rating !== null ? '★'.repeat(Math.max(1, Math.round(place.avg_rating ?? 0))) : '—'}</span>
+                  <span className="font-semibold text-snack-text">{place.avg_rating?.toFixed(1) ?? '—'}</span>
                 </div>
               </div>
-              <div className="rounded-xl bg-snack-surface px-4 py-3">
+              <div className="h-8 w-px bg-snack-border" />
+              <div>
                 <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Reviews</p>
                 <p className="mt-1 font-semibold text-snack-text">{place.review_count} {place.review_count === 1 ? 'post' : 'posts'}</p>
               </div>
-              <a
-                href={`https://www.google.com/maps?q=${place.lat},${place.lng}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-xl bg-snack-surface px-4 py-3 transition hover:bg-[#eef2f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2"
-                aria-label={`Open ${place.name} in maps`}
-              >
-                <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Directions</p>
-                <p className="mt-1 font-semibold text-snack-primary">Open in maps</p>
-              </a>
             </div>
+            <a
+              href={`https://www.google.com/maps?q=${place.lat},${place.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 flex items-center gap-2 rounded-xl border border-snack-border px-4 py-3 text-sm font-semibold text-snack-primary transition hover:bg-snack-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2"
+              aria-label={`Open ${place.name} in maps`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Open in Maps
+            </a>
           </div>
-          <PlaceMapEmbed
-            lat={place.lat}
-            lng={place.lng}
-            className="h-48 rounded-xl overflow-hidden"
-          />
+          <div className="hidden md:block">
+            <PlaceMapEmbed
+              lat={place.lat}
+              lng={place.lng}
+              className="h-48 rounded-xl overflow-hidden"
+            />
+          </div>
         </div>
 
         {/* Right column: reviews */}
