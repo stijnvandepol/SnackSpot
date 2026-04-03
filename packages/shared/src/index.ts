@@ -119,7 +119,6 @@ export const UpdateMeProfileSchema = z.object({
     .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers and underscores')
     .optional(),
   bio: z.string().max(280).optional(),
-  avatarKey: z.string().max(512).nullable().optional(),
 })
 
 export const ReviewsQuerySchema = z.object({
