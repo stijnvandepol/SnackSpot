@@ -1,32 +1,5 @@
 import { redis } from './redis'
-
-export interface RateLimitResult {
-  allowed: boolean
-  remaining: number
-  resetInSeconds: number
-}
-
-const RATE_LIMIT_SCRIPT = `
-local key   = KEYS[1]
-local now   = tonumber(ARGV[1])
-local winMs = tonumber(ARGV[2])
-local limit = tonumber(ARGV[3])
-local member = ARGV[4]
-local winSec = tonumber(ARGV[5])
-
-redis.call('ZREMRANGEBYSCORE', key, 0, now - winMs)
-local count = redis.call('ZCARD', key)
-
-local added = 0
-if count < limit then
-  redis.call('ZADD', key, now, member)
-  added = 1
-  count = count + 1
-end
-
-redis.call('EXPIRE', key, winSec)
-return {count, added}
-`
+import { SLIDING_WINDOW_LUA, type RateLimitResult } from '@snackspot/shared'
 
 export async function rateLimit(
   key: string,
@@ -37,7 +10,7 @@ export async function rateLimit(
   const member = `${now}-${Math.random().toString(36).slice(2)}`
 
   const result = await redis.eval(
-    RATE_LIMIT_SCRIPT,
+    SLIDING_WINDOW_LUA,
     1,
     key,
     String(now),

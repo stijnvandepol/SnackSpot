@@ -219,3 +219,31 @@ export async function processMentions(
     logger.error({ err: error, reviewId, actorId }, 'Mention processing failed')
   }
 }
+
+/** Comment-specific mention processing: extract usernames, resolve IDs,
+ *  and send comment-mention notifications. Unlike `processMentions`, this does
+ *  not create ReviewMention records (comments are not reviews) and additionally
+ *  excludes the review owner from notifications (they already get a comment
+ *  notification). Errors are logged but do not throw. */
+export async function processCommentMentions(
+  text: string,
+  reviewId: string,
+  commentId: string,
+  actorId: string,
+  reviewOwnerId: string,
+  notifyFn: (userId: string, reviewId: string, commentId: string, actorId: string) => Promise<unknown>,
+): Promise<void> {
+  try {
+    const usernames = extractMentionedUsernames(text)
+    const userIds = await resolveMentionedUserIds(usernames, [], actorId)
+
+    const filtered = userIds.filter((id) => id !== reviewOwnerId)
+    if (filtered.length === 0) return
+
+    await Promise.allSettled(
+      filtered.map((userId) => notifyFn(userId, reviewId, commentId, actorId)),
+    )
+  } catch (error) {
+    logger.error({ err: error, reviewId, commentId, actorId }, 'Comment mention processing failed')
+  }
+}

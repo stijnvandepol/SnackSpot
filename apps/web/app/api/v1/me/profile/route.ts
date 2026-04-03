@@ -7,6 +7,12 @@ import { rateLimitUser, getClientIP, rateLimitIP } from '@/lib/rate-limit'
 const USERNAME_CHANGE_COOLDOWN_DAYS = 30
 const USERNAME_CHANGE_COOLDOWN_MS = USERNAME_CHANGE_COOLDOWN_DAYS * 24 * 60 * 60 * 1000
 
+function nextUsernameChangeAt(changedAt: Date | null): Date | null {
+  return changedAt
+    ? new Date(changedAt.getTime() + USERNAME_CHANGE_COOLDOWN_MS)
+    : null
+}
+
 type UpdateMeProfileInput = {
   username?: string
   bio?: string
@@ -33,14 +39,12 @@ export async function GET(req: NextRequest) {
 
     if (!user) return err('User not found', 404)
 
-    const nextUsernameChangeAt = user.usernameChangedAt
-      ? new Date(user.usernameChangedAt.getTime() + USERNAME_CHANGE_COOLDOWN_MS)
-      : null
+    const nextChange = nextUsernameChangeAt(user.usernameChangedAt)
 
     return withNoStore(ok({
       ...user,
-      usernameCanChangeNow: !nextUsernameChangeAt || nextUsernameChangeAt <= new Date(),
-      nextUsernameChangeAt,
+      usernameCanChangeNow: !nextChange || nextChange <= new Date(),
+      nextUsernameChangeAt: nextChange,
     }))
   } catch (e) {
     return serverError('me/profile GET', e)
@@ -105,14 +109,12 @@ export async function PATCH(req: NextRequest) {
       },
     })
 
-    const nextUsernameChangeAt = updated.usernameChangedAt
-      ? new Date(updated.usernameChangedAt.getTime() + USERNAME_CHANGE_COOLDOWN_MS)
-      : null
+    const nextChange = nextUsernameChangeAt(updated.usernameChangedAt)
 
     return withNoStore(ok({
       ...updated,
-      usernameCanChangeNow: !nextUsernameChangeAt || nextUsernameChangeAt <= new Date(),
-      nextUsernameChangeAt,
+      usernameCanChangeNow: !nextChange || nextChange <= new Date(),
+      nextUsernameChangeAt: nextChange,
     }))
   } catch (e: unknown) {
     const code =

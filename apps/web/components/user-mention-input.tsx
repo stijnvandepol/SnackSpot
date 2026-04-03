@@ -62,8 +62,7 @@ export function UserMentionInput({
           setSuggestions([])
           setShowSuggestions(false)
         }
-      } catch (error) {
-        console.error('Failed to search users', error)
+      } catch {
         setSuggestions([])
         setShowSuggestions(false)
       }

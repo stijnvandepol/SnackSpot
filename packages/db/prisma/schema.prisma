@@ -123,6 +123,7 @@ model RefreshToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([family])
+  @@index([userId])
   @@map("refresh_tokens")
 }
 
@@ -283,6 +284,7 @@ model Comment {
   flaggedComment FlaggedComment?
 
   @@index([reviewId, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([userId])
   @@index([userId, createdAt(sort: Desc)])
   @@map("comments")
 }
@@ -328,6 +330,8 @@ model Photo {
   uploader     User                  @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
   reports      Report[]
 
+  @@index([uploaderId])
+  @@index([moderationStatus])
   @@map("photos")
 }
 
@@ -407,6 +411,7 @@ model Notification {
   comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, isRead])
   @@index([userId, isRead, createdAt(sort: Desc)])
   @@map("notifications")
 }
