@@ -67,24 +67,16 @@ function formatDistance(meters: number): string {
 }
 
 function formatRating(rating: number | null): string {
-  if (!rating) return 'No rating'
+  if (rating === null || rating === undefined) return 'No rating'
   return `${rating.toFixed(1)} ★`
 }
 
 export function PlaceMap({ position, places, radius }: PlaceMapProps) {
   if (!hasValidCoordinates(position)) {
-    console.warn('Skipping nearby map render because the current position is invalid', position)
     return null
   }
 
   const validPlaces = places.filter(hasValidCoordinates)
-
-  if (validPlaces.length !== places.length) {
-    console.warn('Skipping nearby map markers with invalid coordinates', {
-      total: places.length,
-      skipped: places.length - validPlaces.length,
-    })
-  }
 
   return (
     <div className="w-full rounded-xl overflow-hidden border border-snack-border mb-6 shadow-sm" style={{ height: '420px' }}>

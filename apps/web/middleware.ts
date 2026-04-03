@@ -48,12 +48,12 @@ export function middleware(req: NextRequest) {
     }
     const preflight = new Response(null, { status: 204, headers: corsHeaders(origin, true) })
     preflight.headers.set('Vary', 'Origin')
-    preflight.headers.set('X-Request-ID', req.headers.get('x-request-id') ?? crypto.randomUUID())
+    preflight.headers.set('X-Request-ID', crypto.randomUUID())
     return preflight
   }
 
   const res = NextResponse.next()
-  res.headers.set('X-Request-ID', req.headers.get('x-request-id') ?? crypto.randomUUID())
+  res.headers.set('X-Request-ID', crypto.randomUUID())
   res.headers.set('X-Response-Time', `${Date.now() - startedAt}ms`)
 
   // Attach CORS headers to all API responses

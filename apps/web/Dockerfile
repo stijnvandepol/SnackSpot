@@ -1,8 +1,8 @@
 FROM node:20-alpine AS base
 
 # argon2 + Prisma need build tools and OpenSSL
-RUN apk add --no-cache python3 make g++ openssl
-RUN npm install -g pnpm@9.15.4
+RUN apk add --no-cache python3 make g++ openssl \
+  && npm install -g pnpm@9.15.4
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ COPY packages/ui/package.json packages/ui/
 COPY apps/web/package.json apps/web/
 COPY tsconfig.base.json ./
 
-RUN pnpm install --no-frozen-lockfile && pnpm store prune && rm -rf /root/.cache/pnpm
+RUN pnpm install --frozen-lockfile && pnpm store prune && rm -rf /root/.cache/pnpm
 
 # Source
 COPY packages/ packages/

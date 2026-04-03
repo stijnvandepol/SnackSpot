@@ -2,6 +2,7 @@ import { type NextRequest } from 'next/server'
 import { UpdateMeProfileSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
 import { ok, err, parseBody, requireAuth, serverError, isResponse, withNoStore } from '@/lib/api-helpers'
+import { rateLimitUser, getClientIP, rateLimitIP } from '@/lib/rate-limit'
 
 const USERNAME_CHANGE_COOLDOWN_DAYS = 30
 const USERNAME_CHANGE_COOLDOWN_MS = USERNAME_CHANGE_COOLDOWN_DAYS * 24 * 60 * 60 * 1000
@@ -9,7 +10,6 @@ const USERNAME_CHANGE_COOLDOWN_MS = USERNAME_CHANGE_COOLDOWN_DAYS * 24 * 60 * 60
 type UpdateMeProfileInput = {
   username?: string
   bio?: string
-  avatarKey?: string | null
 }
 
 export async function GET(req: NextRequest) {
@@ -51,6 +51,13 @@ export async function PATCH(req: NextRequest) {
   const auth = requireAuth(req)
   if (isResponse(auth)) return auth
 
+  const ip = getClientIP(req)
+  const [userRl, ipRl] = await Promise.all([
+    rateLimitUser(auth.sub, 'profile-patch', 10, 60),
+    rateLimitIP(ip, 'profile-patch', 20, 60),
+  ])
+  if (!userRl.allowed || !ipRl.allowed) return err('Too many requests', 429)
+
   const body = await parseBody<UpdateMeProfileInput>(req, UpdateMeProfileSchema)
   if (isResponse(body)) return body
 
@@ -84,7 +91,6 @@ export async function PATCH(req: NextRequest) {
       data: {
         ...(body.username !== undefined ? { username: body.username.trim() } : {}),
         ...(body.bio !== undefined ? { bio: body.bio.trim() || null } : {}),
-        ...(body.avatarKey !== undefined ? { avatarKey: body.avatarKey } : {}),
         ...(usernameChangeRequested ? { usernameChangedAt: new Date() } : {}),
       },
       select: {

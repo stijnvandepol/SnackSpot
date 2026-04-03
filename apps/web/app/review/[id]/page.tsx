@@ -6,6 +6,7 @@ import { photoVariantUrl } from '@/lib/photo-url'
 import { getReviewTagLabel } from '@/lib/review-tags'
 import { extractCity } from '@/lib/utils'
 import { getSiteUrl } from '@/lib/site-url'
+import { safeJsonLd } from '@/lib/html'
 import { ReviewInteractions } from '@/components/review-interactions'
 import { ImageLightbox } from '@/components/image-lightbox'
 import { Breadcrumb } from '@/components/breadcrumb'
@@ -165,8 +166,8 @@ export default async function ReviewPage({
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6 space-y-6">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(reviewJsonLd) }} />
       <Breadcrumb items={buildReviewBreadcrumb(from, review.place.name, review.place.id, parsedPlaceContext)} />
       <div className="flex items-center gap-2">
         <Link href={backHref} className="btn-secondary text-sm">

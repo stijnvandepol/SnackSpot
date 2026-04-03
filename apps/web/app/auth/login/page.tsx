@@ -52,6 +52,8 @@ export default function LoginPage() {
         setCaptchaRequired(true)
         setCaptchaToken(null)
         turnstileRef.current?.reset()
+        setError('Please complete the security check below to continue')
+        return
       }
       setError(result.error ?? 'Login failed')
       return

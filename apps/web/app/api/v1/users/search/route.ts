@@ -1,7 +1,8 @@
 import { type NextRequest } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
-import { ok, parseQuery, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
+import { ok, err, parseQuery, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
+import { rateLimitUser } from '@/lib/rate-limit'
 
 const SearchUsersQuerySchema = z.object({
   q: z.string().min(1).max(50),
@@ -11,6 +12,9 @@ const SearchUsersQuerySchema = z.object({
 export async function GET(req: NextRequest) {
   const auth = requireAuth(req)
   if (isResponse(auth)) return auth
+
+  const rl = await rateLimitUser(auth.sub, 'users-search', 30, 60)
+  if (!rl.allowed) return err('Too many requests', 429)
 
   const query = parseQuery(req, SearchUsersQuerySchema)
   if (isResponse(query)) return query

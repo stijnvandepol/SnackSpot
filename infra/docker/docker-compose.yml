@@ -18,6 +18,11 @@ services:
   db:
     image: postgis/postgis:16-3.4-alpine
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       POSTGRES_DB: snackspot
       POSTGRES_USER: snackspot
@@ -38,6 +43,11 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     command: redis-server --save 60 1 --loglevel warning
     volumes:
       - redisdata:/data
@@ -54,6 +64,11 @@ services:
   minio:
     image: ${MINIO_IMAGE:-minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1}
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required}
@@ -96,6 +111,11 @@ services:
     networks: [snackspot]
 
   web:
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
     build:
       context: ../..
       dockerfile: apps/web/Dockerfile
@@ -152,6 +172,11 @@ services:
     networks: [snackspot]
 
   worker:
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
     build:
       context: ../..
       dockerfile: apps/worker/Dockerfile
@@ -189,6 +214,11 @@ services:
     networks: [snackspot]
 
   admin:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     build:
       context: ../..
       dockerfile: apps/admin/Dockerfile
@@ -230,6 +260,11 @@ services:
   nginx:
     image: nginx:1.27-alpine
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       # Enige publieke ingang – Cloudflare tunnel wijst naar deze poort.
       - "${WEB_BIND_ADDRESS:-0.0.0.0}:8080:80"
