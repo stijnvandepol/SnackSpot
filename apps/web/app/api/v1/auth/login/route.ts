@@ -12,7 +12,17 @@ import {
   buildSetCookie,
 } from '@/lib/auth'
 import { ok, err, parseBody, serverError, isResponse, requireSameOrigin, withNoStore } from '@/lib/api-helpers'
-import { rateLimitIP, rateLimit, getClientIP } from '@/lib/rate-limit'
+import {
+  rateLimitIP,
+  rateLimit,
+  getClientIP,
+  incrementLoginFailures,
+  resetLoginFailures,
+  getLoginFailureCount,
+} from '@/lib/rate-limit'
+import { verifyTurnstileToken } from '@/lib/turnstile'
+
+const CAPTCHA_THRESHOLD = 3
 
 export async function POST(req: NextRequest) {
   const sameOrigin = requireSameOrigin(req)
@@ -32,6 +42,19 @@ export async function POST(req: NextRequest) {
   const accountRl = await rateLimit(`rl:account:login:${body.email.toLowerCase()}`, 5, 600)
   if (!accountRl.allowed) {
     return err('Too many login attempts – try again later', 429)
+  }
+
+  // CAPTCHA: required once either the IP or the account reaches 3 failures.
+  // The token is single-use — Cloudflare returns timeout-or-duplicate on replay.
+  const failures = await getLoginFailureCount(ip, body.email)
+  if (failures.ip >= CAPTCHA_THRESHOLD || failures.email >= CAPTCHA_THRESHOLD) {
+    if (!body.captchaToken) {
+      return Response.json({ error: 'captcha_required', captchaRequired: true }, { status: 400 })
+    }
+    const tokenValid = await verifyTurnstileToken(body.captchaToken, ip)
+    if (!tokenValid) {
+      return Response.json({ error: 'captcha_required', captchaRequired: true }, { status: 400 })
+    }
   }
 
   try {
@@ -56,12 +79,15 @@ export async function POST(req: NextRequest) {
       : await hashPassword(body.password).then(() => false)
 
     if (!user || !passwordOk) {
+      await incrementLoginFailures(ip, body.email)
       return err('Invalid email or password', 401)
     }
 
     if (user.bannedAt) {
       return err('Account banned', 403)
     }
+
+    await resetLoginFailures(ip, body.email)
 
     const accessToken = signAccessToken({ sub: user.id, email: user.email, username: user.username, role: user.role })
     const rawRefresh = generateRefreshToken()
