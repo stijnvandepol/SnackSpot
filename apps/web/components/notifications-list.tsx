@@ -147,7 +147,7 @@ function NotificationsList() {
       {notifications.map((notification) => (
         <div
           key={notification.id}
-          className={`card p-3 transition ${!notification.isRead ? 'bg-blue-50 border-blue-200' : ''}`}
+          className={`card p-3 transition ${!notification.isRead ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800' : ''}`}
         >
           {notification.link ? (
             <Link
