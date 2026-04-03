@@ -17,7 +17,7 @@ import { ReviewStatus } from '@prisma/client'
 import { normalizeRatings } from '@/lib/ratings'
 import { recalculateUserBadges } from '@/lib/badge-service'
 import { normalizeDishName } from '@/lib/text'
-import { getBlockedWords, filterText } from '@/lib/blocked-words'
+import { getBlockedWordsCache, filterText } from '@/lib/blocked-words'
 import { reviewListSelect, serializeReview, checkReviewVisibility, validatePhotos } from '@/lib/review-helpers'
 
 export async function GET(
@@ -68,8 +68,8 @@ export async function PATCH(
   try {
     const normalized = body.ratings ? normalizeRatings(body.ratings) : null
     const normalizedDishName = normalizeDishName(body.dishName)
-    const blockedWords = await getBlockedWords()
-    const filteredText = body.text !== undefined ? filterText(body.text, blockedWords) : undefined
+    const { regexes } = await getBlockedWordsCache()
+    const filteredText = body.text !== undefined ? filterText(body.text, regexes) : undefined
     const nextTags = body.tags ?? null
     const dedupedTags = nextTags !== null ? Array.from(new Set(nextTags)) : null
     const nextPhotoIds = body.photoIds ?? null

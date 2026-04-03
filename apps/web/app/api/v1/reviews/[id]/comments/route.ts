@@ -16,7 +16,7 @@ import { ReviewStatus } from '@prisma/client'
 import { rateLimitUser } from '@/lib/rate-limit'
 import { recalculateUserBadges } from '@/lib/badge-service'
 import { notifyCommentMention, notifyReviewComment } from '@/lib/notification-service'
-import { getBlockedWords, filterText } from '@/lib/blocked-words'
+import { getBlockedWordsCache, filterText } from '@/lib/blocked-words'
 import { checkReviewVisibility, extractMentionedUsernames } from '@/lib/review-helpers'
 
 export async function GET(
@@ -82,8 +82,8 @@ export async function POST(
 
   const rawText = body.text.trim()
   if (!rawText) return err('Comment text is required', 422)
-  const blockedWords = await getBlockedWords()
-  const text = filterText(rawText, blockedWords)
+  const { regexes } = await getBlockedWordsCache()
+  const text = filterText(rawText, regexes)
 
   try {
     const review = await prisma.review.findUnique({
