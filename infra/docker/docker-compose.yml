@@ -72,7 +72,7 @@ services:
     networks: [snackspot]
 
   pgbouncer:
-    image: edoburu/pgbouncer:1.24.0-p1
+    image: edoburu/pgbouncer:v1.24.0-p1
     restart: unless-stopped
     logging:
       driver: json-file
