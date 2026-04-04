@@ -158,6 +158,9 @@ services:
     networks: [snackspot]
 
   web:
+    # Uncomment to enable horizontal scaling:
+    # deploy:
+    #   replicas: 2
     logging:
       driver: json-file
       options:
