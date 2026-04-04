@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ReviewCard } from '@/components/review-card'
 import { useAuth } from '@/components/auth-provider'
+import { PullToRefresh } from '@/components/pull-to-refresh'
 
 interface Review {
   id: string
@@ -71,6 +72,29 @@ export function FeedClient() {
     }
   }, [hasMore, cursor, accessToken])
 
+  const refresh = useCallback(async () => {
+    requestedCursorsRef.current.clear()
+    inFlightRef.current = false
+    setCursor(null)
+    setHasMore(true)
+    setError(null)
+
+    try {
+      const url = '/api/v1/feed?limit=15'
+      const res = await fetch(url, {
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+      })
+      if (!res.ok) throw new Error('Failed to load feed')
+      const json = await res.json()
+      setReviews(json.data.data as Review[])
+      setCursor(json.data.pagination.nextCursor)
+      setHasMore(json.data.pagination.hasMore)
+      requestedCursorsRef.current.add('__initial__')
+    } catch {
+      setError('Could not refresh feed. Check your connection and try again.')
+    }
+  }, [accessToken])
+
   // Initial load: wait for auth to finish restoring so likedByMe is accurate.
   // If we load before the token is ready, the feed returns likedByMe: false for
   // every card and never refreshes — likes appear gone after reopening the app.
@@ -90,7 +114,7 @@ export function FeedClient() {
   }, [loadMore])
 
   return (
-    <>
+    <PullToRefresh onRefresh={refresh}>
       {initial && loading && (
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
@@ -139,6 +163,6 @@ export function FeedClient() {
       {!hasMore && reviews.length > 0 && (
         <p className="text-center text-sm text-snack-muted py-6">No more snacks to scroll. Time to grab one.</p>
       )}
-    </>
+    </PullToRefresh>
   )
 }

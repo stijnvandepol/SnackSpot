@@ -16,7 +16,7 @@ export type PlaceSearchResult = {
   pagination: { nextCursor: null; hasMore: false }
 }
 
-/** Nearby search with a required text filter. */
+/** Nearby search with a required text filter. Searches place name, address, AND dish names. */
 export async function searchNearbyWithText(
   lat: number,
   lng: number,
@@ -26,13 +26,20 @@ export async function searchNearbyWithText(
 ): Promise<PlaceRow[]> {
   return prisma.$queryRaw<PlaceRow[]>`
     WITH candidates AS (
-      SELECT
+      SELECT DISTINCT ON (p.id)
         p.id,
         p.name,
         p.address,
         p.location,
         ST_Distance(p.location, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography) AS distance_m
       FROM places p
+      LEFT JOIN reviews dr ON dr.place_id = p.id
+        AND dr.status = 'PUBLISHED'
+        AND dr.dish_name IS NOT NULL
+        AND (
+          to_tsvector('english', COALESCE(dr.dish_name, '')) @@ plainto_tsquery('english', ${q})
+          OR dr.dish_name ILIKE ${'%' + q + '%'}
+        )
       WHERE ST_DWithin(
         p.location,
         ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
@@ -41,9 +48,9 @@ export async function searchNearbyWithText(
       AND (
         to_tsvector('english', p.name || ' ' || p.address) @@ plainto_tsquery('english', ${q})
         OR p.name ILIKE ${'%' + q + '%'}
+        OR dr.id IS NOT NULL
       )
-      ORDER BY distance_m
-      LIMIT ${limit}
+      ORDER BY p.id, distance_m
     )
     SELECT
       c.id,
@@ -63,6 +70,7 @@ export async function searchNearbyWithText(
       WHERE r.place_id = c.id AND r.status = 'PUBLISHED'
     ) rs ON TRUE
     ORDER BY c.distance_m
+    LIMIT ${limit}
   `
 }
 
@@ -111,27 +119,45 @@ export async function searchNearby(
   `
 }
 
-/** Text-only search ranked by relevance. */
+/** Text-only search ranked by relevance. Searches place name, address, AND dish names from reviews. */
 export async function searchByText(
   q: string,
   limit: number,
 ): Promise<PlaceRow[]> {
   return prisma.$queryRaw<PlaceRow[]>`
     WITH candidates AS (
-      SELECT
+      SELECT DISTINCT ON (p.id)
         p.id,
         p.name,
         p.address,
         p.location,
-        ts_rank(
-          to_tsvector('english', p.name || ' ' || p.address),
-          plainto_tsquery('english', ${q})
+        GREATEST(
+          ts_rank(
+            to_tsvector('english', p.name || ' ' || p.address),
+            plainto_tsquery('english', ${q})
+          ),
+          CASE WHEN p.name ILIKE ${'%' + q + '%'} THEN 0.5 ELSE 0 END,
+          COALESCE(dish.rank, 0) * 0.8
         ) AS rank
       FROM places p
+      LEFT JOIN LATERAL (
+        SELECT MAX(ts_rank(
+          to_tsvector('english', COALESCE(r.dish_name, '')),
+          plainto_tsquery('english', ${q})
+        )) AS rank
+        FROM reviews r
+        WHERE r.place_id = p.id
+          AND r.status = 'PUBLISHED'
+          AND r.dish_name IS NOT NULL
+          AND (
+            to_tsvector('english', COALESCE(r.dish_name, '')) @@ plainto_tsquery('english', ${q})
+            OR r.dish_name ILIKE ${'%' + q + '%'}
+          )
+      ) dish ON TRUE
       WHERE to_tsvector('english', p.name || ' ' || p.address) @@ plainto_tsquery('english', ${q})
          OR p.name ILIKE ${'%' + q + '%'}
-      ORDER BY rank DESC
-      LIMIT ${limit}
+         OR dish.rank IS NOT NULL
+      ORDER BY p.id, rank DESC
     )
     SELECT
       c.id,
@@ -150,6 +176,7 @@ export async function searchByText(
       WHERE r.place_id = c.id AND r.status = 'PUBLISHED'
     ) rs ON TRUE
     ORDER BY c.rank DESC
+    LIMIT ${limit}
   `
 }
 

@@ -3,6 +3,9 @@ import { prisma } from '@/lib/db'
 import { getSiteUrl } from '@/lib/site-url'
 import { PILLAR_GUIDES } from '@/lib/guides'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 3600
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const appUrl = getSiteUrl()
   // Use a stable date for static pages; bump this when static content changes.
