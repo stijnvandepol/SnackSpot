@@ -259,7 +259,7 @@ services:
     read_only: true
     tmpfs:
       - /tmp
-    mem_limit: 768m
+    mem_limit: 1g
     cpus: 1.0
     pids_limit: 256
     networks: [snackspot]
