@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { extractCity } from '@/lib/utils'
 
@@ -23,13 +24,7 @@ export async function generateMetadata(
   })
 
   if (!place) {
-    return {
-      title: 'Place not found',
-      robots: { index: false, follow: false },
-      alternates: {
-        canonical: `/place/${encodeURIComponent(id)}`,
-      },
-    }
+    notFound()
   }
 
   const city = extractCity(place.address)
