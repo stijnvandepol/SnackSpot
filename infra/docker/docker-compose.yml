@@ -58,7 +58,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    command: redis-server --save 60 1 --loglevel warning
+    command: redis-server --save 60 1 --loglevel warning --maxmemory 256mb --maxmemory-policy allkeys-lru --tcp-keepalive 60
     volumes:
       - redisdata:/data
     healthcheck:
