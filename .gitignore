@@ -39,3 +39,4 @@ data/
 
 # Prisma
 prisma/generated/
+.zenflow/
