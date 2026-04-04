@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 """
-SnackSpot Marketing Posters — Thermal Cartography aesthetic
-Generates small promotional posters with QR code to snackspot.online
+SnackSpot Marketing Posters — clean, informative, app-focused
 """
 
 import math
 import os
 import qrcode
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
-# Paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "posters")
 FONT_DIR = "/Users/stijnvandepol/.claude/plugins/marketplaces/anthropic-agent-skills/skills/canvas-design/canvas-fonts"
@@ -18,371 +16,428 @@ ICON_PATH = "/Users/stijnvandepol/Documents/GitHub/SnackSpot/apps/web/public/ico
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Brand colors
-ORANGE = (249, 115, 22)       # #F97316
-RED = (220, 38, 38)           # #DC2626
-AMBER = (245, 158, 11)        # #F59E0B
-DARK = (15, 23, 42)           # #0F172A
+ORANGE = (249, 115, 22)
+ORANGE_LIGHT = (255, 237, 213)
+ORANGE_SOFT = (254, 215, 170)
+RED = (220, 38, 38)
+AMBER = (245, 158, 11)
+DARK = (15, 23, 42)
+SLATE = (71, 85, 105)
+GRAY = (148, 163, 184)
+LIGHT_BG = (252, 250, 247)
 WHITE = (255, 255, 255)
-BONE = (250, 248, 244)        # warm white
-LIGHT_ORANGE = (254, 237, 220)  # soft warm tint
 
-# Poster dimensions (A5-ish, 300 DPI = 1748x2480)
-# Using a compact poster size: 1200x1600px (good for print at ~4x5.3 inches)
 W, H = 1200, 1600
 
-def load_font(name, size):
-    path = os.path.join(FONT_DIR, name)
+
+def font(name, size):
     try:
-        return ImageFont.truetype(path, size)
+        return ImageFont.truetype(os.path.join(FONT_DIR, name), size)
     except:
         return ImageFont.load_default()
 
-def generate_qr(url, size=280):
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_H,
-        box_size=10,
-        border=2,
-    )
+
+def generate_qr(url, size=280, fg=DARK, bg=WHITE):
+    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=2)
     qr.add_data(url)
     qr.make(fit=True)
-    img = qr.make_image(fill_color=DARK, back_color=WHITE).convert("RGBA")
-    img = img.resize((size, size), Image.LANCZOS)
-    return img
+    img = qr.make_image(fill_color=fg, back_color=bg).convert("RGBA")
+    return img.resize((size, size), Image.LANCZOS)
 
-def draw_concentric_rings(draw, cx, cy, max_r, color, alpha_start=60, ring_width=2, gap=18):
-    """Draw concentric rings radiating from a center point — thermal plume effect."""
-    r = gap
-    while r < max_r:
-        alpha = max(5, int(alpha_start * (1 - r / max_r)))
-        c = (*color, alpha)
-        bbox = [cx - r, cy - r, cx + r, cy + r]
-        draw.ellipse(bbox, outline=c, width=ring_width)
-        r += gap
 
-def draw_dot_field(draw, x0, y0, x1, y1, color, spacing=24, dot_r=2):
-    """Grid of tiny dots — systematic repetition."""
-    for x in range(x0, x1, spacing):
-        for y in range(y0, y1, spacing):
-            # slight variation in opacity based on distance from center
-            cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-            dist = math.sqrt((x - cx)**2 + (y - cy)**2)
-            max_dist = math.sqrt((x1 - x0)**2 + (y1 - y0)**2) / 2
-            alpha = max(15, int(80 * (1 - dist / max_dist)))
-            draw.ellipse([x - dot_r, y - dot_r, x + dot_r, y + dot_r], fill=(*color, alpha))
+def center_text(draw, y, text, f, fill):
+    bb = draw.textbbox((0, 0), text, font=f)
+    tw = bb[2] - bb[0]
+    draw.text(((W - tw) // 2, y), text, fill=fill, font=f)
+    return bb[3] - bb[1]
 
-def draw_radial_dots(draw, cx, cy, max_r, color, count=120, dot_r=3):
-    """Dots radiating outward from a point — like a thermal signature."""
-    import random
-    random.seed(42)
-    for i in range(count):
-        angle = random.uniform(0, 2 * math.pi)
-        r = random.uniform(20, max_r)
-        x = cx + r * math.cos(angle)
-        y = cy + r * math.sin(angle)
-        alpha = max(10, int(120 * (1 - r / max_r)))
-        size = max(1, int(dot_r * (1 - r / max_r * 0.7)))
-        draw.ellipse([x - size, y - size, x + size, y + size], fill=(*color, alpha))
+
+def draw_rounded_rect(draw, box, radius, fill, outline=None, outline_width=0):
+    draw.rounded_rectangle(box, radius=radius, fill=fill, outline=outline, width=outline_width)
+
+
+def load_logo(size=120):
+    try:
+        logo = Image.open(ICON_PATH).convert("RGBA")
+        return logo.resize((size, size), Image.LANCZOS)
+    except:
+        return None
+
+
+def draw_location_pin(draw, cx, cy, size=28, color=ORANGE):
+    """Simple location pin icon."""
+    r = size
+    # Pin body (circle)
+    draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=color)
+    # Pin point (triangle)
+    draw.polygon([(cx - r * 0.6, cy + r * 0.5), (cx, cy + r * 2), (cx + r * 0.6, cy + r * 0.5)], fill=color)
+    # Inner circle (white)
+    ir = r * 0.4
+    draw.ellipse([cx - ir, cy - ir, cx + ir, cy + ir], fill=WHITE)
+
+
+def draw_star(draw, cx, cy, size=12, color=AMBER):
+    """Simple 5-point star."""
+    points = []
+    for i in range(10):
+        angle = math.radians(i * 36 - 90)
+        r = size if i % 2 == 0 else size * 0.4
+        points.append((cx + r * math.cos(angle), cy + r * math.sin(angle)))
+    draw.polygon(points, fill=color)
+
+
+def draw_feature_row(draw, x, y, icon_type, text, sub, f_text, f_sub):
+    """Draw a feature with icon, title, and subtitle."""
+    if icon_type == "pin":
+        draw_location_pin(draw, x + 22, y + 20, size=16, color=ORANGE)
+    elif icon_type == "star":
+        draw_star(draw, x + 22, y + 18, size=14, color=AMBER)
+    elif icon_type == "share":
+        # Simple share icon: three dots connected
+        draw.ellipse([x + 14, y + 6, x + 22, y + 14], fill=ORANGE)
+        draw.ellipse([x + 28, y + 18, x + 36, y + 26], fill=ORANGE)
+        draw.ellipse([x + 14, y + 28, x + 22, y + 36], fill=ORANGE)
+        draw.line([(x + 20, y + 12), (x + 30, y + 20)], fill=ORANGE, width=2)
+        draw.line([(x + 20, y + 30), (x + 30, y + 24)], fill=ORANGE, width=2)
+
+    draw.text((x + 52, y + 2), text, fill=DARK, font=f_text)
+    draw.text((x + 52, y + 30), sub, fill=SLATE, font=f_sub)
+
+
+# ─── POSTER 1: Clean white, logo-focused, vertical layout ───
 
 def create_poster_1():
-    """Poster variant 1: Central thermal pulse with concentric rings."""
-    img = Image.new("RGBA", (W, H), BONE)
-    draw = ImageDraw.Draw(img, "RGBA")
+    img = Image.new("RGB", (W, H), WHITE)
+    draw = ImageDraw.Draw(img)
 
-    # Background dot field — subtle systematic pattern
-    draw_dot_field(draw, 0, 0, W, H, ORANGE, spacing=32, dot_r=1)
+    # Soft orange accent bar at very top
+    draw.rectangle([(0, 0), (W, 8)], fill=ORANGE)
 
-    # Central thermal rings
-    cx, cy = W // 2, H // 2 - 80
-    draw_concentric_rings(draw, cx, cy, 500, ORANGE, alpha_start=50, ring_width=2, gap=20)
-    draw_concentric_rings(draw, cx, cy, 300, RED, alpha_start=40, ring_width=1, gap=14)
+    # Logo
+    logo = load_logo(140)
+    if logo:
+        lx = (W - 140) // 2
+        img.paste(logo, (lx, 80), logo)
 
-    # Radial dots — thermal scatter
-    draw_radial_dots(draw, cx, cy, 400, AMBER, count=200, dot_r=4)
-    draw_radial_dots(draw, cx, cy, 250, ORANGE, count=100, dot_r=3)
-
-    # Central hot spot — solid circle
-    draw.ellipse([cx-45, cy-45, cx+45, cy+45], fill=(*ORANGE, 220))
-    draw.ellipse([cx-25, cy-25, cx+25, cy+25], fill=(*RED, 240))
-
-    # Location pin silhouette in center (simple geometric)
-    # Pin body
-    pin_top = cy - 18
-    pin_size = 14
-    draw.ellipse([cx-pin_size, pin_top-pin_size, cx+pin_size, pin_top+pin_size], fill=WHITE)
-    draw.polygon([(cx-pin_size, pin_top+4), (cx, pin_top+pin_size+16), (cx+pin_size, pin_top+4)], fill=WHITE)
-    draw.ellipse([cx-6, pin_top-6, cx+6, pin_top+6], fill=(*RED, 240))
-
-    # Title — large, architectural
-    font_title = load_font("Outfit-Bold.ttf", 96)
-    font_sub = load_font("InstrumentSans-Regular.ttf", 28)
-    font_tiny = load_font("DMMono-Regular.ttf", 16)
-
-    # "SNACKSPOT" at top
-    title_text = "SNACKSPOT"
-    bbox_t = draw.textbbox((0, 0), title_text, font=font_title)
-    tw = bbox_t[2] - bbox_t[0]
-    draw.text(((W - tw) // 2, 100), title_text, fill=(*DARK, 230), font=font_title)
-
-    # Thin line under title
-    line_y = 215
-    draw.line([(W//2 - 160, line_y), (W//2 + 160, line_y)], fill=(*ORANGE, 120), width=2)
-
-    # Subtitle
-    sub_text = "Ontdek de beste snacks bij jou in de buurt"
-    bbox_s = draw.textbbox((0, 0), sub_text, font=font_sub)
-    sw = bbox_s[2] - bbox_s[0]
-    draw.text(((W - sw) // 2, 235), sub_text, fill=(*DARK, 160), font=font_sub)
-
-    # QR code at bottom
-    qr_img = generate_qr("https://snackspot.online", size=240)
-    qr_x = (W - 240) // 2
-    qr_y = H - 380
-
-    # QR background
-    qr_pad = 24
-    draw.rounded_rectangle(
-        [qr_x - qr_pad, qr_y - qr_pad, qr_x + 240 + qr_pad, qr_y + 240 + qr_pad],
-        radius=16, fill=WHITE
-    )
-    img.paste(qr_img, (qr_x, qr_y), qr_img)
-
-    # URL label under QR
-    url_text = "snackspot.online"
-    bbox_u = draw.textbbox((0, 0), url_text, font=font_sub)
-    uw = bbox_u[2] - bbox_u[0]
-    draw.text(((W - uw) // 2, qr_y + 260), url_text, fill=(*DARK, 200), font=font_sub)
-
-    # Coordinate-style markers — scientific notation feel
-    draw.text((40, H - 60), "52.3676°N  4.9041°E", fill=(*DARK, 60), font=font_tiny)
-    draw.text((W - 240, H - 60), "THERMAL CARTOGRAPHY", fill=(*DARK, 40), font=font_tiny)
-
-    # Top corner — minimal marker
-    draw.text((40, 40), "▪ 001", fill=(*ORANGE, 100), font=font_tiny)
-
-    out = img.convert("RGB")
-    path = os.path.join(OUTPUT_DIR, "snackspot-poster-01.png")
-    out.save(path, "PNG", dpi=(300, 300))
-    print(f"Created: {path}")
-    return path
-
-
-def create_poster_2():
-    """Poster variant 2: Clean geometric — warm minimalism with structured space."""
-    img = Image.new("RGBA", (W, H), BONE)
-    draw = ImageDraw.Draw(img, "RGBA")
-
-    # Subtle warm tint at top — very gentle, drawn on separate layer to avoid alpha accumulation
-    tint = Image.new("RGBA", (W, 160), (0, 0, 0, 0))
-    tint_draw = ImageDraw.Draw(tint, "RGBA")
-    for y in range(0, 160):
-        progress = y / 160
-        alpha = int(18 * (1 - progress))
-        tint_draw.line([(0, y), (W, y)], fill=(*ORANGE, alpha))
-    img = Image.alpha_composite(img, Image.new("RGBA", (W, H), (0, 0, 0, 0)))
-    # Paste tint onto a full-size transparent image, then composite
-    tint_full = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    tint_full.paste(tint, (0, 0))
-    img = Image.alpha_composite(img, tint_full)
-    draw = ImageDraw.Draw(img, "RGBA")
-
-    # Thin horizontal rules — cartographic structure
-    for y in range(300, 1100, 60):
-        draw.line([(100, y), (W - 100, y)], fill=(*DARK, 12), width=1)
-
-    # Vertical thin accent lines at margins
-    for x in [100, W - 100]:
-        draw.line([(x, 280), (x, 1120)], fill=(*ORANGE, 20), width=1)
-
-    # Dot grid — subtle, not overlapping with center
-    draw_dot_field(draw, 120, 340, 400, 1080, ORANGE, spacing=30, dot_r=1)
-    draw_dot_field(draw, W - 400, 340, W - 120, 1080, ORANGE, spacing=30, dot_r=1)
-
-    # Central element — concentric rings only (no filled circles)
-    cx, cy = W // 2, 680
-    draw_concentric_rings(draw, cx, cy, 280, ORANGE, alpha_start=35, ring_width=1, gap=22)
-
-    # Small hot center
-    draw.ellipse([cx-20, cy-20, cx+20, cy+20], fill=(*ORANGE, 160))
-    draw.ellipse([cx-8, cy-8, cx+8, cy+8], fill=(*RED, 200))
-
-    # Brand mark top — clean and bold
-    font_brand = load_font("Outfit-Bold.ttf", 80)
-    font_tagline = load_font("InstrumentSans-Regular.ttf", 24)
-    font_label = load_font("DMMono-Regular.ttf", 14)
-    font_url = load_font("InstrumentSans-Bold.ttf", 26)
-
-    brand = "SNACKSPOT"
-    bb = draw.textbbox((0, 0), brand, font=font_brand)
-    bw = bb[2] - bb[0]
-    draw.text(((W - bw) // 2, 80), brand, fill=(*DARK, 230), font=font_brand)
-
-    # Thin orange accent bar
-    bar_y = 178
-    bar_w = 50
-    draw.rectangle([(W//2 - bar_w, bar_y), (W//2 + bar_w, bar_y + 2)], fill=(*ORANGE, 180))
+    # Brand name
+    f_brand = font("Outfit-Bold.ttf", 64)
+    center_text(draw, 240, "SnackSpot", f_brand, DARK)
 
     # Tagline
-    tag = "Vind jouw favoriete snackbar"
-    tb = draw.textbbox((0, 0), tag, font=font_tagline)
-    ttw = tb[2] - tb[0]
-    draw.text(((W - ttw) // 2, 200), tag, fill=(*DARK, 130), font=font_tagline)
+    f_tag = font("InstrumentSans-Regular.ttf", 28)
+    center_text(draw, 320, "De app voor snackbar-liefhebbers", f_tag, SLATE)
 
-    # Three feature labels — minimal, well-spaced
-    features = ["ONTDEK", "BEOORDEEL", "DEEL"]
-    feat_font = load_font("DMMono-Regular.ttf", 15)
-    feat_y = 1140
-    spacing = W // 4
-    for i, feat in enumerate(features):
-        fx = spacing * (i + 1)
-        fb = draw.textbbox((0, 0), feat, font=feat_font)
-        fw = fb[2] - fb[0]
-        draw.text((fx - fw // 2, feat_y), feat, fill=(*ORANGE, 160), font=feat_font)
-        # small dot above
-        draw.ellipse([fx - 2, feat_y - 12, fx + 2, feat_y - 8], fill=(*RED, 140))
+    # Divider
+    draw.line([(W // 2 - 60, 380), (W // 2 + 60, 380)], fill=ORANGE, width=3)
 
-    # QR section at bottom — generous spacing
-    qr_img = generate_qr("https://snackspot.online", size=200)
-    qr_x = (W - 200) // 2
-    qr_y = H - 380
+    # Main headline
+    f_headline = font("Outfit-Bold.ttf", 44)
+    f_headline_sub = font("InstrumentSans-Regular.ttf", 26)
+    center_text(draw, 420, "Ontdek de beste snackbars", f_headline, DARK)
+    center_text(draw, 478, "bij jou in de buurt", f_headline, DARK)
 
-    # Clean white card behind QR
-    card_pad = 28
-    draw.rounded_rectangle(
-        [qr_x - card_pad, qr_y - card_pad - 6, qr_x + 200 + card_pad, qr_y + 200 + card_pad + 46],
-        radius=16, fill=WHITE, outline=(*ORANGE, 30), width=1
-    )
-    img.paste(qr_img, (qr_x, qr_y), qr_img)
+    # Feature cards area — light background
+    card_y = 550
+    card_h = 380
+    card_margin = 80
+    draw_rounded_rect(draw, [card_margin, card_y, W - card_margin, card_y + card_h], 20, LIGHT_BG)
 
-    # URL
-    url = "snackspot.online"
-    ub = draw.textbbox((0, 0), url, font=font_url)
-    uw = ub[2] - ub[0]
-    draw.text(((W - uw) // 2, qr_y + 215), url, fill=(*DARK, 190), font=font_url)
+    # Features
+    f_feat = font("Outfit-Bold.ttf", 24)
+    f_desc = font("InstrumentSans-Regular.ttf", 19)
 
-    # Scan label
-    scan = "SCAN & ONTDEK"
-    sb = draw.textbbox((0, 0), scan, font=font_label)
-    sw = sb[2] - sb[0]
-    draw.text(((W - sw) // 2, qr_y - card_pad + 6), scan, fill=(*ORANGE, 120), font=font_label)
-
-    # Bottom coordinates
-    draw.text((40, H - 50), "▪ 002", fill=(*ORANGE, 70), font=font_label)
-    draw.text((W - 200, H - 50), "THERMAL CARTOGRAPHY", fill=(*DARK, 35), font=font_label)
-
-    out = img.convert("RGB")
-    path = os.path.join(OUTPUT_DIR, "snackspot-poster-02.png")
-    out.save(path, "PNG", dpi=(300, 300))
-    print(f"Created: {path}")
-    return path
-
-
-def create_poster_3():
-    """Poster variant 3: Dark mode — thermal imaging aesthetic."""
-    img = Image.new("RGBA", (W, H), DARK)
-    draw = ImageDraw.Draw(img, "RGBA")
-
-    # Subtle grid — like thermal camera overlay
-    for x in range(0, W, 40):
-        draw.line([(x, 0), (x, H)], fill=(255, 255, 255, 8), width=1)
-    for y in range(0, H, 40):
-        draw.line([(0, y), (W, y)], fill=(255, 255, 255, 8), width=1)
-
-    # Multiple heat sources — scattered thermal signatures
-    import random
-    random.seed(77)
-    heat_points = [
-        (W // 2, H // 2 - 100, 350, ORANGE, 45),
-        (280, 500, 180, AMBER, 30),
-        (W - 300, 550, 200, ORANGE, 35),
-        (400, 900, 150, RED, 25),
-        (W - 250, 950, 170, AMBER, 28),
+    features = [
+        ("pin", "Vind snackbars", "Zoek op locatie, naam of type snack"),
+        ("star", "Lees reviews", "Bekijk beoordelingen van andere snackliefhebbers"),
+        ("share", "Deel je favorieten", "Schrijf reviews en help anderen kiezen"),
     ]
 
-    for hx, hy, hr, hcolor, halpha in heat_points:
-        draw_concentric_rings(draw, hx, hy, hr, hcolor, alpha_start=halpha, ring_width=1, gap=16)
-        draw_radial_dots(draw, hx, hy, hr * 0.7, hcolor, count=60, dot_r=2)
-        # Hot center
-        draw.ellipse([hx-8, hy-8, hx+8, hy+8], fill=(*hcolor, 200))
+    fy = card_y + 40
+    for icon, title, desc in features:
+        draw_feature_row(draw, card_margin + 40, fy, icon, title, desc, f_feat, f_desc)
+        fy += 105
 
-    # Central dominant source
-    cx, cy = W // 2, H // 2 - 100
-    draw.ellipse([cx-35, cy-35, cx+35, cy+35], fill=(*ORANGE, 160))
-    draw.ellipse([cx-18, cy-18, cx+18, cy+18], fill=(*AMBER, 220))
-    draw.ellipse([cx-6, cy-6, cx+6, cy+6], fill=(*WHITE, 240))
+    # Separator dots between features
+    for i in range(2):
+        dot_y = card_y + 40 + 105 * (i + 1) - 15
+        for dx in range(0, 200, 12):
+            draw.ellipse([card_margin + 92 + dx, dot_y, card_margin + 94 + dx, dot_y + 2], fill=(*GRAY, ))
 
-    # Title — glowing on dark
-    font_title = load_font("Outfit-Bold.ttf", 88)
-    font_sub = load_font("InstrumentSans-Regular.ttf", 26)
-    font_tiny = load_font("DMMono-Regular.ttf", 14)
-    font_url = load_font("InstrumentSans-Bold.ttf", 24)
+    # "Gratis beschikbaar" badge
+    f_badge = font("Outfit-Bold.ttf", 20)
+    f_badge_sub = font("InstrumentSans-Regular.ttf", 17)
+    badge_y = card_y + card_h + 30
+    badge_text = "100% gratis  —  Geen account nodig"
+    center_text(draw, badge_y, badge_text, f_badge_sub, SLATE)
 
-    title = "SNACKSPOT"
-    tb = draw.textbbox((0, 0), title, font=font_title)
-    tw = tb[2] - tb[0]
-    # Glow effect
-    for offset in range(3, 0, -1):
-        alpha = 20 * offset
-        draw.text(((W - tw) // 2, 90 - offset), title, fill=(*ORANGE, alpha), font=font_title)
-    draw.text(((W - tw) // 2, 90), title, fill=(*ORANGE, 240), font=font_title)
+    # QR Section
+    qr_section_y = 1100
+    draw.line([(card_margin, qr_section_y - 20), (W - card_margin, qr_section_y - 20)], fill=(*ORANGE_SOFT,), width=1)
 
-    # Accent line
-    draw.line([(W//2 - 100, 195), (W//2 + 100, 195)], fill=(*ORANGE, 80), width=1)
+    f_cta = font("Outfit-Bold.ttf", 32)
+    center_text(draw, qr_section_y, "Scan en begin met ontdekken", f_cta, DARK)
 
-    # Subtitle
-    sub = "De snackbar-app van Nederland"
-    sb = draw.textbbox((0, 0), sub, font=font_sub)
-    sw = sb[2] - sb[0]
-    draw.text(((W - sw) // 2, 210), sub, fill=(200, 200, 200, 160), font=font_sub)
+    # QR code
+    qr_img = generate_qr("https://snackspot.online", size=260)
+    qr_x = (W - 260) // 2
+    qr_y = qr_section_y + 60
 
-    # QR — white on dark stands out
+    # White card with subtle shadow
+    shadow_pad = 36
+    draw_rounded_rect(draw, [qr_x - shadow_pad + 4, qr_y - shadow_pad + 4,
+                              qr_x + 260 + shadow_pad + 4, qr_y + 260 + shadow_pad + 4],
+                      18, (230, 230, 230))
+    draw_rounded_rect(draw, [qr_x - shadow_pad, qr_y - shadow_pad,
+                              qr_x + 260 + shadow_pad, qr_y + 260 + shadow_pad],
+                      18, WHITE)
+    img.paste(qr_img, (qr_x, qr_y), qr_img)
+
+    # URL under QR
+    f_url = font("Outfit-Bold.ttf", 26)
+    center_text(draw, qr_y + 280, "snackspot.online", f_url, ORANGE)
+
+    # Bottom bar
+    draw.rectangle([(0, H - 8), (W, H)], fill=ORANGE)
+
+    path = os.path.join(OUTPUT_DIR, "snackspot-poster-01.png")
+    img.save(path, "PNG", dpi=(300, 300))
+    print(f"Created: {path}")
+
+
+# ─── POSTER 2: Orange header, bold and energetic ───
+
+def create_poster_2():
+    img = Image.new("RGB", (W, H), WHITE)
+    draw = ImageDraw.Draw(img)
+
+    # Large orange header section
+    header_h = 480
+    draw.rectangle([(0, 0), (W, header_h)], fill=ORANGE)
+
+    # Logo in header
+    logo = load_logo(100)
+    if logo:
+        img.paste(logo, ((W - 100) // 2, 50), logo)
+
+    # Title on orange
+    f_title = font("Outfit-Bold.ttf", 56)
+    f_sub = font("InstrumentSans-Regular.ttf", 26)
+    center_text(draw, 170, "SnackSpot", f_title, WHITE)
+
+    # Tagline on orange
+    center_text(draw, 245, "Ontdek  ·  Beoordeel  ·  Deel", f_sub, (*WHITE,))
+
+    # Big CTA text on orange
+    f_big = font("Outfit-Bold.ttf", 38)
+    center_text(draw, 340, "Jouw gids voor de beste", f_big, WHITE)
+    center_text(draw, 390, "snackbars van Nederland", f_big, WHITE)
+
+    # Wave/curve transition (simple rounded rectangle overlap)
+    draw_rounded_rect(draw, [0, header_h - 30, W, header_h + 30], 30, WHITE)
+
+    # Content section
+    f_heading = font("Outfit-Bold.ttf", 30)
+    f_body = font("InstrumentSans-Regular.ttf", 21)
+    f_bold = font("InstrumentSans-Bold.ttf", 21)
+
+    # What is SnackSpot
+    section_x = 100
+    sy = 530
+
+    draw.text((section_x, sy), "Wat is SnackSpot?", fill=DARK, font=f_heading)
+    draw.rectangle([(section_x, sy + 42), (section_x + 50, sy + 45)], fill=ORANGE)
+
+    desc_lines = [
+        "SnackSpot helpt je de lekkerste snackbars",
+        "te vinden, waar je ook bent. Bekijk reviews,",
+        "ontdek nieuwe plekken en deel je mening.",
+    ]
+    for i, line in enumerate(desc_lines):
+        draw.text((section_x, sy + 65 + i * 32), line, fill=SLATE, font=f_body)
+
+    # Feature list with orange bullets
+    fy = 730
+    draw.text((section_x, fy), "Dit kan je met SnackSpot:", fill=DARK, font=f_heading)
+    draw.rectangle([(section_x, fy + 42), (section_x + 50, fy + 45)], fill=ORANGE)
+
+    bullet_items = [
+        "Zoek snackbars op locatie of naam",
+        "Bekijk foto's, menu's en openingstijden",
+        "Lees en schrijf beoordelingen",
+        "Bewaar je favoriete plekken",
+        "Deel tips met vrienden en familie",
+    ]
+    f_bullet = font("InstrumentSans-Regular.ttf", 22)
+    for i, item in enumerate(bullet_items):
+        by = fy + 65 + i * 46
+        # Orange bullet dot
+        draw.ellipse([section_x + 4, by + 10, section_x + 14, by + 20], fill=ORANGE)
+        draw.text((section_x + 30, by), item, fill=DARK, font=f_bullet)
+
+    # QR section at bottom
+    qr_bg_y = 1100
+    draw_rounded_rect(draw, [60, qr_bg_y, W - 60, H - 60], 24, LIGHT_BG)
+
+    f_cta = font("Outfit-Bold.ttf", 30)
+    center_text(draw, qr_bg_y + 30, "Probeer het nu — helemaal gratis!", f_cta, DARK)
+
+    f_cta_sub = font("InstrumentSans-Regular.ttf", 20)
+    center_text(draw, qr_bg_y + 75, "Scan de QR-code of ga naar:", f_cta_sub, SLATE)
+
+    # QR
     qr_img = generate_qr("https://snackspot.online", size=220)
     qr_x = (W - 220) // 2
-    qr_y = H - 400
+    qr_y = qr_bg_y + 115
 
-    # Subtle glow behind QR
-    glow_r = 160
-    for r in range(glow_r, 0, -2):
-        alpha = int(8 * (1 - r / glow_r))
-        draw.ellipse([qr_x + 110 - r, qr_y + 110 - r, qr_x + 110 + r, qr_y + 110 + r],
-                     fill=(*ORANGE, alpha))
+    draw_rounded_rect(draw, [qr_x - 20, qr_y - 20, qr_x + 240, qr_y + 240], 14, WHITE)
+    img.paste(qr_img, (qr_x, qr_y), qr_img)
 
-    # QR white background
-    qr_pad = 20
-    draw.rounded_rectangle(
-        [qr_x - qr_pad, qr_y - qr_pad, qr_x + 220 + qr_pad, qr_y + 220 + qr_pad],
-        radius=14, fill=WHITE
-    )
+    f_url = font("Outfit-Bold.ttf", 28)
+    center_text(draw, qr_y + 245, "snackspot.online", f_url, ORANGE)
+
+    # Bottom accent
+    draw.rectangle([(0, H - 6), (W, H)], fill=ORANGE)
+
+    path = os.path.join(OUTPUT_DIR, "snackspot-poster-02.png")
+    img.save(path, "PNG", dpi=(300, 300))
+    print(f"Created: {path}")
+
+
+# ─── POSTER 3: Dark/modern, app-showcase style ───
+
+def create_poster_3():
+    img = Image.new("RGB", (W, H), DARK)
+    draw = ImageDraw.Draw(img)
+
+    DARK_CARD = (30, 41, 59)
+    DARK_BORDER = (51, 65, 85)
+
+    # Top accent line
+    draw.rectangle([(0, 0), (W, 4)], fill=ORANGE)
+
+    # Logo
+    logo = load_logo(120)
+    if logo:
+        img.paste(logo, ((W - 120) // 2, 70), logo)
+
+    # Title
+    f_title = font("Outfit-Bold.ttf", 60)
+    f_sub = font("InstrumentSans-Regular.ttf", 24)
+    center_text(draw, 210, "SnackSpot", f_title, WHITE)
+
+    # Tagline
+    center_text(draw, 285, "De snackbar-app van Nederland", f_sub, GRAY)
+
+    # Orange divider
+    draw.rectangle([(W // 2 - 40, 340), (W // 2 + 40, 343)], fill=ORANGE)
+
+    # Headline
+    f_head = font("Outfit-Bold.ttf", 38)
+    center_text(draw, 380, "Altijd een goede snackbar", f_head, WHITE)
+    center_text(draw, 430, "binnen handbereik", f_head, WHITE)
+
+    # Feature cards — 3 cards in a column
+    card_data = [
+        ("Zoek & Vind", "Vind snackbars bij jou in de buurt\nop basis van locatie, naam of snack", "pin"),
+        ("Reviews & Ratings", "Lees eerlijke beoordelingen en\nbekijk foto's van andere bezoekers", "star"),
+        ("Deel & Bewaar", "Sla favorieten op en deel je\nbeste snackbar-tips met anderen", "share"),
+    ]
+
+    f_card_title = font("Outfit-Bold.ttf", 24)
+    f_card_body = font("InstrumentSans-Regular.ttf", 19)
+
+    card_y_start = 510
+    card_h = 110
+    card_gap = 20
+    card_mx = 80
+
+    for i, (title, body, icon) in enumerate(card_data):
+        cy = card_y_start + i * (card_h + card_gap)
+
+        # Card background
+        draw_rounded_rect(draw, [card_mx, cy, W - card_mx, cy + card_h], 14, DARK_CARD, DARK_BORDER, 1)
+
+        # Orange accent left border
+        draw_rounded_rect(draw, [card_mx, cy, card_mx + 5, cy + card_h], 3, ORANGE)
+
+        # Icon area
+        icon_x = card_mx + 30
+        icon_y = cy + card_h // 2
+
+        if icon == "pin":
+            draw_location_pin(draw, icon_x + 12, icon_y - 4, size=14, color=ORANGE)
+        elif icon == "star":
+            draw_star(draw, icon_x + 12, icon_y - 4, size=12, color=AMBER)
+        elif icon == "share":
+            draw.ellipse([icon_x + 6, icon_y - 14, icon_x + 12, icon_y - 8], fill=ORANGE)
+            draw.ellipse([icon_x + 18, icon_y - 4, icon_x + 24, icon_y + 2], fill=ORANGE)
+            draw.ellipse([icon_x + 6, icon_y + 4, icon_x + 12, icon_y + 10], fill=ORANGE)
+            draw.line([(icon_x + 11, icon_y - 10), (icon_x + 19, icon_y - 2)], fill=ORANGE, width=2)
+            draw.line([(icon_x + 11, icon_y + 6), (icon_x + 19, icon_y + 0)], fill=ORANGE, width=2)
+
+        # Text
+        text_x = card_mx + 70
+        draw.text((text_x, cy + 18), title, fill=WHITE, font=f_card_title)
+        body_lines = body.split("\n")
+        for j, line in enumerate(body_lines):
+            draw.text((text_x, cy + 52 + j * 24), line, fill=GRAY, font=f_card_body)
+
+    # Stats row
+    stats_y = card_y_start + 3 * (card_h + card_gap) + 30
+    f_stat_num = font("Outfit-Bold.ttf", 42)
+    f_stat_label = font("InstrumentSans-Regular.ttf", 16)
+
+    stats = [
+        ("500+", "Snackbars"),
+        ("1000+", "Reviews"),
+        ("Gratis", "Geen kosten"),
+    ]
+
+    stat_spacing = W // 4
+    for i, (num, label) in enumerate(stats):
+        sx = stat_spacing * (i + 1)
+        nb = draw.textbbox((0, 0), num, font=f_stat_num)
+        nw = nb[2] - nb[0]
+        draw.text((sx - nw // 2, stats_y), num, fill=ORANGE, font=f_stat_num)
+        lb = draw.textbbox((0, 0), label, font=f_stat_label)
+        lw = lb[2] - lb[0]
+        draw.text((sx - lw // 2, stats_y + 50), label, fill=GRAY, font=f_stat_label)
+
+    # Divider dots
+    dot_y = stats_y + 90
+    for dx in range(0, 200, 8):
+        draw.ellipse([W // 2 - 100 + dx, dot_y, W // 2 - 98 + dx, dot_y + 2], fill=DARK_BORDER)
+
+    # QR Section
+    qr_section_y = stats_y + 120
+    f_cta = font("Outfit-Bold.ttf", 28)
+    center_text(draw, qr_section_y, "Scan en ontdek jouw nieuwe", f_cta, WHITE)
+    center_text(draw, qr_section_y + 40, "favoriete snackbar", f_cta, WHITE)
+
+    # QR
+    qr_img = generate_qr("https://snackspot.online", size=240, fg=DARK, bg=WHITE)
+    qr_x = (W - 240) // 2
+    qr_y = qr_section_y + 100
+
+    # QR glow
+    draw_rounded_rect(draw, [qr_x - 24, qr_y - 24, qr_x + 264, qr_y + 264], 18, WHITE)
     img.paste(qr_img, (qr_x, qr_y), qr_img)
 
     # URL
-    url = "snackspot.online"
-    ub = draw.textbbox((0, 0), url, font=font_url)
-    uw = ub[2] - ub[0]
-    draw.text(((W - uw) // 2, qr_y + 250), url, fill=(*ORANGE, 200), font=font_url)
+    f_url = font("Outfit-Bold.ttf", 26)
+    center_text(draw, qr_y + 260, "snackspot.online", f_url, ORANGE)
 
-    # Corner data
-    draw.text((30, 30), "▪ 003", fill=(*ORANGE, 80), font=font_tiny)
-    draw.text((30, H - 40), "52.37°N  4.90°E", fill=(200, 200, 200, 40), font=font_tiny)
-    draw.text((W - 220, H - 40), "THERMAL CARTOGRAPHY", fill=(200, 200, 200, 30), font=font_tiny)
+    # Bottom accent
+    draw.rectangle([(0, H - 4), (W, H)], fill=ORANGE)
 
-    # Crosshair on main heat source
-    ch_len = 20
-    draw.line([(cx - ch_len, cy), (cx - 8, cy)], fill=(255, 255, 255, 100), width=1)
-    draw.line([(cx + 8, cy), (cx + ch_len, cy)], fill=(255, 255, 255, 100), width=1)
-    draw.line([(cx, cy - ch_len), (cx, cy - 8)], fill=(255, 255, 255, 100), width=1)
-    draw.line([(cx, cy + 8), (cx, cy + ch_len)], fill=(255, 255, 255, 100), width=1)
-
-    out = img.convert("RGB")
     path = os.path.join(OUTPUT_DIR, "snackspot-poster-03.png")
-    out.save(path, "PNG", dpi=(300, 300))
+    img.save(path, "PNG", dpi=(300, 300))
     print(f"Created: {path}")
-    return path
 
 
 if __name__ == "__main__":
     print("Generating SnackSpot posters...")
-    p1 = create_poster_1()
-    p2 = create_poster_2()
-    p3 = create_poster_3()
+    create_poster_1()
+    create_poster_2()
+    create_poster_3()
     print(f"\nDone! 3 posters saved to: {OUTPUT_DIR}")
