@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
+import { MarketingShell } from '@/components/marketing-shell'
 import { SnackSpotLogo } from '@/components/snack-spot-logo'
 
 export const metadata: Metadata = {
@@ -70,29 +71,8 @@ const flow = [
 
 export default function ProductPage() {
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.14),_transparent_32%),linear-gradient(180deg,#fff7ed_0%,#ffffff_28%,#ffffff_100%)] text-snack-text">
-      <header className="sticky top-0 z-30 border-b backdrop-blur" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 h-16">
-          <Link href="/" className="shrink-0">
-            <SnackSpotLogo className="text-xl" />
-          </Link>
-          <nav aria-label="Product page navigation" className="hidden items-center gap-5 text-sm text-snack-muted md:flex">
-            <a href="#problem" className="hover:text-snack-text">Problem</a>
-            <a href="#features" className="hover:text-snack-text">Features</a>
-            <a href="#why" className="hover:text-snack-text">Why SnackSpot</a>
-            <Link href="/guides" className="hover:text-snack-text">Guides</Link>
-            <Link href="/releases" className="hover:text-snack-text">Release Notes</Link>
-          </nav>
-          <div className="flex items-center gap-2">
-            <Link href="/auth/login" className="btn-ghost text-sm">Log in</Link>
-            <Link href="/auth/register" className="btn-primary text-sm">Create account</Link>
-          </div>
-        </div>
-      </header>
-
+    <MarketingShell>
       <BreadcrumbJsonLd items={[{ name: 'About SnackSpot', path: '/product' }]} />
-
-      <main>
         <section className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-[1.2fr_0.8fr] md:items-center md:py-24">
           <div>
             <p className="mb-4 inline-flex rounded-full border border-snack-primary/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-snack-primary">
@@ -236,13 +216,6 @@ export default function ProductPage() {
             </div>
           </div>
         </section>
-      </main>
-
-      <footer className="px-4 pb-10 pt-4 text-center">
-        <p className="text-sm font-medium text-snack-muted">
-          &copy; {new Date().getFullYear()} SnackSpot
-        </p>
-      </footer>
-    </div>
+    </MarketingShell>
   )
 }
