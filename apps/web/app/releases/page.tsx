@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
-import { SnackSpotLogo } from '@/components/snack-spot-logo'
+import { MarketingShell } from '@/components/marketing-shell'
 
 export const metadata: Metadata = {
   title: { absolute: 'Release Notes | SnackSpot' },
@@ -89,27 +88,10 @@ const releases: Release[] = [
 
 export default function ReleasesPage() {
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.14),_transparent_32%),linear-gradient(180deg,#fff7ed_0%,#ffffff_28%,#ffffff_100%)] text-snack-text">
-      <header className="sticky top-0 z-30 border-b backdrop-blur" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 h-16">
-          <Link href="/" className="shrink-0">
-            <SnackSpotLogo className="text-xl" />
-          </Link>
-          <nav aria-label="Release notes navigation" className="hidden items-center gap-5 text-sm text-snack-muted md:flex">
-            <Link href="/product" className="hover:text-snack-text">About</Link>
-            <Link href="/guides" className="hover:text-snack-text">Guides</Link>
-            <span className="font-semibold text-snack-text">Release Notes</span>
-          </nav>
-          <div className="flex items-center gap-2">
-            <Link href="/auth/login" className="btn-ghost text-sm">Log in</Link>
-            <Link href="/auth/register" className="btn-primary text-sm">Create account</Link>
-          </div>
-        </div>
-      </header>
-
+    <MarketingShell>
       <BreadcrumbJsonLd items={[{ name: 'Release Notes', path: '/releases' }]} />
 
-      <main className="mx-auto max-w-3xl px-4 py-16 md:py-24">
+      <div className="mx-auto max-w-3xl px-4 py-16 md:py-24">
         <div className="mb-12">
           <p className="mb-4 inline-flex rounded-full border border-snack-primary/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-snack-primary">
             Changelog
@@ -155,13 +137,7 @@ export default function ReleasesPage() {
             </li>
           ))}
         </ol>
-      </main>
-
-      <footer className="px-4 pb-10 pt-4 text-center">
-        <p className="text-sm font-medium text-snack-muted">
-          &copy; {new Date().getFullYear()} SnackSpot
-        </p>
-      </footer>
-    </div>
+      </div>
+    </MarketingShell>
   )
 }
