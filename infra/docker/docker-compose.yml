@@ -80,7 +80,7 @@ services:
         max-size: "10m"
         max-file: "3"
     environment:
-      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-snackspot}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/${POSTGRES_DB:-snackspot}
       POOL_MODE: transaction
       DEFAULT_POOL_SIZE: "25"
       MAX_CLIENT_CONN: "400"
