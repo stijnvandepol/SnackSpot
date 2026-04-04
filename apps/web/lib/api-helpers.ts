@@ -20,7 +20,6 @@ export function noContent(): Response {
 
 export function withPublicCache(res: Response, maxAgeSeconds = 15, staleWhileRevalidateSeconds = 60): Response {
   res.headers.set('Cache-Control', `public, max-age=${maxAgeSeconds}, stale-while-revalidate=${staleWhileRevalidateSeconds}`)
-  res.headers.set('Vary', 'Accept')
   return res
 }
 
