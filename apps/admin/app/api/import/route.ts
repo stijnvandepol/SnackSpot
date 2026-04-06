@@ -621,14 +621,17 @@ export async function POST(req: NextRequest) {
       await minioClient.makeBucket(BUCKET)
     }
 
-    // Filter photo file entries from the ZIP (per D-12 — reuse parsed directory)
-    const photoEntries = directory.files.filter(
-      (f: { path: string; type: string }) => f.path.startsWith('photos/') && f.type === 'File'
-    )
+    // Restore object files from the ZIP.
+    // Backward-compatible: older archives only have photos/, newer archives include objects/.
+    const objectEntries = directory.files.filter((f: { path: string; type: string }) => (
+      (f.path.startsWith('photos/') || f.path.startsWith('objects/')) && f.type === 'File'
+    ))
 
     // Sequential upload loop (per D-02, matches export pattern)
-    for (const entry of photoEntries) {
-      const storageKey = entry.path.slice('photos/'.length)
+    for (const entry of objectEntries) {
+      const storageKey = entry.path.startsWith('objects/')
+        ? entry.path.slice('objects/'.length)
+        : entry.path.slice('photos/'.length)
       try {
         // D-03: skip if already exists in MinIO
         const alreadyExists = await minioClient

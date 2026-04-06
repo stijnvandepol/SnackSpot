@@ -16,6 +16,22 @@ interface ExportManifest {
   counts: Record<string, number>
   photosCount: number
   photosSkipped: number
+  objectsCount: number
+  objectsSkipped: number
+}
+
+function avatarVariantKey(avatarKey: string): string {
+  const trimmed = avatarKey.replace(/^\/+/, '')
+  const lastDot = trimmed.lastIndexOf('.')
+  const base = lastDot >= 0 ? trimmed.slice(0, lastDot) : trimmed
+  return `${base}.avatar-128.webp`
+}
+
+function extractVariantKeys(variants: unknown): string[] {
+  if (!variants || typeof variants !== 'object' || Array.isArray(variants)) return []
+  return Object.values(variants as Record<string, unknown>).filter(
+    (v): v is string => typeof v === 'string' && v.length > 0,
+  )
 }
 
 // ── Table names (data/*.json filenames in the ZIP) ───────────────
@@ -174,9 +190,11 @@ async function buildExport(
 
     // ── Stream photos from MinIO (per EXP-05, D-05, D-11, D-12) ─────
 
-    const allPhotos = await db.photo.findMany({ select: { id: true, storageKey: true } })
+    const allPhotos = await db.photo.findMany({ select: { id: true, storageKey: true, variants: true } })
     let photosExported = 0
     let photosSkipped = 0
+    let objectsExported = 0
+    let objectsSkipped = 0
 
     for (const photo of allPhotos) {
       try {
@@ -190,6 +208,29 @@ async function buildExport(
       }
     }
 
+    // Export additional assets used by the UI (photo variants + avatars).
+    const objectKeys = new Set<string>()
+    for (const photo of allPhotos) {
+      for (const key of extractVariantKeys(photo.variants)) objectKeys.add(key)
+    }
+    for (const user of users) {
+      if (!user.avatarKey) continue
+      objectKeys.add(user.avatarKey)
+      objectKeys.add(avatarVariantKey(user.avatarKey))
+    }
+
+    for (const key of objectKeys) {
+      try {
+        const stream = await minioClient.getObject(BUCKET, key)
+        archive.append(stream, { name: `objects/${key}` })
+        objectsExported++
+      } catch {
+        objectsSkipped++
+        // eslint-disable-next-line no-console -- export skips are intentional operational warnings
+        console.warn(`Export: skipped missing object ${key}`)
+      }
+    }
+
     // ── Manifest (per EXP-08, INF-03, D-03) ──────────────────────────
 
     const manifest: ExportManifest = {
@@ -199,6 +240,8 @@ async function buildExport(
       counts,
       photosCount: photosExported,
       photosSkipped,
+      objectsCount: objectsExported,
+      objectsSkipped,
     }
     archive.append(JSON.stringify(manifest, null, 2), { name: 'manifest.json' })
 
