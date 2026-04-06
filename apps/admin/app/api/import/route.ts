@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
   const idMaps: IdMaps = createEmptyIdMaps()
 
   try {
-    const result = await db.$transaction(async (tx) => {
+    const result = await db.$transaction(async (tx: Parameters<Parameters<typeof db.$transaction>[0]>[0]) => {
       // ── 1. users.json (per D-07, D-09, D-10) ──────────────────
       const users = tableData.get('users.json')!
       for (const r of users as any[]) {
@@ -203,13 +203,25 @@ export async function POST(req: NextRequest) {
         tableStats['places'].imported++
       }
 
-      // ── 3. reviews.json ────────────────────────────────────────
+      // ── 3. reviews.json — dedup by userId+placeId+createdAt ───
       const reviews = tableData.get('reviews.json')!
       for (const r of reviews as any[]) {
+        const mappedUserId = remapRequired(idMaps.users, r.userId, 'review.userId')
+        const mappedPlaceId = remapRequired(idMaps.places, r.placeId, 'review.placeId')
+        const createdAt = new Date(r.createdAt)
+        const existing = await tx.review.findFirst({
+          where: { userId: mappedUserId, placeId: mappedPlaceId, createdAt },
+          select: { id: true },
+        })
+        if (existing) {
+          idMaps.reviews.set(r.id, existing.id)
+          tableStats['reviews'].skipped++
+          continue
+        }
         const created = await tx.review.create({
           data: {
-            userId: remapRequired(idMaps.users, r.userId, 'review.userId'),
-            placeId: remapRequired(idMaps.places, r.placeId, 'review.placeId'),
+            userId: mappedUserId,
+            placeId: mappedPlaceId,
             rating: r.rating,
             ratingTaste: r.ratingTaste,
             ratingValue: r.ratingValue,
@@ -219,7 +231,7 @@ export async function POST(req: NextRequest) {
             text: r.text,
             dishName: r.dishName ?? null,
             status: r.status,
-            createdAt: new Date(r.createdAt),
+            createdAt,
             updatedAt: new Date(r.updatedAt),
           },
           select: { id: true },
@@ -263,15 +275,27 @@ export async function POST(req: NextRequest) {
       const rpResult = await tx.reviewPhoto.createMany({ data: remappedReviewPhotos, skipDuplicates: true })
       tableStats['review-photos'].imported = rpResult.count
 
-      // ── 6. comments.json ───────────────────────────────────────
+      // ── 6. comments.json — dedup by userId+reviewId+createdAt ─
       const comments = tableData.get('comments.json')!
       for (const r of comments as any[]) {
+        const mappedUserId = remapRequired(idMaps.users, r.userId, 'comment.userId')
+        const mappedReviewId = remapRequired(idMaps.reviews, r.reviewId, 'comment.reviewId')
+        const createdAt = new Date(r.createdAt)
+        const existing = await tx.comment.findFirst({
+          where: { userId: mappedUserId, reviewId: mappedReviewId, createdAt },
+          select: { id: true },
+        })
+        if (existing) {
+          idMaps.comments.set(r.id, existing.id)
+          tableStats['comments'].skipped++
+          continue
+        }
         const created = await tx.comment.create({
           data: {
-            userId: remapRequired(idMaps.users, r.userId, 'comment.userId'),
-            reviewId: remapRequired(idMaps.reviews, r.reviewId, 'comment.reviewId'),
+            userId: mappedUserId,
+            reviewId: mappedReviewId,
             text: r.text,
-            createdAt: new Date(r.createdAt),
+            createdAt,
             updatedAt: new Date(r.updatedAt),
           },
           select: { id: true },
@@ -341,18 +365,29 @@ export async function POST(req: NextRequest) {
       const fResult = await tx.favorite.createMany({ data: remappedFavorites, skipDuplicates: true })
       tableStats['favorites'].imported = fResult.count
 
-      // ── 11. reports.json ───────────────────────────────────────
+      // ── 11. reports.json — dedup by reporterId+targetType+createdAt
       const reports = tableData.get('reports.json')!
       for (const r of reports as any[]) {
+        const mappedReporterId = remapRequired(idMaps.users, r.reporterId, 'report.reporterId')
+        const createdAt = new Date(r.createdAt)
+        const existing = await tx.report.findFirst({
+          where: { reporterId: mappedReporterId, targetType: r.targetType, createdAt },
+          select: { id: true },
+        })
+        if (existing) {
+          idMaps.reports.set(r.id, existing.id)
+          tableStats['reports'].skipped++
+          continue
+        }
         const created = await tx.report.create({
           data: {
-            reporterId: remapRequired(idMaps.users, r.reporterId, 'report.reporterId'),
+            reporterId: mappedReporterId,
             targetType: r.targetType,
             reviewId: remap(idMaps.reviews, r.reviewId),
             photoId: remap(idMaps.photos, r.photoId),
             reason: r.reason,
             status: r.status,
-            createdAt: new Date(r.createdAt),
+            createdAt,
           },
           select: { id: true },
         })
@@ -360,17 +395,28 @@ export async function POST(req: NextRequest) {
         tableStats['reports'].imported++
       }
 
-      // ── 12. moderation-actions.json ────────────────────────────
+      // ── 12. moderation-actions.json — dedup by moderatorId+actionType+targetId+createdAt
       const moderationActions = tableData.get('moderation-actions.json')!
       for (const r of moderationActions as any[]) {
+        const mappedModeratorId = remapRequired(idMaps.users, r.moderatorId, 'moderationAction.moderatorId')
+        const createdAt = new Date(r.createdAt)
+        const existing = await tx.moderationAction.findFirst({
+          where: { moderatorId: mappedModeratorId, actionType: r.actionType, targetId: r.targetId, createdAt },
+          select: { id: true },
+        })
+        if (existing) {
+          idMaps.moderationActions.set(r.id, existing.id)
+          tableStats['moderation-actions'].skipped++
+          continue
+        }
         const created = await tx.moderationAction.create({
           data: {
-            moderatorId: remapRequired(idMaps.users, r.moderatorId, 'moderationAction.moderatorId'),
+            moderatorId: mappedModeratorId,
             actionType: r.actionType,
             targetType: r.targetType,
             targetId: r.targetId,
             note: r.note ?? null,
-            createdAt: new Date(r.createdAt),
+            createdAt,
           },
           select: { id: true },
         })
@@ -378,12 +424,23 @@ export async function POST(req: NextRequest) {
         tableStats['moderation-actions'].imported++
       }
 
-      // ── 13. notifications.json ─────────────────────────────────
+      // ── 13. notifications.json — dedup by userId+type+createdAt ─
       const notifications = tableData.get('notifications.json')!
       for (const r of notifications as any[]) {
+        const mappedUserId = remapRequired(idMaps.users, r.userId, 'notification.userId')
+        const createdAt = new Date(r.createdAt)
+        const existing = await tx.notification.findFirst({
+          where: { userId: mappedUserId, type: r.type, createdAt },
+          select: { id: true },
+        })
+        if (existing) {
+          idMaps.notifications.set(r.id, existing.id)
+          tableStats['notifications'].skipped++
+          continue
+        }
         const created = await tx.notification.create({
           data: {
-            userId: remapRequired(idMaps.users, r.userId, 'notification.userId'),
+            userId: mappedUserId,
             type: r.type,
             title: r.title,
             message: r.message,
@@ -392,7 +449,7 @@ export async function POST(req: NextRequest) {
             actorId: remap(idMaps.users, r.actorId),
             reviewId: remap(idMaps.reviews, r.reviewId),
             commentId: remap(idMaps.comments, r.commentId),
-            createdAt: new Date(r.createdAt),
+            createdAt,
           },
           select: { id: true },
         })
@@ -414,13 +471,24 @@ export async function POST(req: NextRequest) {
       const npResult = await tx.notificationPreferences.createMany({ data: remappedNotifPrefs, skipDuplicates: true })
       tableStats['notification-preferences'].imported = npResult.count
 
-      // ── 15. review-mentions.json — three FKs ──────────────────
+      // ── 15. review-mentions.json — dedup by @@unique(reviewId, mentionedUserId)
       const reviewMentions = tableData.get('review-mentions.json')!
       for (const r of reviewMentions as any[]) {
+        const mappedReviewId = remapRequired(idMaps.reviews, r.reviewId, 'reviewMention.reviewId')
+        const mappedMentionedUserId = remapRequired(idMaps.users, r.mentionedUserId, 'reviewMention.mentionedUserId')
+        const existing = await tx.reviewMention.findUnique({
+          where: { reviewId_mentionedUserId: { reviewId: mappedReviewId, mentionedUserId: mappedMentionedUserId } },
+          select: { id: true },
+        })
+        if (existing) {
+          idMaps.reviewMentions.set(r.id, existing.id)
+          tableStats['review-mentions'].skipped++
+          continue
+        }
         const created = await tx.reviewMention.create({
           data: {
-            reviewId: remapRequired(idMaps.reviews, r.reviewId, 'reviewMention.reviewId'),
-            mentionedUserId: remapRequired(idMaps.users, r.mentionedUserId, 'reviewMention.mentionedUserId'),
+            reviewId: mappedReviewId,
+            mentionedUserId: mappedMentionedUserId,
             mentionedByUserId: remapRequired(idMaps.users, r.mentionedByUserId, 'reviewMention.mentionedByUserId'),
             createdAt: new Date(r.createdAt),
           },
@@ -440,9 +508,18 @@ export async function POST(req: NextRequest) {
       const rtResult = await tx.reviewTag.createMany({ data: remappedReviewTags, skipDuplicates: true })
       tableStats['review-tags'].imported = rtResult.count
 
-      // ── 17. blocked-words.json ─────────────────────────────────
+      // ── 17. blocked-words.json — dedup by word (@unique) ───────
       const blockedWords = tableData.get('blocked-words.json')!
       for (const r of blockedWords as any[]) {
+        const existing = await tx.blockedWord.findUnique({
+          where: { word: r.word },
+          select: { id: true },
+        })
+        if (existing) {
+          idMaps.blockedWords.set(r.id, existing.id)
+          tableStats['blocked-words'].skipped++
+          continue
+        }
         const created = await tx.blockedWord.create({
           data: {
             word: r.word,
@@ -455,12 +532,22 @@ export async function POST(req: NextRequest) {
         tableStats['blocked-words'].imported++
       }
 
-      // ── 18. flagged-comments.json ──────────────────────────────
+      // ── 18. flagged-comments.json — dedup by commentId (@unique) ─
       const flaggedComments = tableData.get('flagged-comments.json')!
       for (const r of flaggedComments as any[]) {
+        const mappedCommentId = remapRequired(idMaps.comments, r.commentId, 'flaggedComment.commentId')
+        const existing = await tx.flaggedComment.findUnique({
+          where: { commentId: mappedCommentId },
+          select: { id: true },
+        })
+        if (existing) {
+          idMaps.flaggedComments.set(r.id, existing.id)
+          tableStats['flagged-comments'].skipped++
+          continue
+        }
         const created = await tx.flaggedComment.create({
           data: {
-            commentId: remapRequired(idMaps.comments, r.commentId, 'flaggedComment.commentId'),
+            commentId: mappedCommentId,
             matchedWord: r.matchedWord,
             status: r.status,
             reviewedBy: remap(idMaps.users, r.reviewedBy),

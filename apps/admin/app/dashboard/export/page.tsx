@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import type { ImportSummary } from '../api/import/types'
+import type { ImportSummary } from '../../api/import/types'
 
 export default function ExportPage() {
   const [loading, setLoading] = useState(false)
