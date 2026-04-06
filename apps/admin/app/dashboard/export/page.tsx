@@ -169,7 +169,7 @@ export default function ExportPage() {
               {importResult.success ? 'Import voltooid' : 'Import mislukt'}
             </h3>
 
-            <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
               <div className="bg-green-50 rounded-lg p-3 text-center">
                 <p className="text-2xl font-bold text-green-700">{importResult.totalImported}</p>
                 <p className="text-sm text-green-600">Geimporteerd</p>
@@ -182,7 +182,20 @@ export default function ExportPage() {
                 <p className="text-2xl font-bold text-blue-700">{importResult.tablesProcessed}</p>
                 <p className="text-sm text-blue-600">Tabellen</p>
               </div>
+              {importResult.photos && (
+                <div className="bg-purple-50 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-purple-700">{importResult.photos.uploaded}</p>
+                  <p className="text-sm text-purple-600">Foto&apos;s geupload</p>
+                </div>
+              )}
             </div>
+
+            {importResult.photos && (importResult.photos.skipped > 0 || importResult.photos.errors.length > 0) && (
+              <p className="text-xs text-gray-500 mt-2">
+                Foto&apos;s: {importResult.photos.uploaded} geupload, {importResult.photos.skipped} overgeslagen
+                {importResult.photos.errors.length > 0 && `, ${importResult.photos.errors.length} fouten`}
+              </p>
+            )}
 
             <table className="w-full text-sm border-collapse">
               <thead>
@@ -225,6 +238,16 @@ export default function ExportPage() {
                       ))}
                     </div>
                   ))}
+              </div>
+            )}
+
+            {/* Show photo-specific errors if any */}
+            {importResult.photos && importResult.photos.errors.length > 0 && (
+              <div className="mt-4 bg-red-50 border border-red-200 rounded-xl p-4">
+                <h4 className="text-sm font-semibold text-red-800 mb-2">Foto-fouten</h4>
+                {importResult.photos.errors.map((err, i) => (
+                  <p key={i} className="text-xs text-red-600 ml-2">{err}</p>
+                ))}
               </div>
             )}
           </div>
