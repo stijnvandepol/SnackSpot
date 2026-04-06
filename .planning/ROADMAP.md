@@ -31,9 +31,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Install archiver/minio dependencies, extend admin env schema, create MinIO client
-- [ ] 01-02-PLAN.md — Streaming export API route (18 tables + photos + manifest)
-- [ ] 01-03-PLAN.md — Export UI page with sidebar nav and download button
+- [x] 01-01-PLAN.md — Install archiver/minio dependencies, extend admin env schema, create MinIO client
+- [x] 01-02-PLAN.md — Streaming export API route (18 tables + photos + manifest)
+- [x] 01-03-PLAN.md — Export UI page with sidebar nav and download button
 **UI hint**: yes
 
 ### Phase 2: Import Pipeline (Relational)
