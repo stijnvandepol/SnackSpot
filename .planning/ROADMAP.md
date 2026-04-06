@@ -49,9 +49,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Install unzipper dependency and define import types/constants contract
-- [ ] 02-02-PLAN.md — Import API route with validation, 18-table FK-ordered pipeline, ID remapping, dedup
-- [ ] 02-03-PLAN.md — Import UI with file picker, upload button, spinner, and summary report
+- [x] 02-01-PLAN.md — Install unzipper dependency and define import types/constants contract
+- [x] 02-02-PLAN.md — Import API route with validation, 18-table FK-ordered pipeline, ID remapping, dedup
+- [x] 02-03-PLAN.md — Import UI with file picker, upload button, spinner, and summary report
 **UI hint**: yes
 
 ### Phase 3: Photo Import + End-to-End
@@ -65,8 +65,8 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Install unzipper dependency and define import types/constants contract
-- [ ] 02-02-PLAN.md — Import API route with validation, 18-table FK-ordered pipeline, ID remapping, dedup
+- [x] 02-01-PLAN.md — Install unzipper dependency and define import types/constants contract
+- [x] 02-02-PLAN.md — Import API route with validation, 18-table FK-ordered pipeline, ID remapping, dedup
 - [ ] 02-03-PLAN.md — Import UI with file picker, upload button, spinner, and summary report
 
 ## Progress
