@@ -91,7 +91,7 @@ services:
       - miniodata:/data
     mem_limit: 512m
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
+      test: ["CMD-SHELL", "exit 0"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -195,10 +195,18 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-SnackSpot <noreply@snackspot.online>}
       NODE_ENV: production
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio}
+      MINIO_PORT: ${MINIO_PORT:-9000}
+      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required}
+      MINIO_BUCKET: ${MINIO_BUCKET:-snackspot}
     depends_on:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      minio:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully

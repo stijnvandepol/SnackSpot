@@ -22,6 +22,7 @@ jobs:
       MINIO_ENDPOINT: localhost
       MINIO_ACCESS_KEY: placeholder-key
       MINIO_SECRET_KEY: placeholder-secret-key-min
+      MINIO_BUCKET: snackspot
       MINIO_PUBLIC_URL: https://snackspot.online
       JWT_ACCESS_SECRET: placeholder-access-secret-at-least-32-chars-long
       JWT_REFRESH_SECRET: placeholder-refresh-secret-at-least-32-chars-long
@@ -77,6 +78,7 @@ jobs:
       MINIO_ENDPOINT: localhost
       MINIO_ACCESS_KEY: placeholder-key
       MINIO_SECRET_KEY: placeholder-secret-key-min
+      MINIO_BUCKET: snackspot
       MINIO_PUBLIC_URL: https://snackspot.online
       JWT_ACCESS_SECRET: placeholder-access-secret-at-least-32-chars-long
       JWT_REFRESH_SECRET: placeholder-refresh-secret-at-least-32-chars-long
