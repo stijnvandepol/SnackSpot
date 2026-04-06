@@ -63,10 +63,11 @@ export async function POST(req: NextRequest) {
   let formData: FormData
   try {
     formData = await req.formData()
-  } catch {
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err)
     return Response.json(
       {
-        error: 'Upload kon niet worden verwerkt. Het ZIP-bestand is waarschijnlijk te groot voor de huidige uploadlimiet.',
+        error: `Upload kon niet worden verwerkt tijdens multipart parsing: ${reason}`,
       },
       { status: 413 },
     )
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
   // Stream upload to a temp file to avoid loading large archives fully into memory.
   const tempZipPath = join(tmpdir(), `snackspot-import-${randomUUID()}.zip`)
   try {
-    await pipeline(Readable.fromWeb(file.stream() as ReadableStream<Uint8Array>), createWriteStream(tempZipPath))
+    await pipeline(Readable.fromWeb(file.stream() as any), createWriteStream(tempZipPath))
   } catch {
     return Response.json(
       { error: 'Uploadbestand kon niet naar tijdelijke opslag worden geschreven.' },
