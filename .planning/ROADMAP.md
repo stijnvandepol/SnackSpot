@@ -46,7 +46,12 @@ Plans:
   3. All foreign key IDs are remapped correctly including compound-key junction tables (ReviewLike, Favorite, etc.)
   4. Duplicate users (by email) and duplicate places (by name+address) are skipped, not overwritten
   5. Re-running the same archive a second time produces zero new records in every table
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Install unzipper dependency and define import types/constants contract
+- [ ] 02-02-PLAN.md — Import API route with validation, 18-table FK-ordered pipeline, ID remapping, dedup
+- [ ] 02-03-PLAN.md — Import UI with file picker, upload button, spinner, and summary report
 **UI hint**: yes
 
 ### Phase 3: Photo Import + End-to-End
@@ -57,7 +62,12 @@ Plans:
   1. After import, every photo referenced in the database is retrievable from the target MinIO instance
   2. A full round-trip (export populated instance → import to empty instance) produces matching record counts, correct place lat/lng values, and accessible photos
   3. The import summary report includes per-entity photo counts (uploaded / skipped / errors)
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Install unzipper dependency and define import types/constants contract
+- [ ] 02-02-PLAN.md — Import API route with validation, 18-table FK-ordered pipeline, ID remapping, dedup
+- [ ] 02-03-PLAN.md — Import UI with file picker, upload button, spinner, and summary report
 
 ## Progress
 
