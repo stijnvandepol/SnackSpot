@@ -34,6 +34,14 @@ export interface ImportTableStats {
   errors: string[]
 }
 
+// ── Photo import statistics ───────────────────────────────────────
+
+export interface PhotoImportStats {
+  uploaded: number
+  skipped: number
+  errors: string[]
+}
+
 // ── Import response shape ────────────────────────────────────────
 
 export interface ImportSummary {
@@ -44,6 +52,7 @@ export interface ImportSummary {
   totalImported: number
   totalSkipped: number
   tables: Record<string, ImportTableStats>
+  photos?: PhotoImportStats
   error?: string
 }
 

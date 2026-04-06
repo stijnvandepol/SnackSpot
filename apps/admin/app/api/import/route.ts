@@ -2,10 +2,12 @@ import { type NextRequest } from 'next/server'
 import unzipper from 'unzipper'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { minioClient, BUCKET } from '@/lib/minio'
 import {
   type ImportSummary,
   type ImportTableStats,
   type IdMaps,
+  type PhotoImportStats,
   CURRENT_SCHEMA_VERSION,
   IMPORT_TABLE_ORDER,
   createEmptyIdMaps,
@@ -579,6 +581,50 @@ export async function POST(req: NextRequest) {
       }
       return summary
     }, { timeout: 60000, maxWait: 10000 })
+
+    // ── Photo upload (after transaction, before response) ────────
+    // Per D-01, D-11: upload photos from ZIP to MinIO after successful DB import
+
+    const photoStats: PhotoImportStats = { uploaded: 0, skipped: 0, errors: [] }
+
+    // Ensure bucket exists
+    const bucketExists = await minioClient.bucketExists(BUCKET)
+    if (!bucketExists) {
+      await minioClient.makeBucket(BUCKET)
+    }
+
+    // Filter photo file entries from the ZIP (per D-12 — reuse parsed directory)
+    const photoEntries = directory.files.filter(
+      (f: { path: string; type: string }) => f.path.startsWith('photos/') && f.type === 'File'
+    )
+
+    // Sequential upload loop (per D-02, matches export pattern)
+    for (const entry of photoEntries) {
+      const storageKey = entry.path.slice('photos/'.length)
+      try {
+        // D-03: skip if already exists in MinIO
+        const alreadyExists = await minioClient
+          .statObject(BUCKET, storageKey)
+          .then(() => true)
+          .catch(() => false)
+
+        if (alreadyExists) {
+          photoStats.skipped++
+          continue
+        }
+
+        const buffer = await entry.buffer()
+        await minioClient.putObject(BUCKET, storageKey, buffer, buffer.length)
+        photoStats.uploaded++
+      } catch (err) {
+        // D-04: failure does not abort — count and report
+        // D-05: log storageKey and error reason
+        const reason = err instanceof Error ? err.message : String(err)
+        photoStats.errors.push(`${storageKey}: ${reason}`)
+      }
+    }
+
+    result.photos = photoStats
 
     return Response.json(result)
   } catch (error) {
