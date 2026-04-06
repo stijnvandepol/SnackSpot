@@ -1,5 +1,12 @@
 import { type NextRequest } from 'next/server'
 import unzipper from 'unzipper'
+import { createWriteStream } from 'node:fs'
+import { unlink } from 'node:fs/promises'
+import { join } from 'node:path'
+import { tmpdir } from 'node:os'
+import { randomUUID } from 'node:crypto'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { minioClient, BUCKET } from '@/lib/minio'
@@ -53,21 +60,41 @@ export async function POST(req: NextRequest) {
 
   // ── Parse uploaded file ───────────────────────────────────────
 
-  const formData = await req.formData()
+  let formData: FormData
+  try {
+    formData = await req.formData()
+  } catch {
+    return Response.json(
+      {
+        error: 'Upload kon niet worden verwerkt. Het ZIP-bestand is waarschijnlijk te groot voor de huidige uploadlimiet.',
+      },
+      { status: 413 },
+    )
+  }
   const file = formData.get('file')
 
   if (!file || !(file instanceof File)) {
     return Response.json({ error: 'Geen bestand geupload' }, { status: 422 })
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer())
+  // Stream upload to a temp file to avoid loading large archives fully into memory.
+  const tempZipPath = join(tmpdir(), `snackspot-import-${randomUUID()}.zip`)
+  try {
+    await pipeline(Readable.fromWeb(file.stream() as ReadableStream<Uint8Array>), createWriteStream(tempZipPath))
+  } catch {
+    return Response.json(
+      { error: 'Uploadbestand kon niet naar tijdelijke opslag worden geschreven.' },
+      { status: 500 },
+    )
+  }
 
   // ── Parse ZIP ─────────────────────────────────────────────────
 
   let directory: unzipper.CentralDirectory
   try {
-    directory = await unzipper.Open.buffer(buffer)
+    directory = await unzipper.Open.file(tempZipPath)
   } catch {
+    await unlink(tempZipPath).catch(() => undefined)
     return Response.json({ error: 'Ongeldig ZIP-archief' }, { status: 422 })
   }
 
@@ -638,5 +665,7 @@ export async function POST(req: NextRequest) {
       tables: {},
       error: error instanceof Error ? error.message : 'Onbekende fout bij het importeren',
     } satisfies ImportSummary, { status: 500 })
+  } finally {
+    await unlink(tempZipPath).catch(() => undefined)
   }
 }
