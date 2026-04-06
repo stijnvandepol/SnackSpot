@@ -9,7 +9,14 @@ overrides:
 
 importers:
 
-  .: {}
+  .:
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.11.10
+        version: 8.18.0
+      pg:
+        specifier: ^8.13.0
+        version: 8.20.0
 
   apps/admin:
     dependencies:
