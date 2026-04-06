@@ -62,12 +62,11 @@ Plans:
   1. After import, every photo referenced in the database is retrievable from the target MinIO instance
   2. A full round-trip (export populated instance → import to empty instance) produces matching record counts, correct place lat/lng values, and accessible photos
   3. The import summary report includes per-entity photo counts (uploaded / skipped / errors)
-**Plans:** 3 plans
+**Plans:** 2 plans
 
 Plans:
-- [x] 02-01-PLAN.md — Install unzipper dependency and define import types/constants contract
-- [x] 02-02-PLAN.md — Import API route with validation, 18-table FK-ordered pipeline, ID remapping, dedup
-- [ ] 02-03-PLAN.md — Import UI with file picker, upload button, spinner, and summary report
+- [ ] 03-01-PLAN.md — Photo upload in import route, type extension, UI photo stats box, docker-compose fix
+- [ ] 03-02-PLAN.md — Round-trip validation script with table counts, photo accessibility, PostGIS checks
 
 ## Progress
 
@@ -76,6 +75,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + Export Pipeline | 0/3 | Planned | - |
-| 2. Import Pipeline (Relational) | 0/? | Not started | - |
-| 3. Photo Import + End-to-End | 0/? | Not started | - |
+| 1. Foundation + Export Pipeline | 3/3 | Complete | - |
+| 2. Import Pipeline (Relational) | 3/3 | Complete | - |
+| 3. Photo Import + End-to-End | 0/2 | Planned | - |
