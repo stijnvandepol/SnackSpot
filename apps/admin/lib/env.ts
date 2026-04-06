@@ -16,6 +16,12 @@ const envSchema = z.object({
     .transform((v) => (v === undefined ? undefined : v === 'true')),
   RESEND_API_KEY: z.string().min(1),
   RESEND_FROM_EMAIL: z.string().default('SnackSpot <noreply@snackspot.online>'),
+  MINIO_ENDPOINT: z.string().min(1),
+  MINIO_PORT: z.coerce.number().default(9000),
+  MINIO_USE_SSL: z.string().transform(v => v === 'true').default('false'),
+  MINIO_ACCESS_KEY: z.string().min(1),
+  MINIO_SECRET_KEY: z.string().min(1),
+  MINIO_BUCKET: z.string().min(1),
 })
 
 const parsed = envSchema.safeParse(process.env)
