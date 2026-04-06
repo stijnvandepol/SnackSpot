@@ -45,7 +45,7 @@ Declared values (must be multiples of 4). Source: observed from existing pages v
 | 3xl | 64px | — (not currently observed; available for future use) |
 
 Exceptions:
-- Button touch target: `px-5 py-2.5` (20px / 10px) — matches `.btn` class in `globals.css`; not a spacing token but a fixed component geometry
+- **Pre-existing codebase exception (out of scope for this phase):** The `.btn` class in `apps/admin/app/globals.css` uses `px-5 py-2.5` (20px / 10px). The `py-2.5` value (10px) predates this spec and is not on the 4-point grid. This phase does not introduce or change this value — it is inherited as-is from the existing design system.
 - Nav item active/hover: `px-4 py-3` (16px / 12px) — fixed component geometry matching sidebar pattern
 
 ---
@@ -54,17 +54,18 @@ Exceptions:
 
 Source: observed from `app/dashboard/page.tsx`, `app/dashboard/layout.tsx`, `globals.css`.
 
+Two weights only: **regular (400)** for body and muted text, **semibold (600)** for all elevated text (labels, section headings, page headings).
+
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
-| Body | 14px (`text-sm`) | 400 (regular) | 1.5 |
-| Label | 14px (`text-sm`) | 500 (`font-medium`, via `.label`) | 1.4 |
-| Heading (section) | 20px (`text-xl`) | 600 (`font-semibold`) | 1.2 |
-| Heading (page) | 30px (`text-3xl`) | 700 (`font-bold`) | 1.2 |
+| Body / muted | 14px (`text-sm`) | 400 (regular, `font-normal`) | 1.5 |
+| Label / section heading / page heading | 14px–30px (`text-sm` / `text-xl` / `text-3xl`) | 600 (semibold, `font-semibold`) | 1.2 for headings, 1.4 for labels |
 
 Notes:
-- The export page title follows the page heading pattern: `text-3xl font-bold mb-8` (matches "Dashboard" heading)
-- Table header cells use `text-sm font-semibold` — same size as label but heavier weight; treat as label role
-- Muted text (descriptions, secondary info) uses `text-sm text-gray-600` or `color: var(--snack-muted)` (#64748B)
+- The export page title follows the page heading pattern: `text-3xl font-semibold mb-8` (updated from `font-bold` to stay within the 2-weight constraint)
+- Table header cells use `text-sm font-semibold` — same weight tier as headings
+- Muted text (descriptions, secondary info) uses `text-sm font-normal text-gray-600` or `color: var(--snack-muted)` (#64748B)
+- Weight 500 (`font-medium`) and weight 700 (`font-bold`) are not used in new code written for this phase
 
 ---
 
@@ -106,7 +107,7 @@ These are the exact existing components to reuse on the export page. No new prim
 | Primary button | `.btn .btn-primary` | "Download Export" CTA |
 | Spinner | `animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500` | Shown during export generation (matches loading state in `layout.tsx`) |
 | Section heading | `text-xl font-semibold mb-4` | "Gegevens exporteren" section title |
-| Page heading | `text-3xl font-bold mb-8` | "Export / Import" page title |
+| Page heading | `text-3xl font-semibold mb-8` | "Export / Import" page title |
 | Muted paragraph | `text-gray-600` | Explanatory copy under headings |
 | Info callout | `bg-orange-50 border border-orange-200 rounded-xl p-4` + inner `text-sm text-orange-900` | Advisory notes (matches dashboard welcome card pattern) |
 
@@ -146,7 +147,7 @@ The export page (`/dashboard/export`) follows the same layout pattern as all das
 
 ```
 <div>
-  <h1 class="text-3xl font-bold mb-8">Export / Import</h1>
+  <h1 class="text-3xl font-semibold mb-8">Export / Import</h1>
 
   <div class="card">
     <h2 class="text-xl font-semibold mb-4">Gegevens exporteren</h2>
