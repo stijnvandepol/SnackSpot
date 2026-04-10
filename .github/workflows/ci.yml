@@ -158,18 +158,23 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Install Semgrep
+        run: pip install semgrep
+
       - name: Run Semgrep
-        uses: semgrep/semgrep-action@v1
-        with:
-          config: >-
-            p/typescript
-            p/nodejs
-            p/owasp-top-ten
-            p/jwt
-            p/nextjs
+        run: >-
+          semgrep scan
+          --config p/typescript
+          --config p/nodejs
+          --config p/owasp-top-ten
+          --config p/jwt
+          --config p/nextjs
+          --sarif --output semgrep.sarif
+          --error
 
       - name: Upload SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        if: always() && hashFiles('semgrep.sarif') != ''
+        continue-on-error: true
         with:
           sarif_file: semgrep.sarif
