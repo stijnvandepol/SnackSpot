@@ -37,6 +37,9 @@ Thumbs.db
 # Docker volumes data (local dev)
 data/
 
+# DAST scan reports (local)
+zap-reports/
+
 # Prisma
 prisma/generated/
 .zenflow/
