@@ -400,7 +400,7 @@ function ProfileContent() {
 
               {!loading && reviews.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-snack-muted text-sm">You haven't written any reviews yet.</p>
+                  <p className="text-snack-muted text-sm">You haven&apos;t written any reviews yet.</p>
                   <a href="/add-review" className="btn-primary mt-4 inline-block">Add your first review</a>
                 </div>
               )}
@@ -582,7 +582,7 @@ function ProfileContent() {
 
           {!loading && reviews.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-snack-muted text-sm">You haven't written any reviews yet.</p>
+              <p className="text-snack-muted text-sm">You haven&apos;t written any reviews yet.</p>
               <a href="/add-review" className="btn-primary mt-4 hidden md:inline-block">Add your first review</a>
             </div>
           )}

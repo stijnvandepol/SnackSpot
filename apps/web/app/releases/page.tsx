@@ -100,7 +100,7 @@ export default function ReleasesPage() {
             Release Notes
           </h1>
           <p className="mt-4 text-base leading-7 text-snack-muted">
-            What we've shipped — new features, improvements, and fixes.
+            What we&apos;ve shipped — new features, improvements, and fixes.
           </p>
         </div>
 

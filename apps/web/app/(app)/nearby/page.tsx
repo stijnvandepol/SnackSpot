@@ -153,7 +153,7 @@ export default function NearbyPage() {
   }
 
   // ── Desktop: address lookup via Nominatim ─────────────────────────────────
-  const useAddress = async () => {
+  const searchAddress = async () => {
     const query = addressQuery.trim()
     if (!query) {
       setGeoError('Enter a city or address first.')
@@ -213,7 +213,7 @@ export default function NearbyPage() {
               type="text"
               value={addressQuery}
               onChange={(e: { target: { value: string } }) => setAddressQuery(e.target.value)}
-              onKeyDown={(e: { key: string }) => { if (e.key === 'Enter') void useAddress() }}
+              onKeyDown={(e: { key: string }) => { if (e.key === 'Enter') void searchAddress() }}
               placeholder="Enter city or address…"
               className="input flex-1"
               disabled={loading}
@@ -221,7 +221,7 @@ export default function NearbyPage() {
             <button
               type="button"
               className="btn-primary whitespace-nowrap"
-              onClick={() => void useAddress()}
+              onClick={() => void searchAddress()}
               disabled={loading || addressQuery.trim().length === 0}
             >
               {loading ? 'Searching…' : 'Search'}
