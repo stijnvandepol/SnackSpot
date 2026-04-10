@@ -150,6 +150,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
+      actions: read
       contents: read
       security-events: write
 
@@ -166,7 +167,6 @@ jobs:
             p/owasp-top-ten
             p/jwt
             p/nextjs
-          generateSarif: "1"
 
       - name: Upload SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
