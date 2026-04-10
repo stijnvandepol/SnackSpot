@@ -3,6 +3,7 @@ import { z } from 'zod'
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   DATABASE_URL: z.string().min(1),
+  REDIS_URL: z.string().min(1),
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_SECRET: z.string().min(32),
@@ -13,14 +14,27 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((v) => (v === undefined ? undefined : v === 'true')),
+  RESEND_API_KEY: z.string().min(1),
+  RESEND_FROM_EMAIL: z.string().default('SnackSpot <noreply@snackspot.online>'),
+  MINIO_ENDPOINT: z.string().min(1),
+  MINIO_PORT: z.coerce.number().default(9000),
+  MINIO_USE_SSL: z.string().transform(v => v === 'true').default('false'),
+  MINIO_ACCESS_KEY: z.string().min(1),
+  MINIO_SECRET_KEY: z.string().min(1),
+  MINIO_BUCKET: z.string().min(1),
 })
 
 const parsed = envSchema.safeParse(process.env)
 
 if (!parsed.success) {
-  console.error('❌ Invalid environment variables:')
-  console.error(JSON.stringify(parsed.error.format(), null, 2))
-  process.exit(1)
+  const fieldErrors = parsed.error.flatten().fieldErrors
+  const failedVars = Object.keys(fieldErrors).join(', ')
+  // eslint-disable-next-line no-console -- startup validation must be visible before logger is available
+  console.error(`Invalid environment variables (${failedVars}):`, JSON.stringify(fieldErrors, null, 2))
+  // Only throw at runtime, not during Next.js build analysis
+  if (process.env.NODE_ENV !== 'test') {
+    throw new Error(`Invalid environment variables: ${failedVars} – check .env`)
+  }
 }
 
-export const env = parsed.data
+export const env = parsed.success ? parsed.data : ({} as z.infer<typeof envSchema>)

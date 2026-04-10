@@ -1,5 +1,5 @@
 x-common-env: &common-env
-  DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+  DATABASE_URL: ${DATABASE_POOL_URL:-${DATABASE_URL:?DATABASE_URL is required}}
   REDIS_URL: ${REDIS_URL:-redis://redis:6379}
   MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio}
   MINIO_PORT: ${MINIO_PORT:-9000}
@@ -16,12 +16,20 @@ services:
   db:
     image: postgis/postgis:16-3.4-alpine
     restart: unless-stopped
+    command: >
+      postgres
+      -c shared_buffers=512MB
+      -c effective_cache_size=1536MB
+      -c work_mem=16MB
+      -c max_connections=100
+      -c checkpoint_completion_target=0.9
     environment:
       POSTGRES_DB: snackspot
       POSTGRES_USER: snackspot
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    mem_limit: 2g
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U snackspot -d snackspot"]
       interval: 5s
@@ -33,14 +41,39 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: redis-server --save 60 1 --loglevel warning
+    command: redis-server --save 60 1 --loglevel warning --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       - redisdata:/data
+    mem_limit: 256m
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 10
+    networks: [snackspot]
+
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.24.0-p1
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-snackspot}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/${POSTGRES_DB:-snackspot}
+      POOL_MODE: transaction
+      DEFAULT_POOL_SIZE: "25"
+      MAX_CLIENT_CONN: "400"
+      MAX_DB_CONNECTIONS: "80"
+      RESERVE_POOL_SIZE: "5"
+      RESERVE_POOL_TIMEOUT: "3"
+      SERVER_TLS_SSLMODE: disable
+      AUTH_TYPE: scram-sha-256
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U snackspot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     networks: [snackspot]
 
   minio:
@@ -56,8 +89,9 @@ services:
       - "${MINIO_CONSOLE_BIND_ADDRESS:-127.0.0.1}:9001:9001"
     volumes:
       - miniodata:/data
+    mem_limit: 512m
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
+      test: ["CMD-SHELL", "exit 0"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -92,6 +126,7 @@ services:
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://snackspot.online}
         NEXT_PUBLIC_MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?MINIO_PUBLIC_URL is required}
         NEXT_PUBLIC_MINIO_BUCKET: ${MINIO_BUCKET:-snackspot}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:?NEXT_PUBLIC_TURNSTILE_SITE_KEY is required}
     restart: unless-stopped
     init: true
     ports:
@@ -109,6 +144,7 @@ services:
       NODE_ENV: production
       RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-SnackSpot <noreply@snackspot.online>}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:?TURNSTILE_SECRET_KEY is required}
     depends_on:
       db:
         condition: service_healthy
@@ -118,6 +154,8 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      pgbouncer:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health/ready',{redirect:'manual'}).then(r=>process.exit(r.status<400?0:1)).catch(()=>process.exit(1))"]
       interval: 15s
@@ -132,9 +170,9 @@ services:
     tmpfs:
       - /tmp
       - /app/apps/web/.next/cache
-    mem_limit: 768m
-    cpus: 1.0
-    pids_limit: 256
+    mem_limit: 2g
+    cpus: 1.5
+    pids_limit: 512
     networks: [snackspot]
 
   admin:
@@ -147,18 +185,33 @@ services:
       # Override ADMIN_BIND_ADDRESS to expose the admin UI beyond localhost.
       - "${ADMIN_BIND_ADDRESS:-0.0.0.0}:3001:3001"
     environment:
-      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      DATABASE_URL: ${DATABASE_POOL_URL:-${DATABASE_URL:?DATABASE_URL is required}}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
       JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
       JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS:-7}
       AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+      RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-SnackSpot <noreply@snackspot.online>}
       NODE_ENV: production
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio}
+      MINIO_PORT: ${MINIO_PORT:-9000}
+      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required}
+      MINIO_BUCKET: ${MINIO_BUCKET:-snackspot}
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      pgbouncer:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "const h=process.env.HOSTNAME||'127.0.0.1';fetch('http://'+h+':3001',{redirect:'manual'}).then(r=>process.exit(r.status<400?0:1)).catch(()=>process.exit(1))"]
       interval: 15s
@@ -197,6 +250,8 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      pgbouncer:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "const Redis=require('ioredis');const r=new Redis(process.env.REDIS_URL);r.ping().then(()=>r.quit()).then(()=>process.exit(0)).catch(()=>process.exit(1))"]
       interval: 20s
@@ -210,8 +265,8 @@ services:
     read_only: true
     tmpfs:
       - /tmp
-    mem_limit: 768m
-    cpus: 1.0
+    mem_limit: 1g
+    cpus: 0.5
     pids_limit: 256
     networks: [snackspot]
 

@@ -17,6 +17,8 @@ const NAV_ITEMS = [
   { href: '/dashboard/reviews', label: '⭐ Reviews' },
   { href: '/dashboard/reports', label: '🚨 Meldingen' },
   { href: '/dashboard/comments', label: '💬 Comments' },
+  { href: '/dashboard/marketing', label: '📣 Marketing Email' },
+  { href: '/dashboard/export', label: '📦 Export / Import' },
 ] as const
 
 export default function DashboardLayout({

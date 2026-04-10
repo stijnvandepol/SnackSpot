@@ -129,22 +129,24 @@ async function processPhoto(job: Job<PhotoJob>): Promise<void> {
   const uuidMatch = storageKey.match(/[^/]+(?=\.[^.]+$)/)
   const uuid = uuidMatch ? uuidMatch[0] : photoId
 
-  const variantKeys: Record<string, string> = {}
+  const variantEntries = await Promise.all(
+    VARIANTS.map(async (variant) => {
+      const destKey = `variants/${uuid}/${variant.name}.webp`
 
-  for (const variant of VARIANTS) {
-    const destKey = `variants/${uuid}/${variant.name}.webp`
+      const outputBuffer = await sharp(originalBuffer, { limitInputPixels: MAX_INPUT_PIXELS })
+        .rotate() // auto-rotate from EXIF orientation, then discard EXIF
+        .resize({ width: variant.width, withoutEnlargement: true })
+        // withMetadata() intentionally omitted: Sharp strips all metadata (incl. GPS) by default
+        .webp({ quality: variant.quality, effort: 4 })
+        .toBuffer()
 
-    const outputBuffer = await sharp(originalBuffer, { limitInputPixels: MAX_INPUT_PIXELS })
-      .rotate() // auto-rotate from EXIF orientation, then discard EXIF
-      .resize({ width: variant.width, withoutEnlargement: true })
-      // withMetadata() intentionally omitted: Sharp strips all metadata (incl. GPS) by default
-      .webp({ quality: variant.quality, effort: 4 })
-      .toBuffer()
+      await uploadBuffer(destKey, outputBuffer, 'image/webp')
+      jobLog.debug({ variant: variant.name, size: outputBuffer.length }, 'Variant uploaded')
+      return [variant.name, destKey] as const
+    }),
+  )
 
-    await uploadBuffer(destKey, outputBuffer, 'image/webp')
-    variantKeys[variant.name] = destKey
-    jobLog.debug({ variant: variant.name, size: outputBuffer.length }, 'Variant uploaded')
-  }
+  const variantKeys: Record<string, string> = Object.fromEntries(variantEntries)
 
   await prisma.photo.update({
     where: { id: photoId },
@@ -173,6 +175,33 @@ const CLEANUP_QUEUE      = 'token-cleanup'
 const CLEANUP_BATCH_SIZE = 500
 // 24-hour interval expressed in milliseconds for BullMQ repeat option.
 const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000
+const UNUSED_IMAGE_CUTOFF_MS = positiveIntFromEnv('UNUSED_IMAGE_CUTOFF_MS', 24 * 60 * 60 * 1000)
+
+function avatarVariantKey(avatarKey: string): string {
+  const trimmed = avatarKey.replace(/^\/+/, '')
+  const lastDot = trimmed.lastIndexOf('.')
+  const base = lastDot >= 0 ? trimmed.slice(0, lastDot) : trimmed
+  return `${base}.avatar-128.webp`
+}
+
+function extractVariantKeys(variants: unknown): string[] {
+  if (!variants || typeof variants !== 'object' || Array.isArray(variants)) return []
+  return Object.values(variants)
+    .filter((value): value is string => typeof value === 'string' && value.length > 0)
+}
+
+async function listObjectKeys(prefix: string): Promise<string[]> {
+  const stream = minio.listObjectsV2(BUCKET, prefix, true)
+
+  return await new Promise((resolve, reject) => {
+    const keys: string[] = []
+    stream.on('data', (obj: Minio.BucketItem) => {
+      if (obj.name) keys.push(obj.name)
+    })
+    stream.on('error', reject)
+    stream.on('end', () => resolve(keys))
+  })
+}
 
 async function runTokenCleanup(): Promise<void> {
   const now = new Date()
@@ -250,9 +279,97 @@ async function runOrphanPhotoCleanup(): Promise<void> {
   log.info({ photosDeleted }, 'Orphaned photo cleanup completed')
 }
 
+async function runUnusedImageCleanup(): Promise<void> {
+  const cutoff = new Date(Date.now() - UNUSED_IMAGE_CUTOFF_MS)
+  let photosDeleted = 0
+  let photoObjectsDeleted = 0
+
+  while (true) {
+    const stalePhotos = await prisma.photo.findMany({
+      where: {
+        createdAt: { lt: cutoff },
+        reviewPhotos: { none: {} },
+        reports: { none: {} },
+      },
+      select: {
+        id: true,
+        storageKey: true,
+        variants: true,
+      },
+      take: CLEANUP_BATCH_SIZE,
+    })
+
+    if (stalePhotos.length === 0) break
+
+    await Promise.all(
+      stalePhotos.flatMap((photo) => {
+        const keys = [photo.storageKey, ...extractVariantKeys(photo.variants)]
+        return keys.map((key) =>
+          minio.removeObject(BUCKET, key)
+            .then(() => {
+              photoObjectsDeleted += 1
+            })
+            .catch(() => undefined),
+        )
+      }),
+    )
+
+    const { count } = await prisma.photo.deleteMany({
+      where: { id: { in: stalePhotos.map((photo) => photo.id) } },
+    })
+    photosDeleted += count
+  }
+
+  const referencedKeys = new Set<string>()
+
+  const photos = await prisma.photo.findMany({
+    select: {
+      storageKey: true,
+      variants: true,
+    },
+  })
+  for (const photo of photos) {
+    referencedKeys.add(photo.storageKey)
+    for (const variantKey of extractVariantKeys(photo.variants)) {
+      referencedKeys.add(variantKey)
+    }
+  }
+
+  const usersWithAvatar = await prisma.user.findMany({
+    where: { avatarKey: { not: null } },
+    select: { avatarKey: true },
+  })
+  for (const user of usersWithAvatar) {
+    if (!user.avatarKey) continue
+    referencedKeys.add(user.avatarKey)
+    referencedKeys.add(avatarVariantKey(user.avatarKey))
+  }
+
+  const existingKeys = [
+    ...(await listObjectKeys('originals/')),
+    ...(await listObjectKeys('variants/')),
+    ...(await listObjectKeys('avatars/')),
+  ]
+
+  const orphanKeys = existingKeys.filter((key) => !referencedKeys.has(key))
+  await Promise.all(orphanKeys.map((key) => minio.removeObject(BUCKET, key).catch(() => undefined)))
+
+  log.info(
+    {
+      photosDeleted,
+      photoObjectsDeleted,
+      referencedObjects: referencedKeys.size,
+      orphanObjectsDeleted: orphanKeys.length,
+      unusedImageCutoffMs: UNUSED_IMAGE_CUTOFF_MS,
+    },
+    'Unused image cleanup completed',
+  )
+}
+
 async function runCleanup(): Promise<void> {
   await runTokenCleanup()
   await runOrphanPhotoCleanup()
+  await runUnusedImageCleanup()
 }
 
 const cleanupQueue = new Queue(CLEANUP_QUEUE, {
@@ -277,7 +394,7 @@ const cleanupWorker = new Worker(CLEANUP_QUEUE, runCleanup, {
 })
 
 cleanupWorker.on('failed', (job, err) => {
-  log.error({ jobId: job?.id, err }, 'Token cleanup job failed')
+  log.error({ jobId: job?.id, err }, 'Daily cleanup job failed')
 })
 
 // ─── Photo worker ─────────────────────────────────────────────────────────────

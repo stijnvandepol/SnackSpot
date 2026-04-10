@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { getSiteUrl } from '@/lib/site-url'
+import { safeJsonLd } from '@/lib/html'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { UserReviewsList } from '@/components/user-reviews-list'
 import { VerifiedBadge } from '@/components/verified-badge'
@@ -55,7 +56,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(profileJsonLd) }} />
       <Breadcrumb items={[{ label: 'Feed', href: '/' }, { label: `@${user.username}` }]} />
       <div className="md:hidden mb-4">
         <Link href="/" className="btn-secondary text-sm">← Back</Link>

@@ -22,12 +22,15 @@ jobs:
       MINIO_ENDPOINT: localhost
       MINIO_ACCESS_KEY: placeholder-key
       MINIO_SECRET_KEY: placeholder-secret-key-min
+      MINIO_BUCKET: snackspot
       MINIO_PUBLIC_URL: https://snackspot.online
       JWT_ACCESS_SECRET: placeholder-access-secret-at-least-32-chars-long
       JWT_REFRESH_SECRET: placeholder-refresh-secret-at-least-32-chars-long
       RESEND_API_KEY: re_placeholder_key
       RESEND_FROM_EMAIL: SnackSpot <noreply@snackspot.online>
       NEXT_PUBLIC_APP_URL: https://snackspot.online
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+      TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
 
     steps:
       - name: Check out repository
@@ -75,6 +78,7 @@ jobs:
       MINIO_ENDPOINT: localhost
       MINIO_ACCESS_KEY: placeholder-key
       MINIO_SECRET_KEY: placeholder-secret-key-min
+      MINIO_BUCKET: snackspot
       MINIO_PUBLIC_URL: https://snackspot.online
       JWT_ACCESS_SECRET: placeholder-access-secret-at-least-32-chars-long
       JWT_REFRESH_SECRET: placeholder-refresh-secret-at-least-32-chars-long
@@ -83,6 +87,8 @@ jobs:
       NEXT_PUBLIC_APP_URL: https://snackspot.online
       NEXT_PUBLIC_MINIO_PUBLIC_URL: https://snackspot.online
       NEXT_PUBLIC_MINIO_BUCKET: snackspot
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+      TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
 
     steps:
       - name: Check out repository

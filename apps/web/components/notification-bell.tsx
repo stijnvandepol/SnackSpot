@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from './auth-provider'
 import Link from 'next/link'
 import { AvatarLightbox } from './avatar-lightbox'
+import { timeAgo } from '@/lib/time'
 
 interface Notification {
   id: string
@@ -17,16 +18,6 @@ interface Notification {
     username: string
     avatarKey: string | null
   } | null
-}
-
-function timeAgo(dateInput: Date | string): string {
-  const date = new Date(dateInput)
-  const secs = Math.floor((Date.now() - date.getTime()) / 1000)
-  if (secs < 60) return 'just now'
-  if (secs < 3600) return `${Math.floor(secs / 60)}m ago`
-  if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`
-  if (secs < 604800) return `${Math.floor(secs / 86400)}d ago`
-  return new Date(date).toLocaleDateString()
 }
 
 export function NotificationBell() {
@@ -64,12 +55,10 @@ export function NotificationBell() {
           setNotifications(parsedNotifications as Notification[])
           setUnreadCount(parsedUnreadCount)
         } else {
-          console.error('Failed to fetch notifications:', json.error)
           setNotifications([])
           setUnreadCount(0)
         }
-      } catch (error) {
-        console.error('Error fetching notifications:', error)
+      } catch {
         setNotifications([])
         setUnreadCount(0)
       } finally {
@@ -97,8 +86,8 @@ export function NotificationBell() {
         prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n))
       )
       setUnreadCount((prev) => Math.max(0, prev - 1))
-    } catch (error) {
-      console.error('Failed to mark notification as read', error)
+    } catch {
+      // handled silently
     }
   }
 
@@ -113,8 +102,8 @@ export function NotificationBell() {
 
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
       setUnreadCount(0)
-    } catch (error) {
-      console.error('Failed to mark all as read', error)
+    } catch {
+      // handled silently
     }
   }
 

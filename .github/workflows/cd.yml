@@ -45,3 +45,7 @@ jobs:
       - name: Show recent logs on failure
         if: failure()
         run: docker compose logs --tail=200
+
+      - name: Prune build cache
+        if: success()
+        run: docker builder prune -f

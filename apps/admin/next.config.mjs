@@ -4,8 +4,10 @@ const nextConfig = {
   transpilePackages: ['@snackspot/shared', '@snackspot/db'],
   output: 'standalone',
   experimental: {
+    // This controls the buffered request body limit used with middleware/proxy.
+    middlewareClientMaxBodySize: '5gb',
     serverActions: {
-      bodySizeLimit: '10mb',
+      bodySizeLimit: '5gb',
     },
   },
 }

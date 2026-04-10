@@ -39,3 +39,6 @@ data/
 
 # Prisma
 prisma/generated/
+.zenflow/
+marketing/posters/snackspot-poster-01.png
+marketing/posters/snackspot-poster-02.png

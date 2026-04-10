@@ -151,43 +151,43 @@ export async function validatePhotos(
 // ─── Mention extraction ─────────────────────────────────────────────────────
 
 const MENTION_REGEX = /@(\w{3,30})/g
+const MAX_MENTIONS = 10
 
 /** Extracts unique lowercase usernames from @mentions in text. */
 export function extractMentionedUsernames(text: string): string[] {
   const matches = text.match(MENTION_REGEX) ?? []
-  return [...new Set(matches.map((m) => m.slice(1).toLowerCase()))]
+  return [...new Set(matches.map((m) => m.slice(1).toLowerCase()))].slice(0, MAX_MENTIONS)
 }
 
 /** Resolves mentioned usernames to user IDs, excluding banned users.
- *  Merges with any explicitly provided user IDs and filters out `excludeUserId`. */
+ *  Merges with any explicitly provided user IDs and filters out `excludeUserId`.
+ *  Uses a single DB query by combining username lookup and ID validation. */
 export async function resolveMentionedUserIds(
   usernames: string[],
   explicitUserIds: string[],
   excludeUserId: string,
 ): Promise<string[]> {
-  const usersFromText = usernames.length > 0
-    ? await prisma.user.findMany({
-        where: {
-          bannedAt: null,
-          OR: usernames.map((username) => ({
-            username: { equals: username, mode: 'insensitive' as const },
-          })),
-        },
-        select: { id: true },
-      })
-    : []
+  const cappedUsernames = usernames.slice(0, MAX_MENTIONS)
+  const cappedExplicitIds = explicitUserIds.slice(0, MAX_MENTIONS)
 
-  const allIds = [...new Set([...explicitUserIds, ...usersFromText.map((u) => u.id)])]
-  const filtered = allIds.filter((id) => id !== excludeUserId)
+  if (cappedUsernames.length === 0 && cappedExplicitIds.length === 0) return []
 
-  if (filtered.length === 0) return []
-
-  const validUsers = await prisma.user.findMany({
-    where: { id: { in: filtered }, bannedAt: null },
+  const users = await prisma.user.findMany({
+    where: {
+      bannedAt: null,
+      OR: [
+        ...(cappedUsernames.length > 0
+          ? cappedUsernames.map((username) => ({
+              username: { equals: username, mode: 'insensitive' as const },
+            }))
+          : []),
+        ...(cappedExplicitIds.length > 0 ? [{ id: { in: cappedExplicitIds } }] : []),
+      ],
+    },
     select: { id: true },
   })
 
-  return validUsers.map((u) => u.id)
+  return [...new Set(users.map((u) => u.id))].filter((id) => id !== excludeUserId)
 }
 
 /** Full mention processing: extract usernames, resolve IDs, create ReviewMention
@@ -217,5 +217,33 @@ export async function processMentions(
     await Promise.allSettled(userIds.map((userId) => notifyFn(userId, reviewId, actorId)))
   } catch (error) {
     logger.error({ err: error, reviewId, actorId }, 'Mention processing failed')
+  }
+}
+
+/** Comment-specific mention processing: extract usernames, resolve IDs,
+ *  and send comment-mention notifications. Unlike `processMentions`, this does
+ *  not create ReviewMention records (comments are not reviews) and additionally
+ *  excludes the review owner from notifications (they already get a comment
+ *  notification). Errors are logged but do not throw. */
+export async function processCommentMentions(
+  text: string,
+  reviewId: string,
+  commentId: string,
+  actorId: string,
+  reviewOwnerId: string,
+  notifyFn: (userId: string, reviewId: string, commentId: string, actorId: string) => Promise<unknown>,
+): Promise<void> {
+  try {
+    const usernames = extractMentionedUsernames(text)
+    const userIds = await resolveMentionedUserIds(usernames, [], actorId)
+
+    const filtered = userIds.filter((id) => id !== reviewOwnerId)
+    if (filtered.length === 0) return
+
+    await Promise.allSettled(
+      filtered.map((userId) => notifyFn(userId, reviewId, commentId, actorId)),
+    )
+  } catch (error) {
+    logger.error({ err: error, reviewId, commentId, actorId }, 'Comment mention processing failed')
   }
 }

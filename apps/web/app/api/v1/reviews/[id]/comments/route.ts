@@ -16,8 +16,8 @@ import { ReviewStatus } from '@prisma/client'
 import { rateLimitUser } from '@/lib/rate-limit'
 import { recalculateUserBadges } from '@/lib/badge-service'
 import { notifyCommentMention, notifyReviewComment } from '@/lib/notification-service'
-import { getBlockedWords, filterText } from '@/lib/blocked-words'
-import { checkReviewVisibility, extractMentionedUsernames } from '@/lib/review-helpers'
+import { getBlockedWordsCache, filterText } from '@/lib/blocked-words'
+import { checkReviewVisibility, processCommentMentions } from '@/lib/review-helpers'
 
 export async function GET(
   req: NextRequest,
@@ -82,8 +82,8 @@ export async function POST(
 
   const rawText = body.text.trim()
   if (!rawText) return err('Comment text is required', 422)
-  const blockedWords = await getBlockedWords()
-  const text = filterText(rawText, blockedWords)
+  const { regexes } = await getBlockedWordsCache()
+  const text = filterText(rawText, regexes)
 
   try {
     const review = await prisma.review.findUnique({
@@ -113,26 +113,7 @@ export async function POST(
     await notifyReviewComment(id, comment.id, auth.sub)
     await recalculateUserBadges(review.userId, { criteriaTypes: ['COMMENTS_RECEIVED_COUNT'] })
 
-    const mentionedUsernames = extractMentionedUsernames(text)
-
-    if (mentionedUsernames.length > 0) {
-      const mentionedUsers = await prisma.user.findMany({
-        where: {
-          bannedAt: null,
-          OR: mentionedUsernames.map((username) => ({
-            username: { equals: username, mode: 'insensitive' as const },
-          })),
-        },
-        select: { id: true },
-      })
-
-      const mentionedUserIds = [...new Set(mentionedUsers.map((user) => user.id))]
-        .filter((userId) => userId !== auth.sub && userId !== review.userId)
-
-      await Promise.allSettled(
-        mentionedUserIds.map((userId) => notifyCommentMention(userId, id, comment.id, auth.sub)),
-      )
-    }
+    await processCommentMentions(text, id, comment.id, auth.sub, review.userId, notifyCommentMention)
 
     return created({
       ...comment,

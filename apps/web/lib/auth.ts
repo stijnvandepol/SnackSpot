@@ -16,6 +16,12 @@ export interface AccessTokenPayload {
 const JWT_ISSUER = 'snackspot'
 const JWT_AUDIENCE = 'snackspot-users'
 
+// ─── Constants ───────────────────────────────────────────────────────────────
+const RESET_TOKEN_BYTES = 32 // 256 bits -> 64 hex chars
+const RESET_TOKEN_TTL_MINUTES = 15
+const MS_PER_MINUTE = 60 * 1000
+const MS_PER_DAY = 24 * 60 * 60 * 1000
+
 // ─── Argon2id password hashing ───────────────────────────────────────────────
 
 export async function hashPassword(password: string): Promise<string> {
@@ -23,7 +29,7 @@ export async function hashPassword(password: string): Promise<string> {
     type: argon2.argon2id,
     memoryCost: 65536, // 64 MiB
     timeCost: 3,
-    parallelism: 4,
+    parallelism: 2,
   })
 }
 
@@ -44,11 +50,15 @@ export function signAccessToken(payload: Omit<AccessTokenPayload, 'iat' | 'exp'>
 }
 
 export function verifyAccessToken(token: string): AccessTokenPayload {
-  return jwt.verify(token, env.JWT_ACCESS_SECRET, {
+  const result = jwt.verify(token, env.JWT_ACCESS_SECRET, {
     algorithms: ['HS256'],
     issuer: JWT_ISSUER,
     audience: JWT_AUDIENCE,
-  }) as AccessTokenPayload
+  })
+  if (typeof result !== 'object' || result === null || !('sub' in result)) {
+    throw new Error('Invalid token payload')
+  }
+  return result as AccessTokenPayload
 }
 
 // ─── Refresh token ───────────────────────────────────────────────────────────
@@ -73,11 +83,6 @@ export function refreshTokenExpiresAt(): Date {
 }
 
 // ─── Password reset token ────────────────────────────────────────────────────
-
-const RESET_TOKEN_BYTES = 32 // 256 bits -> 64 hex chars
-const RESET_TOKEN_TTL_MINUTES = 15
-const MS_PER_MINUTE = 60 * 1000
-const MS_PER_DAY = 24 * 60 * 60 * 1000
 
 export function generateResetToken(): string {
   return randomBytes(RESET_TOKEN_BYTES).toString('hex')

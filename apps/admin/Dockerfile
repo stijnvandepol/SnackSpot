@@ -25,8 +25,16 @@ RUN pnpm --filter @snackspot/db generate
 # Placeholder server-side env vars for Next.js build analysis.
 ENV NODE_ENV=production \
     DATABASE_URL=postgresql://placeholder:placeholder@db:5432/placeholder \
+    REDIS_URL=redis://placeholder:6379 \
     JWT_ACCESS_SECRET=placeholder-access-secret-at-least-32-chars-long \
-    JWT_REFRESH_SECRET=placeholder-refresh-secret-at-least-32-chars-long
+    JWT_REFRESH_SECRET=placeholder-refresh-secret-at-least-32-chars-long \
+  RESEND_API_KEY=placeholder-resend-api-key \
+  MINIO_ENDPOINT=minio \
+  MINIO_PORT=9000 \
+  MINIO_USE_SSL=false \
+  MINIO_ACCESS_KEY=placeholder-minio-access-key \
+  MINIO_SECRET_KEY=placeholder-minio-secret-key \
+  MINIO_BUCKET=snackspot
 
 RUN pnpm --filter @snackspot/admin build
 
@@ -43,7 +51,6 @@ ENV PORT=3001
 
 COPY --from=base --chown=app:app /app/apps/admin/.next/standalone ./
 COPY --from=base --chown=app:app /app/apps/admin/.next/static ./apps/admin/.next/static
-
 USER app
 
 EXPOSE 3001

@@ -2,14 +2,20 @@ import { type NextRequest } from 'next/server'
 import { UpdateMeProfileSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
 import { ok, err, parseBody, requireAuth, serverError, isResponse, withNoStore } from '@/lib/api-helpers'
+import { rateLimitUser, getClientIP, rateLimitIP } from '@/lib/rate-limit'
 
 const USERNAME_CHANGE_COOLDOWN_DAYS = 30
 const USERNAME_CHANGE_COOLDOWN_MS = USERNAME_CHANGE_COOLDOWN_DAYS * 24 * 60 * 60 * 1000
 
+function nextUsernameChangeAt(changedAt: Date | null): Date | null {
+  return changedAt
+    ? new Date(changedAt.getTime() + USERNAME_CHANGE_COOLDOWN_MS)
+    : null
+}
+
 type UpdateMeProfileInput = {
   username?: string
   bio?: string
-  avatarKey?: string | null
 }
 
 export async function GET(req: NextRequest) {
@@ -33,14 +39,12 @@ export async function GET(req: NextRequest) {
 
     if (!user) return err('User not found', 404)
 
-    const nextUsernameChangeAt = user.usernameChangedAt
-      ? new Date(user.usernameChangedAt.getTime() + USERNAME_CHANGE_COOLDOWN_MS)
-      : null
+    const nextChange = nextUsernameChangeAt(user.usernameChangedAt)
 
     return withNoStore(ok({
       ...user,
-      usernameCanChangeNow: !nextUsernameChangeAt || nextUsernameChangeAt <= new Date(),
-      nextUsernameChangeAt,
+      usernameCanChangeNow: !nextChange || nextChange <= new Date(),
+      nextUsernameChangeAt: nextChange,
     }))
   } catch (e) {
     return serverError('me/profile GET', e)
@@ -50,6 +54,13 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const auth = requireAuth(req)
   if (isResponse(auth)) return auth
+
+  const ip = getClientIP(req)
+  const [userRl, ipRl] = await Promise.all([
+    rateLimitUser(auth.sub, 'profile-patch', 10, 60),
+    rateLimitIP(ip, 'profile-patch', 20, 60),
+  ])
+  if (!userRl.allowed || !ipRl.allowed) return err('Too many requests', 429)
 
   const body = await parseBody<UpdateMeProfileInput>(req, UpdateMeProfileSchema)
   if (isResponse(body)) return body
@@ -84,7 +95,6 @@ export async function PATCH(req: NextRequest) {
       data: {
         ...(body.username !== undefined ? { username: body.username.trim() } : {}),
         ...(body.bio !== undefined ? { bio: body.bio.trim() || null } : {}),
-        ...(body.avatarKey !== undefined ? { avatarKey: body.avatarKey } : {}),
         ...(usernameChangeRequested ? { usernameChangedAt: new Date() } : {}),
       },
       select: {
@@ -99,14 +109,12 @@ export async function PATCH(req: NextRequest) {
       },
     })
 
-    const nextUsernameChangeAt = updated.usernameChangedAt
-      ? new Date(updated.usernameChangedAt.getTime() + USERNAME_CHANGE_COOLDOWN_MS)
-      : null
+    const nextChange = nextUsernameChangeAt(updated.usernameChangedAt)
 
     return withNoStore(ok({
       ...updated,
-      usernameCanChangeNow: !nextUsernameChangeAt || nextUsernameChangeAt <= new Date(),
-      nextUsernameChangeAt,
+      usernameCanChangeNow: !nextChange || nextChange <= new Date(),
+      nextUsernameChangeAt: nextChange,
     }))
   } catch (e: unknown) {
     const code =

@@ -67,29 +67,20 @@ function formatDistance(meters: number): string {
 }
 
 function formatRating(rating: number | null): string {
-  if (!rating) return 'No rating'
+  if (rating === null || rating === undefined) return 'No rating'
   return `${rating.toFixed(1)} ★`
 }
 
 export function PlaceMap({ position, places, radius }: PlaceMapProps) {
   if (!hasValidCoordinates(position)) {
-    console.warn('Skipping nearby map render because the current position is invalid', position)
     return null
   }
 
   const validPlaces = places.filter(hasValidCoordinates)
 
-  if (validPlaces.length !== places.length) {
-    console.warn('Skipping nearby map markers with invalid coordinates', {
-      total: places.length,
-      skipped: places.length - validPlaces.length,
-    })
-  }
-
   return (
     <div className="w-full rounded-xl overflow-hidden border border-snack-border mb-6 shadow-sm" style={{ height: '420px' }}>
       <Map
-        theme="light"
         center={[position.lng, position.lat]}
         zoom={13}
       >
@@ -114,7 +105,7 @@ export function PlaceMap({ position, places, radius }: PlaceMapProps) {
           <MapMarker key={place.id} longitude={place.lng} latitude={place.lat}>
             <MarkerContent>
               <svg width="28" height="38" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M16 0C8.27 0 2 6.27 2 14c0 9 14 25 14 25s14-16 14-25c0-7.73-6.27-14-14-14Z" fill="#FF712F" stroke="white" strokeWidth="2"/>
+                <path d="M16 0C8.27 0 2 6.27 2 14c0 9 14 25 14 25s14-16 14-25c0-7.73-6.27-14-14-14Z" fill="var(--snack-primary)" stroke="white" strokeWidth="2"/>
                 <circle cx="16" cy="14" r="5" fill="white"/>
               </svg>
             </MarkerContent>
@@ -125,7 +116,7 @@ export function PlaceMap({ position, places, radius }: PlaceMapProps) {
                 <div className="mt-2 pt-2 border-t border-snack-border space-y-1">
                   <div className="flex justify-between text-xs">
                     <span className="text-snack-muted">Distance</span>
-                    <span className="font-medium text-[#FF712F]">{formatDistance(place.distance_m)}</span>
+                    <span className="font-medium text-snack-primary">{formatDistance(place.distance_m)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-snack-muted">Rating</span>
@@ -139,7 +130,7 @@ export function PlaceMap({ position, places, radius }: PlaceMapProps) {
                 <Link
                   href={`/place/${place.id}?from=nearby`}
                   className="mt-2 block text-center text-xs text-white rounded px-2 py-1 hover:opacity-90 transition"
-                  style={{ backgroundColor: '#FF712F' }}
+                  style={{ backgroundColor: 'var(--snack-primary)' }}
                 >
                   View details
                 </Link>

@@ -1,8 +1,8 @@
 FROM node:20-alpine AS base
 
 # argon2 + Prisma need build tools and OpenSSL
-RUN apk add --no-cache python3 make g++ openssl
-RUN npm install -g pnpm@9.15.4
+RUN apk add --no-cache python3 make g++ openssl \
+  && npm install -g pnpm@9.15.4
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ COPY packages/ui/package.json packages/ui/
 COPY apps/web/package.json apps/web/
 COPY tsconfig.base.json ./
 
-RUN pnpm install --no-frozen-lockfile && pnpm store prune && rm -rf /root/.cache/pnpm
+RUN pnpm install --frozen-lockfile && pnpm store prune && rm -rf /root/.cache/pnpm
 
 # Source
 COPY packages/ packages/
@@ -28,9 +28,11 @@ RUN pnpm --filter @snackspot/db generate
 ARG NEXT_PUBLIC_APP_URL=https://snackspot.online
 ARG NEXT_PUBLIC_MINIO_PUBLIC_URL=https://snackspot.online
 ARG NEXT_PUBLIC_MINIO_BUCKET=snackspot
+ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_MINIO_PUBLIC_URL=$NEXT_PUBLIC_MINIO_PUBLIC_URL
 ENV NEXT_PUBLIC_MINIO_BUCKET=$NEXT_PUBLIC_MINIO_BUCKET
+ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
 # Placeholder server-side env vars for Next.js build analysis.
 ENV NODE_ENV=production \
@@ -42,7 +44,8 @@ ENV NODE_ENV=production \
     MINIO_PUBLIC_URL=https://snackspot.online \
     JWT_ACCESS_SECRET=placeholder-access-secret-at-least-32-chars-long \
     JWT_REFRESH_SECRET=placeholder-refresh-secret-at-least-32-chars-long \
-    RESEND_API_KEY=placeholder-resend-api-key
+    RESEND_API_KEY=placeholder-resend-api-key \
+    TURNSTILE_SECRET_KEY=placeholder-turnstile-secret-key
 
 FROM base AS test
 RUN pnpm --filter web test

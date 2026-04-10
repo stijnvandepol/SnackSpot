@@ -1,6 +1,6 @@
 import { type NextRequest } from 'next/server'
 import { z } from 'zod'
-import { requireRole, parseBody, ok, err, serverError, isResponse } from '@/lib/api-helpers'
+import { requireRole, requireSameOrigin, parseBody, ok, err, serverError, isResponse } from '@/lib/api-helpers'
 import { rateLimitUser } from '@/lib/rate-limit'
 import { prisma } from '@/lib/db'
 import { sendMarketingEmail } from '@/lib/email'
@@ -21,6 +21,9 @@ const BodySchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
+  const sameOrigin = requireSameOrigin(req)
+  if (isResponse(sameOrigin)) return sameOrigin
+
   const auth = requireRole(req, 'ADMIN')
   if (isResponse(auth)) return auth
 

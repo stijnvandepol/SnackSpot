@@ -3,13 +3,13 @@ import { CreateReviewSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
 import { env } from '@/lib/env'
 import { created, err, parseBody, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
-import { rateLimitUser } from '@/lib/rate-limit'
+import { rateLimit, rateLimitUser } from '@/lib/rate-limit'
 import { normalizeRatings } from '@/lib/ratings'
 import { recalculateUserBadges } from '@/lib/badge-service'
 import { normalizeDishName } from '@/lib/text'
 import { notifyMention } from '@/lib/notification-service'
 import { logger } from '@/lib/logger'
-import { getBlockedWords, filterText } from '@/lib/blocked-words'
+import { getBlockedWordsCache, filterText } from '@/lib/blocked-words'
 import { validatePhotos, processMentions } from '@/lib/review-helpers'
 
 export async function POST(req: NextRequest) {
@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
           portion: body.rating!,
           service: null,
         })
-    const blockedWords = await getBlockedWords()
-    const filteredText = filterText(body.text, blockedWords)
+    const { regexes } = await getBlockedWordsCache()
+    const filteredText = filterText(body.text, regexes)
     const normalizedDishName = normalizeDishName(body.dishName)
     const reviewTags = Array.from(new Set(body.tags))
 
@@ -65,9 +65,12 @@ export async function POST(req: NextRequest) {
     if (photoError) return photoError
 
     // Run rate-limit after payload/photo validation so failed attempts don't burn quota as quickly.
-    // Allow higher throughput for power users posting multiple reviews in a short session.
     const rl = await rateLimitUser(auth.sub, 'review_create', 60, 3600)
     if (!rl.allowed) return err('Review rate limit exceeded', 429)
+
+    // Per-place limit: max 5 reviews per user per place per day to prevent spam on a single location.
+    const placeRl = await rateLimit(`rl:place_review:${auth.sub}:${placeId}`, 5, 86400)
+    if (!placeRl.allowed) return err('Too many reviews for this place', 429)
 
     const review = await prisma.review.create({
       data: {

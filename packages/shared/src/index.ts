@@ -29,6 +29,7 @@ export const RegisterSchema = z.object({
 export const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+  captchaToken: z.string().max(2048).optional(),
 })
 
 // ─── Place schemas ───────────────────────────────────────────────────────────
@@ -118,7 +119,6 @@ export const UpdateMeProfileSchema = z.object({
     .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers and underscores')
     .optional(),
   bio: z.string().max(280).optional(),
-  avatarKey: z.string().max(512).nullable().optional(),
 })
 
 export const ReviewsQuerySchema = z.object({
@@ -262,3 +262,34 @@ export interface ReviewSummary {
 export const USERNAME_MIN_LENGTH = 3
 export const USERNAME_MAX_LENGTH = 30
 export const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/
+
+// ── Rate limiting ────────────────────────────────────────────────
+
+/** Atomic sliding-window rate limit Lua script for Redis sorted sets. */
+export const SLIDING_WINDOW_LUA = `
+local key   = KEYS[1]
+local now   = tonumber(ARGV[1])
+local winMs = tonumber(ARGV[2])
+local limit = tonumber(ARGV[3])
+local member = ARGV[4]
+local winSec = tonumber(ARGV[5])
+
+redis.call('ZREMRANGEBYSCORE', key, 0, now - winMs)
+local count = redis.call('ZCARD', key)
+
+local added = 0
+if count < limit then
+  redis.call('ZADD', key, now, member)
+  added = 1
+  count = count + 1
+end
+
+redis.call('EXPIRE', key, winSec)
+return {count, added}
+`
+
+export interface RateLimitResult {
+  allowed: boolean
+  remaining: number
+  resetInSeconds: number
+}

@@ -10,7 +10,8 @@
     "db:generate": "pnpm --filter @snackspot/db generate",
     "db:migrate": "pnpm --filter @snackspot/db migrate",
     "db:seed": "pnpm --filter @snackspot/db seed",
-    "worker:dev": "pnpm --filter worker dev"
+    "worker:dev": "pnpm --filter worker dev",
+    "validate": "tsx scripts/validate-round-trip.ts"
   },
   "engines": {
     "node": ">=20.0.0",
@@ -20,5 +21,9 @@
     "overrides": {
       "ioredis": "5.4.1"
     }
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.10",
+    "pg": "^8.13.0"
   }
 }

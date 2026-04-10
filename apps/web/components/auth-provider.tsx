@@ -15,7 +15,7 @@ interface AuthCtx {
   user: AuthUser | null
   accessToken: string | null
   loading: boolean
-  login(email: string, password: string): Promise<{ ok: boolean; error?: string }>
+  login(email: string, password: string, captchaToken?: string): Promise<{ ok: boolean; error?: string; captchaRequired?: boolean }>
   register(data: {
     email: string
     username: string
@@ -26,6 +26,8 @@ interface AuthCtx {
   reloadMe(): Promise<boolean>
 }
 
+const isDev = process.env.NODE_ENV !== 'production'
+
 const Ctx = createContext<AuthCtx | null>(null)
 
 export function useAuth(): AuthCtx {
@@ -35,19 +37,12 @@ export function useAuth(): AuthCtx {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const isDev = process.env.NODE_ENV !== 'production'
   const [user, setUser] = useState<AuthUser | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const tokenRef = useRef<string | null>(null)
 
   const refreshToken = useCallback(async (): Promise<boolean> => {
-    const doRefresh = async () =>
-      fetch('/api/v1/auth/refresh', {
-        method: 'POST',
-        credentials: 'include',
-      })
-
     try {
       const controller = new AbortController()
       const timeout = setTimeout(() => controller.abort(), 15000) // 15 sec timeout
@@ -65,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // a 401. One retry after a short delay is enough to recover.
         if (res.status === 401) {
           await new Promise((resolve) => setTimeout(resolve, 250))
-          const retryRes = await doRefresh()
+          const retryRes = await fetch('/api/v1/auth/refresh', { method: 'POST', credentials: 'include' })
           if (retryRes.ok) {
             const { data } = await retryRes.json()
             tokenRef.current = data.access_token
@@ -94,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Don't logout on network errors - just fail gracefully
       return false
     }
-  }, [isDev])
+  }, [])
 
   // On mount: try to refresh (restores session from httpOnly cookie)
   useEffect(() => {
@@ -120,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     }
     restoreSession()
-  }, [isDev, refreshToken])
+  }, [refreshToken])
 
   // Proactively refresh 2 min before expiry (access token = 15 min)
   useEffect(() => {
@@ -130,19 +125,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [accessToken, refreshToken])
 
   const login = useCallback(
-    async (email: string, password: string) => {
-      const res = await fetch('/api/v1/auth/login', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-      const json = await res.json()
-      if (!res.ok) return { ok: false, error: json.error ?? 'Login failed' }
-      tokenRef.current = json.data.access_token
-      setAccessToken(json.data.access_token)
-      setUser(json.data.user)
-      return { ok: true }
+    async (email: string, password: string, captchaToken?: string) => {
+      try {
+        const res = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            password,
+            ...(captchaToken ? { captchaToken } : {}),
+          }),
+        })
+        const json = await res.json()
+        if (!res.ok) {
+          return {
+            ok: false,
+            error: json.error ?? 'Login failed',
+            captchaRequired: json.captchaRequired === true,
+          }
+        }
+        tokenRef.current = json.data.access_token
+        setAccessToken(json.data.access_token)
+        setUser(json.data.user)
+        return { ok: true }
+      } catch {
+        return { ok: false, error: 'Network error' }
+      }
     },
     [],
   )

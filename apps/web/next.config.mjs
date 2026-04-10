@@ -45,8 +45,8 @@ const nextConfig = {
       }
     })()
     const scriptSrc = isProd
-      ? "script-src 'self' 'unsafe-inline'"
-      : "script-src 'self' 'unsafe-eval' 'unsafe-inline'"
+      ? "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com"
+      : "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://challenges.cloudflare.com"
 
     return [
       {
@@ -65,8 +65,9 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               `img-src 'self' data: blob: ${minioInternalOrigin} ${minioPublicOrigin} https://*.basemaps.cartocdn.com`,
               "font-src 'self' https://fonts.gstatic.com",
-              `connect-src 'self' ${minioInternalOrigin} ${minioPublicOrigin} https://nominatim.openstreetmap.org https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com https://ipapi.co`,
+              `connect-src 'self' ${minioInternalOrigin} ${minioPublicOrigin} https://nominatim.openstreetmap.org https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com https://ipapi.co https://challenges.cloudflare.com`,
               "worker-src blob: 'self'",
+              "frame-src https://challenges.cloudflare.com",
               "frame-ancestors 'none'",
             ].join('; '),
           },
