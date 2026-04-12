@@ -18,7 +18,7 @@ export async function GET() {
       },
     })
 
-    return withPublicCache(ok({ data: badges }), 3600, 7200)
+    return await withPublicCache(ok({ data: badges }), 3600, 7200)
   } catch (e) {
     return serverError('badges GET', e)
   }

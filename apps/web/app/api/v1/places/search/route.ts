@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
     const cacheKey = buildCacheKey('places-search', stableSearchParams(req.nextUrl.searchParams))
     const cached = await getCachedJson<PlaceSearchResult>(cacheKey)
-    if (cached) return withPublicCache(ok(cached), 15, 60)
+    if (cached) return await withPublicCache(ok(cached), 15, 60)
 
     const isNearby = query.lat !== undefined && query.lng !== undefined
     const rows = isNearby && query.q
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     const payload: PlaceSearchResult = { data: rows, pagination: { nextCursor: null, hasMore: false } }
 
     await setCachedJson(cacheKey, payload, ttl)
-    return withPublicCache(ok(payload), ttl, stale)
+    return await withPublicCache(ok(payload), ttl, stale)
   } catch (e) {
     return serverError('places/search', e)
   }

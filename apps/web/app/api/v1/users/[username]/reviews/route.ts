@@ -42,7 +42,7 @@ export async function GET(
     const nextCursor = hasMore ? encodeURIComponent(items.at(-1)!.createdAt.toISOString()) : null
 
     const res = ok({ data: items.map(serializeReview), pagination: { nextCursor, hasMore } })
-    return auth ? withNoStore(res) : withPublicCache(res, 15, 60)
+    return auth ? withNoStore(res) : await withPublicCache(res, 15, 60)
   } catch (e) {
     return serverError('users/[username]/reviews', e)
   }

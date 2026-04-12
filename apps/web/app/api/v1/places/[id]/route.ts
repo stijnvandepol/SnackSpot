@@ -27,7 +27,7 @@ export async function GET(
       created_at: Date
     }>(cacheKey)
     if (cached) {
-      return withPublicCache(ok(cached), 30, 120)
+      return await withPublicCache(ok(cached), 30, 120)
     }
 
     const [place] = await prisma.$queryRaw<
@@ -60,7 +60,7 @@ export async function GET(
     if (!place) return err('Place not found', 404)
 
     await setCachedJson(cacheKey, place, 30)
-    return withPublicCache(ok(place), 30, 120)
+    return await withPublicCache(ok(place), 30, 120)
   } catch (e) {
     return serverError('places/[id]', e)
   }

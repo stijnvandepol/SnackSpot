@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
         pagination: { nextCursor: string | null; hasMore: boolean }
       }>(cacheKey)
       if (cached) {
-        return withPublicCache(ok(cached), 60, 120)
+        return await withPublicCache(ok(cached), 60, 120)
       }
     }
 
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
     }
 
     const res = ok(payload)
-    return auth ? withNoStore(res) : withPublicCache(res, 60, 120)
+    return auth ? withNoStore(res) : await withPublicCache(res, 60, 120)
   } catch (e) {
     return serverError('feed', e)
   }

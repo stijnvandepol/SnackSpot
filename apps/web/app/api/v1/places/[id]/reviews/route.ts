@@ -31,7 +31,7 @@ export async function GET(
         pagination: { nextCursor: string | null; hasMore: boolean }
       }>(cacheKey)
       if (cached) {
-        return withPublicCache(ok(cached), 15, 60)
+        return await withPublicCache(ok(cached), 15, 60)
       }
     }
 
@@ -76,7 +76,7 @@ export async function GET(
     }
 
     const res = ok(payload)
-    return auth ? withNoStore(res) : withPublicCache(res, 15, 60)
+    return auth ? withNoStore(res) : await withPublicCache(res, 15, 60)
   } catch (e) {
     return serverError('places/[id]/reviews', e)
   }

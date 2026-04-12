@@ -17,7 +17,7 @@ export async function GET(req: Request) {
     ].slice(0, MAX_USERNAMES_PER_REQUEST)
 
     if (usernames.length === 0) {
-      return withPublicCache(ok({ existing: [] as string[] }), 30, 120)
+      return await withPublicCache(ok({ existing: [] as string[] }), 30, 120)
     }
 
     const users = await prisma.user.findMany({
@@ -30,7 +30,7 @@ export async function GET(req: Request) {
       select: { username: true },
     })
 
-    return withPublicCache(
+    return await withPublicCache(
       ok({
         existing: users.map((user: { username: string }) => user.username.toLowerCase()),
       }),

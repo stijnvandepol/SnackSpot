@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
         underTheRadar: Array<Record<string, unknown>>
       }>(cacheKey)
       if (cached) {
-        return withPublicCache(ok(cached), 20, 60)
+        return await withPublicCache(ok(cached), 20, 60)
       }
     }
 
@@ -117,7 +117,7 @@ export async function GET(req: NextRequest) {
 
     const res = ok(payload)
 
-    return auth ? withNoStore(res) : withPublicCache(res, 20, 60)
+    return auth ? withNoStore(res) : await withPublicCache(res, 20, 60)
   } catch (e) {
     return serverError('discover', e)
   }

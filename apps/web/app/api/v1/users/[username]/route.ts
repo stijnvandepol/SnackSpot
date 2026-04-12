@@ -29,7 +29,7 @@ export async function GET(
       }),
     ])
 
-    return withPublicCache(ok({
+    return await withPublicCache(ok({
       ...user,
       _count: {
         reviews: reviewCount,
