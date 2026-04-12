@@ -60,7 +60,10 @@ export function middleware(req: NextRequest) {
   if (req.nextUrl.pathname.startsWith('/api/')) {
     const ch = corsHeaders(origin, false)
     ch.forEach((value, key) => res.headers.set(key, value))
-    res.headers.set('Vary', 'Origin')
+    // Override Vary to only include relevant headers for API responses.
+    // Next.js adds RSC-related Vary headers that prevent Cloudflare from caching.
+    res.headers.set('Vary', 'Accept, Origin')
+    res.headers.delete('x-nextjs-cache')
   }
 
   return res
