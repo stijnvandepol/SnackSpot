@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { getSiteUrl } from '@/lib/site-url'
+import { safeJsonLd } from '@/lib/html'
 import { PlaceReviewsSection } from '@/components/place-reviews-section'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { PlaceMapEmbed } from '@/components/place-map-embed'
@@ -111,8 +112,8 @@ export default async function PlacePage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }} />
       <Breadcrumb items={buildPlaceBreadcrumb(from, place.name)} />
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Link href={backHref} className="btn-secondary text-sm">Back</Link>

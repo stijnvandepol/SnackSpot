@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { safeJsonLd } from '@/lib/html'
 import { RelatedGuides } from '@/components/related-guides'
 import { GuidesShell } from '@/components/guides-shell'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
@@ -58,7 +59,7 @@ export default function HowToAddAPlacePage() {
     <GuidesShell>
       <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
         <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/guides' }, { name: 'How to Add a Place', path: '/guides/how-to-add-a-place' }]} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }} />
 
         <article className="guide-content guide-article prose prose-slate">
           <h1>How to add a place or restaurant on SnackSpot</h1>

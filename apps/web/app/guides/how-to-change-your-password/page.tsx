@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { safeJsonLd } from '@/lib/html'
 import { RelatedGuides } from '@/components/related-guides'
 import { GuidesShell } from '@/components/guides-shell'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
@@ -57,7 +58,7 @@ export default function HowToChangeYourPasswordPage() {
     <GuidesShell>
       <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
         <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/guides' }, { name: 'How to Change Your Password', path: '/guides/how-to-change-your-password' }]} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }} />
 
         <article className="guide-content guide-article prose prose-slate">
           <h1>How to change your SnackSpot password</h1>

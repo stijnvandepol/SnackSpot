@@ -8,6 +8,7 @@ import { extractCity } from '@/lib/utils'
 import { getSiteUrl } from '@/lib/site-url'
 import { safeJsonLd } from '@/lib/html'
 import { ReviewInteractions } from '@/components/review-interactions'
+import { MentionText } from '@/components/mention-text'
 import { ImageLightbox } from '@/components/image-lightbox'
 import { Breadcrumb } from '@/components/breadcrumb'
 
@@ -97,7 +98,7 @@ export default async function ReviewPage({
       userId: true,
       tags: { orderBy: { tag: 'asc' }, select: { tag: true } },
       _count: { select: { reviewLikes: true, comments: true } },
-      user: { select: { id: true, username: true, avatarKey: true, role: true } },
+      user: { select: { id: true, username: true, avatarKey: true, role: true, isVerified: true } },
       place: { select: { id: true, name: true, address: true } },
       reviewPhotos: {
         orderBy: { sortOrder: 'asc' },
@@ -232,7 +233,7 @@ export default async function ReviewPage({
           </div>
         )}
 
-        <p className="whitespace-pre-line text-snack-muted">{review.text}</p>
+        <MentionText text={review.text} className="whitespace-pre-line text-snack-muted" />
       </div>
 
       {/* Interactive section: likes, comments, author, report, owner actions */}

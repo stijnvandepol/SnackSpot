@@ -5,7 +5,7 @@ import { useAuth } from '@/components/auth-provider'
 import { UserMentionInput } from '@/components/user-mention-input'
 import { computeOverallRating } from '@/lib/ratings'
 import { REVIEW_TAG_OPTIONS, type ReviewTag } from '@/lib/review-tags'
-import { shouldUseDirectBrowserUpload } from '@/lib/upload'
+import { shouldUseDirectBrowserUpload, normalizeUploadMime, compressImage } from '@/lib/upload'
 
 type Step = 'place' | 'review' | 'photos'
 
@@ -42,35 +42,7 @@ interface RatingDraft {
   service: number | null
 }
 
-const MIME_ALIASES: Record<string, 'image/jpeg' | 'image/png' | 'image/webp' | 'image/avif' | 'image/heic'> = {
-  'image/jpeg': 'image/jpeg',
-  'image/jpg': 'image/jpeg',
-  'image/pjpeg': 'image/jpeg',
-  'image/x-jpeg': 'image/jpeg',
-  'image/jfif': 'image/jpeg',
-  'image/png': 'image/png',
-  'image/x-png': 'image/png',
-  'image/webp': 'image/webp',
-  'image/avif': 'image/avif',
-  'image/heic': 'image/heic',
-  'image/heif': 'image/heic',
-  'image/heic-sequence': 'image/heic',
-  'image/heif-sequence': 'image/heic',
-}
-
-function normalizeUploadMime(file: File): 'image/jpeg' | 'image/png' | 'image/webp' | 'image/avif' | 'image/heic' | null {
-  const rawType = (file.type || '').trim().toLowerCase()
-  if (rawType in MIME_ALIASES) return MIME_ALIASES[rawType]
-
-  const name = (file.name || '').toLowerCase()
-  if (name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'image/jpeg'
-  if (name.endsWith('.png')) return 'image/png'
-  if (name.endsWith('.webp')) return 'image/webp'
-  if (name.endsWith('.avif')) return 'image/avif'
-  if (name.endsWith('.heic') || name.endsWith('.heif')) return 'image/heic'
-
-  return null
-}
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
 
 function createTempPhotoId(): string {
   if (typeof globalThis.crypto !== 'undefined' && typeof globalThis.crypto.randomUUID === 'function') {
@@ -387,21 +359,40 @@ export default function AddReviewPage() {
         continue
       }
 
+      if (file.size > MAX_FILE_SIZE_BYTES * 2) {
+        setError(`${file.name || 'File'} is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 10 MB before compression.`)
+        continue
+      }
+
       const previewUrl = URL.createObjectURL(file)
       const tempId = createTempPhotoId()
-      // realId starts as the temp UUID and gets updated to the DB photo ID after initiate-upload.
-      // This allows the catch block to always find the correct photo entry regardless of when the error occurs.
       let realId = tempId
 
       setPhotos((prev) => [...prev, { photoId: tempId, previewUrl, status: 'uploading' }])
 
       try {
+        // Compress image client-side: resize to max 2048px, convert to WebP/JPEG
+        let uploadBlob: Blob = file
+        let uploadMime = normalizedMime
+        try {
+          const compressed = await compressImage(file)
+          uploadBlob = compressed.blob
+          uploadMime = compressed.mime
+          if (isDev) console.log(`[Upload] Compressed ${file.name}: ${(file.size / 1024).toFixed(0)}KB → ${(uploadBlob.size / 1024).toFixed(0)}KB (${uploadMime})`)
+        } catch (compressErr) {
+          // Compression failed (e.g. HEIC on non-Safari browser) — try uploading original
+          if (isDev) console.warn('[Upload] Client-side compression failed, using original:', compressErr)
+          if (file.size > MAX_FILE_SIZE_BYTES) {
+            throw new Error(`Photo is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Try a smaller photo or use a different browser.`)
+          }
+        }
+
         // 1. Initiate
-        if (isDev) console.log(`[Upload] Initiating upload for ${file.name} (${(file.size / 1024).toFixed(1)}KB)`)
+        if (isDev) console.log(`[Upload] Initiating upload for ${file.name} (${(uploadBlob.size / 1024).toFixed(1)}KB)`)
         const initRes = await fetch('/api/v1/photos/initiate-upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-          body: JSON.stringify({ filename: file.name, contentType: normalizedMime, size: file.size }),
+          body: JSON.stringify({ filename: file.name, contentType: uploadMime, size: uploadBlob.size }),
         })
         if (!initRes.ok) {
           const errorData = await initRes.json().catch(() => ({ error: 'Unknown error' }))
@@ -417,13 +408,14 @@ export default function AddReviewPage() {
         if (shouldUseDirectBrowserUpload(initData.uploadUrl)) {
           try {
             const controller = new AbortController()
-            const timeout = setTimeout(() => controller.abort(), 5000)
+            const timeoutMs = Math.max(15000, uploadBlob.size / 50000 * 1000)
+            const timeout = setTimeout(() => controller.abort(), timeoutMs)
             let putRes: Response
             try {
               putRes = await fetch(initData.uploadUrl, {
                 method: 'PUT',
-                body: file,
-                headers: { 'Content-Type': normalizedMime },
+                body: uploadBlob,
+                headers: { 'Content-Type': uploadMime },
                 signal: controller.signal,
               })
             } finally {
@@ -445,8 +437,8 @@ export default function AddReviewPage() {
         if (!uploaded) {
           const fallbackRes = await fetch(`/api/v1/photos/upload-fallback?photoId=${encodeURIComponent(initData.photoId)}`, {
             method: 'POST',
-            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': normalizedMime },
-            body: file,
+            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': uploadMime },
+            body: uploadBlob,
           })
           if (!fallbackRes.ok) {
             const fallbackErr = await fallbackRes.json().catch(() => ({ error: fallbackRes.statusText }))
@@ -506,7 +498,7 @@ export default function AddReviewPage() {
 
     const readyPhotos = photos.filter((p) => p.status === 'ready')
     if (readyPhotos.length === 0) { setError('At least one photo is required'); return }
-    if (text.length < 10) { setError('Review text must be at least 10 characters'); return }
+    if (text.trim().length < 10) { setError('Review text must be at least 10 characters'); return }
     setError(null)
     setSubmitting(true)
 
@@ -514,22 +506,22 @@ export default function AddReviewPage() {
       ? {
           placeId: place.placeId,
           ratings,
-          text,
-          dishName: dishName || undefined,
+          text: text.trim(),
+          dishName: dishName.trim() || undefined,
           tags: selectedTags,
           photoIds: photos.filter((p) => p.status === 'ready').map((p) => p.photoId),
           mentionedUserIds,
         }
       : {
           place: {
-            name: place.name,
-            address: place.address,
+            name: place.name.trim(),
+            address: place.address.trim(),
             lat: parseFloat(place.lat),
             lng: parseFloat(place.lng),
           },
           ratings,
-          text,
-          dishName: dishName || undefined,
+          text: text.trim(),
+          dishName: dishName.trim() || undefined,
           tags: selectedTags,
           photoIds: photos.filter((p) => p.status === 'ready').map((p) => p.photoId),
           mentionedUserIds,
@@ -856,12 +848,12 @@ export default function AddReviewPage() {
           {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="status" aria-live="polite">{error}</div>}
 
           <div className="flex gap-2">
-            <button className="btn-secondary flex-1" type="button" onClick={() => setStep('place')}>Back</button>
+            <button className="btn-secondary flex-1" type="button" onClick={() => { setError(null); setStep('place') }}>Back</button>
             <button
               className="btn-primary flex-1"
               type="button"
               onClick={() => {
-                if (text.length < 10) { setError('Review text must be at least 10 characters'); return }
+                if (text.trim().length < 10) { setError('Review text must be at least 10 characters'); return }
                 setError(null)
                 setStep('photos')
               }}
@@ -939,7 +931,7 @@ export default function AddReviewPage() {
           {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="status" aria-live="polite">{error}</div>}
 
           <div className="flex gap-2">
-            <button className="btn-secondary flex-1" type="button" onClick={() => setStep('review')}>Back</button>
+            <button className="btn-secondary flex-1" type="button" onClick={() => { setError(null); setStep('review') }}>Back</button>
             <button
               className="btn-primary flex-1"
               type="button"

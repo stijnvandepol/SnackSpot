@@ -126,16 +126,30 @@ export default function NearbyPage() {
           } catch { /* Permissions API not supported — continue */ }
         }
 
-        const pos = await new Promise<GeolocationPosition | null>((resolve) => {
+        const pos = await new Promise<GeolocationPosition | null>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(
             (p) => resolve(isUsablePosition(p) ? p : null),
-            () => resolve(null),
+            (err) => reject(err),
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
           )
+        }).catch((err: GeolocationPositionError) => {
+          switch (err.code) {
+            case 1: // PERMISSION_DENIED
+              setGeoError('Location access denied. Enable location in your browser settings.')
+              break
+            case 2: // POSITION_UNAVAILABLE
+              setGeoError('Location unavailable. Make sure GPS is enabled.')
+              break
+            case 3: // TIMEOUT
+              setGeoError('Location request timed out. Try again.')
+              break
+            default:
+              setGeoError('Could not get your location. Try again.')
+          }
+          return null
         })
 
         if (!pos) {
-          setGeoError('Could not get your location. Make sure GPS is enabled.')
           return
         }
 
@@ -143,7 +157,7 @@ export default function NearbyPage() {
         await search(pos.coords.latitude, pos.coords.longitude, radius)
       } catch (err) {
         console.error('[Geolocation]', err)
-        setGeoError('Could not get your location. Make sure GPS is enabled.')
+        if (!geoError) setGeoError('Could not get your location. Try again.')
       } finally {
         setLoading(false)
       }

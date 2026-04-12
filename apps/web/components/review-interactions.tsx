@@ -86,6 +86,7 @@ export function ReviewInteractions({
       .then((json) => {
         if (Array.isArray(json.data)) setComments(json.data)
       })
+      .catch(() => {})
       .finally(() => setCommentsLoading(false))
   }, [reviewId, accessToken])
 
