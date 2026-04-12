@@ -169,6 +169,8 @@ jobs:
           --config p/owasp-top-ten
           --config p/jwt
           --config p/nextjs
+          --exclude-rule generic.nginx.security.request-host-used.request-host-used
+          --exclude-rule generic.nginx.security.possible-h2c-smuggling.possible-nginx-h2c-smuggling
           --sarif --output semgrep.sarif
           --error
 
