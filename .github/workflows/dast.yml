@@ -1,0 +1,55 @@
+name: DAST — OWASP ZAP Scan
+
+on:
+  # Run manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      target:
+        description: URL to scan (e.g. https://snackspot.online)
+        required: true
+        type: string
+      scan_type:
+        description: Scan type
+        required: true
+        default: baseline
+        type: choice
+        options:
+          - baseline
+          - full
+  # Weekly passive scan against production
+  schedule:
+    - cron: '30 4 * * 1'  # Every Monday 04:30 UTC
+
+concurrency:
+  group: dast-scan
+  cancel-in-progress: true
+
+jobs:
+  zap-scan:
+    name: ZAP ${{ inputs.scan_type || 'baseline' }} scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      issues: write  # ZAP action can create issues for findings
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: ZAP Baseline Scan
+        if: inputs.scan_type != 'full'
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: ${{ inputs.target || 'https://snackspot.online' }}
+          rules_file_name: '.zap/rules.tsv'
+          fail_action: false
+          artifact_name: zap-baseline-report
+
+      - name: ZAP Full Scan
+        if: inputs.scan_type == 'full'
+        uses: zaproxy/action-full-scan@v0.12.0
+        with:
+          target: ${{ inputs.target || 'https://snackspot.online' }}
+          rules_file_name: '.zap/rules.tsv'
+          fail_action: false
+          artifact_name: zap-full-report

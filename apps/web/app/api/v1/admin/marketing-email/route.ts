@@ -52,7 +52,11 @@ export async function POST(req: NextRequest) {
     let sent = 0
     let failed = 0
 
-    for (const user of users) {
+    // Resend enforces a 5 req/s rate limit. sendEmailWithFallback may make up to
+    // 2 API calls per recipient, so cap throughput at ~2.5 emails/sec (400 ms gap).
+    for (let i = 0; i < users.length; i++) {
+      const user = users[i]
+      if (i > 0) await new Promise((r) => setTimeout(r, 400))
       try {
         await sendMarketingEmail(
           user.email,

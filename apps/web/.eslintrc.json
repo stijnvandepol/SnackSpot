@@ -1,0 +1,8 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "plugins": ["security", "no-unsanitized"],
+  "rules": {
+    "no-unsanitized/method": "error",
+    "no-unsanitized/property": "error"
+  }
+}

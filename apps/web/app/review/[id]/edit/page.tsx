@@ -6,7 +6,7 @@ import { useAuth } from '@/components/auth-provider'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { computeOverallRating } from '@/lib/ratings'
 import { REVIEW_TAG_OPTIONS, type ReviewTag } from '@/lib/review-tags'
-import { shouldUseDirectBrowserUpload } from '@/lib/upload'
+import { shouldUseDirectBrowserUpload, normalizeUploadMime, compressImage } from '@/lib/upload'
 
 interface ReviewEditData {
   id: string
@@ -43,35 +43,7 @@ type Step = 'place' | 'review' | 'photos'
 
 const MAX_PHOTOS = 5
 
-const MIME_ALIASES: Record<string, 'image/jpeg' | 'image/png' | 'image/webp' | 'image/avif' | 'image/heic'> = {
-  'image/jpeg': 'image/jpeg',
-  'image/jpg': 'image/jpeg',
-  'image/pjpeg': 'image/jpeg',
-  'image/x-jpeg': 'image/jpeg',
-  'image/jfif': 'image/jpeg',
-  'image/png': 'image/png',
-  'image/x-png': 'image/png',
-  'image/webp': 'image/webp',
-  'image/avif': 'image/avif',
-  'image/heic': 'image/heic',
-  'image/heif': 'image/heic',
-  'image/heic-sequence': 'image/heic',
-  'image/heif-sequence': 'image/heic',
-}
-
-function normalizeUploadMime(file: File): 'image/jpeg' | 'image/png' | 'image/webp' | 'image/avif' | 'image/heic' | null {
-  const rawType = (file.type || '').trim().toLowerCase()
-  if (rawType in MIME_ALIASES) return MIME_ALIASES[rawType]
-
-  const name = (file.name || '').toLowerCase()
-  if (name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'image/jpeg'
-  if (name.endsWith('.png')) return 'image/png'
-  if (name.endsWith('.webp')) return 'image/webp'
-  if (name.endsWith('.avif')) return 'image/avif'
-  if (name.endsWith('.heic') || name.endsWith('.heif')) return 'image/heic'
-
-  return null
-}
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
 
 function createTempPhotoId(): string {
   if (typeof globalThis.crypto !== 'undefined' && typeof globalThis.crypto.randomUUID === 'function') {
@@ -336,6 +308,11 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
         continue
       }
 
+      if (file.size > MAX_FILE_SIZE_BYTES * 2) {
+        setError(`${file.name || 'File'} is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 10 MB before compression.`)
+        continue
+      }
+
       const previewUrl = URL.createObjectURL(file)
       const tempId = createTempPhotoId()
       let realId = tempId
@@ -343,10 +320,23 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
       setPhotos((prev) => [...prev, { photoId: tempId, previewUrl, status: 'uploading' }])
 
       try {
+        // Compress image client-side
+        let uploadBlob: Blob = file
+        let uploadMime = normalizedMime
+        try {
+          const compressed = await compressImage(file)
+          uploadBlob = compressed.blob
+          uploadMime = compressed.mime
+        } catch {
+          if (file.size > MAX_FILE_SIZE_BYTES) {
+            throw new Error(`Photo is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Try a smaller photo or use a different browser.`)
+          }
+        }
+
         const initRes = await fetch('/api/v1/photos/initiate-upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-          body: JSON.stringify({ filename: file.name, contentType: normalizedMime, size: file.size }),
+          body: JSON.stringify({ filename: file.name, contentType: uploadMime, size: uploadBlob.size }),
         })
         if (!initRes.ok) {
           const errorData = await initRes.json().catch(() => ({ error: 'Unknown error' }))
@@ -360,13 +350,14 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
         if (shouldUseDirectBrowserUpload(initData.uploadUrl)) {
           try {
             const controller = new AbortController()
-            const timeout = setTimeout(() => controller.abort(), 5000)
+            const timeoutMs = Math.max(15000, uploadBlob.size / 50000 * 1000)
+            const timeout = setTimeout(() => controller.abort(), timeoutMs)
             let putRes: Response
             try {
               putRes = await fetch(initData.uploadUrl, {
                 method: 'PUT',
-                body: file,
-                headers: { 'Content-Type': normalizedMime },
+                body: uploadBlob,
+                headers: { 'Content-Type': uploadMime },
                 signal: controller.signal,
               })
             } finally {
@@ -381,8 +372,8 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
         if (!uploaded) {
           const fallbackRes = await fetch(`/api/v1/photos/upload-fallback?photoId=${encodeURIComponent(initData.photoId)}`, {
             method: 'POST',
-            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': normalizedMime },
-            body: file,
+            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': uploadMime },
+            body: uploadBlob,
           })
           if (!fallbackRes.ok) {
             const fallbackErr = await fallbackRes.json().catch(() => ({ error: fallbackRes.statusText }))

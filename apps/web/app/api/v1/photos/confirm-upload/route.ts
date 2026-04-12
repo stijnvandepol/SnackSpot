@@ -69,7 +69,11 @@ export async function POST(req: NextRequest) {
       uploaderId: auth.sub,
     }
     try {
-      await queue.add('process-photo', job, { jobId: photo.id })
+      await queue.add('process-photo', job, {
+        jobId: photo.id,
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 5000 },
+      })
     } catch (queueErr) {
       await prisma.photo.update({
         where: { id: photo.id },

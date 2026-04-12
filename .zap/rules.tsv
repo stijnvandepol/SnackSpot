@@ -1,0 +1,8 @@
+# ZAP rule overrides — tab-separated: id	action	reason
+# Actions: IGNORE, WARN, FAIL
+# See https://www.zaproxy.org/docs/alerts/ for rule IDs
+10015	IGNORE	Incomplete or No Cache-control — Next.js manages caching headers via its own middleware
+10027	IGNORE	Information Disclosure — Suspicious Comments — flags source-map references and common code comments
+10036	IGNORE	Server Leaks Version Information — Next.js x-powered-by is disabled in production via next.config
+10049	IGNORE	Storable and Cacheable Content — Next.js static assets are intentionally long-cached
+10109	IGNORE	Modern Web Application — informational, not a security finding

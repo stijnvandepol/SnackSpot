@@ -72,9 +72,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // 401/403 after retry = auth session really invalid.
         if (res.status === 401 || res.status === 403) {
           if (isDev) console.error('[AUTH] Refresh failed:', res.status, res.statusText)
+          const hadUser = !!tokenRef.current
           setUser(null)
           setAccessToken(null)
           tokenRef.current = null
+          // Redirect to login with expired param so the page can show a message
+          if (hadUser && typeof window !== 'undefined') {
+            window.location.href = '/auth/login?expired=1'
+          }
         } else {
           if (isDev) console.warn('[AUTH] Refresh returned non-auth error:', res.status)
         }

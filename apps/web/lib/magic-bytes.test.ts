@@ -111,21 +111,44 @@ describe('matchesMagicBytes — image/webp', () => {
   })
 })
 
-// ─── AVIF / HEIC (no registered signature — always pass) ─────────────────────
+// ─── AVIF / HEIC (ISOBMFF ftyp container validation) ─────────────────────────
+
+function makeIsobmff(brand: string): Buffer {
+  // Minimal ISOBMFF: bytes 4-7 = "ftyp", bytes 8-11 = brand
+  const buf = Buffer.alloc(12)
+  buf.write('ftyp', 4, 'ascii')
+  buf.write(brand, 8, 'ascii')
+  return buf
+}
 
 describe('matchesMagicBytes — image/avif and image/heic', () => {
-  it('allows any buffer for image/avif (no fixed signature)', () => {
-    expect(matchesMagicBytes('image/avif', Buffer.alloc(0))).toBe(true)
-    expect(matchesMagicBytes('image/avif', Buffer.alloc(16))).toBe(true)
+  it('accepts valid AVIF ftyp brand', () => {
+    expect(matchesMagicBytes('image/avif', makeIsobmff('avif'))).toBe(true)
+    expect(matchesMagicBytes('image/avif', makeIsobmff('avis'))).toBe(true)
   })
 
-  it('allows any buffer for image/heic (no fixed signature)', () => {
-    expect(matchesMagicBytes('image/heic', Buffer.alloc(0))).toBe(true)
-    expect(matchesMagicBytes('image/heic', Buffer.alloc(16))).toBe(true)
+  it('rejects invalid buffer for image/avif', () => {
+    expect(matchesMagicBytes('image/avif', Buffer.alloc(0))).toBe(false)
+    expect(matchesMagicBytes('image/avif', Buffer.alloc(16))).toBe(false)
   })
 
-  it('allows any buffer for image/heif (no fixed signature)', () => {
-    expect(matchesMagicBytes('image/heif', Buffer.alloc(16))).toBe(true)
+  it('accepts valid HEIC ftyp brand', () => {
+    expect(matchesMagicBytes('image/heic', makeIsobmff('heic'))).toBe(true)
+    expect(matchesMagicBytes('image/heic', makeIsobmff('heix'))).toBe(true)
+    expect(matchesMagicBytes('image/heic', makeIsobmff('mif1'))).toBe(true)
+  })
+
+  it('rejects invalid buffer for image/heic', () => {
+    expect(matchesMagicBytes('image/heic', Buffer.alloc(0))).toBe(false)
+    expect(matchesMagicBytes('image/heic', Buffer.alloc(16))).toBe(false)
+  })
+
+  it('accepts valid HEIF ftyp brand', () => {
+    expect(matchesMagicBytes('image/heif', makeIsobmff('heic'))).toBe(true)
+  })
+
+  it('rejects invalid buffer for image/heif', () => {
+    expect(matchesMagicBytes('image/heif', Buffer.alloc(16))).toBe(false)
   })
 })
 

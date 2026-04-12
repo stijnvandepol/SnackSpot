@@ -41,7 +41,7 @@ export function BottomNav() {
               <Link
                 href={l.href}
                 aria-current={active ? 'page' : undefined}
-                aria-label={l.label}
+                aria-label={l.accent ? 'Create new post' : l.label}
                 className={`flex flex-col items-center gap-0.5 py-1 text-xs font-medium transition min-h-[44px] justify-center ${
                   l.accent
                     ? 'text-white'
