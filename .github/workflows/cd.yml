@@ -36,7 +36,7 @@ jobs:
           docker compose version
 
       - name: Deploy stack
-        run: docker compose up -d --build --remove-orphans
+        run: docker compose up -d --build --force-recreate --remove-orphans
 
       - name: Show service status
         if: always()
