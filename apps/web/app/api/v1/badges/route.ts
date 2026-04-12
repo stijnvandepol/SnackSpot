@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db'
-import { ok, serverError } from '@/lib/api-helpers'
+import { ok, withPublicCache, serverError } from '@/lib/api-helpers'
 
 export async function GET() {
   try {
@@ -18,7 +18,7 @@ export async function GET() {
       },
     })
 
-    return ok({ data: badges })
+    return withPublicCache(ok({ data: badges }), 3600, 7200)
   } catch (e) {
     return serverError('badges GET', e)
   }
