@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     const cacheKey = buildCacheKey('places-featured', stableSearchParams(req.nextUrl.searchParams))
     const cached = await getCachedJson<{ data: FeaturedPlaceRow[] }>(cacheKey)
     if (cached) {
-      return withPublicCache(ok(cached), 30, 120)
+      return await withPublicCache(ok(cached), 30, 120)
     }
 
     const rows = await prisma.$queryRaw<FeaturedPlaceRow[]>`
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
 
     const payload = { data: rows }
     await setCachedJson(cacheKey, payload, 30)
-    return withPublicCache(ok(payload), 30, 120)
+    return await withPublicCache(ok(payload), 30, 120)
   } catch (e) {
     return serverError('places/featured', e)
   }

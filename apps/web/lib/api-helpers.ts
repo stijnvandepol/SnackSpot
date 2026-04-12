@@ -18,10 +18,17 @@ export function noContent(): Response {
   return new Response(null, { status: 204 })
 }
 
-export function withPublicCache(res: Response, maxAgeSeconds = 15, staleWhileRevalidateSeconds = 60): Response {
-  res.headers.set('Cache-Control', `public, max-age=${maxAgeSeconds}, stale-while-revalidate=${staleWhileRevalidateSeconds}`)
-  res.headers.set('Vary', 'Accept, Origin')
-  return res
+export async function withPublicCache(res: Response, maxAgeSeconds = 15, staleWhileRevalidateSeconds = 60): Promise<Response> {
+  // Build a fresh Response so Next.js cannot append RSC Vary headers
+  // (which prevent Cloudflare from caching JSON responses).
+  const body = await res.text()
+  const headers = new Headers(res.headers)
+  headers.set('Cache-Control', `public, max-age=${maxAgeSeconds}, stale-while-revalidate=${staleWhileRevalidateSeconds}`)
+  headers.set('Vary', 'Accept, Origin')
+  // Delete Next.js internal headers that interfere with edge caching
+  headers.delete('x-nextjs-cache')
+  headers.delete('x-nextjs-stale-time')
+  return new Response(body, { status: res.status, headers })
 }
 
 export function withNoStore(res: Response): Response {
