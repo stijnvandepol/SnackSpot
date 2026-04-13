@@ -98,8 +98,7 @@ export function ImageLightbox({
               src={img.thumbnail}
               alt={img.alt}
               fill
-              sizes="(max-width: 512px) 33vw, 170px"
-              quality={90}
+              unoptimized
               className={thumbnailClassName}
               priority={img.priority}
             />
