@@ -36,6 +36,12 @@ export function useAuth(): AuthCtx {
   return ctx
 }
 
+/** Like useAuth but returns null when used outside AuthProvider instead of throwing.
+ *  Use this for components that render safely without an authenticated session. */
+export function useAuthOptional(): AuthCtx | null {
+  return useContext(Ctx)
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)

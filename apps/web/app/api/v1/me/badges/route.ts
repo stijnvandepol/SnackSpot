@@ -1,15 +1,12 @@
 import { type NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import { ok, requireAuth, serverError, isResponse, withNoStore } from '@/lib/api-helpers'
-import { recalculateUserBadges } from '@/lib/badge-service'
 
 export async function GET(req: NextRequest) {
   const auth = requireAuth(req)
   if (isResponse(auth)) return auth
 
   try {
-    await recalculateUserBadges(auth.sub)
-
     const rows = await prisma.userBadge.findMany({
       where: { userId: auth.sub, badge: { isActive: true } },
       orderBy: [{ earnedAt: 'desc' }, { createdAt: 'asc' }],

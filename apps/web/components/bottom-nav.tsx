@@ -1,15 +1,18 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { SHARED_NAV_LINKS } from '@/lib/nav-links'
 
 type IconName = 'home' | 'search' | 'plus' | 'map' | 'user'
 
+// Derive bottom-nav entries from the shared route list so href/label stay in sync.
+// Post and Profile are bottom-nav-only additions (not in the desktop top nav).
 const links = [
-  { href: '/',       icon: 'home' as IconName, label: 'Home' },
-  { href: '/search',     icon: 'search' as IconName, label: 'Explore' },
-  { href: '/add-review', icon: 'plus' as IconName, label: 'Post', accent: true },
-  { href: '/nearby',     icon: 'map' as IconName, label: 'Nearby' },
-  { href: '/profile',    icon: 'user' as IconName, label: 'Profile' },
+  { href: SHARED_NAV_LINKS[0].href, icon: 'home'   as IconName, label: SHARED_NAV_LINKS[0].label },
+  { href: SHARED_NAV_LINKS[1].href, icon: 'search' as IconName, label: SHARED_NAV_LINKS[1].label },
+  { href: '/add-review',            icon: 'plus'   as IconName, label: 'Post', accent: true },
+  { href: SHARED_NAV_LINKS[2].href, icon: 'map'    as IconName, label: SHARED_NAV_LINKS[2].label },
+  { href: '/profile',               icon: 'user'   as IconName, label: 'Profile' },
 ]
 
 function NavIcon({ name, className }: { name: IconName; className?: string }) {

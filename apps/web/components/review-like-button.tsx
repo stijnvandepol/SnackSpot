@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { useAuth } from '@/components/auth-provider'
+import { useAuthOptional } from '@/components/auth-provider'
 
 interface ReviewLikeButtonProps {
   reviewId: string
@@ -15,7 +15,7 @@ export function ReviewLikeButton({
   initialLikedByMe,
   className,
 }: ReviewLikeButtonProps) {
-  const { accessToken } = useAuth()
+  const accessToken = useAuthOptional()?.accessToken ?? null
   const [likeCount, setLikeCount] = useState(initialLikeCount)
   const [likedByMe, setLikedByMe] = useState(initialLikedByMe)
   const [loading, setLoading] = useState(false)

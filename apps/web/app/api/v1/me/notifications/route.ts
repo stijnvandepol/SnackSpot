@@ -17,43 +17,40 @@ export async function GET(req: NextRequest) {
   if (isResponse(query)) return query
 
   try {
-    const notifications = await prisma.notification.findMany({
-      where: {
-        userId: auth.sub,
-        ...(query.unreadOnly ? { isRead: false } : {}),
-        ...(query.cursor ? { createdAt: { lt: new Date(decodeURIComponent(query.cursor)) } } : {}),
-      },
-      orderBy: { createdAt: 'desc' },
-      take: query.limit + 1,
-      select: {
-        id: true,
-        type: true,
-        title: true,
-        message: true,
-        link: true,
-        isRead: true,
-        createdAt: true,
-        actor: {
-          select: {
-            id: true,
-            username: true,
-            avatarKey: true,
+    const [notifications, unreadCount] = await Promise.all([
+      prisma.notification.findMany({
+        where: {
+          userId: auth.sub,
+          ...(query.unreadOnly ? { isRead: false } : {}),
+          ...(query.cursor ? { createdAt: { lt: new Date(decodeURIComponent(query.cursor)) } } : {}),
+        },
+        orderBy: { createdAt: 'desc' },
+        take: query.limit + 1,
+        select: {
+          id: true,
+          type: true,
+          title: true,
+          message: true,
+          link: true,
+          isRead: true,
+          createdAt: true,
+          actor: {
+            select: {
+              id: true,
+              username: true,
+              avatarKey: true,
+            },
           },
         },
-      },
-    })
+      }),
+      prisma.notification.count({
+        where: { userId: auth.sub, isRead: false },
+      }),
+    ])
 
     const hasMore = notifications.length > query.limit
     const items = hasMore ? notifications.slice(0, query.limit) : notifications
     const nextCursor = hasMore ? encodeURIComponent(items.at(-1)!.createdAt.toISOString()) : null
-
-    // Get unread count
-    const unreadCount = await prisma.notification.count({
-      where: {
-        userId: auth.sub,
-        isRead: false,
-      },
-    })
 
     return withNoStore(ok({ data: items, pagination: { nextCursor, hasMore }, unreadCount }))
   } catch (e) {

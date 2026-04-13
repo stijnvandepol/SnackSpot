@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { ok, err, parseQuery, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
 import { rateLimitUser } from '@/lib/rate-limit'
+import { buildCacheKey, getCachedJson, setCachedJson } from '@/lib/cache'
 
 const SearchUsersQuerySchema = z.object({
   q: z.string().min(1).max(50),
@@ -20,6 +21,10 @@ export async function GET(req: NextRequest) {
   if (isResponse(query)) return query
 
   try {
+    const cacheKey = buildCacheKey('users-search', `${query.q.toLowerCase()}:${query.limit}`)
+    const cached = await getCachedJson<Array<{ id: string; username: string; avatarKey: string | null }>>(cacheKey)
+    if (cached) return ok(cached)
+
     const users = await prisma.user.findMany({
       where: {
         username: {
@@ -38,6 +43,8 @@ export async function GET(req: NextRequest) {
         username: 'asc',
       },
     })
+
+    await setCachedJson(cacheKey, users, 30)
 
     return ok(users)
   } catch (e) {

@@ -6,17 +6,14 @@ import { useAuth } from './auth-provider'
 import { avatarUrl } from '@/lib/avatar'
 import { NotificationBell } from './notification-bell'
 import { SnackSpotLogo } from './snack-spot-logo'
+import { SHARED_NAV_LINKS } from '@/lib/nav-links'
 
 export function TopNav() {
   const { user, logout } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
 
-  const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/search', label: 'Explore' },
-    { href: '/nearby', label: 'Nearby' },
-  ]
+  const navLinks = SHARED_NAV_LINKS
 
   return (
     <header className="hidden md:block sticky top-0 z-30 backdrop-blur border-b" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>

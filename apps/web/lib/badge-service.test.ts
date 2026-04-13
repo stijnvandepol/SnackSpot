@@ -1,4 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// badge-service imports `prisma` from lib/db which runs `new PrismaClient()` at
+// module load time. Mock the module before importing the service so that
+// PrismaClient is never instantiated during unit tests.
+vi.mock('@/lib/db', () => ({ prisma: {} }))
+vi.mock('@/lib/notification-service', () => ({ notifyBadgeEarned: vi.fn() }))
+
 import { progressForCriteria } from './badge-service'
 
 describe('progressForCriteria', () => {
