@@ -169,12 +169,12 @@ export function NotificationBell() {
                   No notifications yet
                 </div>
               ) : (
-                <div className="divide-y divide-[#ececec]">
+                <div className="divide-y divide-snack-border">
                   {notifications.map((notification) => (
                     <div
                       key={notification.id}
                       className={`p-4 hover:bg-snack-surface transition ${
-                        !notification.isRead ? 'bg-blue-50' : ''
+                        !notification.isRead ? 'bg-blue-50 dark:bg-blue-950/30' : ''
                       }`}
                     >
                       {notification.link ? (

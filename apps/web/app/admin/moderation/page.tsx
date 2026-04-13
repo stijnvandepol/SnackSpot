@@ -125,7 +125,7 @@ export default function ModerationPage() {
                     Hide Review
                   </button>
                   <button
-                    className="btn-secondary text-xs py-1.5 px-3 text-red-600 hover:bg-red-50"
+                    className="btn-secondary text-xs py-1.5 px-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
                     disabled={actionLoading === report.id}
                     onClick={() => doAction('DELETE_REVIEW', 'REVIEW', report.review!.id, report.id)}
                   >
@@ -133,7 +133,7 @@ export default function ModerationPage() {
                   </button>
                   {user.role === 'ADMIN' && (
                     <button
-                      className="btn-secondary text-xs py-1.5 px-3 text-red-700 hover:bg-red-50"
+                      className="btn-secondary text-xs py-1.5 px-3 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
                       disabled={actionLoading === report.id}
                       onClick={() => doAction('BAN_USER', 'USER', report.review!.user.id, report.id, `Banned via report ${report.id}`)}
                     >
@@ -144,7 +144,7 @@ export default function ModerationPage() {
               )}
               {report.photo && (
                 <button
-                  className="btn-secondary text-xs py-1.5 px-3 text-red-600 hover:bg-red-50"
+                  className="btn-secondary text-xs py-1.5 px-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
                   disabled={actionLoading === report.id}
                   onClick={() => doAction('DELETE_PHOTO', 'PHOTO', report.photo!.id, report.id)}
                 >

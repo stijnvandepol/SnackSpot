@@ -256,20 +256,20 @@ export default function SearchPage() {
       )}
 
       {searchError && (
-        <div className="card mb-4 border-red-200 bg-red-50/50 p-3" role="status" aria-live="polite">
-          <p className="text-sm text-red-700">{searchError}</p>
+        <div className="card mb-4 border-red-200 dark:border-red-900 bg-red-50/50 dark:bg-red-950/30 p-3" role="status" aria-live="polite">
+          <p className="text-sm text-red-700 dark:text-red-400">{searchError}</p>
         </div>
       )}
 
       {tagError && (
-        <div className="card mb-4 border-red-200 bg-red-50/50 p-3" role="status" aria-live="polite">
-          <p className="text-sm text-red-700">{tagError}</p>
+        <div className="card mb-4 border-red-200 dark:border-red-900 bg-red-50/50 dark:bg-red-950/30 p-3" role="status" aria-live="polite">
+          <p className="text-sm text-red-700 dark:text-red-400">{tagError}</p>
         </div>
       )}
 
       {featuredError && showDefaultPlaces && (
-        <div className="card mb-4 border-red-200 bg-red-50/50 p-3" role="status" aria-live="polite">
-          <p className="text-sm text-red-700">{featuredError}</p>
+        <div className="card mb-4 border-red-200 dark:border-red-900 bg-red-50/50 dark:bg-red-950/30 p-3" role="status" aria-live="polite">
+          <p className="text-sm text-red-700 dark:text-red-400">{featuredError}</p>
         </div>
       )}
 

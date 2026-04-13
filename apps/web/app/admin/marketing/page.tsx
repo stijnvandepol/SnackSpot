@@ -277,13 +277,13 @@ export default function MarketingPage() {
 
         {/* Error / result */}
         {errorMsg && (
-          <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+          <div className="rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 p-4 text-sm text-red-700 dark:text-red-400">
             {errorMsg}
           </div>
         )}
 
         {result && (
-          <div className="rounded-xl bg-green-50 border border-green-200 p-4 text-sm text-green-800">
+          <div className="rounded-xl bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 p-4 text-sm text-green-800 dark:text-green-400">
             <p className="font-semibold">Emails sent!</p>
             <p className="mt-1">
               {result.sent} of {result.total} sent successfully

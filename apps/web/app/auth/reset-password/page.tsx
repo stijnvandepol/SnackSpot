@@ -74,8 +74,8 @@ function ResetPasswordForm() {
 
         {done ? (
           <div className="card p-6 text-center space-y-4">
-            <div className="mx-auto w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="mx-auto w-12 h-12 rounded-full bg-green-50 dark:bg-green-950/30 flex items-center justify-center">
+              <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>

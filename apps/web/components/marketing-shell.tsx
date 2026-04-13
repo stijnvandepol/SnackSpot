@@ -16,7 +16,7 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.14),_transparent_32%),linear-gradient(180deg,#fff7ed_0%,#ffffff_28%,#ffffff_100%)] text-snack-text">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.14),_transparent_32%),linear-gradient(180deg,#fff7ed_0%,#ffffff_28%,#ffffff_100%)] dark:bg-[linear-gradient(180deg,#1c1917_0%,#0c0a09_100%)] text-snack-text">
       <header className="sticky top-0 z-30 border-b backdrop-blur" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 h-16">
           <Link href="/product" className="shrink-0">
