@@ -16,7 +16,15 @@ export type PlaceSearchResult = {
   pagination: { nextCursor: null; hasMore: false }
 }
 
-/** Nearby search with a required text filter. Searches place name, address, AND dish names. */
+/**
+ * Nearby search with a text filter.
+ *
+ * Matches places within `radius` metres whose name/address OR any published
+ * dish name matches `q` (full-text first, ILIKE fallback for short terms).
+ * DISTINCT ON(place_id) collapses multiple matching dish rows into one place.
+ * Stats (avg_rating, review_count) are computed in a LATERAL subquery so we
+ * don't need a second round-trip.
+ */
 export async function searchNearbyWithText(
   lat: number,
   lng: number,
@@ -74,7 +82,7 @@ export async function searchNearbyWithText(
   `
 }
 
-/** Nearby search without a text filter. */
+/** Nearby search without a text filter — returns all places within `radius` metres ordered by distance. */
 export async function searchNearby(
   lat: number,
   lng: number,
@@ -119,7 +127,13 @@ export async function searchNearby(
   `
 }
 
-/** Text-only search ranked by relevance. Searches place name, address, AND dish names from reviews. */
+/**
+ * Text-only search ranked by relevance (no spatial filter).
+ *
+ * Scores each place as the best of: ts_rank on name/address, ILIKE bonus (0.5),
+ * and 80 % of the best dish-name rank across published reviews. DISTINCT ON(place_id)
+ * with ORDER BY rank DESC picks the best-scoring row per place.
+ */
 export async function searchByText(
   q: string,
   limit: number,

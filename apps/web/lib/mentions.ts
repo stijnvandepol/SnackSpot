@@ -4,7 +4,14 @@ export type MentionSegment =
 
 const USERNAME_MIN = 3
 const USERNAME_MAX = 30
-const mentionRegex = new RegExp(`(?<![a-zA-Z0-9_])@([a-zA-Z0-9_]{${USERNAME_MIN},${USERNAME_MAX}})\\b`, 'g')
+
+// Negative lookbehind (?<![a-zA-Z0-9_]) prevents matching inside email
+// addresses (e.g. "user@example.com"). Word boundary \b prevents matching
+// when the username runs directly into other word characters.
+const mentionRegex = new RegExp(
+  `(?<![a-zA-Z0-9_])@([a-zA-Z0-9_]{${USERNAME_MIN},${USERNAME_MAX}})\\b`,
+  'g',
+)
 
 export function parseMentions(text: string): MentionSegment[] {
   const segments: MentionSegment[] = []

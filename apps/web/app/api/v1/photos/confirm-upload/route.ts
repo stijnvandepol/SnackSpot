@@ -10,6 +10,14 @@ import { ALLOWED_IMAGE_MIMES } from '@/lib/upload'
 import { getObjectHeaderBytes } from '@/lib/minio'
 import { matchesMagicBytes } from '@/lib/magic-bytes'
 
+// Extract the content type stored when the client called initiate-upload.
+// The metadata field is untyped JSON (Prisma JsonValue), so we guard carefully.
+function contentTypeFromMetadata(metadata: unknown): string | null {
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return null
+  const ct = (metadata as Record<string, unknown>).contentType
+  return typeof ct === 'string' ? ct : null
+}
+
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
   if (isResponse(auth)) return auth
@@ -33,15 +41,7 @@ export async function POST(req: NextRequest) {
     if (objectInfo.size > env.MAX_FILE_SIZE_BYTES) {
       return err(`File too large - max ${env.MAX_FILE_SIZE_BYTES / 1024 / 1024} MB`, 413)
     }
-    const metadataContentType =
-      photo.metadata &&
-      typeof photo.metadata === 'object' &&
-      !Array.isArray(photo.metadata) &&
-      typeof (photo.metadata as Record<string, unknown>).contentType === 'string'
-        ? String((photo.metadata as Record<string, unknown>).contentType)
-        : null
-
-    const rawContentType = objectInfo.contentType ?? metadataContentType
+    const rawContentType = objectInfo.contentType ?? contentTypeFromMetadata(photo.metadata)
     const contentType = rawContentType?.split(';')[0]?.trim().toLowerCase() ?? null
     if (!contentType || !ALLOWED_IMAGE_MIMES.has(contentType)) {
       return err('File type not allowed', 415)

@@ -3,11 +3,14 @@ import { logger } from './logger'
 
 const CACHE_PREFIX = 'cache:v1:'
 
+// Produces a deterministic string from search params so that
+// ?tag=X&limit=4 and ?limit=4&tag=X resolve to the same cache key.
 export function stableSearchParams(params: URLSearchParams): string {
   return [...params.entries()]
-    .sort(([aKey, aValue], [bKey, bValue]) =>
-      aKey === bKey ? aValue.localeCompare(bValue) : aKey.localeCompare(bKey),
-    )
+    .sort(([aKey, aVal], [bKey, bVal]) => {
+      const byKey = aKey.localeCompare(bKey)
+      return byKey !== 0 ? byKey : aVal.localeCompare(bVal)
+    })
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
     .join('&')
 }

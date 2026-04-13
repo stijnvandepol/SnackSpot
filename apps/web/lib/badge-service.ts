@@ -123,15 +123,21 @@ export async function recalculateUserBadges(userId: string, options?: Recalculat
     existingRows.map((row) => [row.badgeId, { earnedAt: row.earnedAt }]),
   )
 
+  // Pre-compute each badge's current progress once — used in both the
+  // newly-earned filter and the upsert below.
+  const progressByBadgeId = new Map(
+    badges.map((badge) => [badge.id, progressForCriteria(badge.criteriaType, snapshot)]),
+  )
+
   const newlyEarnedBadges = badges.filter((badge) => {
-    const progress = progressForCriteria(badge.criteriaType, snapshot)
+    const progress = progressByBadgeId.get(badge.id)!
     const existing = existingByBadgeId.get(badge.id)
     return progress >= badge.criteriaValue && !existing?.earnedAt
   })
 
   await prisma.$transaction(
     badges.map((badge) => {
-      const progress = progressForCriteria(badge.criteriaType, snapshot)
+      const progress = progressByBadgeId.get(badge.id)!
       const existing = existingByBadgeId.get(badge.id)
       const earnedAt = progress >= badge.criteriaValue
         ? (existing?.earnedAt ?? new Date())

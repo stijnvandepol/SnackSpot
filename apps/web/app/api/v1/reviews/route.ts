@@ -119,6 +119,7 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    // Fire-and-forget — badge failures must never roll back a successful review.
     await recalculateUserBadges(auth.sub).catch((error) => {
       logger.error({ err: error, userId: auth.sub, reviewId: review.id }, 'Badge recalculation failed after review create')
     })
