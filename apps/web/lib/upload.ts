@@ -118,13 +118,15 @@ export async function compressImage(file: File): Promise<{ blob: Blob; mime: Nor
   })
 }
 
+// Decide whether to PUT directly to S3/MinIO (true) or proxy through our API (false).
+// Direct upload is required when the presigned URL points to a different origin —
+// in that case the browser would block a same-origin fetch to our API anyway.
 export function shouldUseDirectBrowserUpload(uploadUrl: string): boolean {
-  if (typeof window === 'undefined') return true
-
+  if (typeof window === 'undefined') return true // SSR path: no upload happens
   try {
     const target = new URL(uploadUrl, window.location.href)
     return target.origin !== window.location.origin
   } catch {
-    return true
+    return true // Malformed URL — default to direct to avoid silent failure
   }
 }

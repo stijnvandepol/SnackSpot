@@ -171,8 +171,8 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
         <div
           className={`p-3 rounded-xl text-sm ${
             messageTone === 'success'
-              ? 'bg-green-50 text-green-900'
-              : 'bg-red-50 text-red-900'
+              ? 'bg-green-50 dark:bg-green-950/30 text-green-900 dark:text-green-400'
+              : 'bg-red-50 dark:bg-red-950/30 text-red-900 dark:text-red-400'
           }`}
         >
           {message}

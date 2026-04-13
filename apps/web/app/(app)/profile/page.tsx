@@ -228,14 +228,14 @@ function ProfileContent() {
   }
 
   const dangerZone = (
-    <div className="card p-4 border border-red-200">
-      <h3 className="font-heading font-semibold text-red-600 mb-1">Danger Zone</h3>
+    <div className="card p-4 border border-red-200 dark:border-red-900">
+      <h3 className="font-heading font-semibold text-red-600 dark:text-red-400 mb-1">Danger Zone</h3>
       <p className="text-xs text-snack-muted mb-3">
         Permanently delete your account and all your data. This cannot be undone.
       </p>
       <button
         type="button"
-        className="w-full text-sm py-2 px-4 rounded-xl border border-red-300 text-red-600 hover:bg-red-50 transition font-medium"
+        className="w-full text-sm py-2 px-4 rounded-xl border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition font-medium"
         onClick={() => { setDeleteModalOpen(true); setDeletePassword(''); setDeleteError(null) }}
       >
         Delete my account
@@ -245,9 +245,9 @@ function ProfileContent() {
 
   const TIER_LABEL: Record<string, string> = { BRONZE: 'Bronze', SILVER: 'Silver', GOLD: 'Gold' }
   const TIER_CLASS: Record<string, string> = {
-    BRONZE: 'text-amber-700 bg-amber-50 border-amber-200',
-    SILVER: 'text-slate-500 bg-slate-50 border-slate-200',
-    GOLD: 'text-yellow-600 bg-yellow-50 border-yellow-300',
+    BRONZE: 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800',
+    SILVER: 'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700',
+    GOLD: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-950/30 border-yellow-300 dark:border-yellow-700',
   }
 
   const allBadgeRows = [

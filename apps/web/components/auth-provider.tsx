@@ -36,6 +36,12 @@ export function useAuth(): AuthCtx {
   return ctx
 }
 
+/** Like useAuth but returns null when used outside AuthProvider instead of throwing.
+ *  Use this for components that render safely without an authenticated session. */
+export function useAuthOptional(): AuthCtx | null {
+  return useContext(Ctx)
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
@@ -55,11 +61,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(timeout)
 
       if (!res.ok) {
-        // Token-rotation race: two tabs can refresh simultaneously. The second
-        // request arrives after the first already rotated the cookie, so it gets
-        // a 401. One retry after a short delay is enough to recover.
+        // Token-rotation race: two browser tabs can call /refresh simultaneously.
+        // The first rotates the cookie; the second arrives with the now-invalid
+        // old cookie and gets a 401. A short wait lets the first response commit,
+        // so a single retry with the updated cookie succeeds.
+        const ROTATION_RACE_RETRY_MS = 250
         if (res.status === 401) {
-          await new Promise((resolve) => setTimeout(resolve, 250))
+          await new Promise((resolve) => setTimeout(resolve, ROTATION_RACE_RETRY_MS))
           const retryRes = await fetch('/api/v1/auth/refresh', { method: 'POST', credentials: 'include' })
           if (retryRes.ok) {
             const { data } = await retryRes.json()

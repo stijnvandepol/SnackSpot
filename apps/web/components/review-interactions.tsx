@@ -246,7 +246,7 @@ export function ReviewInteractions({
           <Link href={editHref} className="btn-secondary flex-1 text-center text-sm">Edit</Link>
           <button
             type="button"
-            className="btn-secondary flex-1 text-sm text-red-600 hover:bg-red-50"
+            className="btn-secondary flex-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
             onClick={async () => {
               if (!confirm('Delete this review?')) return
               await fetch(`/api/v1/reviews/${reviewId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } })

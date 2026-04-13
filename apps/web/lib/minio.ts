@@ -19,12 +19,9 @@ function createPublicMinioClient(): Minio.Client {
     throw new Error('MINIO_PUBLIC_URL may not include a path; use root origin only')
   }
 
-  const port =
-    publicUrl.port.length > 0
-      ? Number.parseInt(publicUrl.port, 10)
-      : publicUrl.protocol === 'https:'
-        ? 443
-        : 80
+  const port = publicUrl.port
+    ? Number.parseInt(publicUrl.port, 10)
+    : publicUrl.protocol === 'https:' ? 443 : 80
 
   return new Minio.Client({
     endPoint: publicUrl.hostname,

@@ -55,8 +55,8 @@ export function PlaceReviewsSection({ placeId, placeName, placeAddress, from }: 
   return (
     <>
       {reviewsError && (
-        <div className="card p-3 mb-4 border-red-200 bg-red-50/50" role="status" aria-live="polite">
-          <p className="text-sm text-red-700">{reviewsError}</p>
+        <div className="card p-3 mb-4 border-red-200 dark:border-red-900 bg-red-50/50 dark:bg-red-950/30" role="status" aria-live="polite">
+          <p className="text-sm text-red-700 dark:text-red-400">{reviewsError}</p>
         </div>
       )}
 

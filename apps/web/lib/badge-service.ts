@@ -20,52 +20,45 @@ interface RecalculateOptions {
 }
 
 async function getActivitySnapshot(userId: string): Promise<ActivitySnapshot> {
-  const [postsCount, postsLast30Days, uniqueLocationsRows, activeDaysRows, likesReceivedRows, commentsReceivedRows] = await Promise.all([
-    prisma.review.count({ where: { userId, status: 'PUBLISHED' } }),
-    prisma.review.count({
-      where: {
-        userId,
-        status: 'PUBLISHED',
-        createdAt: { gte: new Date(Date.now() - ACTIVITY_WINDOW_DAYS * MS_PER_DAY) },
-      },
-    }),
-    prisma.$queryRaw<Array<{ count: number }>>`
-      SELECT COUNT(DISTINCT place_id)::int AS count
+  type SnapshotRow = {
+    posts_count: number
+    posts_last_30: number
+    unique_locations: number
+    active_days: Date[] | null
+    likes_received: number
+    comments_received: number
+  }
+
+  const windowStart = new Date(Date.now() - ACTIVITY_WINDOW_DAYS * MS_PER_DAY)
+
+  const [row] = await prisma.$queryRaw<SnapshotRow[]>`
+    WITH pr AS (
+      SELECT id, place_id, created_at
       FROM reviews
       WHERE user_id = ${userId} AND status = 'PUBLISHED'
-    `,
-    prisma.$queryRaw<Array<{ day: Date }>>`
-      SELECT DISTINCT DATE(created_at) AS day
-      FROM reviews
-      WHERE user_id = ${userId} AND status = 'PUBLISHED'
-      ORDER BY day ASC
-    `,
-    prisma.$queryRaw<Array<{ count: number }>>`
-      SELECT COUNT(rl.review_id)::int AS count
-      FROM review_likes rl
-      INNER JOIN reviews r ON r.id = rl.review_id
-      WHERE r.user_id = ${userId} AND r.status = 'PUBLISHED'
-    `,
-    prisma.$queryRaw<Array<{ count: number }>>`
-      SELECT COUNT(c.id)::int AS count
-      FROM comments c
-      INNER JOIN reviews r ON r.id = c.review_id
-      WHERE r.user_id = ${userId} AND r.status = 'PUBLISHED'
-    `,
-  ])
+    )
+    SELECT
+      (SELECT COUNT(*)::int FROM pr)                                                  AS posts_count,
+      (SELECT COUNT(*)::int FROM pr WHERE created_at >= ${windowStart})               AS posts_last_30,
+      (SELECT COUNT(DISTINCT place_id)::int FROM pr)                                  AS unique_locations,
+      (SELECT ARRAY_AGG(DISTINCT DATE(created_at) ORDER BY DATE(created_at)) FROM pr) AS active_days,
+      (SELECT COUNT(rl.review_id)::int FROM review_likes rl
+       INNER JOIN pr ON pr.id = rl.review_id)                                         AS likes_received,
+      (SELECT COUNT(c.id)::int FROM comments c
+       INNER JOIN pr ON pr.id = c.review_id)                                          AS comments_received
+  `
+
+  const activeDays = (row?.active_days ?? [])
+    .map((d) => new Date(d))
+    .map((d) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())))
+    .sort((a, b) => a.getTime() - b.getTime())
 
   const bestStreakDays = (() => {
-    const sorted = activeDaysRows
-      .map((row) => new Date(row.day))
-      .map((date) => new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())))
-      .sort((a, b) => a.getTime() - b.getTime())
-
-    if (sorted.length === 0) return 0
-
+    if (activeDays.length === 0) return 0
     let best = 1
     let running = 1
-    for (let i = 1; i < sorted.length; i++) {
-      const diffDays = Math.round((sorted[i].getTime() - sorted[i - 1].getTime()) / MS_PER_DAY)
+    for (let i = 1; i < activeDays.length; i++) {
+      const diffDays = Math.round((activeDays[i].getTime() - activeDays[i - 1].getTime()) / MS_PER_DAY)
       if (diffDays === 1) {
         running += 1
         best = Math.max(best, running)
@@ -77,13 +70,13 @@ async function getActivitySnapshot(userId: string): Promise<ActivitySnapshot> {
   })()
 
   return {
-    postsCount,
-    postsLast30Days,
-    uniqueLocationsCount: uniqueLocationsRows[0]?.count ?? 0,
-    activeDaysCount: activeDaysRows.length,
+    postsCount: row?.posts_count ?? 0,
+    postsLast30Days: row?.posts_last_30 ?? 0,
+    uniqueLocationsCount: row?.unique_locations ?? 0,
+    activeDaysCount: activeDays.length,
     bestStreakDays,
-    likesReceivedCount: likesReceivedRows[0]?.count ?? 0,
-    commentsReceivedCount: commentsReceivedRows[0]?.count ?? 0,
+    likesReceivedCount: row?.likes_received ?? 0,
+    commentsReceivedCount: row?.comments_received ?? 0,
   }
 }
 
@@ -130,15 +123,21 @@ export async function recalculateUserBadges(userId: string, options?: Recalculat
     existingRows.map((row) => [row.badgeId, { earnedAt: row.earnedAt }]),
   )
 
+  // Pre-compute each badge's current progress once — used in both the
+  // newly-earned filter and the upsert below.
+  const progressByBadgeId = new Map(
+    badges.map((badge) => [badge.id, progressForCriteria(badge.criteriaType, snapshot)]),
+  )
+
   const newlyEarnedBadges = badges.filter((badge) => {
-    const progress = progressForCriteria(badge.criteriaType, snapshot)
+    const progress = progressByBadgeId.get(badge.id)!
     const existing = existingByBadgeId.get(badge.id)
     return progress >= badge.criteriaValue && !existing?.earnedAt
   })
 
   await prisma.$transaction(
     badges.map((badge) => {
-      const progress = progressForCriteria(badge.criteriaType, snapshot)
+      const progress = progressByBadgeId.get(badge.id)!
       const existing = existingByBadgeId.get(badge.id)
       const earnedAt = progress >= badge.criteriaValue
         ? (existing?.earnedAt ?? new Date())

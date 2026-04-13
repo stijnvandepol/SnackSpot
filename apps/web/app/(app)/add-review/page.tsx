@@ -657,7 +657,7 @@ export default function AddReviewPage() {
               </div>
               
               {place.placeId && (
-                <div className="px-4 py-3 bg-green-50 border border-green-200 rounded-xl">
+                <div className="px-4 py-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-xl">
                   <div className="flex items-start gap-2">
                     <span className="text-lg" aria-hidden="true">+</span>
                     <div className="flex-1">
@@ -751,7 +751,7 @@ export default function AddReviewPage() {
           >
             {geocoding || fetchingLocation || searching ? 'Loading...' : 'Next: Write review'}
           </button>
-          {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="status" aria-live="polite">{error}</div>}
+          {error && <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400" role="status" aria-live="polite">{error}</div>}
         </div>
       )}
 
@@ -845,7 +845,7 @@ export default function AddReviewPage() {
             <p className="mt-2 text-xs text-snack-muted">Share the standout details: what you ordered, how it tasted, and whether you would recommend it.</p>
           </div>
 
-          {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="status" aria-live="polite">{error}</div>}
+          {error && <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400" role="status" aria-live="polite">{error}</div>}
 
           <div className="flex gap-2">
             <button className="btn-secondary flex-1" type="button" onClick={() => { setError(null); setStep('place') }}>Back</button>
@@ -923,12 +923,12 @@ export default function AddReviewPage() {
           )}
 
           {photos.length === 0 && (
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-center">
-              <p className="text-sm text-blue-900 font-medium">At least one photo is required</p>
+            <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-xl text-center">
+              <p className="text-sm text-blue-900 dark:text-blue-300 font-medium">At least one photo is required</p>
             </div>
           )}
 
-          {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="status" aria-live="polite">{error}</div>}
+          {error && <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400" role="status" aria-live="polite">{error}</div>}
 
           <div className="flex gap-2">
             <button className="btn-secondary flex-1" type="button" onClick={() => { setError(null); setStep('review') }}>Back</button>

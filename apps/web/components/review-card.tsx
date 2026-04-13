@@ -72,6 +72,7 @@ export function ReviewCard({
               alt={review.dishName ?? 'Review photo'}
               fill
               sizes="(max-width: 672px) 100vw, 672px"
+              quality={90}
               className="object-cover"
               priority={priority}
             />

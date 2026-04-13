@@ -49,7 +49,6 @@ export function rateLimitUser(userId: string, action: string, limit: number, win
   return rateLimit(`rl:user:${action}:${userId}`, limit, windowSeconds)
 }
 
-/** Extract client IP. Trust proxy headers only when explicitly configured. */
 // ─── Login failure counters ──────────────────────────────────────────────────
 // Simple INCR-based counters (not sliding-window). Used to decide when to
 // require a CAPTCHA challenge. Each counter expires after the login window.
@@ -68,9 +67,12 @@ export async function incrementLoginFailures(ip: string, email: string): Promise
   const pipeline = redis.pipeline()
   pipeline.incr(loginFailIPKey(ip))
   pipeline.incr(loginFailEmailKey(email))
-  const results = await pipeline.exec()
-  const ipNew = (results?.[0]?.[1] as number) === 1
-  const emailNew = (results?.[1]?.[1] as number) === 1
+  // Pipeline results are [[err, value], ...]. INCR returns 1 only when it
+  // creates a brand-new key — that's the signal to set TTL. We avoid touching
+  // the TTL of existing keys so repeated failures don't keep extending the window.
+  const results = await pipeline.exec() as Array<[Error | null, number]> | null
+  const ipNew = results?.[0]?.[1] === 1
+  const emailNew = results?.[1]?.[1] === 1
   const expirePipeline = redis.pipeline()
   if (ipNew) expirePipeline.expire(loginFailIPKey(ip), LOGIN_FAIL_TTL)
   if (emailNew) expirePipeline.expire(loginFailEmailKey(email), LOGIN_FAIL_TTL)

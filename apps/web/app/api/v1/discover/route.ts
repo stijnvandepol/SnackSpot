@@ -65,37 +65,38 @@ export async function GET(req: NextRequest) {
         }
       : {}
 
-    const freshFinds = await prisma.review.findMany({
-      where: {
-        status: ReviewStatus.PUBLISHED,
-        ...tagFilter,
-      },
-      orderBy: { createdAt: 'desc' },
-      take: query.limit,
-      select: reviewListSelect(auth?.sub),
-    })
-
-    const underTheRadarRows = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
-      SELECT r.id
-      FROM reviews r
-      JOIN (
-        SELECT place_id, COUNT(*)::int AS review_count
-        FROM reviews
-        WHERE status = 'PUBLISHED'
-        GROUP BY place_id
-      ) place_counts ON place_counts.place_id = r.place_id
-      WHERE r.status = 'PUBLISHED'
-      ${query.tag
-        ? Prisma.sql`AND EXISTS (
-            SELECT 1
-            FROM review_tags rt
-            WHERE rt.review_id = r.id
-              AND rt.tag = ${query.tag}
-          )`
-        : Prisma.empty}
-      ORDER BY place_counts.review_count ASC, r.created_at DESC
-      LIMIT ${query.limit * 3}
-    `)
+    const [freshFinds, underTheRadarRows] = await Promise.all([
+      prisma.review.findMany({
+        where: {
+          status: ReviewStatus.PUBLISHED,
+          ...tagFilter,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: query.limit,
+        select: reviewListSelect(auth?.sub),
+      }),
+      prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+        SELECT r.id
+        FROM reviews r
+        JOIN (
+          SELECT place_id, COUNT(*)::int AS review_count
+          FROM reviews
+          WHERE status = 'PUBLISHED'
+          GROUP BY place_id
+        ) place_counts ON place_counts.place_id = r.place_id
+        WHERE r.status = 'PUBLISHED'
+        ${query.tag
+          ? Prisma.sql`AND EXISTS (
+              SELECT 1
+              FROM review_tags rt
+              WHERE rt.review_id = r.id
+                AND rt.tag = ${query.tag}
+            )`
+          : Prisma.empty}
+        ORDER BY place_counts.review_count ASC, r.created_at DESC
+        LIMIT ${query.limit * 3}
+      `),
+    ])
 
     const freshFindIds = new Set(freshFinds.map((review) => review.id))
     const underTheRadarIds = underTheRadarRows
