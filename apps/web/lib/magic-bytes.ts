@@ -9,7 +9,8 @@
 /**
  * HEIC/HEIF and AVIF use ISOBMFF (ISO Base Media File Format) containers.
  * Bytes 4-7 contain "ftyp", followed by a brand identifier.
- * Known brands: heic, heix, hevc, hevx, heim, heis, mif1 (HEIF), avif (AVIF).
+ * Known brands: heic, heix, hevc, hevx, heim, heis, mif1 (HEIF), avif (AVIF),
+ * msf1 (Samsung multi-image sequence), MiHE (Xiaomi HEIF).
  */
 function isIsobmff(buf: Buffer, brands: string[]): boolean {
   if (buf.length < 12) return false
@@ -19,7 +20,7 @@ function isIsobmff(buf: Buffer, brands: string[]): boolean {
   return brands.includes(brand)
 }
 
-const HEIC_BRANDS = ['heic', 'heix', 'hevc', 'hevx', 'heim', 'heis', 'mif1']
+const HEIC_BRANDS = ['heic', 'heix', 'hevc', 'hevx', 'heim', 'heis', 'mif1', 'msf1', 'MiHE']
 const AVIF_BRANDS = ['avif', 'avis', 'mif1']
 
 const MAGIC_SIGNATURES: Record<string, (buf: Buffer) => boolean> = {
