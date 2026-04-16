@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // old cookie and gets a 401. A short wait lets the first response commit,
         // so a single retry with the updated cookie succeeds.
         const ROTATION_RACE_RETRY_MS = 250
-        if (res.status === 401) {
+        if (res.status === 401 && tokenRef.current !== null) {
           await new Promise((resolve) => setTimeout(resolve, ROTATION_RACE_RETRY_MS))
           const retryRes = await fetch('/api/v1/auth/refresh', { method: 'POST', credentials: 'include' })
           if (retryRes.ok) {

@@ -160,7 +160,7 @@ export function ReviewInteractions({
               initialLikedByMe={likedByMe}
             />
           )}
-          <p className="text-xs text-snack-muted">{commentCount} comments</p>
+          <p className="text-xs text-snack-muted">{commentCount} {commentCount === 1 ? 'comment' : 'comments'}</p>
         </div>
 
         <div className="flex items-center justify-between pt-2 border-t border-snack-border">
