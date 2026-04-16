@@ -8,8 +8,8 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: '/search' },
-  openGraph: { title, description },
-  twitter: { title, description },
+  openGraph: { title: `${title} | SnackSpot`, description },
+  twitter: { title: `${title} | SnackSpot`, description },
 }
 
 export default function SearchLayout({ children }: { children: React.ReactNode }) {

@@ -8,8 +8,8 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: '/nearby' },
-  openGraph: { title, description },
-  twitter: { title, description },
+  openGraph: { title: `${title} | SnackSpot`, description },
+  twitter: { title: `${title} | SnackSpot`, description },
 }
 
 export default function NearbyLayout({ children }: { children: React.ReactNode }) {

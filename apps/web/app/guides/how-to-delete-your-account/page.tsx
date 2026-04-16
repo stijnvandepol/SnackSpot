@@ -32,7 +32,7 @@ const faqSchema = {
 }
 
 export const metadata: Metadata = {
-  title: 'How to delete your SnackSpot account',
+  title: { absolute: 'How to delete your SnackSpot account' },
   description:
     'Permanently delete your SnackSpot account and all associated data from your profile settings.',
   alternates: {

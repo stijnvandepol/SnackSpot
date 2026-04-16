@@ -9,7 +9,7 @@ const guidesDescription =
   'Step-by-step guides for using SnackSpot: create an account, post a review, add a place, manage your password, and more.'
 
 export const metadata: Metadata = {
-  title: guidesTitle,
+  title: { absolute: guidesTitle },
   description: guidesDescription,
   alternates: { canonical: '/guides' },
   openGraph: { title: guidesTitle, description: guidesDescription },

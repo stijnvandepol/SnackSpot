@@ -34,7 +34,7 @@ const faqSchema = {
 }
 
 export const metadata: Metadata = {
-  title: 'How to add a place or restaurant on SnackSpot',
+  title: { absolute: 'How to add a place or restaurant on SnackSpot' },
   description:
     'Add a new place or restaurant on SnackSpot during the posting flow when the location is not listed yet.',
   alternates: {
