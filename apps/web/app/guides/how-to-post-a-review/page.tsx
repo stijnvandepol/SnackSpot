@@ -37,7 +37,7 @@ const faqSchema = {
 }
 
 export const metadata: Metadata = {
-  title: 'How to post a review on SnackSpot',
+  title: { absolute: 'How to post a review on SnackSpot' },
   description:
     'Share a photo review of a local food spot on SnackSpot. Step-by-step instructions for posting your first review.',
   alternates: {

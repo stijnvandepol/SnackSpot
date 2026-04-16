@@ -87,7 +87,7 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
   },
-  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Snack Spot' },
+  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'SnackSpot' },
   openGraph: {
     type: 'website',
     title: 'SnackSpot',

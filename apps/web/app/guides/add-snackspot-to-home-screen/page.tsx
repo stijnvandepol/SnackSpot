@@ -37,7 +37,7 @@ const faqSchema = {
 }
 
 export const metadata: Metadata = {
-  title: 'Add SnackSpot to your home screen (Android & iPhone)',
+  title: { absolute: 'Add SnackSpot to your home screen (Android & iPhone)' },
   description:
     'Step-by-step guide to add SnackSpot to your mobile home screen on Android and iOS, including fixes for common issues.',
   alternates: {

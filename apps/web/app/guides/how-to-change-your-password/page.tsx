@@ -33,7 +33,7 @@ const faqSchema = {
 }
 
 export const metadata: Metadata = {
-  title: 'How to change your SnackSpot password',
+  title: { absolute: 'How to change your SnackSpot password' },
   description:
     'Reset or update your SnackSpot password using the forgot-password flow. Step-by-step instructions and common fixes.',
   alternates: {

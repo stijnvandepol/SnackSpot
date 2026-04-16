@@ -32,7 +32,7 @@ const faqSchema = {
 }
 
 export const metadata: Metadata = {
-  title: 'How to create a SnackSpot account',
+  title: { absolute: 'How to create a SnackSpot account' },
   description:
     'Create a free SnackSpot account in under a minute. All you need is an email address and a username.',
   alternates: {
