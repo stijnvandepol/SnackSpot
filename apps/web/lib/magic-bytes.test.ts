@@ -138,6 +138,20 @@ describe('matchesMagicBytes — image/avif and image/heic', () => {
     expect(matchesMagicBytes('image/heic', makeIsobmff('mif1'))).toBe(true)
   })
 
+  it('accepts Samsung HEIC brand (msf1)', () => {
+    expect(matchesMagicBytes('image/heic', makeIsobmff('msf1'))).toBe(true)
+    expect(matchesMagicBytes('image/heif', makeIsobmff('msf1'))).toBe(true)
+  })
+
+  it('accepts Xiaomi HEIC brand (MiHE)', () => {
+    expect(matchesMagicBytes('image/heic', makeIsobmff('MiHE'))).toBe(true)
+    expect(matchesMagicBytes('image/heif', makeIsobmff('MiHE'))).toBe(true)
+  })
+
+  it('rejects an unrecognised ftyp brand', () => {
+    expect(matchesMagicBytes('image/heic', makeIsobmff('UNKN'))).toBe(false)
+  })
+
   it('rejects invalid buffer for image/heic', () => {
     expect(matchesMagicBytes('image/heic', Buffer.alloc(0))).toBe(false)
     expect(matchesMagicBytes('image/heic', Buffer.alloc(16))).toBe(false)
