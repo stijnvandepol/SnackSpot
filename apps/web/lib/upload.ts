@@ -84,24 +84,32 @@ export async function compressImage(file: File): Promise<{ blob: Blob; mime: Nor
       if (!ctx) { reject(new Error('Canvas not supported')); return }
       ctx.drawImage(img, 0, 0, width, height)
 
-      // Try WebP first, fall back to JPEG
+      // Encode as JPEG for maximum cross-device compatibility.
+      // Why not WebP: canvas.toBlob(_, 'image/webp') is unreliable across
+      // iOS Safari and some Samsung Internet builds — when WebP isn't
+      // supported the browser silently falls back to PNG/JPEG but still
+      // returns a blob, which previously caused the server magic-byte
+      // check to reject the upload as "File contents do not match declared type".
+      const encodeAsJpeg = () =>
+        canvas.toBlob(
+          (jpgBlob) => {
+            if (jpgBlob) {
+              resolve({ blob: jpgBlob, mime: 'image/jpeg' })
+            } else {
+              reject(new Error('Failed to compress image'))
+            }
+          },
+          'image/jpeg',
+          CLIENT_COMPRESS_QUALITY,
+        )
+
+      // Prefer WebP when we can verify the browser actually produced WebP.
       canvas.toBlob(
         (blob) => {
-          if (blob) {
+          if (blob && blob.type === 'image/webp') {
             resolve({ blob, mime: 'image/webp' })
           } else {
-            // WebP not supported — fall back to JPEG
-            canvas.toBlob(
-              (jpgBlob) => {
-                if (jpgBlob) {
-                  resolve({ blob: jpgBlob, mime: 'image/jpeg' })
-                } else {
-                  reject(new Error('Failed to compress image'))
-                }
-              },
-              'image/jpeg',
-              CLIENT_COMPRESS_QUALITY,
-            )
+            encodeAsJpeg()
           }
         },
         'image/webp',
