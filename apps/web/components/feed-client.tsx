@@ -36,6 +36,7 @@ export function FeedClient() {
   const requestedCursorsRef = useRef<Set<string>>(new Set())
 
   const loadMore = useCallback(async () => {
+    if (authLoading) return
     if (!hasMore || inFlightRef.current) return
     const cursorKey = cursor ?? '__initial__'
     if (requestedCursorsRef.current.has(cursorKey)) return
@@ -70,7 +71,7 @@ export function FeedClient() {
       setLoading(false)
       setInitial(false)
     }
-  }, [hasMore, cursor, accessToken])
+  }, [authLoading, hasMore, cursor, accessToken])
 
   const refresh = useCallback(async () => {
     requestedCursorsRef.current.clear()
