@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Poppins } from 'next/font/google'
+import '@fontsource-variable/inter/latin.css'
+import '@fontsource/poppins/latin-500.css'
+import '@fontsource/poppins/latin-600.css'
+import '@fontsource/poppins/latin-700.css'
 import { AuthProvider } from '@/components/auth-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { CookieConsent } from '@/components/cookie-consent'
@@ -44,9 +47,6 @@ function buildJsonLd(appUrl: string) {
   }
   return { organization, website, webApp }
 }
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
-const poppins = Poppins({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-poppins', display: 'swap' })
 
 export const viewport: Viewport = {
   themeColor: '#F97316',
@@ -108,7 +108,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const appUrl = getSiteUrl()
   const { organization, website, webApp } = buildJsonLd(appUrl)
   return (
-    <html lang="en" className={`h-full ${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
+    <html lang="en" className="h-full" suppressHydrationWarning>
       <head>
         {/* Runs synchronously before React hydrates to prevent a flash of the wrong theme
             (FOUC). Must stay inline — an external script would load async and fire too late. */}
