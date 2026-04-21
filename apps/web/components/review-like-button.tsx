@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuthOptional } from '@/components/auth-provider'
 
 interface ReviewLikeButtonProps {
@@ -20,6 +20,12 @@ export function ReviewLikeButton({
   const [likedByMe, setLikedByMe] = useState(initialLikedByMe)
   const [loading, setLoading] = useState(false)
   const [pop, setPop] = useState(false)
+
+  // Sync state when the parent feed refreshes with authoritative API data.
+  // React reuses component instances when reconciling by key, so useState
+  // initial values are ignored on subsequent renders — this effect bridges that.
+  useEffect(() => { setLikedByMe(initialLikedByMe) }, [initialLikedByMe])
+  useEffect(() => { setLikeCount(initialLikeCount) }, [initialLikeCount])
 
   const toggleLike = async () => {
     if (!accessToken || loading) return
