@@ -64,7 +64,7 @@ const nextConfig = {
               scriptSrc,
               "style-src 'self' 'unsafe-inline'",
               `img-src 'self' data: blob: ${isProd ? '' : minioInternalOrigin} ${minioPublicOrigin} https://*.basemaps.cartocdn.com`.replace(/  +/g, ' '),
-              "font-src 'self' https://fonts.gstatic.com",
+              "font-src 'self'",
               `connect-src 'self' ${isProd ? '' : minioInternalOrigin} ${minioPublicOrigin} https://nominatim.openstreetmap.org https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com https://ipapi.co https://challenges.cloudflare.com`.replace(/  +/g, ' '),
               "worker-src blob: 'self'",
               "frame-src https://challenges.cloudflare.com",
