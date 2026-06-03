@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/db'
-import { ReviewStatus } from '@prisma/client'
 
 export interface UserStatsData {
   totalPosts: number
@@ -52,46 +51,39 @@ function computeStreaks(dateKeys: string[]): { current: number; best: number } {
 }
 
 export async function getUserStats(userId: string): Promise<UserStatsData> {
-  const [
-    totalPosts,
-    postsLast30Days,
-    uniqueLocationsRows,
-    avgOverallRows,
-    likesRows,
-    commentsRows,
-    weeklyRows,
-    activeDaysRows,
-    topLocationsRows,
-  ] = await Promise.all([
-    prisma.review.count({ where: { userId, status: ReviewStatus.PUBLISHED } }),
-    prisma.review.count({
-      where: {
-        userId,
-        status: ReviewStatus.PUBLISHED,
-        createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-      },
-    }),
-    prisma.$queryRaw<Array<{ count: number }>>`
-      SELECT COUNT(DISTINCT place_id)::int AS count
-      FROM reviews
-      WHERE user_id = ${userId} AND status = 'PUBLISHED'
-    `,
-    prisma.$queryRaw<Array<{ avg: number | null }>>`
-      SELECT ROUND(AVG(rating_overall)::numeric, 1)::float AS avg
-      FROM reviews
-      WHERE user_id = ${userId} AND status = 'PUBLISHED'
-    `,
-    prisma.$queryRaw<Array<{ count: number }>>`
-      SELECT COUNT(rl.review_id)::int AS count
-      FROM review_likes rl
-      INNER JOIN reviews r ON r.id = rl.review_id
-      WHERE r.user_id = ${userId} AND r.status = 'PUBLISHED'
-    `,
-    prisma.$queryRaw<Array<{ count: number }>>`
-      SELECT COUNT(c.id)::int AS count
-      FROM comments c
-      INNER JOIN reviews r ON r.id = c.review_id
-      WHERE r.user_id = ${userId} AND r.status = 'PUBLISHED'
+  const windowStart = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+  // The six scalar aggregates all run over the same filtered set
+  // (reviews for this user with status PUBLISHED), so they are computed in a
+  // single CTE-based query instead of six separate round-trips. This mirrors
+  // the pattern already used by badge-service.getActivitySnapshot. The
+  // set-returning stats (weekly buckets, active days, top locations) remain
+  // separate queries.
+  const [scalarRows, weeklyRows, activeDaysRows, topLocationsRows] = await Promise.all([
+    prisma.$queryRaw<
+      Array<{
+        total_posts: number
+        posts_last_30: number
+        unique_locations: number
+        avg_overall: number | null
+        likes_received: number
+        comments_received: number
+      }>
+    >`
+      WITH pr AS (
+        SELECT id, place_id, rating_overall, created_at
+        FROM reviews
+        WHERE user_id = ${userId} AND status = 'PUBLISHED'
+      )
+      SELECT
+        (SELECT COUNT(*)::int FROM pr)                                   AS total_posts,
+        (SELECT COUNT(*)::int FROM pr WHERE created_at >= ${windowStart}) AS posts_last_30,
+        (SELECT COUNT(DISTINCT place_id)::int FROM pr)                   AS unique_locations,
+        (SELECT ROUND(AVG(rating_overall)::numeric, 1)::float FROM pr)   AS avg_overall,
+        (SELECT COUNT(rl.review_id)::int FROM review_likes rl
+         INNER JOIN pr ON pr.id = rl.review_id)                         AS likes_received,
+        (SELECT COUNT(c.id)::int FROM comments c
+         INNER JOIN pr ON pr.id = c.review_id)                          AS comments_received
     `,
     prisma.$queryRaw<Array<{ week: Date; posts: number }>>`
       SELECT DATE_TRUNC('week', created_at)::date AS week, COUNT(*)::int AS posts
@@ -119,16 +111,17 @@ export async function getUserStats(userId: string): Promise<UserStatsData> {
     `,
   ])
 
+  const scalar = scalarRows[0]
   const days = activeDaysRows.map((row) => toDateKey(new Date(row.day)))
   const streak = computeStreaks(days)
 
   return {
-    totalPosts,
-    postsLast30Days,
-    totalLikesReceived: likesRows[0]?.count ?? 0,
-    totalCommentsReceived: commentsRows[0]?.count ?? 0,
-    uniqueLocationsVisited: uniqueLocationsRows[0]?.count ?? 0,
-    averageOverallRatingGiven: avgOverallRows[0]?.avg ?? null,
+    totalPosts: scalar?.total_posts ?? 0,
+    postsLast30Days: scalar?.posts_last_30 ?? 0,
+    totalLikesReceived: scalar?.likes_received ?? 0,
+    totalCommentsReceived: scalar?.comments_received ?? 0,
+    uniqueLocationsVisited: scalar?.unique_locations ?? 0,
+    averageOverallRatingGiven: scalar?.avg_overall ?? null,
     topLocations: topLocationsRows.map((row) => ({
       id: row.place_id,
       name: row.place_name,
