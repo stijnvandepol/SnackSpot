@@ -1,26 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import type { Prisma } from '@prisma/client'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { parseQuery, parseBody, serverError, isResponse } from '@/lib/api-helpers'
 
-const DEFAULT_PAGE = 1
-const DEFAULT_LIMIT = 50
-const MAX_LIMIT = 100
+const ListPlacesQuery = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  search: z.string().default(''),
+  withoutReviews: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true'),
+})
+
+const CreatePlaceBody = z.object({
+  name: z.string().min(1),
+  address: z.string().min(1),
+  lat: z.number(),
+  lng: z.number(),
+})
 
 // GET /api/places - List all places
 export async function GET(req: NextRequest) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
+
+  const query = parseQuery(req, ListPlacesQuery)
+  if (isResponse(query)) return query
+  const { page, limit, search, withoutReviews } = query
 
   try {
-    const url = new URL(req.url)
-    const page = parseInt(url.searchParams.get('page') || String(DEFAULT_PAGE))
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || String(DEFAULT_LIMIT)), MAX_LIMIT)
-    const search = url.searchParams.get('search') || ''
-    const withoutReviews = url.searchParams.get('withoutReviews') === 'true'
-
     const where: Prisma.PlaceWhereInput = {}
-    
+
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' as const } },
@@ -70,34 +83,21 @@ export async function GET(req: NextRequest) {
         pages: Math.ceil(total / limit),
       },
     })
-  } catch {
-    return NextResponse.json(
-      { error: 'Error fetching places' },
-      { status: 500 }
-    )
+  } catch (e) {
+    return serverError('places GET', e)
   }
 }
 
 // POST /api/places - Create a new place
 export async function POST(req: NextRequest) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
+
+  const body = await parseBody(req, CreatePlaceBody)
+  if (isResponse(body)) return body
+  const { name, address, lat, lng } = body
 
   try {
-    const { name, address, lat, lng } = (await req.json()) as {
-      name: string
-      address: string
-      lat: number
-      lng: number
-    }
-
-    if (!name || !address || lat === undefined || lng === undefined) {
-      return NextResponse.json(
-        { error: 'Naam, adres, lat en lng zijn verplicht' },
-        { status: 400 }
-      )
-    }
-
     // Create place with PostGIS geography point
     await db.$executeRaw`
       INSERT INTO places (id, name, address, location, created_at, updated_at)
@@ -125,18 +125,15 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ place }, { status: 201 })
-  } catch {
-    return NextResponse.json(
-      { error: 'Error creating place' },
-      { status: 500 }
-    )
+  } catch (e) {
+    return serverError('places POST', e)
   }
 }
 
 // DELETE /api/places/bulk - Delete places without reviews
 export async function DELETE(req: NextRequest) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
 
   try {
     const result = await db.place.deleteMany({
@@ -153,10 +150,7 @@ export async function DELETE(req: NextRequest) {
       success: true,
       deletedCount: result.count,
     })
-  } catch {
-    return NextResponse.json(
-      { error: 'Error deleting places' },
-      { status: 500 }
-    )
+  } catch (e) {
+    return serverError('places DELETE', e)
   }
 }

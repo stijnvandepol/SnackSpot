@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { serverError, isResponse } from '@/lib/api-helpers'
 
 const DEFAULT_LIMIT = 50
 const VALID_STATUSES = ['PENDING', 'APPROVED', 'DELETED'] as const
@@ -8,7 +9,7 @@ const VALID_STATUSES = ['PENDING', 'APPROVED', 'DELETED'] as const
 // GET /api/comments/flagged - List flagged comments
 export async function GET(req: NextRequest) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
 
   try {
     const url = new URL(req.url)
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest) {
     ])
 
     return NextResponse.json({ flagged, pagination: { page, limit, total } })
-  } catch {
-    return NextResponse.json({ error: 'Error fetching flagged comments' }, { status: 500 })
+  } catch (e) {
+    return serverError('flagged GET', e)
   }
 }
