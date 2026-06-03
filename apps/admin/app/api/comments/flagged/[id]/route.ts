@@ -1,21 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { parseBody, serverError, mapPrismaError, isResponse } from '@/lib/api-helpers'
 
 type Params = { params: Promise<{ id: string }> }
 
 const VALID_ACTIONS = ['APPROVE', 'DELETE'] as const
-type FlagAction = (typeof VALID_ACTIONS)[number]
+
+const PatchBody = z.object({
+  action: z.string(),
+})
 
 // PATCH /api/comments/flagged/[id] - Approve or delete a flagged comment
 export async function PATCH(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
   const { id } = await params
 
-  try {
-    const { action } = (await req.json()) as { action: FlagAction }
+  const body = await parseBody(req, PatchBody)
+  if (isResponse(body)) return body
+  const { action } = body
 
+  try {
     if (!(VALID_ACTIONS as readonly string[]).includes(action)) {
       return NextResponse.json({ error: 'Ongeldige actie' }, { status: 400 })
     }
@@ -56,9 +63,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     return NextResponse.json({ success: true, action })
   } catch (error: unknown) {
-    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2025') {
-      return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
-    }
-    return NextResponse.json({ error: 'Error processing action' }, { status: 500 })
+    return (
+      mapPrismaError(error, { notFound: 'Niet gevonden' }) ??
+      serverError('flagged PATCH', error)
+    )
   }
 }

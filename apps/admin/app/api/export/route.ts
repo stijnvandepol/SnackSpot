@@ -3,6 +3,7 @@ import { PassThrough, Readable } from 'node:stream'
 import archiver from 'archiver'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { logger } from '@/lib/logger'
 import { minioClient, BUCKET } from '@/lib/minio'
 
 export const runtime = 'nodejs'
@@ -247,6 +248,7 @@ async function buildExport(
 
     await archive.finalize()
   } catch (err) {
+    logger.error({ err }, 'admin export failed')
     archive.abort()
     pass.destroy(err instanceof Error ? err : new Error(String(err)))
   }

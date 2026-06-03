@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { serverError, isResponse } from '@/lib/api-helpers'
 
 const RECENT_WINDOW_DAYS = 7
 
 export async function GET(req: NextRequest) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
 
   try {
     const recentCutoff = new Date()
@@ -56,7 +57,7 @@ export async function GET(req: NextRequest) {
       placesWithoutReviews,
       openReports,
     })
-  } catch {
-    return NextResponse.json({ error: 'Er is een fout opgetreden' }, { status: 500 })
+  } catch (e) {
+    return serverError('stats GET', e)
   }
 }

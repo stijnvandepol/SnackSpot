@@ -1,19 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { Role } from '@prisma/client'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { parseQuery, parseBody, serverError, mapPrismaError, isResponse } from '@/lib/api-helpers'
 import argon2 from 'argon2'
+
+const ListUsersQuery = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  search: z.string().default(''),
+})
+
+const CreateUserBody = z.object({
+  email: z.string().min(1),
+  username: z.string().min(1),
+  password: z.string().min(1),
+  role: z.nativeEnum(Role).optional(),
+})
 
 // GET /api/users - List all users
 export async function GET(req: NextRequest) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
+
+  const query = parseQuery(req, ListUsersQuery)
+  if (isResponse(query)) return query
+  const { page, limit, search } = query
 
   try {
-    const url = new URL(req.url)
-    const page = parseInt(url.searchParams.get('page') || '1')
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100)
-    const search = url.searchParams.get('search') || ''
-
     const where = search
       ? {
           OR: [
@@ -60,45 +75,29 @@ export async function GET(req: NextRequest) {
         pages: Math.ceil(total / limit),
       },
     })
-  } catch {
-    return NextResponse.json(
-      { error: 'Error fetching users' },
-      { status: 500 }
-    )
+  } catch (e) {
+    return serverError('users GET', e)
   }
 }
 
 // POST /api/users - Create a new user
 export async function POST(req: NextRequest) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
+
+  const body = await parseBody(req, CreateUserBody)
+  if (isResponse(body)) return body
+  const { email, username, password, role } = body
 
   try {
-    const { email, username, password, role } = (await req.json()) as {
-      email: string
-      username: string
-      password: string
-      role?: 'USER' | 'ADMIN'
-    }
-
-    // Validate input
-    if (!email || !username || !password) {
-      return NextResponse.json(
-        { error: 'Email, username en wachtwoord zijn verplicht' },
-        { status: 400 }
-      )
-    }
-
-    // Hash password
     const passwordHash = await argon2.hash(password)
 
-    // Create user
     const user = await db.user.create({
       data: {
         email,
         username,
         passwordHash,
-        role: role || 'USER',
+        role: role ?? 'USER',
       },
       select: {
         id: true,
@@ -111,15 +110,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ user }, { status: 201 })
   } catch (error: unknown) {
-    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2002') {
-      return NextResponse.json(
-        { error: 'Email of username bestaat al' },
-        { status: 400 }
-      )
-    }
-    return NextResponse.json(
-      { error: 'Error creating user' },
-      { status: 500 }
+    return (
+      mapPrismaError(error, { conflict: 'Email of username bestaat al' }) ??
+      serverError('users POST', error)
     )
   }
 }

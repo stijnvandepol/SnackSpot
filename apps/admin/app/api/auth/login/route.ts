@@ -11,6 +11,7 @@ import {
   storeRefreshToken,
 } from '@/lib/auth'
 import { getClientIp, rateLimit } from '@/lib/rate-limit'
+import { serverError } from '@/lib/api-helpers'
 
 const LOGIN_RATE_LIMIT = 5
 const LOGIN_RATE_WINDOW_SECONDS = 15 * 60
@@ -81,10 +82,7 @@ export async function POST(req: NextRequest) {
     response.headers.append('Set-Cookie', buildSetAdminCookie(accessToken))
     response.headers.append('Set-Cookie', buildSetRefreshCookie(rawRefreshToken))
     return response
-  } catch {
-    return NextResponse.json(
-      { error: 'Er is een fout opgetreden' },
-      { status: 500 }
-    )
+  } catch (e) {
+    return serverError('admin login', e)
   }
 }

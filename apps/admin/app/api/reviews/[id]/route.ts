@@ -1,17 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { err, parseBody, serverError, mapPrismaError, isResponse } from '@/lib/api-helpers'
 
 type Params = { params: Promise<{ id: string }> }
 
-function hasPrismaCode(error: unknown, code: string): boolean {
-  return typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === code
-}
+const UpdateReviewBody = z.object({
+  status: z.string().optional(),
+  text: z.string().optional(),
+  dishName: z.string().nullable().optional(),
+})
 
 // GET /api/reviews/[id] - Get review details
 export async function GET(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
   const { id } = await params
 
   try {
@@ -61,34 +65,28 @@ export async function GET(req: NextRequest, { params }: Params) {
 
     return NextResponse.json({ review })
   } catch (error: unknown) {
-    return NextResponse.json(
-      { error: 'Error fetching review' },
-      { status: 500 }
-    )
+    return serverError('review GET', error)
   }
 }
 
 // PATCH /api/reviews/[id] - Update review status or content
 export async function PATCH(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
   const { id } = await params
 
-  try {
-    const body = (await req.json()) as {
-      status?: 'PUBLISHED' | 'HIDDEN' | 'DELETED'
-      text?: string
-      dishName?: string | null
-    }
+  const body = await parseBody(req, UpdateReviewBody)
+  if (isResponse(body)) return body
 
+  try {
     // Status update
     if (body.status !== undefined) {
       if (!['PUBLISHED', 'HIDDEN', 'DELETED'].includes(body.status)) {
-        return NextResponse.json({ error: 'Ongeldige status' }, { status: 400 })
+        return err('Ongeldige status', 400)
       }
       const review = await db.review.update({
         where: { id },
-        data: { status: body.status },
+        data: { status: body.status as 'PUBLISHED' | 'HIDDEN' | 'DELETED' },
         select: { id: true, status: true },
       })
       return NextResponse.json({ review })
@@ -97,7 +95,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     // Content update
     if (body.text !== undefined || body.dishName !== undefined) {
       if (body.text !== undefined && body.text.trim() === '') {
-        return NextResponse.json({ error: 'Review tekst mag niet leeg zijn' }, { status: 400 })
+        return err('Review tekst mag niet leeg zijn', 400)
       }
       const data: { text?: string; dishName?: string | null } = {}
       if (body.text !== undefined) data.text = body.text.trim()
@@ -111,19 +109,16 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       return NextResponse.json({ review })
     }
 
-    return NextResponse.json({ error: 'Geen geldige velden opgegeven' }, { status: 400 })
+    return err('Geen geldige velden opgegeven', 400)
   } catch (error: unknown) {
-    if (hasPrismaCode(error, 'P2025')) {
-      return NextResponse.json({ error: 'Review niet gevonden' }, { status: 404 })
-    }
-    return NextResponse.json({ error: 'Error updating review' }, { status: 500 })
+    return mapPrismaError(error, { notFound: 'Review niet gevonden' }) ?? serverError('review PATCH', error)
   }
 }
 
 // DELETE /api/reviews/[id] - Delete review permanently
 export async function DELETE(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
   const { id } = await params
 
   try {
@@ -133,15 +128,6 @@ export async function DELETE(req: NextRequest, { params }: Params) {
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
-    if (hasPrismaCode(error, 'P2025')) {
-      return NextResponse.json(
-        { error: 'Review niet gevonden' },
-        { status: 404 }
-      )
-    }
-    return NextResponse.json(
-      { error: 'Error deleting review' },
-      { status: 500 }
-    )
+    return mapPrismaError(error, { notFound: 'Review niet gevonden' }) ?? serverError('review DELETE', error)
   }
 }
