@@ -9,6 +9,7 @@ import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { logger } from '@/lib/logger'
 import { minioClient, BUCKET } from '@/lib/minio'
 import {
   type ImportSummary,
@@ -82,7 +83,8 @@ export async function POST(req: NextRequest) {
   const tempZipPath = join(tmpdir(), `snackspot-import-${randomUUID()}.zip`)
   try {
     await pipeline(Readable.fromWeb(file.stream() as any), createWriteStream(tempZipPath))
-  } catch {
+  } catch (err) {
+    logger.error({ err }, 'admin import: temp file write failed')
     return Response.json(
       { error: 'Uploadbestand kon niet naar tijdelijke opslag worden geschreven.' },
       { status: 500 },
@@ -659,6 +661,7 @@ export async function POST(req: NextRequest) {
 
     return Response.json(result)
   } catch (error) {
+    logger.error({ err: error }, 'admin import failed')
     return Response.json({
       success: false,
       schemaVersion: CURRENT_SCHEMA_VERSION,
