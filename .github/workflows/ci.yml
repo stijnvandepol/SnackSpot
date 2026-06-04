@@ -95,6 +95,9 @@ jobs:
       - name: Lint web app
         run: pnpm --filter web exec next lint --max-warnings 0
 
+      - name: Lint admin app
+        run: pnpm --filter @snackspot/admin exec next lint --max-warnings 0
+
   # ─── Job 3: Type check ───────────────────────────────────────────────────────
   typecheck:
     name: Type check
@@ -131,6 +134,9 @@ jobs:
 
       - name: Type check admin app
         run: pnpm --filter @snackspot/admin exec tsc --noEmit
+
+      - name: Type check worker
+        run: pnpm --filter worker exec tsc --noEmit
 
   # ─── Job 4: Build verification ───────────────────────────────────────────────
   build:

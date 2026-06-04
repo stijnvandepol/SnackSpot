@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 
 interface User {
@@ -19,7 +19,7 @@ export default function UsersPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     setLoading(true)
     try {
       const res = await fetch(`/api/users?page=${page}&search=${search}`)
@@ -31,11 +31,11 @@ export default function UsersPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, search])
 
   useEffect(() => {
     loadUsers()
-  }, [page, search])
+  }, [loadUsers])
 
   const handleDeleteUser = async (userId: string, username: string) => {
     if (!confirm(`Weet je zeker dat je gebruiker "${username}" wilt verwijderen?`)) return

@@ -101,8 +101,7 @@ async function buildExport(
 
     // 3. reviews — Decimal fields must be converted to numbers (per D-08, EXP-04)
     const rawReviews = await db.review.findMany()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- rawReviews typed via Prisma when generated; any used as fallback when @prisma/client not yet generated
-    const reviews = rawReviews.map((r: any) => ({
+    const reviews = rawReviews.map((r) => ({
       ...r,
       rating: Number(r.rating),
       ratingTaste: Number(r.ratingTaste),

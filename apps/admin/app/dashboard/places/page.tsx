@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 
 interface Place {
@@ -20,7 +20,7 @@ export default function PlacesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newPlace, setNewPlace] = useState({ name: '', address: '', lat: '', lng: '' })
 
-  const loadPlaces = async () => {
+  const loadPlaces = useCallback(async () => {
     setLoading(true)
     try {
       const url = `/api/places?page=${page}&search=${search}&withoutReviews=${showWithoutReviews}`
@@ -33,11 +33,11 @@ export default function PlacesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, search, showWithoutReviews])
 
   useEffect(() => {
     loadPlaces()
-  }, [page, search, showWithoutReviews])
+  }, [loadPlaces])
 
   const handleDeletePlace = async (placeId: string, name: string) => {
     if (!confirm(`Weet je zeker dat je restaurant "${name}" wilt verwijderen?`)) return

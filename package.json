@@ -11,7 +11,9 @@
     "db:migrate": "pnpm --filter @snackspot/db migrate",
     "db:seed": "pnpm --filter @snackspot/db seed",
     "worker:dev": "pnpm --filter worker dev",
-    "validate": "tsx scripts/validate-round-trip.ts"
+    "validate": "tsx scripts/validate-round-trip.ts",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,css}\""
   },
   "engines": {
     "node": ">=20.0.0",
@@ -24,6 +26,7 @@
   },
   "devDependencies": {
     "@types/pg": "^8.11.10",
-    "pg": "^8.13.0"
+    "pg": "^8.13.0",
+    "prettier": "^3.4.2"
   }
 }

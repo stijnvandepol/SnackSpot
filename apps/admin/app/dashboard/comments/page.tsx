@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 
 interface FlaggedComment {
@@ -41,7 +41,7 @@ export default function CommentsPage() {
   const [newWord, setNewWord] = useState('')
   const [wordError, setWordError] = useState('')
 
-  const loadFlagged = async () => {
+  const loadFlagged = useCallback(async () => {
     setFlaggedLoading(true)
     try {
       const res = await fetch(`/api/comments/flagged?page=${flaggedPage}&status=${statusFilter}`)
@@ -53,9 +53,9 @@ export default function CommentsPage() {
     } finally {
       setFlaggedLoading(false)
     }
-  }
+  }, [flaggedPage, statusFilter])
 
-  const loadWords = async () => {
+  const loadWords = useCallback(async () => {
     setWordsLoading(true)
     try {
       const res = await fetch('/api/comments/blocked-words')
@@ -66,10 +66,10 @@ export default function CommentsPage() {
     } finally {
       setWordsLoading(false)
     }
-  }
+  }, [])
 
-  useEffect(() => { loadFlagged() }, [flaggedPage, statusFilter])
-  useEffect(() => { loadWords() }, [])
+  useEffect(() => { loadFlagged() }, [loadFlagged])
+  useEffect(() => { loadWords() }, [loadWords])
 
   const handleFlagAction = async (flagId: string, action: 'APPROVE' | 'DELETE') => {
     const label = action === 'DELETE' ? 'verwijderen' : 'goedkeuren'

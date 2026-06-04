@@ -1,0 +1,15 @@
+# Build output & dependencies
+node_modules
+**/.next
+**/dist
+**/coverage
+**/playwright-report
+**/test-results
+
+# Generated / vendored
+pnpm-lock.yaml
+packages/db/prisma/migrations
+**/*.sql
+
+# Content where formatting is intentional
+**/*.md
