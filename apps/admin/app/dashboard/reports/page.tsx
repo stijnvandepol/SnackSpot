@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 
 interface Report {
@@ -32,7 +32,7 @@ export default function ReportsPage() {
   const [statusFilter, setStatusFilter] = useState('OPEN')
   const [typeFilter, setTypeFilter] = useState('')
 
-  const loadReports = async () => {
+  const loadReports = useCallback(async () => {
     setLoading(true)
     try {
       const url = `/api/reports?page=${page}&status=${statusFilter}&targetType=${typeFilter}`
@@ -45,11 +45,11 @@ export default function ReportsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, statusFilter, typeFilter])
 
   useEffect(() => {
     loadReports()
-  }, [page, statusFilter, typeFilter])
+  }, [loadReports])
 
   const handleAction = async (reportId: string, action: string, targetId: string) => {
     const actionName = action === 'DISMISS' ? 'afwijzen' : 'uitvoeren'
@@ -133,7 +133,7 @@ export default function ReportsPage() {
           >
             <option value="">Alle types</option>
             <option value="REVIEW">Reviews</option>
-            <option value="PHOTO">Foto's</option>
+            <option value="PHOTO">Foto&apos;s</option>
             <option value="USER">Gebruikers</option>
           </select>
         </div>

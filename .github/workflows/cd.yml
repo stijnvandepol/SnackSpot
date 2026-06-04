@@ -11,6 +11,11 @@ on:
         default: main
         type: string
 
+# Least privilege: deploy only needs to read the repo (checkout); it talks to
+# Docker on the self-hosted runner, not the GitHub API.
+permissions:
+  contents: read
+
 concurrency:
   group: cd-deploy
   cancel-in-progress: false

@@ -3,6 +3,7 @@ import { PassThrough, Readable } from 'node:stream'
 import archiver from 'archiver'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { logger } from '@/lib/logger'
 import { minioClient, BUCKET } from '@/lib/minio'
 
 export const runtime = 'nodejs'
@@ -100,8 +101,7 @@ async function buildExport(
 
     // 3. reviews — Decimal fields must be converted to numbers (per D-08, EXP-04)
     const rawReviews = await db.review.findMany()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- rawReviews typed via Prisma when generated; any used as fallback when @prisma/client not yet generated
-    const reviews = rawReviews.map((r: any) => ({
+    const reviews = rawReviews.map((r) => ({
       ...r,
       rating: Number(r.rating),
       ratingTaste: Number(r.ratingTaste),
@@ -247,6 +247,7 @@ async function buildExport(
 
     await archive.finalize()
   } catch (err) {
+    logger.error({ err }, 'admin export failed')
     archive.abort()
     pass.destroy(err instanceof Error ? err : new Error(String(err)))
   }

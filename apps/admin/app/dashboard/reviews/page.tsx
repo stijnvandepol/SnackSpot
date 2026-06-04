@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 
 interface Review {
@@ -22,7 +22,7 @@ export default function ReviewsPage() {
   const [total, setTotal] = useState(0)
   const [statusFilter, setStatusFilter] = useState('')
 
-  const loadReviews = async () => {
+  const loadReviews = useCallback(async () => {
     setLoading(true)
     try {
       const url = `/api/reviews?page=${page}&search=${search}&status=${statusFilter}`
@@ -35,11 +35,11 @@ export default function ReviewsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, search, statusFilter])
 
   useEffect(() => {
     loadReviews()
-  }, [page, search, statusFilter])
+  }, [loadReviews])
 
   const handleDeleteReview = async (reviewId: string) => {
     if (!confirm('Weet je zeker dat je deze review permanent wilt verwijderen?')) return

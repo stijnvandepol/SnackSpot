@@ -3,6 +3,10 @@
   "plugins": ["security", "no-unsanitized"],
   "rules": {
     "no-unsanitized/method": "error",
-    "no-unsanitized/property": "error"
+    "no-unsanitized/property": "error",
+    // Intentional: images are served from MinIO as pre-generated WebP variants
+    // (see the photo-upload flow), so next/image optimization is not wanted here.
+    // Disabled project-wide so `next lint --max-warnings 0` can gate real issues.
+    "@next/next/no-img-element": "off"
   }
 }

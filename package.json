@@ -11,7 +11,9 @@
     "db:migrate": "pnpm --filter @snackspot/db migrate",
     "db:seed": "pnpm --filter @snackspot/db seed",
     "worker:dev": "pnpm --filter worker dev",
-    "validate": "tsx scripts/validate-round-trip.ts"
+    "validate": "tsx scripts/validate-round-trip.ts",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,css}\""
   },
   "engines": {
     "node": ">=20.0.0",
@@ -19,11 +21,22 @@
   },
   "pnpm": {
     "overrides": {
-      "ioredis": "5.4.1"
+      "ioredis": "5.4.1",
+      "fast-xml-parser": ">=5.5.6",
+      "fast-xml-builder": ">=1.1.7",
+      "lodash": ">=4.18.0",
+      "picomatch@<2.3.2": "2.3.2",
+      "picomatch@>=4.0.0 <4.0.4": "4.0.4"
+    },
+    "auditConfig": {
+      "ignoreGhsas": [
+        "GHSA-5xrq-8626-4rwp"
+      ]
     }
   },
   "devDependencies": {
     "@types/pg": "^8.11.10",
-    "pg": "^8.13.0"
+    "pg": "^8.13.0",
+    "prettier": "^3.4.2"
   }
 }

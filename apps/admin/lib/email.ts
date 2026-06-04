@@ -1,4 +1,5 @@
 import { env } from './env'
+import { logger } from './logger'
 
 interface SendEmailOptions {
   to: string
@@ -10,7 +11,7 @@ interface SendEmailOptions {
 /** Send a single email via the Resend HTTP API. */
 async function sendEmail(opts: SendEmailOptions): Promise<void> {
   if (!env.RESEND_API_KEY) {
-    console.warn('[email] RESEND_API_KEY not set — skipping email to', opts.to)
+    logger.warn({ to: opts.to }, 'RESEND_API_KEY not set — skipping email')
     return
   }
 

@@ -1,20 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import type { Prisma } from '@prisma/client'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { parseBody, serverError, mapPrismaError, isResponse } from '@/lib/api-helpers'
 
 type Params = { params: Promise<{ id: string }> }
 
 const RECENT_REVIEWS_LIMIT = 10
 
-function hasPrismaCode(error: unknown, code: string): boolean {
-  return typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === code
-}
+const UpdatePlaceBody = z.object({
+  name: z.string().optional(),
+  address: z.string().optional(),
+  lat: z.number().optional(),
+  lng: z.number().optional(),
+})
 
 // GET /api/places/[id] - Get place details
 export async function GET(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
   const { id } = await params
 
   try {
@@ -65,31 +70,22 @@ export async function GET(req: NextRequest, { params }: Params) {
     }
 
     return NextResponse.json({ place })
-  } catch {
-    return NextResponse.json(
-      { error: 'Error fetching place' },
-      { status: 500 }
-    )
+  } catch (e) {
+    return serverError('place GET', e)
   }
-}
-
-interface UpdatePlaceBody {
-  name?: string
-  address?: string
-  lat?: number
-  lng?: number
 }
 
 // PATCH /api/places/[id] - Update place
 export async function PATCH(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
   const { id } = await params
 
-  try {
-    const body = (await req.json()) as UpdatePlaceBody
-    const { name, address, lat, lng } = body
+  const body = await parseBody(req, UpdatePlaceBody)
+  if (isResponse(body)) return body
+  const { name, address, lat, lng } = body
 
+  try {
     if (lat !== undefined && lng !== undefined) {
       await db.$executeRaw`
         UPDATE places
@@ -124,15 +120,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     return NextResponse.json({ place })
   } catch (error: unknown) {
-    if (hasPrismaCode(error, 'P2025')) {
-      return NextResponse.json(
-        { error: 'Restaurant niet gevonden' },
-        { status: 404 }
-      )
-    }
-    return NextResponse.json(
-      { error: 'Error updating place' },
-      { status: 500 }
+    return (
+      mapPrismaError(error, { notFound: 'Restaurant niet gevonden' }) ??
+      serverError('place PATCH', error)
     )
   }
 }
@@ -140,7 +130,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 // DELETE /api/places/[id] - Delete place
 export async function DELETE(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
   const { id } = await params
 
   try {
@@ -150,15 +140,9 @@ export async function DELETE(req: NextRequest, { params }: Params) {
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
-    if (hasPrismaCode(error, 'P2025')) {
-      return NextResponse.json(
-        { error: 'Restaurant niet gevonden' },
-        { status: 404 }
-      )
-    }
-    return NextResponse.json(
-      { error: 'Error deleting place' },
-      { status: 500 }
+    return (
+      mapPrismaError(error, { notFound: 'Restaurant niet gevonden' }) ??
+      serverError('place DELETE', error)
     )
   }
 }

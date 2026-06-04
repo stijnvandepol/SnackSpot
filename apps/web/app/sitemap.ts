@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next'
 import { prisma } from '@/lib/db'
 import { getSiteUrl } from '@/lib/site-url'
 import { PILLAR_GUIDES } from '@/lib/guides'
+import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 3600
@@ -61,7 +62,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return [...staticEntries, ...placeEntries, ...reviewEntries, ...userEntries]
   } catch (error) {
-    console.error('Failed to build dynamic sitemap; returning static entries only.', error)
+    logger.error({ err: error }, 'Failed to build dynamic sitemap; returning static entries only')
     return staticEntries
   }
 }

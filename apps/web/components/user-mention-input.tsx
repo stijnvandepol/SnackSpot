@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from './auth-provider'
+import { avatarUrl } from '@/lib/avatar'
 
 interface User {
   id: string
@@ -198,7 +199,7 @@ export function UserMentionInput({
               <div className="h-8 w-8 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-xs uppercase">
                 {user.avatarKey ? (
                   <img
-                    src={`${process.env.NEXT_PUBLIC_MINIO_URL}/${user.avatarKey}`}
+                    src={avatarUrl(user.avatarKey) ?? ''}
                     alt=""
                     className="h-full w-full rounded-full object-cover"
                   />

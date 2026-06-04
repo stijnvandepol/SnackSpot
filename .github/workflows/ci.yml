@@ -4,6 +4,11 @@ on:
   pull_request:
     branches: [main]
 
+# Least privilege: jobs only read the repo. The SAST job overrides this with the
+# extra scopes it needs (security-events: write) in its own permissions block.
+permissions:
+  contents: read
+
 # Cancel in-progress CI runs for the same PR branch when a new commit is pushed.
 concurrency:
   group: ci-${{ github.head_ref }}
@@ -64,7 +69,81 @@ jobs:
       - name: Run unit tests
         run: pnpm --filter web test
 
-  # ─── Job 2: Build verification ───────────────────────────────────────────────
+  # ─── Job 2: Lint ─────────────────────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Configure pnpm for CI
+        run: sed -i 's/shamefully-hoist=true/node-linker=hoisted/' .npmrc
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile --ignore-scripts --prod=false
+
+      # Warnings are treated as errors so they cannot accumulate unnoticed.
+      - name: Lint web app
+        run: pnpm --filter web exec next lint --max-warnings 0
+
+      - name: Lint admin app
+        run: pnpm --filter @snackspot/admin exec next lint --max-warnings 0
+
+  # ─── Job 3: Type check ───────────────────────────────────────────────────────
+  typecheck:
+    name: Type check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Configure pnpm for CI
+        run: sed -i 's/shamefully-hoist=true/node-linker=hoisted/' .npmrc
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile --ignore-scripts --prod=false
+
+      # tsc needs the generated Prisma client for @prisma/client types.
+      - name: Generate Prisma client
+        run: pnpm --filter @snackspot/db generate
+
+      - name: Type check web app
+        run: pnpm --filter web exec tsc --noEmit
+
+      - name: Type check admin app
+        run: pnpm --filter @snackspot/admin exec tsc --noEmit
+
+      - name: Type check worker
+        run: pnpm --filter worker exec tsc --noEmit
+
+  # ─── Job 4: Build verification ───────────────────────────────────────────────
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -144,7 +223,7 @@ jobs:
       - name: Build admin app
         run: pnpm --filter @snackspot/admin build
 
-  # ─── Job 3: SAST (Semgrep) ───────────────────────────────────────────────────
+  # ─── Job 5: SAST (Semgrep) ───────────────────────────────────────────────────
   sast:
     name: SAST
     runs-on: ubuntu-latest
@@ -180,3 +259,35 @@ jobs:
         continue-on-error: true
         with:
           sarif_file: semgrep.sarif
+
+  # ─── Job 6: Dependency audit ─────────────────────────────────────────────────
+  # Reports known vulnerabilities in dependencies (high/critical). Non-blocking:
+  # most advisories are transitive and need triage, and Dependabot (.github/
+  # dependabot.yml) drives the actual remediation PRs. This step keeps the current
+  # advisory state visible in every PR so regressions are noticed.
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      # No `cache: 'pnpm'` here: this job runs `pnpm audit` straight off the
+      # lockfile and never runs `pnpm install`, so the pnpm store is never
+      # created — caching it would fail the post-job step trying to save a
+      # non-existent path.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Audit dependencies (high and critical)
+        run: pnpm audit --audit-level=high
