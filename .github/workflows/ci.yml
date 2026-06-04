@@ -280,11 +280,14 @@ jobs:
         with:
           version: 9.15.4
 
+      # No `cache: 'pnpm'` here: this job runs `pnpm audit` straight off the
+      # lockfile and never runs `pnpm install`, so the pnpm store is never
+      # created — caching it would fail the post-job step trying to save a
+      # non-existent path.
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
 
       - name: Audit dependencies (high and critical)
         run: pnpm audit --audit-level=high
