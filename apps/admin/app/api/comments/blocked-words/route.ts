@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { parseBody, serverError, mapPrismaError, isResponse } from '@/lib/api-helpers'
 
 const MAX_WORD_LENGTH = 100
+
+const AddBlockedWordBody = z.object({
+  word: z.string().optional(),
+})
 
 // GET /api/comments/blocked-words - List all blocked words
 export async function GET(req: NextRequest) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
 
   try {
     const words = await db.blockedWord.findMany({
@@ -15,18 +21,21 @@ export async function GET(req: NextRequest) {
       select: { id: true, word: true, createdAt: true },
     })
     return NextResponse.json({ words })
-  } catch {
-    return NextResponse.json({ error: 'Error fetching blocked words' }, { status: 500 })
+  } catch (e) {
+    return serverError('blocked-words GET', e)
   }
 }
 
 // POST /api/comments/blocked-words - Add a new blocked word
 export async function POST(req: NextRequest) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
+
+  const body = await parseBody(req, AddBlockedWordBody)
+  if (isResponse(body)) return body
+  const { word } = body
 
   try {
-    const { word } = (await req.json()) as { word?: string }
     if (!word || typeof word !== 'string' || word.trim().length === 0) {
       return NextResponse.json({ error: 'Woord is verplicht' }, { status: 400 })
     }
@@ -43,9 +52,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ word: created }, { status: 201 })
   } catch (error: unknown) {
-    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2002') {
-      return NextResponse.json({ error: 'Dit woord bestaat al' }, { status: 409 })
-    }
-    return NextResponse.json({ error: 'Error adding blocked word' }, { status: 500 })
+    return (
+      mapPrismaError(error, { conflict: 'Dit woord bestaat al' }) ??
+      serverError('blocked-words POST', error)
+    )
   }
 }

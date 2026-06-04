@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { sendMarketingEmail } from '@/lib/email'
+import { parseBody, serverError, isResponse } from '@/lib/api-helpers'
 
 const BodySchema = z.object({
   subject:      z.string().min(1).max(200),
@@ -20,19 +21,10 @@ const BodySchema = z.object({
 
 export async function POST(req: NextRequest) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
 
-  let body: z.infer<typeof BodySchema>
-  try {
-    const json = await req.json()
-    const parsed = BodySchema.safeParse(json)
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 422 })
-    }
-    body = parsed.data
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
-  }
+  const body = await parseBody(req, BodySchema)
+  if (isResponse(body)) return body
 
   try {
     let users: { email: string; username: string }[]
@@ -73,7 +65,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ sent, failed, total: users.length })
   } catch (e) {
-    console.error('marketing-email error', e)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('marketing-email POST', e)
   }
 }

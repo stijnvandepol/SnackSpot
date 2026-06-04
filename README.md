@@ -51,7 +51,7 @@
 | Layer | Technology |
 |---|---|
 | Frontend + API | Next.js 15 (App Router, TypeScript) + Tailwind CSS + React 19 |
-| Admin Panel | Next.js 14 (App Router, TypeScript) |
+| Admin Panel | Next.js 15 (App Router, TypeScript) |
 | Database | PostgreSQL 16 + PostGIS 3.4 (geospatial queries) |
 | Cache / Queue | Redis 7 + BullMQ 5 |
 | Object Storage | MinIO (S3-compatible) |
@@ -83,11 +83,11 @@ snackspot/
 │   │   ├── components/        # Shared React components
 │   │   └── lib/               # Server utilities (auth, DB, Redis, MinIO, rate limiting)
 │   │
-│   ├── admin/                 # Next.js 14 — admin dashboard (port 3001)
+│   ├── admin/                 # Next.js 15 — admin dashboard (port 3001)
 │   │   ├── app/
 │   │   │   ├── api/           # Admin API endpoints
 │   │   │   └── dashboard/     # Admin UI pages
-│   │   └── lib/               # Admin auth, DB, rate limiting
+│   │   └── lib/               # Admin auth, DB, Redis, api-helpers, logger
 │   │
 │   └── worker/                # BullMQ background worker — image processing
 │       └── src/index.ts
@@ -436,11 +436,10 @@ pnpm test
 pnpm test:watch
 ```
 
-**Test coverage:**
-- Badge progress calculations (`badge-service.test.ts`)
-- Rating normalization (`ratings.test.ts`)
-- `@mention` parsing (`mentions.test.ts`)
-- Review schema validation (`review-schema.test.ts`)
+**Test coverage** (250+ tests across 19 files):
+- Domain logic — badge progress (`badge-service.test.ts`), rating normalization (`ratings.test.ts`), `@mention` parsing (`mentions.test.ts`), review schema validation (`review-schema.test.ts`), review tags
+- API & security helpers — `api-helpers`, `auth`, `rate-limit`, `turnstile`, `magic-bytes`, `html` sanitization, `upload`, `photo-url`, `time`
+- Components — `review-card`, `review-interactions`, `bottom-nav`
 
 ---
 

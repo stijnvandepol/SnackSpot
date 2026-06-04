@@ -20,6 +20,12 @@ interface Notification {
   } | null
 }
 
+interface NotificationsResponse {
+  data: Notification[]
+  pagination: { nextCursor: string | null; hasMore: boolean }
+  unreadCount: number
+}
+
 export function NotificationBell() {
   const { user, accessToken } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
@@ -41,23 +47,17 @@ export function NotificationBell() {
         const res = await fetch('/api/v1/me/notifications?limit=10', {
           headers: { Authorization: `Bearer ${accessToken}` },
         })
-        const json = await res.json()
-        if (res.ok && json.data) {
-          const nested = json.data as { data?: unknown; unreadCount?: unknown }
-          const parsedNotifications = Array.isArray(nested.data)
-            ? nested.data
-            : Array.isArray(json.data)
-              ? json.data
-              : []
-          const parsedUnreadCountRaw = nested.unreadCount ?? json.unreadCount
-          const parsedUnreadCount = typeof parsedUnreadCountRaw === 'number' ? parsedUnreadCountRaw : 0
-
-          setNotifications(parsedNotifications as Notification[])
-          setUnreadCount(parsedUnreadCount)
-        } else {
+        if (!res.ok) {
           setNotifications([])
           setUnreadCount(0)
+          return
         }
+        // Contract: GET /api/v1/me/notifications returns ok({ data, pagination, unreadCount }),
+        // which the `ok` helper wraps as { data: { data, pagination, unreadCount } }.
+        const json = (await res.json()) as { data?: NotificationsResponse }
+        const payload = json.data
+        setNotifications(payload?.data ?? [])
+        setUnreadCount(typeof payload?.unreadCount === 'number' ? payload.unreadCount : 0)
       } catch {
         setNotifications([])
         setUnreadCount(0)

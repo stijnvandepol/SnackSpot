@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import type { Prisma } from '@prisma/client'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { serverError, isResponse } from '@/lib/api-helpers'
 
 const DEFAULT_PAGE = 1
 const DEFAULT_LIMIT = 50
@@ -12,7 +13,7 @@ const VALID_TARGET_TYPES = ['REVIEW', 'PHOTO', 'USER'] as const
 // GET /api/reports - List all reports
 export async function GET(req: NextRequest) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
 
   try {
     const url = new URL(req.url)
@@ -91,10 +92,7 @@ export async function GET(req: NextRequest) {
         pages: Math.ceil(total / limit),
       },
     })
-  } catch {
-    return NextResponse.json(
-      { error: 'Error fetching reports' },
-      { status: 500 }
-    )
+  } catch (e) {
+    return serverError('reports GET', e)
   }
 }

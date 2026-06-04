@@ -8,6 +8,7 @@ import {
   buildClearAdminCookie,
   buildClearRefreshCookie,
 } from '@/lib/auth'
+import { serverError } from '@/lib/api-helpers'
 
 export async function POST(req: NextRequest) {
   const rawToken = req.cookies.get(ADMIN_REFRESH_COOKIE)?.value
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
     res.headers.append('Set-Cookie', buildSetAdminCookie(accessToken))
     res.headers.append('Set-Cookie', buildSetRefreshCookie(result.newRawToken))
     return res
-  } catch {
-    return NextResponse.json({ error: 'Er is een fout opgetreden' }, { status: 500 })
+  } catch (e) {
+    return serverError('admin refresh', e)
   }
 }

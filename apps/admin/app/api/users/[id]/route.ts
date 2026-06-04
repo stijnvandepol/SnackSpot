@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { err, serverError, hasPrismaCode, mapPrismaError, parseBody, isResponse } from '@/lib/api-helpers'
+import { Role } from '@prisma/client'
 import type { Prisma } from '@prisma/client'
 
 type Params = { params: Promise<{ id: string }> }
 
-function isPrismaError(error: unknown): error is { code: string } {
-  return typeof error === 'object' && error !== null && 'code' in error
-}
-
 // GET /api/users/[id] - Get user details
 export async function GET(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
   const { id } = await params
 
   try {
@@ -49,32 +48,30 @@ export async function GET(req: NextRequest, { params }: Params) {
     }
 
     return NextResponse.json({ user })
-  } catch {
-    return NextResponse.json(
-      { error: 'Error fetching user' },
-      { status: 500 }
-    )
+  } catch (e) {
+    return serverError('user GET', e)
   }
 }
 
-interface UpdateUserBody {
-  email?: string
-  username?: string
-  role?: 'USER' | 'ADMIN'
-  isVerified?: boolean
-  bannedAt?: string | null
-}
+const UpdateUserBody = z.object({
+  email: z.string().min(1).optional(),
+  username: z.string().min(1).optional(),
+  role: z.nativeEnum(Role).optional(),
+  isVerified: z.boolean().optional(),
+  bannedAt: z.string().nullable().optional(),
+})
 
 // PATCH /api/users/[id] - Update user
 export async function PATCH(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
   const { id } = await params
 
-  try {
-    const body = (await req.json()) as UpdateUserBody
-    const { email, username, role, isVerified, bannedAt } = body
+  const body = await parseBody(req, UpdateUserBody)
+  if (isResponse(body)) return body
+  const { email, username, role, isVerified, bannedAt } = body
 
+  try {
     const updateData: Prisma.UserUpdateInput = {}
     if (email !== undefined) updateData.email = email
     if (username !== undefined) updateData.username = username
@@ -99,21 +96,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     return NextResponse.json({ user })
   } catch (error: unknown) {
-    if (isPrismaError(error) && error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'Email of username bestaat al' },
-        { status: 400 }
-      )
+    if (hasPrismaCode(error, 'P2002')) {
+      return err('Email of username bestaat al', 400)
     }
-    if (isPrismaError(error) && error.code === 'P2025') {
-      return NextResponse.json(
-        { error: 'Gebruiker niet gevonden' },
-        { status: 404 }
-      )
-    }
-    return NextResponse.json(
-      { error: 'Error updating user' },
-      { status: 500 }
+    return (
+      mapPrismaError(error, { notFound: 'Gebruiker niet gevonden' }) ??
+      serverError('user PATCH', error)
     )
   }
 }
@@ -121,7 +109,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 // DELETE /api/users/[id] - Delete user
 export async function DELETE(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
   const { id } = await params
 
   try {
@@ -139,15 +127,9 @@ export async function DELETE(req: NextRequest, { params }: Params) {
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
-    if (isPrismaError(error) && error.code === 'P2025') {
-      return NextResponse.json(
-        { error: 'Gebruiker niet gevonden' },
-        { status: 404 }
-      )
-    }
-    return NextResponse.json(
-      { error: 'Error deleting user' },
-      { status: 500 }
+    return (
+      mapPrismaError(error, { notFound: 'Gebruiker niet gevonden' }) ??
+      serverError('user DELETE', error)
     )
   }
 }

@@ -1,19 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { ReportStatus, ModerationActionType } from '@prisma/client'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { serverError, mapPrismaError, parseBody, isResponse } from '@/lib/api-helpers'
 
 type Params = { params: Promise<{ id: string }> }
 
-function hasPrismaCode(error: unknown, code: string): boolean {
-  return typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === code
-}
-
 const VALID_REPORT_STATUSES = ['OPEN', 'RESOLVED', 'DISMISSED'] as const
+
+const UpdateReportBody = z.object({
+  status: z.string().optional(),
+  action: z.string().optional(),
+  targetId: z.string().optional(),
+})
 
 // GET /api/reports/[id] - Get report details
 export async function GET(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
   const { id } = await params
 
   try {
@@ -75,32 +80,29 @@ export async function GET(req: NextRequest, { params }: Params) {
     }
 
     return NextResponse.json({ report })
-  } catch {
-    return NextResponse.json(
-      { error: 'Error fetching report' },
-      { status: 500 }
-    )
+  } catch (e) {
+    return serverError('report GET', e)
   }
 }
 
 // PATCH /api/reports/[id] - Update report status
 export async function PATCH(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
   const { id } = await params
 
-  try {
-    const { status, action, targetId } = (await req.json()) as {
-      status?: 'OPEN' | 'RESOLVED' | 'DISMISSED'
-      action?: 'HIDE_REVIEW' | 'DELETE_REVIEW' | 'DELETE_PHOTO' | 'DISMISS'
-      targetId?: string
-    }
+  const body = await parseBody(req, UpdateReportBody)
+  if (isResponse(body)) return body
+  const { status, action, targetId } = body
 
+  try {
     // Update report status
     if (status && (VALID_REPORT_STATUSES as readonly string[]).includes(status)) {
       const report = await db.report.update({
         where: { id: id },
-        data: { status },
+        // Runtime-validated against VALID_REPORT_STATUSES above; cast restores the
+        // enum typing the original inline body type provided.
+        data: { status: status as ReportStatus },
         select: {
           id: true,
           status: true,
@@ -172,7 +174,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       await db.moderationAction.create({
         data: {
           moderatorId: admin.sub,
-          actionType,
+          actionType: actionType as ModerationActionType,
           targetType: report.targetType,
           targetId: targetId,
         },
@@ -186,15 +188,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       { status: 400 }
     )
   } catch (error: unknown) {
-    if (hasPrismaCode(error, 'P2025')) {
-      return NextResponse.json(
-        { error: 'Report niet gevonden' },
-        { status: 404 }
-      )
-    }
-    return NextResponse.json(
-      { error: 'Error updating report' },
-      { status: 500 }
+    return (
+      mapPrismaError(error, { notFound: 'Report niet gevonden' }) ??
+      serverError('report PATCH', error)
     )
   }
 }
@@ -202,7 +198,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 // DELETE /api/reports/[id] - Delete report
 export async function DELETE(req: NextRequest, { params }: Params) {
   const admin = requireAdmin(req)
-  if (admin instanceof Response) return admin
+  if (isResponse(admin)) return admin
   const { id } = await params
 
   try {
@@ -212,15 +208,9 @@ export async function DELETE(req: NextRequest, { params }: Params) {
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
-    if (hasPrismaCode(error, 'P2025')) {
-      return NextResponse.json(
-        { error: 'Report niet gevonden' },
-        { status: 404 }
-      )
-    }
-    return NextResponse.json(
-      { error: 'Error deleting report' },
-      { status: 500 }
+    return (
+      mapPrismaError(error, { notFound: 'Report niet gevonden' }) ??
+      serverError('report DELETE', error)
     )
   }
 }
