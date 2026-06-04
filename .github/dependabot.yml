@@ -1,0 +1,20 @@
+version: 2
+updates:
+  # JavaScript/TypeScript dependencies (pnpm workspace — the root lockfile covers all packages).
+  # Grouped to reduce PR noise; security updates always open their own PRs regardless of grouping.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  # Keep GitHub Actions pinned versions current (also a supply-chain surface).
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
