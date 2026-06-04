@@ -384,6 +384,18 @@ pnpm --filter web test:e2e      # Playwright E2E
 - **The web and admin APIs intentionally use different response shapes** (`{ data }` envelope
   vs. bare objects + Dutch errors). See the API Design section — do not "unify" them.
 
+- **Dependency-audit posture (`pnpm audit --audit-level=high`).** Directly-actionable and
+  runtime-facing advisories are fixed at the source: `next` is kept on a patched release,
+  and transitive high-severity advisories pulled in through `minio`/`archiver`/build tooling
+  (`fast-xml-parser`, `fast-xml-builder`, `lodash`, `picomatch`) are forced to patched
+  versions via `pnpm.overrides`. One advisory is consciously accepted via
+  `pnpm.auditConfig.ignoreGhsas`:
+  - **GHSA-5xrq-8626-4rwp (vitest <4.1.0)** — a **dev-only** test dependency. The flaw is in
+    the Vitest **UI server**, which we never run (CI uses `vitest run`); it never ships to
+    any runtime image. A 2.x→4.x major upgrade is deferred to its own tested change rather
+    than bundled into a release. Re-evaluate when bumping Vitest.
+  Remaining `moderate` advisories are below the `high` gate and are tracked by Dependabot.
+
 ## The standard we hold
 
 Every piece of code you write should be something you'd be comfortable showing to a new
