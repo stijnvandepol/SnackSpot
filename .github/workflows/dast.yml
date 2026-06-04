@@ -48,7 +48,7 @@ jobs:
 
       - name: ZAP Full Scan
         if: inputs.scan_type == 'full'
-        uses: zaproxy/action-full-scan@v0.12.0
+        uses: zaproxy/action-full-scan@v0.13.0
         with:
           target: ${{ inputs.target || 'https://snackspot.online' }}
           rules_file_name: '.zap/rules.tsv'
