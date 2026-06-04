@@ -4,6 +4,11 @@ on:
   pull_request:
     branches: [main]
 
+# Least privilege: jobs only read the repo. The SAST job overrides this with the
+# extra scopes it needs (security-events: write) in its own permissions block.
+permissions:
+  contents: read
+
 # Cancel in-progress CI runs for the same PR branch when a new commit is pushed.
 concurrency:
   group: ci-${{ github.head_ref }}
