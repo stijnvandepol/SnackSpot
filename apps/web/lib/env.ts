@@ -48,6 +48,11 @@ const envSchema = z.object({
 
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).optional(),
 
+  // Web push is optional: without a VAPID key pair the subscribe UI hides
+  // itself and the worker skips push jobs. The private key lives only in the
+  // worker's environment.
+  VAPID_PUBLIC_KEY: z.string().optional(),
+
 })
 
 const _env = envSchema.safeParse(process.env)

@@ -114,6 +114,7 @@ model User {
   xpEvents                  XpEvent[]
   following                 Follow[] @relation("Following")
   followers                 Follow[] @relation("Followers")
+  pushSubscriptions         PushSubscription[]
 
   @@map("users")
 }
@@ -427,13 +428,18 @@ model Notification {
 }
 
 model NotificationPreferences {
-  userId         String   @id @map("user_id")
-  emailOnLike    Boolean  @default(false) @map("email_on_like")
-  emailOnComment Boolean  @default(true)  @map("email_on_comment")
-  emailOnMention Boolean  @default(false) @map("email_on_mention")
-  emailOnBadge   Boolean  @default(false) @map("email_on_badge")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  userId             String   @id @map("user_id")
+  emailOnLike        Boolean  @default(false) @map("email_on_like")
+  emailOnComment     Boolean  @default(true)  @map("email_on_comment")
+  emailOnMention     Boolean  @default(false) @map("email_on_mention")
+  emailOnBadge       Boolean  @default(false) @map("email_on_badge")
+  pushOnLike         Boolean  @default(true)  @map("push_on_like")
+  pushOnComment      Boolean  @default(true)  @map("push_on_comment")
+  pushOnMention      Boolean  @default(true)  @map("push_on_mention")
+  pushOnBadge        Boolean  @default(true)  @map("push_on_badge")
+  pushStreakReminder Boolean  @default(true)  @map("push_streak_reminder")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -524,6 +530,23 @@ model XpEvent {
   @@unique([userId, reason, refType, refId])
   @@index([userId, createdAt(sort: Desc)])
   @@map("xp_events")
+}
+
+/// One row per browser/device push subscription (Web Push API).
+model PushSubscription {
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  userAgent  String?   @map("user_agent")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  lastUsedAt DateTime? @map("last_used_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 /// Asymmetric follow graph; a mutual follow means "friends" (bite visibility).

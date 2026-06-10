@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { VerifiedBadge } from '@/components/verified-badge'
 import { NotificationSettings } from '@/components/notification-settings'
+import { PushSettings } from '@/components/push-settings'
 import { ThemeSettings } from '@/components/theme-settings'
 import { LeaderboardPanel } from '@/components/leaderboard-panel'
 import dynamic from 'next/dynamic'
@@ -565,6 +566,7 @@ function ProfileContent() {
               </div>
 
               {/* Notification Preferences */}
+              <PushSettings />
               <div className="card p-4">
                 <h3 className="font-heading font-semibold text-snack-text mb-3">Notification Preferences</h3>
                 <NotificationSettings embedded />
@@ -761,6 +763,7 @@ function ProfileContent() {
 
           <div className="mb-6">
             <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Notification Settings</h2>
+            <PushSettings />
             <NotificationSettings embedded />
           </div>
 

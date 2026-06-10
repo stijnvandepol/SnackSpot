@@ -8,6 +8,11 @@ const PreferencesSchema = z.object({
   emailOnComment: z.boolean().optional(),
   emailOnMention: z.boolean().optional(),
   emailOnBadge: z.boolean().optional(),
+  pushOnLike: z.boolean().optional(),
+  pushOnComment: z.boolean().optional(),
+  pushOnMention: z.boolean().optional(),
+  pushOnBadge: z.boolean().optional(),
+  pushStreakReminder: z.boolean().optional(),
 })
 
 export async function GET(req: NextRequest) {

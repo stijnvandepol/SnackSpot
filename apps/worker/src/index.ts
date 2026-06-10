@@ -13,6 +13,7 @@ import { Worker, Queue, type Job } from 'bullmq'
 import Redis from 'ioredis'
 import * as Minio from 'minio'
 import sharp from 'sharp'
+import webpush from 'web-push'
 import { PrismaClient, PhotoModerationStatus } from '@prisma/client'
 import pino from 'pino'
 
@@ -52,6 +53,12 @@ const QUEUE_NAME         = 'photo-processing'
 const MAX_ORIGINAL_BYTES = positiveIntFromEnv('MAX_FILE_SIZE_BYTES', 10 * 1024 * 1024)
 const MAX_INPUT_PIXELS   = positiveIntFromEnv('MAX_INPUT_PIXELS', 40_000_000)
 const WORKER_CONCURRENCY = positiveIntFromEnv('WORKER_CONCURRENCY', 3)
+
+// Web push is optional: without a VAPID key pair, push jobs complete as no-ops.
+const VAPID_PUBLIC_KEY  = process.env.VAPID_PUBLIC_KEY ?? ''
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY ?? ''
+const VAPID_SUBJECT     = process.env.VAPID_SUBJECT ?? 'mailto:contact@snackspot.online'
+const PUSH_ENABLED      = Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY)
 
 // ─── Clients ─────────────────────────────────────────────────────────────────
 
@@ -423,6 +430,193 @@ cleanupWorker.on('failed', (job, err) => {
   log.error({ jobId: job?.id, err }, 'Daily cleanup job failed')
 })
 
+// ─── Web push ────────────────────────────────────────────────────────────────
+// The web app enqueues push jobs; this worker resolves the recipient's
+// preferences and subscriptions and performs the actual Web Push delivery.
+// Expired endpoints (404/410) are pruned on the spot.
+
+if (PUSH_ENABLED) {
+  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
+} else {
+  log.warn('VAPID keys not configured - web push delivery is disabled')
+}
+
+const PUSH_QUEUE = 'push-notifications'
+
+type PushCategory = 'LIKE' | 'COMMENT' | 'MENTION' | 'BADGE' | 'STREAK'
+
+interface PushJob {
+  userId: string
+  category: PushCategory
+  title: string
+  message: string
+  url: string
+}
+
+function pushCategoryAllowed(
+  category: PushCategory,
+  prefs: {
+    pushOnLike: boolean
+    pushOnComment: boolean
+    pushOnMention: boolean
+    pushOnBadge: boolean
+    pushStreakReminder: boolean
+  } | null,
+): boolean {
+  if (!prefs) return true // no row yet = schema defaults (all on)
+  switch (category) {
+    case 'LIKE': return prefs.pushOnLike
+    case 'COMMENT': return prefs.pushOnComment
+    case 'MENTION': return prefs.pushOnMention
+    case 'BADGE': return prefs.pushOnBadge
+    case 'STREAK': return prefs.pushStreakReminder
+  }
+}
+
+async function deliverPush(job: PushJob): Promise<void> {
+  if (!PUSH_ENABLED) return
+
+  const [prefs, subscriptions] = await Promise.all([
+    prisma.notificationPreferences.findUnique({
+      where: { userId: job.userId },
+      select: {
+        pushOnLike: true,
+        pushOnComment: true,
+        pushOnMention: true,
+        pushOnBadge: true,
+        pushStreakReminder: true,
+      },
+    }),
+    prisma.pushSubscription.findMany({ where: { userId: job.userId } }),
+  ])
+
+  if (!pushCategoryAllowed(job.category, prefs) || subscriptions.length === 0) return
+
+  const payload = JSON.stringify({
+    title: job.title,
+    message: job.message,
+    url: job.url,
+    tag: `snackspot-${job.category.toLowerCase()}`,
+  })
+
+  await Promise.all(
+    subscriptions.map(async (sub) => {
+      try {
+        await webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          payload,
+          { TTL: 3600 },
+        )
+        await prisma.pushSubscription
+          .update({ where: { id: sub.id }, data: { lastUsedAt: new Date() } })
+          .catch(() => undefined) // bookkeeping only
+      } catch (err) {
+        const statusCode = (err as { statusCode?: number }).statusCode
+        if (statusCode === 404 || statusCode === 410) {
+          // The browser revoked this subscription — clean it up.
+          await prisma.pushSubscription.delete({ where: { id: sub.id } }).catch(() => undefined)
+        } else {
+          log.warn({ err, endpoint: sub.endpoint.slice(0, 48) }, 'Push delivery failed')
+        }
+      }
+    }),
+  )
+}
+
+const pushWorker = new Worker<PushJob>(PUSH_QUEUE, (job) => deliverPush(job.data), {
+  connection: redis,
+  concurrency: 5,
+})
+
+pushWorker.on('failed', (job, err) => {
+  log.error({ jobId: job?.id, err }, 'Push job failed')
+})
+
+// ─── Streak reminders ────────────────────────────────────────────────────────
+// Hourly sweep: users whose local time is 19:00, with an active streak
+// (activity yesterday, nothing yet today) and a push subscription get one
+// rescue nudge. Redis SETNX guarantees at most one reminder per local day.
+
+const STREAK_QUEUE = 'streak-reminders'
+const STREAK_REMINDER_HOUR = 19
+
+async function runStreakReminders(): Promise<void> {
+  if (!PUSH_ENABLED) return
+
+  const candidates = await prisma.$queryRaw<Array<{ id: string; local_date: string }>>`
+    SELECT u.id, (NOW() AT TIME ZONE u.timezone)::date::text AS local_date
+    FROM users u
+    LEFT JOIN notification_preferences np ON np.user_id = u.id
+    WHERE u.timezone IS NOT NULL
+      AND u.banned_at IS NULL
+      AND COALESCE(np.push_streak_reminder, true)
+      AND EXTRACT(HOUR FROM (NOW() AT TIME ZONE u.timezone)) = ${STREAK_REMINDER_HOUR}
+      AND EXISTS (SELECT 1 FROM push_subscriptions ps WHERE ps.user_id = u.id)
+      AND (
+        EXISTS (
+          SELECT 1 FROM bites b
+          WHERE b.user_id = u.id AND b.local_date = ((NOW() AT TIME ZONE u.timezone)::date - 1)
+        )
+        OR EXISTS (
+          SELECT 1 FROM reviews r
+          WHERE r.user_id = u.id AND r.status = 'PUBLISHED'
+            AND (r.created_at AT TIME ZONE u.timezone)::date = ((NOW() AT TIME ZONE u.timezone)::date - 1)
+        )
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM bites b2
+        WHERE b2.user_id = u.id AND b2.local_date = (NOW() AT TIME ZONE u.timezone)::date
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM reviews r2
+        WHERE r2.user_id = u.id AND r2.status = 'PUBLISHED'
+          AND (r2.created_at AT TIME ZONE u.timezone)::date = (NOW() AT TIME ZONE u.timezone)::date
+      )
+  `
+
+  let sent = 0
+  for (const candidate of candidates) {
+    // At most one reminder per user per local day, even if the job overlaps.
+    const dedupKey = `push:streak:${candidate.id}:${candidate.local_date}`
+    const first = await redis.set(dedupKey, '1', 'EX', 86400, 'NX')
+    if (first !== 'OK') continue
+
+    await deliverPush({
+      userId: candidate.id,
+      category: 'STREAK',
+      title: 'Your streak is on the line 🔥',
+      message: 'One photo of any meal keeps it alive. Still time today.',
+      url: '/add-bite',
+    })
+    sent += 1
+  }
+
+  if (candidates.length > 0) {
+    log.info({ candidates: candidates.length, sent }, 'Streak reminders processed')
+  }
+}
+
+const streakQueue = new Queue(STREAK_QUEUE, {
+  connection: redis,
+  defaultJobOptions: {
+    removeOnComplete: { count: 5 },
+    removeOnFail: { count: 5 },
+  },
+})
+
+streakQueue
+  .upsertJobScheduler('streak-reminders', { every: 60 * 60 * 1000 }, { name: 'streak-reminders' })
+  .catch((err) => log.error({ err }, 'Failed to schedule streak reminder job'))
+
+const streakWorker = new Worker(STREAK_QUEUE, runStreakReminders, {
+  connection: redis,
+  concurrency: 1,
+})
+
+streakWorker.on('failed', (job, err) => {
+  log.error({ jobId: job?.id, err }, 'Streak reminder job failed')
+})
+
 // ─── Photo worker ─────────────────────────────────────────────────────────────
 
 const worker = new Worker<PhotoJob>(QUEUE_NAME, processPhoto, {
@@ -457,8 +651,8 @@ worker.on('error', (err) => {
 
 async function shutdown(signal: string) {
   log.info({ signal }, 'Shutting down worker')
-  await Promise.all([worker.close(), cleanupWorker.close()])
-  await cleanupQueue.close()
+  await Promise.all([worker.close(), cleanupWorker.close(), pushWorker.close(), streakWorker.close()])
+  await Promise.all([cleanupQueue.close(), streakQueue.close()])
   await prisma.$disconnect()
   await redis.quit()
   process.exit(0)
