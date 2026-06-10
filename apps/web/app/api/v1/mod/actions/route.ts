@@ -17,30 +17,31 @@ export async function POST(req: NextRequest) {
   if (isResponse(body)) return body
 
   try {
+    let mutation
     switch (body.action) {
       case 'HIDE_REVIEW':
-        await prisma.review.update({
+        mutation = prisma.review.update({
           where: { id: body.targetId },
           data: { status: ReviewStatus.HIDDEN },
         })
         break
 
       case 'UNHIDE_REVIEW':
-        await prisma.review.update({
+        mutation = prisma.review.update({
           where: { id: body.targetId },
           data: { status: ReviewStatus.PUBLISHED },
         })
         break
 
       case 'DELETE_REVIEW':
-        await prisma.review.update({
+        mutation = prisma.review.update({
           where: { id: body.targetId },
           data: { status: ReviewStatus.DELETED },
         })
         break
 
       case 'DELETE_PHOTO':
-        await prisma.photo.update({
+        mutation = prisma.photo.update({
           where: { id: body.targetId },
           data: { moderationStatus: PhotoModerationStatus.REJECTED },
         })
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
       case 'BAN_USER':
         // Admins only may ban users
         if (auth.role !== 'ADMIN') return err('Only admins can ban users', 403)
-        await prisma.user.update({
+        mutation = prisma.user.update({
           where: { id: body.targetId },
           data: { bannedAt: new Date() },
         })
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
 
       case 'UNBAN_USER':
         if (auth.role !== 'ADMIN') return err('Only admins can unban users', 403)
-        await prisma.user.update({
+        mutation = prisma.user.update({
           where: { id: body.targetId },
           data: { bannedAt: null },
         })
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
 
       case 'DISMISS_REPORT':
         if (!body.reportId) return err('reportId required to dismiss a report', 422)
-        await prisma.report.update({
+        mutation = prisma.report.update({
           where: { id: body.reportId },
           data: { status: ReportStatus.DISMISSED },
         })
@@ -75,24 +76,28 @@ export async function POST(req: NextRequest) {
         return err('Unknown action', 400)
     }
 
-    // Resolve linked report if provided
+    // The mutation and its audit-log entry commit atomically: a moderation
+    // action is never applied without being logged (and vice versa).
+    await prisma.$transaction([
+      mutation,
+      prisma.moderationAction.create({
+        data: {
+          moderatorId: auth.sub,
+          actionType: body.action as ModerationActionType,
+          targetType: body.targetType,
+          targetId: body.targetId,
+          note: body.note,
+        },
+      }),
+    ])
+
+    // Resolve linked report if provided — best-effort, the report may be gone.
     if (body.reportId && body.action !== 'DISMISS_REPORT') {
       await prisma.report.update({
         where: { id: body.reportId },
         data: { status: ReportStatus.RESOLVED },
       }).catch(() => undefined)
     }
-
-    // Write audit log
-    await prisma.moderationAction.create({
-      data: {
-        moderatorId: auth.sub,
-        actionType: body.action as ModerationActionType,
-        targetType: body.targetType,
-        targetId: body.targetId,
-        note: body.note,
-      },
-    })
 
     return ok({ action: body.action, targetId: body.targetId })
   } catch (e) {

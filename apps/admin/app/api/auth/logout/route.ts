@@ -9,6 +9,8 @@ import {
 export async function POST(req: NextRequest) {
   const rawToken = req.cookies.get(ADMIN_REFRESH_COOKIE)?.value
   if (rawToken) {
+    // Best-effort: the token may already be revoked or expired; logout must
+    // still clear the cookies regardless.
     await revokeRefreshToken(rawToken).catch(() => {})
   }
 

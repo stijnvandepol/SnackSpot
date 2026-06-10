@@ -1,27 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import type { Prisma } from '@prisma/client'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { serverError, isResponse } from '@/lib/api-helpers'
+import { parseQuery, serverError, isResponse } from '@/lib/api-helpers'
 
-const DEFAULT_PAGE = 1
-const DEFAULT_LIMIT = 50
-const MAX_LIMIT = 100
+// The dashboard sends empty strings for unset filters (e.g. `status=`);
+// treat those as absent so they fall through to the default/no-filter case.
+const emptyToUndefined = (v: unknown) => (v === '' ? undefined : v)
+
+const ListReviewsQuery = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  search: z.string().default(''),
+  status: z.preprocess(emptyToUndefined, z.enum(['PUBLISHED', 'HIDDEN', 'DELETED']).optional()),
+})
 
 // GET /api/reviews - List all reviews
 export async function GET(req: NextRequest) {
   const admin = requireAdmin(req)
   if (isResponse(admin)) return admin
 
-  try {
-    const url = new URL(req.url)
-    const page = parseInt(url.searchParams.get('page') || String(DEFAULT_PAGE))
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || String(DEFAULT_LIMIT)), MAX_LIMIT)
-    const search = url.searchParams.get('search') || ''
-    const status = url.searchParams.get('status') || ''
+  const query = parseQuery(req, ListReviewsQuery)
+  if (isResponse(query)) return query
+  const { page, limit, search, status } = query
 
+  try {
     const where: Prisma.ReviewWhereInput = {}
-    
+
     if (search) {
       where.OR = [
         { text: { contains: search, mode: 'insensitive' as const } },
@@ -31,7 +37,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (status) {
-      where.status = status as Prisma.ReviewWhereInput['status']
+      where.status = status
     }
 
     const [reviews, total] = await Promise.all([

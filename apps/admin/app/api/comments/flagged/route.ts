@@ -1,25 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { serverError, isResponse } from '@/lib/api-helpers'
+import { parseQuery, serverError, isResponse } from '@/lib/api-helpers'
 
-const DEFAULT_LIMIT = 50
-const VALID_STATUSES = ['PENDING', 'APPROVED', 'DELETED'] as const
+// The dashboard sends empty strings for unset filters; treat those as absent
+// so they fall through to the default.
+const emptyToUndefined = (v: unknown) => (v === '' ? undefined : v)
+
+const ListFlaggedQuery = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(50),
+  status: z.preprocess(emptyToUndefined, z.enum(['PENDING', 'APPROVED', 'DELETED']).default('PENDING')),
+})
 
 // GET /api/comments/flagged - List flagged comments
 export async function GET(req: NextRequest) {
   const admin = requireAdmin(req)
   if (isResponse(admin)) return admin
 
-  try {
-    const url = new URL(req.url)
-    const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'))
-    const limit = Math.min(DEFAULT_LIMIT, parseInt(url.searchParams.get('limit') || String(DEFAULT_LIMIT)))
-    const status = url.searchParams.get('status') || 'PENDING'
+  const query = parseQuery(req, ListFlaggedQuery)
+  if (isResponse(query)) return query
+  const { page, limit, status } = query
 
-    const where = (VALID_STATUSES as readonly string[]).includes(status)
-      ? { status }
-      : {}
+  try {
+    const where = { status }
 
     const [flagged, total] = await Promise.all([
       db.flaggedComment.findMany({
