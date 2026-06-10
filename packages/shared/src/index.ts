@@ -111,6 +111,25 @@ export const CreateCommentSchema = z.object({
   text: z.string().min(1).max(1000),
 })
 
+// ─── Bites ───────────────────────────────────────────────────────────────────
+// The daily logging unit: a photo of any meal, place optional. Private by
+// design choice "FRIENDS": bites are visible to mutual follows, never public.
+
+export const MEAL_SLOT_VALUES = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'] as const
+export type MealSlotValue = (typeof MEAL_SLOT_VALUES)[number]
+
+export const BITE_VISIBILITY_VALUES = ['PRIVATE', 'FRIENDS'] as const
+
+export const CreateBiteSchema = z.object({
+  photoId: z.string().min(1),
+  placeId: z.string().min(1).optional(),
+  mealSlot: z.enum(MEAL_SLOT_VALUES).default('SNACK'),
+  note: z.string().trim().max(280).optional(),
+  visibility: z.enum(BITE_VISIBILITY_VALUES).default('FRIENDS'),
+  /** IANA timezone of the client, used to pin the bite to a local calendar day. */
+  timezone: z.string().min(1).max(64),
+})
+
 export const UpdateMeProfileSchema = z.object({
   username: z
     .string()

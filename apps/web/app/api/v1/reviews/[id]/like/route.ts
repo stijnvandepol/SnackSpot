@@ -4,6 +4,7 @@ import { ok, err, requireAuth, getAuthPayload, serverError, isResponse } from '@
 import { ReviewStatus } from '@prisma/client'
 import { recalculateUserBadges } from '@/lib/badge-service'
 import { notifyReviewLike } from '@/lib/notification-service'
+import { awardXp } from '@/lib/xp-service'
 
 async function getLikeState(reviewId: string, userId?: string) {
   const [likeCount, likedByMe] = await Promise.all([
@@ -61,12 +62,16 @@ export async function POST(
       skipDuplicates: true,
     })
 
-    // Owner notification, badge recalculation and the response state are
-    // independent of each other — run them in parallel.
+    // Owner notification, badge recalculation, XP and the response state are
+    // independent of each other — run them in parallel. The XP ref includes
+    // the liker, so like/unlike cycles can never award twice.
     const [state] = await Promise.all([
       getLikeState(id, auth.sub),
       notifyReviewLike(id, auth.sub),
       recalculateUserBadges(review.userId, { criteriaTypes: ['LIKES_RECEIVED_COUNT'] }),
+      ...(review.userId !== auth.sub
+        ? [awardXp({ userId: review.userId, reason: 'LIKE_RECEIVED', refType: 'like', refId: `${id}:${auth.sub}` })]
+        : []),
     ])
     return ok(state)
   } catch (e) {

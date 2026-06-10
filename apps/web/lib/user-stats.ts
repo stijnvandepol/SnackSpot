@@ -1,4 +1,6 @@
 import { prisma } from '@/lib/db'
+import { xpProgress, type XpProgress } from '@/lib/xp-service'
+import { computeStreaks, toDateKey } from '@/lib/streaks'
 
 export interface UserStatsData {
   totalPosts: number
@@ -10,44 +12,44 @@ export interface UserStatsData {
   topLocations: Array<{ id: string; name: string; posts: number }>
   weeklyActivity: Array<{ weekStart: string; posts: number }>
   streak: { current: number; best: number }
+  bitesCount: number
+  xp: XpProgress
 }
 
-function toDateKey(value: Date): string {
-  const y = value.getUTCFullYear()
-  const m = String(value.getUTCMonth() + 1).padStart(2, '0')
-  const d = String(value.getUTCDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
+/** Days with at least one published review (UTC day) or one bite (local day). */
+async function getActiveDayKeys(userId: string): Promise<string[]> {
+  const rows = await prisma.$queryRaw<Array<{ day: Date }>>`
+    SELECT DISTINCT day FROM (
+      SELECT DATE(created_at) AS day
+      FROM reviews
+      WHERE user_id = ${userId} AND status = 'PUBLISHED'
+      UNION
+      SELECT local_date AS day
+      FROM bites
+      WHERE user_id = ${userId}
+    ) d
+    ORDER BY day ASC
+  `
+  return rows.map((row) => toDateKey(new Date(row.day)))
 }
 
-function computeStreaks(dateKeys: string[]): { current: number; best: number } {
-  if (dateKeys.length === 0) return { current: 0, best: 0 }
+export interface ProgressSnapshot {
+  streak: { current: number; best: number }
+  xp: XpProgress
+  bitesCount: number
+}
 
-  const sorted = [...dateKeys].sort()
-  let best = 1
-  let running = 1
-
-  for (let i = 1; i < sorted.length; i++) {
-    const prev = new Date(`${sorted[i - 1]}T00:00:00.000Z`)
-    const curr = new Date(`${sorted[i]}T00:00:00.000Z`)
-    const diffDays = Math.round((curr.getTime() - prev.getTime()) / (24 * 60 * 60 * 1000))
-    if (diffDays === 1) {
-      running += 1
-      best = Math.max(best, running)
-    } else {
-      running = 1
-    }
+/** Lightweight streak + XP snapshot for write-path responses (bite/review create). */
+export async function getProgressSnapshot(userId: string): Promise<ProgressSnapshot> {
+  const [days, stats] = await Promise.all([
+    getActiveDayKeys(userId),
+    prisma.userStats.findUnique({ where: { userId } }),
+  ])
+  return {
+    streak: computeStreaks(days),
+    xp: xpProgress(stats?.xpTotal ?? 0),
+    bitesCount: stats?.bitesCount ?? 0,
   }
-
-  const uniqueSet = new Set(sorted)
-  const today = new Date()
-  let cursor = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
-  let current = 0
-  while (uniqueSet.has(toDateKey(cursor))) {
-    current += 1
-    cursor = new Date(cursor.getTime() - 24 * 60 * 60 * 1000)
-  }
-
-  return { current, best }
 }
 
 export async function getUserStats(userId: string): Promise<UserStatsData> {
@@ -59,7 +61,7 @@ export async function getUserStats(userId: string): Promise<UserStatsData> {
   // the pattern already used by badge-service.getActivitySnapshot. The
   // set-returning stats (weekly buckets, active days, top locations) remain
   // separate queries.
-  const [scalarRows, weeklyRows, activeDaysRows, topLocationsRows] = await Promise.all([
+  const [scalarRows, weeklyRows, activeDayKeys, topLocationsRows, userStatsRow] = await Promise.all([
     prisma.$queryRaw<
       Array<{
         total_posts: number
@@ -94,12 +96,7 @@ export async function getUserStats(userId: string): Promise<UserStatsData> {
       GROUP BY DATE_TRUNC('week', created_at)
       ORDER BY week ASC
     `,
-    prisma.$queryRaw<Array<{ day: Date }>>`
-      SELECT DISTINCT DATE(created_at) AS day
-      FROM reviews
-      WHERE user_id = ${userId} AND status = 'PUBLISHED'
-      ORDER BY day ASC
-    `,
+    getActiveDayKeys(userId),
     prisma.$queryRaw<Array<{ place_id: string; place_name: string; count: number }>>`
       SELECT r.place_id, p.name AS place_name, COUNT(r.id)::int AS count
       FROM reviews r
@@ -109,11 +106,11 @@ export async function getUserStats(userId: string): Promise<UserStatsData> {
       ORDER BY count DESC, place_name ASC
       LIMIT 3
     `,
+    prisma.userStats.findUnique({ where: { userId } }),
   ])
 
   const scalar = scalarRows[0]
-  const days = activeDaysRows.map((row) => toDateKey(new Date(row.day)))
-  const streak = computeStreaks(days)
+  const streak = computeStreaks(activeDayKeys)
 
   return {
     totalPosts: scalar?.total_posts ?? 0,
@@ -132,5 +129,7 @@ export async function getUserStats(userId: string): Promise<UserStatsData> {
       posts: row.posts,
     })),
     streak,
+    bitesCount: userStatsRow?.bitesCount ?? 0,
+    xp: xpProgress(userStatsRow?.xpTotal ?? 0),
   }
 }

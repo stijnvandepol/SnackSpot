@@ -295,6 +295,8 @@ async function runUnusedImageCleanup(): Promise<void> {
         createdAt: { lt: cutoff },
         reviewPhotos: { none: {} },
         reports: { none: {} },
+        // A photo attached to a bite is in active use — never clean it up.
+        bite: { is: null },
       },
       select: {
         id: true,
