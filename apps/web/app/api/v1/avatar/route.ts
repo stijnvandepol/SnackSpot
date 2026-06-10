@@ -1,7 +1,7 @@
 import { type NextRequest } from 'next/server'
 import sharp from 'sharp'
 import { BUCKET, minioClient } from '@/lib/minio'
-import { AVATAR_VARIANT_SIZE, avatarVariantKey } from '@/lib/avatar'
+import { AVATAR_MAX_INPUT_PIXELS, AVATAR_VARIANT_SIZE, avatarVariantKey } from '@/lib/avatar'
 
 export const runtime = 'nodejs'
 
@@ -41,34 +41,36 @@ export async function GET(req: NextRequest) {
   if (!key) return new Response('Invalid key', { status: 400 })
 
   try {
+    // getObject throws for a missing key, so a separate statObject round-trip
+    // per lookup is unnecessary.
     const variantKey = avatarVariantKey(key)
-    const variantStat = await minioClient.statObject(BUCKET, variantKey).catch(() => null)
-    if (variantStat) {
-      const variantStream = await minioClient.getObject(BUCKET, variantKey).catch(() => null)
-      if (variantStream) {
-        const variant = await streamToBuffer(variantStream)
-        return new Response(new Uint8Array(variant), {
-          headers: {
-            'Content-Type': 'image/webp',
-            'Content-Length': String(variant.byteLength),
-            'Cache-Control': `public, max-age=${CACHE_SECONDS}`,
-          },
-        })
-      }
+    const variantStream = await minioClient.getObject(BUCKET, variantKey).catch(() => null)
+    if (variantStream) {
+      const variant = await streamToBuffer(variantStream)
+      return new Response(new Uint8Array(variant), {
+        headers: {
+          'Content-Type': 'image/webp',
+          'Content-Length': String(variant.byteLength),
+          'Cache-Control': `public, max-age=${CACHE_SECONDS}`,
+        },
+      })
     }
-
-    const stat = await minioClient.statObject(BUCKET, key).catch(() => null)
-    if (!stat) return new Response('Not found', { status: 404 })
 
     const objectStream = await minioClient.getObject(BUCKET, key).catch(() => null)
     if (!objectStream) return new Response('Not found', { status: 404 })
 
     const original = await streamToBuffer(objectStream)
 
-    const resized = await sharp(original)
+    const resized = await sharp(original, { limitInputPixels: AVATAR_MAX_INPUT_PIXELS })
       .resize(AVATAR_VARIANT_SIZE, AVATAR_VARIANT_SIZE, { fit: 'cover', position: 'centre' })
       .webp({ quality: 80 })
       .toBuffer()
+
+    // Persist the generated variant so subsequent requests skip the re-encode;
+    // best-effort — serving the avatar must not fail on a write error.
+    await minioClient
+      .putObject(BUCKET, variantKey, resized, resized.length, { 'Content-Type': 'image/webp' })
+      .catch(() => undefined)
 
     return new Response(new Uint8Array(resized), {
       headers: {

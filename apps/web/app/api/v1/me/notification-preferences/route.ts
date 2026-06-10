@@ -21,9 +21,17 @@ export async function GET(req: NextRequest) {
 
     // Create default preferences if they don't exist
     if (!preferences) {
-      preferences = await prisma.notificationPreferences.create({
-        data: { userId: auth.sub },
-      })
+      preferences = await prisma.notificationPreferences
+        .create({ data: { userId: auth.sub } })
+        .catch(async (e: unknown) => {
+          // A concurrent request may have created the row between the find and
+          // the create (unique violation) — return that row instead of failing.
+          const existing = await prisma.notificationPreferences.findUnique({
+            where: { userId: auth.sub },
+          })
+          if (!existing) throw e
+          return existing
+        })
     }
 
     return ok(preferences)

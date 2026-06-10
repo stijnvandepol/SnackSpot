@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { err, serverError, hasPrismaCode, mapPrismaError, parseBody, isResponse } from '@/lib/api-helpers'
+import { serverError, mapPrismaError, parseBody, isResponse } from '@/lib/api-helpers'
 import { Role } from '@prisma/client'
 import type { Prisma } from '@prisma/client'
 
@@ -96,12 +96,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     return NextResponse.json({ user })
   } catch (error: unknown) {
-    if (hasPrismaCode(error, 'P2002')) {
-      return err('Email of username bestaat al', 400)
-    }
     return (
-      mapPrismaError(error, { notFound: 'Gebruiker niet gevonden' }) ??
-      serverError('user PATCH', error)
+      mapPrismaError(error, {
+        conflict: 'Email of username bestaat al',
+        notFound: 'Gebruiker niet gevonden',
+      }) ?? serverError('user PATCH', error)
     )
   }
 }

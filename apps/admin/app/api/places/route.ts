@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
 
   try {
     // Create place with PostGIS geography point
-    await db.$executeRaw`
+    const [inserted] = await db.$queryRaw<Array<{ id: string }>>`
       INSERT INTO places (id, name, address, location, created_at, updated_at)
       VALUES (
         gen_random_uuid()::text,
@@ -113,9 +113,8 @@ export async function POST(req: NextRequest) {
     `
 
     // Get the created place
-    const place = await db.place.findFirst({
-      where: { name, address },
-      orderBy: { createdAt: 'desc' },
+    const place = await db.place.findUnique({
+      where: { id: inserted.id },
       select: {
         id: true,
         name: true,

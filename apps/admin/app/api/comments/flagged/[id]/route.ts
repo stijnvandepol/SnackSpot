@@ -40,18 +40,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: 'Comment is al beoordeeld' }, { status: 409 })
     }
 
-    if (action === 'DELETE') {
-      // Delete the actual comment (cascade deletes the flagged_comment too)
-      await db.comment.delete({ where: { id: flagged.commentId } })
-    } else {
-      // Approve: just update the flag status
-      await db.flaggedComment.update({
-        where: { id: id },
-        data: { status: 'APPROVED', reviewedBy: admin.sub, reviewedAt: new Date() },
-      })
-    }
-
-    await db.moderationAction.create({
+    const logModerationAction = db.moderationAction.create({
       data: {
         moderatorId: admin.sub,
         actionType: action === 'DELETE' ? 'DELETE_REVIEW' : 'DISMISS_REPORT',
@@ -60,6 +49,25 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         note: action === 'DELETE' ? 'Comment verwijderd via triggerwoord moderatie' : 'Comment goedgekeurd via triggerwoord moderatie',
       },
     })
+
+    // Mutation and audit-log entry commit atomically: a moderation action is
+    // never applied without its log entry (and vice versa).
+    if (action === 'DELETE') {
+      // Delete the actual comment (cascade deletes the flagged_comment too)
+      await db.$transaction([
+        db.comment.delete({ where: { id: flagged.commentId } }),
+        logModerationAction,
+      ])
+    } else {
+      // Approve: just update the flag status
+      await db.$transaction([
+        db.flaggedComment.update({
+          where: { id: id },
+          data: { status: 'APPROVED', reviewedBy: admin.sub, reviewedAt: new Date() },
+        }),
+        logModerationAction,
+      ])
+    }
 
     return NextResponse.json({ success: true, action })
   } catch (error: unknown) {
