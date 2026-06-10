@@ -1,6 +1,6 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { UserMentionInput } from '@/components/user-mention-input'
 import { computeOverallRating } from '@/lib/ratings'
@@ -86,21 +86,26 @@ function Stars({ value, onChange }: { value: number; onChange: (v: number) => vo
   )
 }
 
-export default function AddReviewPage() {
+function AddReviewForm() {
   const { user, accessToken, loading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const prefillPlaceId = searchParams.get('placeId')
   const isDev = process.env.NODE_ENV !== 'production'
-  const [step, setStep] = useState<Step>('place')
+  // The photo comes first: the camera is the habit, the details follow.
+  const [step, setStep] = useState<Step>('photos')
   const [place, setPlace] = useState<PlaceForm>({
     mode: 'existing', name: '', address: '', lat: '', lng: '',
   })
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchPlace[]>([])
   const [searching, setSearching] = useState(false)
+  // Ratings start unset (0) so a published review always reflects a deliberate
+  // choice — silent defaults would pollute place averages.
   const [ratings, setRatings] = useState<RatingDraft>({
-    taste: 3,
-    value: 3,
-    portion: 3,
+    taste: 0,
+    value: 0,
+    portion: 0,
     service: null,
   })
   const [text, setText] = useState('')
@@ -149,6 +154,31 @@ export default function AddReviewPage() {
   useEffect(() => {
     photosRef.current = photos
   }, [photos])
+
+  // Arriving via "Write review" on a place page (?placeId=...) pre-selects
+  // that place so the user never has to search for it again.
+  useEffect(() => {
+    if (!prefillPlaceId) return
+    let cancelled = false
+    fetch(`/api/v1/places/${encodeURIComponent(prefillPlaceId)}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('Place not found'))))
+      .then((json) => {
+        if (cancelled) return
+        const p = json?.data
+        if (!p?.id) return
+        setPlace({
+          mode: 'existing',
+          placeId: p.id,
+          name: p.name ?? '',
+          address: p.address ?? '',
+          lat: String(p.lat ?? ''),
+          lng: String(p.lng ?? ''),
+        })
+        setSearchQuery(p.name ?? '')
+      })
+      .catch(() => undefined) // unknown place id: the user picks one in the place step
+    return () => { cancelled = true }
+  }, [prefillPlaceId])
 
   useEffect(() => {
     return () => {
@@ -543,8 +573,12 @@ export default function AddReviewPage() {
     }
   }
 
-  const stepOrder: Step[] = ['place', 'review', 'photos']
+  const stepOrder: Step[] = ['photos', 'review', 'place']
   const currentStepIndex = stepOrder.indexOf(step)
+  const readyPhotoCount = photos.filter((p) => p.status === 'ready').length
+  const photosBusy = photos.some((p) => p.status === 'uploading' || p.status === 'confirming')
+  const ratingsComplete =
+    isHalfStepRating(ratings.taste) && isHalfStepRating(ratings.value) && isHalfStepRating(ratings.portion)
   const selectedPlaceSummary = (place.name || place.address) ? (
     <div className="rounded-xl border border-snack-border bg-snack-surface px-4 py-3">
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-snack-muted">Place</p>
@@ -572,9 +606,9 @@ export default function AddReviewPage() {
           ))}
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-snack-muted">
-          <span className={step === 'place' ? 'font-semibold text-snack-primary' : undefined}>Place</span>
+          <span className={step === 'photos' ? 'font-semibold text-snack-primary' : undefined}>Photos</span>
           <span className={step === 'review' ? 'text-center font-semibold text-snack-primary' : 'text-center'}>Review</span>
-          <span className={step === 'photos' ? 'text-right font-semibold text-snack-primary' : 'text-right'}>Photos</span>
+          <span className={step === 'place' ? 'text-right font-semibold text-snack-primary' : 'text-right'}>Place</span>
         </div>
       </div>
 
@@ -726,32 +760,36 @@ export default function AddReviewPage() {
             </>
           )}
 
-          <button
-            className="btn-primary w-full mt-2"
-            type="button"
-            disabled={geocoding || fetchingLocation || searching}
-            onClick={async () => {
-              if (place.mode === 'existing') {
-                if (!place.placeId) {
-                  setError('Please select a place from the search results'); return
-                }
-              } else {
-                // mode === 'new'
-                if (!place.name || !place.address) {
-                  setError('Place name and address are required'); return
-                }
-                if (!place.lat || !place.lng) {
-                  setError('Please pin the address (Enter/Pin) or use your current location first')
-                  return
-                }
-              }
-              setError(null)
-              setStep('review')
-            }}
-          >
-            {geocoding || fetchingLocation || searching ? 'Loading...' : 'Next: Write review'}
-          </button>
           {error && <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400" role="status" aria-live="polite">{error}</div>}
+
+          <div className="flex gap-2">
+            <button className="btn-secondary flex-1" type="button" onClick={() => { setError(null); setStep('review') }}>Back</button>
+            <button
+              className="btn-primary flex-1"
+              type="button"
+              disabled={submitting || geocoding || fetchingLocation}
+              onClick={() => {
+                if (place.mode === 'existing') {
+                  if (!place.placeId) {
+                    setError('Please select a place from the search results'); return
+                  }
+                } else {
+                  // mode === 'new'
+                  if (!place.name || !place.address) {
+                    setError('Place name and address are required'); return
+                  }
+                  if (!place.lat || !place.lng) {
+                    setError('Please pin the address (Enter/Pin) or use your current location first')
+                    return
+                  }
+                }
+                setError(null)
+                void handleSubmit()
+              }}
+            >
+              {submitting ? 'Submitting...' : 'Submit review'}
+            </button>
+          </div>
         </div>
       )}
 
@@ -784,9 +822,11 @@ export default function AddReviewPage() {
               </button>
             </div>
           </div>
-          <div className="px-3 py-2 bg-snack-surface rounded-lg text-sm text-snack-text">
-            Overall rating: <span className="font-semibold">{computeOverallRating(ratings).toFixed(1)}</span>
-          </div>
+          {ratingsComplete && (
+            <div className="px-3 py-2 bg-snack-surface rounded-lg text-sm text-snack-text">
+              Overall rating: <span className="font-semibold">{computeOverallRating(ratings).toFixed(1)}</span>
+            </div>
+          )}
           <div>
             <label className="label">Dish name</label>
             <input className="input" placeholder="e.g. Stroopwafel, Herring" value={dishName} onChange={(e) => setDishName(e.target.value)} maxLength={100} />
@@ -848,17 +888,18 @@ export default function AddReviewPage() {
           {error && <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400" role="status" aria-live="polite">{error}</div>}
 
           <div className="flex gap-2">
-            <button className="btn-secondary flex-1" type="button" onClick={() => { setError(null); setStep('place') }}>Back</button>
+            <button className="btn-secondary flex-1" type="button" onClick={() => { setError(null); setStep('photos') }}>Back</button>
             <button
               className="btn-primary flex-1"
               type="button"
               onClick={() => {
+                if (!ratingsComplete) { setError('Rate taste, value and portion before continuing'); return }
                 if (text.trim().length < 10) { setError('Review text must be at least 10 characters'); return }
                 setError(null)
-                setStep('photos')
+                setStep('place')
               }}
             >
-              Next: Add photos
+              {place.placeId ? 'Next: Confirm place' : 'Next: Choose place'}
             </button>
           </div>
         </div>
@@ -868,7 +909,7 @@ export default function AddReviewPage() {
       {step === 'photos' && (
         <div className="space-y-4">
           {selectedPlaceSummary}
-          <p className="text-sm text-snack-muted">Add 1 to 5 photos so your post stands out in the feed and on the place page.</p>
+          <p className="text-sm text-snack-muted">Start with the food: add 1 to 5 photos of what you&apos;re eating.</p>
 
           <input
             id="review-photo-input"
@@ -930,19 +971,25 @@ export default function AddReviewPage() {
 
           {error && <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400" role="status" aria-live="polite">{error}</div>}
 
-          <div className="flex gap-2">
-            <button className="btn-secondary flex-1" type="button" onClick={() => { setError(null); setStep('review') }}>Back</button>
-            <button
-              className="btn-primary flex-1"
-              type="button"
-              onClick={handleSubmit}
-              disabled={submitting || photos.filter((p) => p.status === 'ready').length === 0 || photos.some((p) => p.status === 'uploading' || p.status === 'confirming')}
-            >
-              {submitting ? 'Submitting...' : 'Submit review'}
-            </button>
-          </div>
+          <button
+            className="btn-primary w-full"
+            type="button"
+            disabled={readyPhotoCount === 0 || photosBusy}
+            onClick={() => { setError(null); setStep('review') }}
+          >
+            {photosBusy ? 'Uploading...' : 'Next: Rate & write'}
+          </button>
         </div>
       )}
     </div>
+  )
+}
+
+export default function AddReviewPage() {
+  // useSearchParams requires a Suspense boundary during prerendering.
+  return (
+    <Suspense fallback={null}>
+      <AddReviewForm />
+    </Suspense>
   )
 }
