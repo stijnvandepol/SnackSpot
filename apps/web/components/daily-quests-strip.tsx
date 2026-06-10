@@ -13,10 +13,33 @@ interface Quest {
 }
 
 /** Compact "today's quests" card above the feed — the daily reason to open the app. */
+const COLLAPSE_STORAGE_KEY = 'snackspot.quests.collapsed'
+
 export function DailyQuestsStrip() {
   const { user, accessToken, loading: authLoading } = useAuth()
   const [quests, setQuests] = useState<Quest[] | null>(null)
   const [collapsed, setCollapsed] = useState(false)
+
+  // Respect the user's choice: once collapsed, the strip stays collapsed
+  // across visits instead of demanding attention every day.
+  useEffect(() => {
+    try {
+      setCollapsed(window.localStorage.getItem(COLLAPSE_STORAGE_KEY) === '1')
+    } catch {
+      // storage unavailable (private mode): default to expanded
+    }
+  }, [])
+
+  const toggleCollapsed = () => {
+    setCollapsed((current) => {
+      try {
+        window.localStorage.setItem(COLLAPSE_STORAGE_KEY, current ? '0' : '1')
+      } catch {
+        // best-effort persistence
+      }
+      return !current
+    })
+  }
 
   useEffect(() => {
     if (authLoading || !user || !accessToken) return
@@ -40,7 +63,7 @@ export function DailyQuestsStrip() {
       <button
         type="button"
         className="flex w-full items-center justify-between"
-        onClick={() => setCollapsed((c) => !c)}
+        onClick={toggleCollapsed}
         aria-expanded={!collapsed}
       >
         <p className="font-heading font-semibold text-snack-text">

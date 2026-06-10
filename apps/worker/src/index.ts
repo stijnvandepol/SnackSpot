@@ -473,24 +473,81 @@ function pushCategoryAllowed(
   }
 }
 
+// Anti-annoyance guardrails (product-vision hoofdstuk 5, B2): a busy day must
+// never flood a phone. Streak reminders are exempt from the cap/throttle —
+// they already carry their own once-per-local-day dedup.
+const SOCIAL_DAILY_PUSH_CAP = 5
+const QUIET_HOURS = { from: 22, until: 8 } // local time, [from, until)
+const CATEGORY_THROTTLE_SECONDS: Partial<Record<PushCategory, number>> = {
+  LIKE: 30 * 60, // a like-storm becomes one heads-up per half hour
+  COMMENT: 10 * 60,
+}
+
+function localHourAndDate(timezone: string | null): { hour: number; date: string } {
+  const tz = timezone ?? 'Europe/Amsterdam'
+  try {
+    const hour = Number(
+      new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: 'numeric', hourCycle: 'h23' }).format(new Date()),
+    )
+    const date = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date())
+    return { hour, date }
+  } catch {
+    const now = new Date()
+    return { hour: now.getUTCHours(), date: now.toISOString().slice(0, 10) }
+  }
+}
+
 async function deliverPush(job: PushJob): Promise<void> {
   if (!PUSH_ENABLED) return
 
-  const [prefs, subscriptions] = await Promise.all([
-    prisma.notificationPreferences.findUnique({
-      where: { userId: job.userId },
+  const [user, subscriptions] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: job.userId },
       select: {
-        pushOnLike: true,
-        pushOnComment: true,
-        pushOnMention: true,
-        pushOnBadge: true,
-        pushStreakReminder: true,
+        timezone: true,
+        notificationPreferences: {
+          select: {
+            pushOnLike: true,
+            pushOnComment: true,
+            pushOnMention: true,
+            pushOnBadge: true,
+            pushStreakReminder: true,
+          },
+        },
       },
     }),
     prisma.pushSubscription.findMany({ where: { userId: job.userId } }),
   ])
 
-  if (!pushCategoryAllowed(job.category, prefs) || subscriptions.length === 0) return
+  if (!user || subscriptions.length === 0) return
+  if (!pushCategoryAllowed(job.category, user.notificationPreferences)) return
+
+  const { hour, date } = localHourAndDate(user.timezone)
+
+  // Quiet hours: never wake anyone between 22:00 and 08:00 local time. The
+  // in-app bell and email digest still carry the event.
+  if (hour >= QUIET_HOURS.from || hour < QUIET_HOURS.until) return
+
+  if (job.category !== 'STREAK') {
+    // Burst throttle per category: only the first event in the window pushes.
+    const throttleSeconds = CATEGORY_THROTTLE_SECONDS[job.category]
+    if (throttleSeconds) {
+      const first = await redis.set(
+        `push:throttle:${job.category}:${job.userId}`,
+        '1',
+        'EX',
+        throttleSeconds,
+        'NX',
+      )
+      if (first !== 'OK') return
+    }
+
+    // Hard daily cap across all social categories.
+    const capKey = `push:daily:${job.userId}:${date}`
+    const sentToday = await redis.incr(capKey)
+    if (sentToday === 1) await redis.expire(capKey, 36 * 60 * 60)
+    if (sentToday > SOCIAL_DAILY_PUSH_CAP) return
+  }
 
   const payload = JSON.stringify({
     title: job.title,

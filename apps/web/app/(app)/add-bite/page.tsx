@@ -278,8 +278,10 @@ export default function AddBitePage() {
         }}
       />
 
-      {previewUrl ? (
+      {previewUrl?.startsWith('blob:') ? (
         <div className="relative aspect-square overflow-hidden rounded-2xl bg-snack-surface">
+          {/* Scheme guard: only browser-generated blob: object URLs are ever
+              rendered as the preview source (CodeQL js/xss-through-dom). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={previewUrl} alt="Your meal" className="h-full w-full object-cover" />
           {photoStatus === 'uploading' && (

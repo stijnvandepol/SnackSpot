@@ -937,7 +937,11 @@ function AddReviewForm() {
             <div className="grid grid-cols-3 gap-2">
               {photos.map((p) => (
                 <div key={p.photoId} className="relative aspect-square rounded-xl overflow-hidden bg-snack-surface">
-                  <img src={p.previewUrl} alt="" className="h-full w-full object-cover" />
+                  {/* Scheme guard: only browser-generated blob: object URLs are
+                      ever rendered as the preview source. */}
+                  {p.previewUrl.startsWith('blob:') && (
+                    <img src={p.previewUrl} alt="" className="h-full w-full object-cover" />
+                  )}
                   <div className={`absolute inset-0 flex items-center justify-center ${p.status !== 'ready' ? 'bg-black/40' : 'opacity-0'}`}>
                     {p.status === 'uploading' || p.status === 'confirming'
                       ? <div className="h-6 w-6 border-2 border-white border-t-transparent rounded-full animate-spin" />

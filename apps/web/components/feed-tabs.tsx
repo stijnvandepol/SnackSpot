@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { FeedClient } from '@/components/feed-client'
-import { DailyQuestsStrip } from '@/components/daily-quests-strip'
 import { useAuth } from '@/components/auth-provider'
 import { photoVariantUrl } from '@/lib/photo-url'
 
@@ -86,7 +85,6 @@ export function FeedTabs() {
 
   return (
     <>
-      <DailyQuestsStrip />
       <div className="mb-4 flex gap-1 rounded-xl bg-snack-surface p-1" role="tablist" aria-label="Feed scope">
         {([
           ['following', 'Following'],
