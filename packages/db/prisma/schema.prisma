@@ -86,6 +86,8 @@ model User {
   avatarKey        String?   @map("avatar_key")
   bannedAt         DateTime? @map("banned_at")
   emailVerifiedAt  DateTime? @map("email_verified_at")
+  /// IANA timezone (e.g. Europe/Amsterdam) for local-date streaks and meal-timed pushes
+  timezone         String?
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
@@ -107,6 +109,14 @@ model User {
   actorNotifications        Notification[] @relation("NotificationActor")
   blockedWords              BlockedWord[]
   reviewedFlags             FlaggedComment[] @relation("FlaggedCommentReviewer")
+  bites                     Bite[]
+  userStats                 UserStats?
+  xpEvents                  XpEvent[]
+  following                 Follow[] @relation("Following")
+  followers                 Follow[] @relation("Followers")
+  pushSubscriptions         PushSubscription[]
+  userQuests                UserQuest[]
+  userCollectibles          UserCollectible[]
 
   @@map("users")
 }
@@ -160,6 +170,10 @@ model Place {
   id        String   @id @default(cuid())
   name      String
   address   String
+  /// Backfilled from the address (last comma segment); admin-correctable
+  city      String?
+  /// Cuisine taxonomy key; filled by admin/heuristics, unlocks cuisine collectibles
+  cuisine   String?
   /// Stored as geography(Point,4326); use raw SQL for spatial ops
   location  Unsupported("geography(Point, 4326)")
   createdAt DateTime @default(now()) @map("created_at")
@@ -167,6 +181,7 @@ model Place {
 
   reviews   Review[]
   favorites Favorite[]
+  bites     Bite[]
 
   @@map("places")
 }
@@ -196,6 +211,7 @@ model Review {
   mentions     ReviewMention[]
   notifications Notification[]
   tags          ReviewTag[]
+  bite          Bite?
 
   @@index([createdAt(sort: Desc)])
   @@index([placeId, createdAt(sort: Desc)])
@@ -329,6 +345,7 @@ model Photo {
   reviewPhotos ReviewPhoto[]
   uploader     User                  @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
   reports      Report[]
+  bite         Bite?
 
   @@index([uploaderId])
   @@index([moderationStatus])
@@ -417,13 +434,18 @@ model Notification {
 }
 
 model NotificationPreferences {
-  userId         String   @id @map("user_id")
-  emailOnLike    Boolean  @default(false) @map("email_on_like")
-  emailOnComment Boolean  @default(true)  @map("email_on_comment")
-  emailOnMention Boolean  @default(false) @map("email_on_mention")
-  emailOnBadge   Boolean  @default(false) @map("email_on_badge")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  userId             String   @id @map("user_id")
+  emailOnLike        Boolean  @default(false) @map("email_on_like")
+  emailOnComment     Boolean  @default(true)  @map("email_on_comment")
+  emailOnMention     Boolean  @default(false) @map("email_on_mention")
+  emailOnBadge       Boolean  @default(false) @map("email_on_badge")
+  pushOnLike         Boolean  @default(true)  @map("push_on_like")
+  pushOnComment      Boolean  @default(true)  @map("push_on_comment")
+  pushOnMention      Boolean  @default(true)  @map("push_on_mention")
+  pushOnBadge        Boolean  @default(true)  @map("push_on_badge")
+  pushStreakReminder Boolean  @default(true)  @map("push_streak_reminder")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -444,5 +466,178 @@ model ReviewMention {
   @@unique([reviewId, mentionedUserId])
   @@index([mentionedUserId, createdAt(sort: Desc)])
   @@map("review_mentions")
+}
+
+enum MealSlot {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+enum BiteVisibility {
+  PRIVATE
+  FRIENDS
+}
+
+/// The daily logging unit: a photo of any meal. Place and note are optional;
+/// a bite can be promoted to a full public review (review relation).
+model Bite {
+  id         String         @id @default(cuid())
+  userId     String         @map("user_id")
+  photoId    String         @unique @map("photo_id")
+  placeId    String?        @map("place_id")
+  reviewId   String?        @unique @map("review_id")
+  mealSlot   MealSlot       @default(SNACK) @map("meal_slot")
+  note       String?        @db.VarChar(280)
+  visibility BiteVisibility @default(FRIENDS)
+  /// Calendar day in the user's own timezone; streaks count these days
+  localDate  DateTime       @map("local_date") @db.Date
+  createdAt  DateTime       @default(now()) @map("created_at")
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photo  Photo   @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  place  Place?  @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  review Review? @relation(fields: [reviewId], references: [id], onDelete: SetNull)
+
+  @@index([userId, localDate(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([placeId])
+  @@index([visibility, createdAt(sort: Desc)])
+  @@map("bites")
+}
+
+/// Denormalised per-user counters; the XP source of truth is xp_events.
+model UserStats {
+  userId     String   @id @map("user_id")
+  xpTotal    Int      @default(0) @map("xp_total")
+  level      Int      @default(1)
+  bitesCount Int      @default(0) @map("bites_count")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_stats")
+}
+
+/// Append-only XP ledger; unique (user, reason, ref) prevents double awards.
+model XpEvent {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  amount    Int
+  reason    String
+  refType   String?  @map("ref_type")
+  refId     String?  @map("ref_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, reason, refType, refId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("xp_events")
+}
+
+/// Food Passport stamp definitions; criteria in JSONB so sets ship as content.
+model Collectible {
+  id          String   @id @default(cuid())
+  setKey      String   @map("set_key")
+  itemKey     String   @map("item_key")
+  name        String
+  description String
+  icon        String
+  criteria    Json
+  sortOrder   Int      @default(0) @map("sort_order")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userCollectibles UserCollectible[]
+
+  @@unique([setKey, itemKey])
+  @@map("collectibles")
+}
+
+model UserCollectible {
+  userId        String   @map("user_id")
+  collectibleId String   @map("collectible_id")
+  earnedAt      DateTime @default(now()) @map("earned_at")
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collectible Collectible @relation(fields: [collectibleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, collectibleId])
+  @@map("user_collectibles")
+}
+
+/// Daily quest content pool; admin-editable later.
+model QuestTemplate {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  title        String
+  description  String
+  criteriaType String   @map("criteria_type")
+  target       Int      @default(1)
+  rewardXp     Int      @map("reward_xp")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  userQuests UserQuest[]
+
+  @@map("quest_templates")
+}
+
+/// A quest assigned to a user for one local day. Criteria/target/reward are
+/// snapshotted at assignment so template edits never change a quest mid-day.
+model UserQuest {
+  id           String    @id @default(cuid())
+  userId       String    @map("user_id")
+  templateId   String    @map("template_id")
+  assignedDate DateTime  @map("assigned_date") @db.Date
+  criteriaType String    @map("criteria_type")
+  title        String
+  description  String
+  progress     Int       @default(0)
+  target       Int
+  rewardXp     Int       @map("reward_xp")
+  completedAt  DateTime? @map("completed_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template QuestTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, templateId, assignedDate])
+  @@index([userId, assignedDate(sort: Desc)])
+  @@map("user_quests")
+}
+
+/// One row per browser/device push subscription (Web Push API).
+model PushSubscription {
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  userAgent  String?   @map("user_agent")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  lastUsedAt DateTime? @map("last_used_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+/// Asymmetric follow graph; a mutual follow means "friends" (bite visibility).
+model Follow {
+  followerId String   @map("follower_id")
+  followeeId String   @map("followee_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  follower User @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  followee User @relation("Followers", fields: [followeeId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followeeId])
+  @@index([followeeId])
+  @@map("follows")
 }
 

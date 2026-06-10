@@ -7,8 +7,17 @@ import {
   sendNotificationMentionEmail,
   sendNotificationBadgeEmail,
 } from './email'
+import { enqueuePush, type PushCategory } from './push-service'
 
 type NotificationType = 'REVIEW_LIKE' | 'REVIEW_COMMENT' | 'REVIEW_MENTION' | 'COMMENT_MENTION' | 'BADGE_EARNED'
+
+const PUSH_CATEGORY_BY_TYPE: Record<NotificationType, PushCategory> = {
+  REVIEW_LIKE: 'LIKE',
+  REVIEW_COMMENT: 'COMMENT',
+  REVIEW_MENTION: 'MENTION',
+  COMMENT_MENTION: 'MENTION',
+  BADGE_EARNED: 'BADGE',
+}
 
 interface CreateNotificationParams {
   userId: string
@@ -52,6 +61,15 @@ export async function createNotification(params: CreateNotificationParams): Prom
     void sendEmailForNotification(params).catch((err) =>
       logger.error({ err, userId: params.userId, type: params.type }, 'Failed to send notification email'),
     )
+
+    // Fire-and-forget web push — the worker checks preferences/subscriptions.
+    void enqueuePush({
+      userId: params.userId,
+      category: PUSH_CATEGORY_BY_TYPE[params.type],
+      title: params.title,
+      message: params.message,
+      url: params.link ?? '/',
+    })
 
     return notification
   } catch (err) {

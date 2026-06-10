@@ -19,7 +19,7 @@ interface Review {
   reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
 }
 
-export function FeedClient() {
+export function FeedClient({ scope = 'discover' }: { scope?: 'discover' | 'following' }) {
   const { accessToken, loading: authLoading } = useAuth()
   const [reviews, setReviews] = useState<Review[]>([])
   const [cursor, setCursor] = useState<string | null>(null)
@@ -47,7 +47,7 @@ export function FeedClient() {
     setError(null)
 
     try {
-      const url = `/api/v1/feed?limit=15${cursor ? `&cursor=${cursor}` : ''}`
+      const url = `/api/v1/feed?limit=15&scope=${scope}${cursor ? `&cursor=${cursor}` : ''}`
       const res = await fetch(url, {
         headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
       })
@@ -71,7 +71,7 @@ export function FeedClient() {
       setLoading(false)
       setInitial(false)
     }
-  }, [authLoading, hasMore, cursor, accessToken])
+  }, [authLoading, hasMore, cursor, accessToken, scope])
 
   const refresh = useCallback(async () => {
     requestedCursorsRef.current.clear()
@@ -81,7 +81,7 @@ export function FeedClient() {
     setError(null)
 
     try {
-      const url = '/api/v1/feed?limit=15'
+      const url = `/api/v1/feed?limit=15&scope=${scope}`
       const res = await fetch(url, {
         headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
       })
@@ -94,7 +94,7 @@ export function FeedClient() {
     } catch {
       setError('Could not refresh feed. Check your connection and try again.')
     }
-  }, [accessToken])
+  }, [accessToken, scope])
 
   // Initial load: wait for auth to finish restoring so likedByMe is accurate.
   // If we load before the token is ready, the feed returns likedByMe: false for
@@ -124,10 +124,18 @@ export function FeedClient() {
         </div>
       )}
 
-      {!initial && reviews.length === 0 && (
+      {!initial && reviews.length === 0 && scope === 'discover' && (
         <div className="text-center py-20">
           <p className="text-snack-muted">No posts available yet.</p>
           <Link href="/add-review" className="btn-primary mt-4 inline-block">Create first post</Link>
+        </div>
+      )}
+
+      {!initial && reviews.length === 0 && scope === 'following' && (
+        <div className="text-center py-20">
+          <p className="font-medium text-snack-text">Your feed is still quiet.</p>
+          <p className="mt-1 text-sm text-snack-muted">Follow spotters to see their posts here.</p>
+          <Link href="/search" className="btn-primary mt-4 inline-block">Find people &amp; places</Link>
         </div>
       )}
 

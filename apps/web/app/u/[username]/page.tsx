@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { getSiteUrl } from '@/lib/site-url'
 import { safeJsonLd } from '@/lib/html'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
+import { FollowButton } from '@/components/follow-button'
 import { UserReviewsList } from '@/components/user-reviews-list'
 import { VerifiedBadge } from '@/components/verified-badge'
 import { Breadcrumb } from '@/components/breadcrumb'
@@ -61,20 +62,25 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
       <div className="md:hidden mb-4">
         <Link href="/" className="btn-secondary text-sm">← Back</Link>
       </div>
-      <div className="card p-6 mb-6 flex items-center gap-4">
-        <AvatarLightbox
-          avatarKey={user.avatarKey}
-          username={user.username}
-          size="lg"
-        />
-        <div className="min-w-0">
-          <h1 className="font-heading font-bold text-xl text-snack-text flex items-center gap-1.5">
-            {user.username}
-            {user.isVerified && <VerifiedBadge className="w-5 h-5" />}
-          </h1>
-          <p className="text-sm text-snack-muted">@{user.username}</p>
-          <p className="text-xs text-snack-muted mt-1">{user.bio?.trim() || 'SnackSpot member'}</p>
-          <p className="text-xs text-snack-muted mt-1">Joined {formatDate(user.createdAt)}</p>
+      <div className="card p-6 mb-6">
+        <div className="flex items-center gap-4">
+          <AvatarLightbox
+            avatarKey={user.avatarKey}
+            username={user.username}
+            size="lg"
+          />
+          <div className="min-w-0">
+            <h1 className="font-heading font-bold text-xl text-snack-text flex items-center gap-1.5">
+              {user.username}
+              {user.isVerified && <VerifiedBadge className="w-5 h-5" />}
+            </h1>
+            <p className="text-sm text-snack-muted">@{user.username}</p>
+            <p className="text-xs text-snack-muted mt-1">{user.bio?.trim() || 'SnackSpot member'}</p>
+            <p className="text-xs text-snack-muted mt-1">Joined {formatDate(user.createdAt)}</p>
+          </div>
+        </div>
+        <div className="mt-4 border-t border-snack-border pt-4">
+          <FollowButton username={user.username} />
         </div>
       </div>
 

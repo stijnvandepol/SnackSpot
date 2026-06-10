@@ -10,6 +10,7 @@ import { reviewListSelect, serializeReview } from '@/lib/review-helpers'
 const FeedQuerySchema = z.object({
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(50).default(20),
+  scope: z.enum(['discover', 'following']).default('discover'),
 })
 
 function parseCursor(cursorRaw?: string): { createdAt: Date; id: string | null } | null {
@@ -32,6 +33,10 @@ export async function GET(req: NextRequest) {
   if (isResponse(query)) return query
 
   try {
+    if (query.scope === 'following' && !auth) {
+      return err('Authentication required for the following feed', 401)
+    }
+
     if (!auth) {
       const ip = getClientIP(req)
       const rl = await rateLimitIP(ip, 'feed_public', 120, 60)
@@ -49,9 +54,24 @@ export async function GET(req: NextRequest) {
 
     const cursor = parseCursor(query.cursor)
 
+    // Following scope: only reviews from people the user follows (pull model;
+    // fan-out is unnecessary at this scale).
+    let followedUserIds: string[] | null = null
+    if (query.scope === 'following' && auth) {
+      const follows = await prisma.follow.findMany({
+        where: { followerId: auth.sub },
+        select: { followeeId: true },
+      })
+      followedUserIds = follows.map((f) => f.followeeId)
+      if (followedUserIds.length === 0) {
+        return withNoStore(ok({ data: [], pagination: { nextCursor: null, hasMore: false } }))
+      }
+    }
+
     const reviews = await prisma.review.findMany({
       where: {
         status: ReviewStatus.PUBLISHED,
+        ...(followedUserIds ? { userId: { in: followedUserIds } } : {}),
         ...(cursor
           ? cursor.id
             ? {
