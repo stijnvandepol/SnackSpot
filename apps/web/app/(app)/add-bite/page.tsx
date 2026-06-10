@@ -258,10 +258,23 @@ export default function AddBitePage() {
   // ── Form ───────────────────────────────────────────────────────────────────
   return (
     <div className="mx-auto max-w-md px-4 py-6 space-y-5">
+      {/* Review-first nudge: the strongest steer sits above everything else. */}
+      <Link
+        href="/add-review"
+        className="block rounded-xl border border-snack-primary/30 bg-snack-primary/10 px-4 py-3 text-sm"
+      >
+        <span className="font-semibold text-snack-text">Eating something worth recommending?</span>{' '}
+        <span className="text-snack-primary font-semibold">Share a Snack instead → +75 XP</span>
+        <span className="mt-0.5 block text-xs text-snack-muted">
+          A public review that puts the spot on the map for everyone.
+        </span>
+      </Link>
+
       <div>
-        <h1 className="text-2xl font-heading font-bold text-snack-text">Log a bite</h1>
+        <h1 className="text-2xl font-heading font-bold text-snack-text">Quick Bite</h1>
         <p className="mt-1 text-sm text-snack-muted">
-          One photo of what you&apos;re eating — that&apos;s it. Visible to your mutual follows only.
+          Your private food log for the in-between moments: one photo, done. Only mutual
+          follows see it — it never appears in the public feed. Keeps your streak alive. +10 XP
         </p>
       </div>
 

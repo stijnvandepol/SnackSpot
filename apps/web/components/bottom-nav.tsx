@@ -10,6 +10,8 @@ type IconName = 'home' | 'search' | 'plus' | 'map' | 'user'
 const links = [
   { href: SHARED_NAV_LINKS[0].href, icon: 'home'   as IconName, label: SHARED_NAV_LINKS[0].label },
   { href: SHARED_NAV_LINKS[1].href, icon: 'search' as IconName, label: SHARED_NAV_LINKS[1].label },
+  // The center button stays the quick log entry; the flow itself steers
+  // toward writing a full review (reviews are the content engine).
   { href: '/add-bite',              icon: 'plus'   as IconName, label: 'Log', accent: true },
   { href: SHARED_NAV_LINKS[2].href, icon: 'map'    as IconName, label: SHARED_NAV_LINKS[2].label },
   { href: '/profile',               icon: 'user'   as IconName, label: 'Profile' },
