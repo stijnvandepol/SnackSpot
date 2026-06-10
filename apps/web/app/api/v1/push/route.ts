@@ -5,8 +5,16 @@ import { env } from '@/lib/env'
 import { ok, err, parseBody, requireAuth, serverError, isResponse, withNoStore } from '@/lib/api-helpers'
 import { rateLimitUser } from '@/lib/rate-limit'
 
+// Push services are always https; rejecting anything else prevents the worker
+// from ever POSTing to attacker-chosen plain-http/internal endpoints (SSRF).
+const HttpsUrl = z
+  .string()
+  .url()
+  .max(1024)
+  .refine((u) => u.startsWith('https://'), { message: 'Endpoint must be https' })
+
 const SubscribeSchema = z.object({
-  endpoint: z.string().url().max(1024),
+  endpoint: HttpsUrl,
   keys: z.object({
     p256dh: z.string().min(1).max(512),
     auth: z.string().min(1).max(512),
@@ -14,7 +22,7 @@ const SubscribeSchema = z.object({
 })
 
 const UnsubscribeSchema = z.object({
-  endpoint: z.string().url().max(1024),
+  endpoint: HttpsUrl,
 })
 
 // GET /api/v1/push — VAPID public key + whether this user has subscriptions.

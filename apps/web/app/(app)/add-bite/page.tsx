@@ -236,14 +236,13 @@ export default function AddBitePage() {
           {success.leveledUp ? ` · Level up! You're now level ${success.level} (${success.title})` : ''}
         </p>
         <div className="space-y-2">
-          {success.placeId && (
-            <Link
-              href={`/add-review?placeId=${encodeURIComponent(success.placeId)}`}
-              className="btn-primary block w-full"
-            >
-              Rate this place →
-            </Link>
-          )}
+          {/* The conversion moment: nudge the private bite toward a public review. */}
+          <Link
+            href={success.placeId ? `/add-review?placeId=${encodeURIComponent(success.placeId)}` : '/add-review'}
+            className="btn-primary block w-full"
+          >
+            Turn it into a Snack review → +75 XP
+          </Link>
           <button type="button" className="btn-secondary block w-full" onClick={resetForm}>
             Log another bite
           </button>
@@ -258,12 +257,36 @@ export default function AddBitePage() {
   // ── Form ───────────────────────────────────────────────────────────────────
   return (
     <div className="mx-auto max-w-md px-4 py-6 space-y-5">
+      {/* Review-first nudge: the strongest steer sits above everything else. */}
+      <Link
+        href="/add-review"
+        className="block rounded-xl border border-snack-primary/30 bg-snack-primary/10 px-4 py-3 text-sm"
+      >
+        <span className="font-semibold text-snack-text">Eating something worth recommending?</span>{' '}
+        <span className="text-snack-primary font-semibold">Share a Snack instead → +75 XP</span>
+        <span className="mt-0.5 block text-xs text-snack-muted">
+          A public review that puts the spot on the map for everyone.
+        </span>
+      </Link>
+
       <div>
-        <h1 className="text-2xl font-heading font-bold text-snack-text">Log a bite</h1>
+        <h1 className="text-2xl font-heading font-bold text-snack-text">Quick Bite</h1>
         <p className="mt-1 text-sm text-snack-muted">
-          One photo of what you&apos;re eating — that&apos;s it. Visible to your mutual follows only.
+          Your private food log for the in-between moments: one photo, done. Only mutual
+          follows see it — it never appears in the public feed. Keeps your streak alive. +10 XP
         </p>
       </div>
+
+      <Link
+        href="/add-review"
+        className="block rounded-xl border border-snack-primary/30 bg-snack-primary/10 px-4 py-3 text-sm"
+      >
+        <span className="font-semibold text-snack-text">Eating something worth recommending?</span>{' '}
+        <span className="text-snack-primary font-semibold">Share a Snack instead → +75 XP</span>
+        <span className="mt-0.5 block text-xs text-snack-muted">
+          A public review that puts the spot on the map for everyone.
+        </span>
+      </Link>
 
       <input
         id="bite-photo-input"
@@ -278,8 +301,10 @@ export default function AddBitePage() {
         }}
       />
 
-      {previewUrl ? (
+      {previewUrl?.startsWith('blob:') ? (
         <div className="relative aspect-square overflow-hidden rounded-2xl bg-snack-surface">
+          {/* Scheme guard: only browser-generated blob: object URLs are ever
+              rendered as the preview source (CodeQL js/xss-through-dom). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={previewUrl} alt="Your meal" className="h-full w-full object-cover" />
           {photoStatus === 'uploading' && (
