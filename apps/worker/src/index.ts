@@ -198,7 +198,12 @@ async function listObjectKeys(prefix: string): Promise<string[]> {
     stream.on('data', (obj: Minio.BucketItem) => {
       if (obj.name) keys.push(obj.name)
     })
-    stream.on('error', reject)
+    stream.on('error', (err) => {
+      // Tear the stream down so a failed listing doesn't leave it dangling
+      // in this long-running process.
+      stream.destroy()
+      reject(err)
+    })
     stream.on('end', () => resolve(keys))
   })
 }
@@ -367,9 +372,28 @@ async function runUnusedImageCleanup(): Promise<void> {
 }
 
 async function runCleanup(): Promise<void> {
-  await runTokenCleanup()
-  await runOrphanPhotoCleanup()
-  await runUnusedImageCleanup()
+  // Run the tasks sequentially (each batches its own DB/MinIO load), but don't
+  // let one failing task skip the others. Any failure is rethrown afterwards so
+  // BullMQ still marks the job as failed and the 'failed' handler logs it.
+  const tasks: ReadonlyArray<readonly [string, () => Promise<void>]> = [
+    ['token cleanup', runTokenCleanup],
+    ['orphaned photo cleanup', runOrphanPhotoCleanup],
+    ['unused image cleanup', runUnusedImageCleanup],
+  ]
+
+  const errors: unknown[] = []
+  for (const [name, task] of tasks) {
+    try {
+      await task()
+    } catch (err) {
+      log.error({ err, task: name }, 'Cleanup task failed')
+      errors.push(err)
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new AggregateError(errors, 'One or more cleanup tasks failed')
+  }
 }
 
 const cleanupQueue = new Queue(CLEANUP_QUEUE, {

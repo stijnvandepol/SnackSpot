@@ -109,11 +109,13 @@ export async function POST(
       },
     })
 
-    // Notify review owner about the comment
-    await notifyReviewComment(id, comment.id, auth.sub)
-    await recalculateUserBadges(review.userId, { criteriaTypes: ['COMMENTS_RECEIVED_COUNT'] })
-
-    await processCommentMentions(text, id, comment.id, auth.sub, review.userId, notifyCommentMention)
+    // Owner notification, badge recalculation and mention processing are
+    // independent of each other — run them in parallel.
+    await Promise.all([
+      notifyReviewComment(id, comment.id, auth.sub),
+      recalculateUserBadges(review.userId, { criteriaTypes: ['COMMENTS_RECEIVED_COUNT'] }),
+      processCommentMentions(text, id, comment.id, auth.sub, review.userId, notifyCommentMention),
+    ])
 
     return created({
       ...comment,

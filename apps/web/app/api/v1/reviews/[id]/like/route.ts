@@ -61,12 +61,13 @@ export async function POST(
       skipDuplicates: true,
     })
 
-    // Notify review owner about the like
-    await notifyReviewLike(id, auth.sub)
-
-    await recalculateUserBadges(review.userId, { criteriaTypes: ['LIKES_RECEIVED_COUNT'] })
-
-    const state = await getLikeState(id, auth.sub)
+    // Owner notification, badge recalculation and the response state are
+    // independent of each other — run them in parallel.
+    const [state] = await Promise.all([
+      getLikeState(id, auth.sub),
+      notifyReviewLike(id, auth.sub),
+      recalculateUserBadges(review.userId, { criteriaTypes: ['LIKES_RECEIVED_COUNT'] }),
+    ])
     return ok(state)
   } catch (e) {
     return serverError('reviews/[id]/like POST', e)
@@ -93,9 +94,10 @@ export async function DELETE(
       where: { userId: auth.sub, reviewId: id },
     })
 
-    await recalculateUserBadges(review.userId, { criteriaTypes: ['LIKES_RECEIVED_COUNT'] })
-
-    const state = await getLikeState(id, auth.sub)
+    const [state] = await Promise.all([
+      getLikeState(id, auth.sub),
+      recalculateUserBadges(review.userId, { criteriaTypes: ['LIKES_RECEIVED_COUNT'] }),
+    ])
     return ok(state)
   } catch (e) {
     return serverError('reviews/[id]/like DELETE', e)

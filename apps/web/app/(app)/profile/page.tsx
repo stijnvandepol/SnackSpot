@@ -117,6 +117,10 @@ function ProfileContent() {
           setEditBio(profileJson.data.bio ?? '')
         }
       })
+      .catch(() => {
+        // Network failure: surface it instead of silently showing an empty page.
+        setProfileError('Failed to load profile data')
+      })
       .finally(() => setLoading(false))
   }, [user, accessToken])
 

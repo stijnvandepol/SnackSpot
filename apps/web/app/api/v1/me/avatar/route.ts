@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db'
 import { env } from '@/lib/env'
 import { BUCKET, minioClient } from '@/lib/minio'
 import { ok, err, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
-import { AVATAR_VARIANT_SIZE, avatarVariantKey } from '@/lib/avatar'
+import { AVATAR_MAX_INPUT_PIXELS, AVATAR_VARIANT_SIZE, avatarVariantKey } from '@/lib/avatar'
 import { rateLimitUser } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
@@ -53,18 +53,20 @@ export async function POST(req: NextRequest) {
     const storageKey = `avatars/${auth.sub}/${Date.now()}_${randomUUID()}.${ext}`
     const variantKey = avatarVariantKey(storageKey)
 
-    await minioClient.putObject(BUCKET, storageKey, buffer, buffer.length, {
-      'Content-Type': contentType,
-    })
-
-    const variantBuffer = await sharp(buffer)
+    const variantBuffer = await sharp(buffer, { limitInputPixels: AVATAR_MAX_INPUT_PIXELS })
       .resize(AVATAR_VARIANT_SIZE, AVATAR_VARIANT_SIZE, { fit: 'cover', position: 'centre' })
       .webp({ quality: 80 })
       .toBuffer()
 
-    await minioClient.putObject(BUCKET, variantKey, variantBuffer, variantBuffer.length, {
-      'Content-Type': 'image/webp',
-    })
+    // The original and the variant are independent objects — upload them in parallel.
+    await Promise.all([
+      minioClient.putObject(BUCKET, storageKey, buffer, buffer.length, {
+        'Content-Type': contentType,
+      }),
+      minioClient.putObject(BUCKET, variantKey, variantBuffer, variantBuffer.length, {
+        'Content-Type': 'image/webp',
+      }),
+    ])
 
     const previous = await prisma.user.findUnique({
       where: { id: auth.sub },
@@ -77,8 +79,11 @@ export async function POST(req: NextRequest) {
     })
 
     if (previous?.avatarKey && previous.avatarKey !== storageKey) {
-      await minioClient.removeObject(BUCKET, previous.avatarKey).catch(() => undefined)
-      await minioClient.removeObject(BUCKET, avatarVariantKey(previous.avatarKey)).catch(() => undefined)
+      // Best-effort cleanup of the old objects; they may not exist.
+      await Promise.all([
+        minioClient.removeObject(BUCKET, previous.avatarKey).catch(() => undefined),
+        minioClient.removeObject(BUCKET, avatarVariantKey(previous.avatarKey)).catch(() => undefined),
+      ])
     }
 
     return ok({
