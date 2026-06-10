@@ -1,3 +1,5 @@
+import { cache } from 'react'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
@@ -71,17 +73,9 @@ function buildReviewBreadcrumb(
   return crumbs
 }
 
-export default async function ReviewPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>
-  searchParams: Promise<{ from?: string }>
-}) {
-  const { id } = await params
-  const { from } = await searchParams
-
-  const review = await prisma.review.findUnique({
+// Cached so the page body and generateMetadata share a single query per request.
+const getReview = cache(async (id: string) =>
+  prisma.review.findUnique({
     where: { id },
     select: {
       id: true,
@@ -96,16 +90,58 @@ export default async function ReviewPage({
       status: true,
       createdAt: true,
       userId: true,
-      tags: { orderBy: { tag: 'asc' }, select: { tag: true } },
+      tags: { orderBy: { tag: 'asc' as const }, select: { tag: true } },
       _count: { select: { reviewLikes: true, comments: true } },
       user: { select: { id: true, username: true, avatarKey: true, role: true, isVerified: true } },
       place: { select: { id: true, name: true, address: true } },
       reviewPhotos: {
-        orderBy: { sortOrder: 'asc' },
+        orderBy: { sortOrder: 'asc' as const },
         select: { sortOrder: true, photo: { select: { id: true, variants: true } } },
       },
     },
-  })
+  }),
+)
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const review = await getReview(id)
+
+  if (!review || review.status !== ReviewStatus.PUBLISHED) {
+    return { title: 'Review' }
+  }
+
+  const rating = Number(review.ratingOverall).toFixed(1)
+  const city = extractCity(review.place.address)
+  const title = review.dishName
+    ? `${review.dishName} at ${review.place.name}${city ? `, ${city}` : ''} — ${rating}★`
+    : `${review.place.name}${city ? `, ${city}` : ''} — ${rating}★ review`
+  const description =
+    review.text.length > 155 ? `${review.text.slice(0, 152).trimEnd()}…` : review.text
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/review/${review.id}` },
+    openGraph: { type: 'article', title, description },
+    twitter: { card: 'summary_large_image', title, description },
+  }
+}
+
+export default async function ReviewPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ from?: string }>
+}) {
+  const { id } = await params
+  const { from } = await searchParams
+
+  const review = await getReview(id)
 
   if (!review || review.status === ReviewStatus.DELETED || review.status === ReviewStatus.HIDDEN) {
     notFound()
@@ -163,6 +199,9 @@ export default async function ReviewPage({
     datePublished: review.createdAt.toISOString(),
     url: `${appUrl}/review/${review.id}`,
     ...(review.dishName ? { name: review.dishName } : {}),
+    ...(galleryImages.length > 0
+      ? { image: galleryImages.map((img) => `${appUrl}${img.src}`) }
+      : {}),
   }
 
   return (
