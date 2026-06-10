@@ -8,6 +8,7 @@ import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { VerifiedBadge } from '@/components/verified-badge'
 import { NotificationSettings } from '@/components/notification-settings'
 import { ThemeSettings } from '@/components/theme-settings'
+import { LeaderboardPanel } from '@/components/leaderboard-panel'
 import dynamic from 'next/dynamic'
 
 const NotificationsList = dynamic(() => import('@/components/notifications-list'), {
@@ -52,6 +53,15 @@ interface StatsData {
   weeklyActivity: Array<{ weekStart: string; posts: number }>
   topLocations: Array<{ id: string; name: string; posts: number }>
   streak: { current: number; best: number }
+  bitesCount: number
+  xp: {
+    total: number
+    level: number
+    title: string
+    currentLevelXp: number
+    nextLevelXp: number
+    progressPct: number
+  }
 }
 
 interface MeProfile {
@@ -265,6 +275,27 @@ function ProfileContent() {
   const statsPanel = stats ? (
     <div className="card p-4 mb-6">
       <h2 className="font-heading font-semibold text-snack-text mb-4">Stats</h2>
+
+      {/* Level & XP */}
+      <div className="mb-3 rounded-xl bg-snack-surface px-4 py-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-snack-text">
+            Level {stats.xp.level}
+            <span className="ml-1.5 text-xs font-medium text-snack-primary">{stats.xp.title}</span>
+          </p>
+          <p className="text-xs text-snack-muted">
+            {stats.xp.total} / {stats.xp.nextLevelXp} XP
+          </p>
+        </div>
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-snack-border/50">
+          <div
+            className="h-full rounded-full bg-snack-primary transition-all"
+            style={{ width: `${Math.max(2, stats.xp.progressPct)}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Streak */}
       <div
         className={`mb-3 flex items-center gap-3 rounded-xl px-4 py-3 ${
           stats.streak.current > 0
@@ -282,17 +313,20 @@ function ProfileContent() {
           </p>
           <p className="mt-1 text-xs text-snack-muted">
             {stats.streak.current > 0
-              ? 'Post today to keep it going.'
-              : 'Post a review today to start a streak.'}
+              ? 'Log a bite or review today to keep it going.'
+              : 'Log a bite or review today to start a streak.'}
           </p>
         </div>
       </div>
+
       <div className="grid grid-cols-2 gap-3">
         {[
           { value: stats.totalPosts, label: 'Reviews written' },
+          { value: stats.bitesCount, label: 'Bites logged' },
           { value: stats.totalLikesReceived, label: 'Likes received' },
           { value: stats.uniqueLocationsVisited, label: 'Locations visited' },
           { value: stats.streak.best, label: 'Best streak (days)' },
+          { value: stats.xp.total, label: 'Total XP' },
         ].map(({ value, label }) => (
           <div key={label} className="rounded-xl bg-snack-surface p-3">
             <p className="text-2xl font-bold text-snack-text">{value}</p>
@@ -452,6 +486,7 @@ function ProfileContent() {
           {tab === 'stats' && (
             <div className="space-y-4">
               {statsPanel}
+              <LeaderboardPanel />
               {achievementsPanel}
             </div>
           )}
@@ -636,6 +671,7 @@ function ProfileContent() {
       {tab === 'stats' && (
         <>
           {statsPanel}
+          <LeaderboardPanel />
           {achievementsPanel}
         </>
       )}

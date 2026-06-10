@@ -10,7 +10,7 @@ type IconName = 'home' | 'search' | 'plus' | 'map' | 'user'
 const links = [
   { href: SHARED_NAV_LINKS[0].href, icon: 'home'   as IconName, label: SHARED_NAV_LINKS[0].label },
   { href: SHARED_NAV_LINKS[1].href, icon: 'search' as IconName, label: SHARED_NAV_LINKS[1].label },
-  { href: '/add-review',            icon: 'plus'   as IconName, label: 'Post', accent: true },
+  { href: '/add-bite',              icon: 'plus'   as IconName, label: 'Log', accent: true },
   { href: SHARED_NAV_LINKS[2].href, icon: 'map'    as IconName, label: SHARED_NAV_LINKS[2].label },
   { href: '/profile',               icon: 'user'   as IconName, label: 'Profile' },
 ]
@@ -44,7 +44,7 @@ export function BottomNav() {
               <Link
                 href={l.href}
                 aria-current={active ? 'page' : undefined}
-                aria-label={l.accent ? 'Create new post' : l.label}
+                aria-label={l.accent ? 'Log a bite' : l.label}
                 className={`flex flex-col items-center gap-0.5 py-1 text-xs font-medium transition min-h-[44px] justify-center ${
                   l.accent
                     ? 'text-white'

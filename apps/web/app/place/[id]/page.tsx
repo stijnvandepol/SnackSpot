@@ -107,6 +107,28 @@ export default async function PlacePage({
 
   if (!place) notFound()
 
+  // "Order This": the dishes people actually order here, aggregated from
+  // dish-named reviews — the answer Google doesn't have.
+  const topDishes = await prisma.$queryRaw<
+    Array<{ dish: string; review_count: number; avg_rating: number; pct: number }>
+  >`
+    WITH dish_reviews AS (
+      SELECT TRIM(dish_name) AS dish_raw, LOWER(TRIM(dish_name)) AS dish_key, rating_overall
+      FROM reviews
+      WHERE place_id = ${id} AND status = 'PUBLISHED'
+        AND dish_name IS NOT NULL AND LENGTH(TRIM(dish_name)) > 0
+    )
+    SELECT
+      MIN(dish_raw) AS dish,
+      COUNT(*)::int AS review_count,
+      ROUND(AVG(rating_overall)::numeric, 1)::float AS avg_rating,
+      ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER ())::int AS pct
+    FROM dish_reviews
+    GROUP BY dish_key
+    ORDER BY review_count DESC, avg_rating DESC
+    LIMIT 3
+  `
+
   // Server-render the first page of reviews so the content is crawlable and
   // instantly visible; the client section takes over for sorting and like-state.
   const initialReviewRows = await prisma.review.findMany({
@@ -203,6 +225,32 @@ export default async function PlacePage({
               Open in Maps
             </a>
           </div>
+          {topDishes.length > 0 && (
+            <div className="card p-5">
+              <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">
+                Order this
+              </p>
+              <ul className="mt-3 space-y-2.5">
+                {topDishes.map((d, i) => (
+                  <li key={d.dish} className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-snack-text">
+                        {i === 0 && <span aria-hidden="true">🏆 </span>}
+                        {d.dish}
+                      </p>
+                      <p className="text-xs text-snack-muted">
+                        {d.pct}% of dish reviews here
+                        {d.review_count > 1 ? ` · ${d.review_count} reviews` : ''}
+                      </p>
+                    </div>
+                    <span className="flex-shrink-0 rounded-full bg-snack-surface px-2.5 py-1 text-sm font-semibold text-snack-text">
+                      ★ {d.avg_rating.toFixed(1)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="hidden md:block">
             <PlaceMapEmbed
               lat={place.lat}
