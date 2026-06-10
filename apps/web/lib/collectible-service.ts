@@ -3,11 +3,11 @@ import { logger } from './logger'
 
 // ─── Criteria evaluation ─────────────────────────────────────────────────────
 // Criteria live in JSONB on the collectible so new sets ship as content:
-//   { type: 'DISH_MATCH',    patterns: string[] }  — reviewed dish name contains a pattern
-//   { type: 'UNIQUE_PLACES', value: number }       — distinct places reviewed
-//   { type: 'UNIQUE_CITIES', value: number }       — distinct cities reviewed
-//   { type: 'CUISINE_MATCH', cuisine: string }     — reviewed a place with this cuisine
-//     (inactive until places.cuisine is populated)
+//   { type: 'DISH_MATCH',      patterns: string[] } — reviewed dish name contains a pattern
+//   { type: 'UNIQUE_PLACES',   value: number }      — distinct places reviewed
+//   { type: 'UNIQUE_CITIES',   value: number }      — distinct cities reviewed
+//   { type: 'CUISINE_MATCH',   cuisine: string }    — reviewed a place with this cuisine
+//   { type: 'UNIQUE_CUISINES', value: number }      — distinct cuisines reviewed
 
 interface CollectibleFacts {
   dishNames: string[]
@@ -32,6 +32,8 @@ function criteriaMet(criteria: unknown, facts: CollectibleFacts): boolean {
       return typeof c.value === 'number' && facts.uniqueCities >= c.value
     case 'CUISINE_MATCH':
       return typeof c.cuisine === 'string' && facts.cuisines.has(c.cuisine)
+    case 'UNIQUE_CUISINES':
+      return typeof c.value === 'number' && facts.cuisines.size >= c.value
     default:
       return false
   }
@@ -110,6 +112,8 @@ export async function recalculateCollectibles(userId: string): Promise<EarnedCol
 /** Display titles per set, in passport order. */
 export const COLLECTIBLE_SETS: ReadonlyArray<{ key: string; title: string }> = [
   { key: 'dutch-classics', title: 'De Hollandse Vijf' },
+  { key: 'world-tour', title: 'World tour' },
+  { key: 'taste-tourist', title: 'Taste tourist' },
   { key: 'spot-milestones', title: 'Spot milestones' },
   { key: 'city-explorer', title: 'City explorer' },
 ]

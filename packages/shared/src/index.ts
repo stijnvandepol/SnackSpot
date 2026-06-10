@@ -111,6 +111,46 @@ export const CreateCommentSchema = z.object({
   text: z.string().min(1).max(1000),
 })
 
+// ─── Cuisine taxonomy ────────────────────────────────────────────────────────
+// Fixed, curated list (NL-oriented) shared by the admin UI, the web place
+// pages and the Food Passport cuisine stamps. Extend by appending — keys are
+// stored on places.cuisine and referenced by collectible criteria.
+
+export const CUISINES = [
+  { key: 'dutch', label: 'Dutch', icon: '🇳🇱' },
+  { key: 'snackbar', label: 'Snackbar', icon: '🍟' },
+  { key: 'surinamese', label: 'Surinamese', icon: '🇸🇷' },
+  { key: 'indonesian', label: 'Indonesian', icon: '🇮🇩' },
+  { key: 'turkish', label: 'Turkish', icon: '🇹🇷' },
+  { key: 'moroccan', label: 'Moroccan', icon: '🇲🇦' },
+  { key: 'italian', label: 'Italian', icon: '🇮🇹' },
+  { key: 'chinese', label: 'Chinese', icon: '🇨🇳' },
+  { key: 'japanese', label: 'Japanese', icon: '🇯🇵' },
+  { key: 'korean', label: 'Korean', icon: '🇰🇷' },
+  { key: 'thai', label: 'Thai', icon: '🇹🇭' },
+  { key: 'vietnamese', label: 'Vietnamese', icon: '🇻🇳' },
+  { key: 'indian', label: 'Indian', icon: '🇮🇳' },
+  { key: 'mexican', label: 'Mexican', icon: '🇲🇽' },
+  { key: 'american', label: 'American', icon: '🇺🇸' },
+  { key: 'french', label: 'French', icon: '🇫🇷' },
+  { key: 'spanish', label: 'Spanish', icon: '🇪🇸' },
+  { key: 'greek', label: 'Greek', icon: '🇬🇷' },
+  { key: 'middle-eastern', label: 'Middle Eastern', icon: '🥙' },
+  { key: 'african', label: 'African', icon: '🌍' },
+  { key: 'caribbean', label: 'Caribbean', icon: '🌴' },
+  { key: 'other', label: 'Other', icon: '🍽️' },
+] as const
+
+export type CuisineKey = (typeof CUISINES)[number]['key']
+
+export const CUISINE_KEYS = CUISINES.map((c) => c.key) as readonly string[]
+
+export function cuisineLabel(key: string | null | undefined): string | null {
+  if (!key) return null
+  const cuisine = CUISINES.find((c) => c.key === key)
+  return cuisine ? `${cuisine.icon} ${cuisine.label}` : null
+}
+
 // ─── Bites ───────────────────────────────────────────────────────────────────
 // The daily logging unit: a photo of any meal, place optional. Private by
 // design choice "FRIENDS": bites are visible to mutual follows, never public.

@@ -1,6 +1,7 @@
 'use client'
 import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { CUISINES } from '@snackspot/shared'
 
 interface PlaceReview {
   id: string
@@ -14,6 +15,8 @@ interface AdminPlace {
   id: string
   name: string
   address: string
+  city: string | null
+  cuisine: string | null
   createdAt: string
   updatedAt: string
   _count: { reviews: number; favorites: number }
@@ -27,6 +30,8 @@ export default function EditPlacePage({ params }: { params: Promise<{ id: string
   const [loading, setLoading] = useState(true)
   const [name, setName] = useState('')
   const [address, setAddress] = useState('')
+  const [city, setCity] = useState('')
+  const [cuisine, setCuisine] = useState('')
 
   useEffect(() => {
     fetch(`/api/places/${id}`)
@@ -35,6 +40,8 @@ export default function EditPlacePage({ params }: { params: Promise<{ id: string
         setPlace(data.place)
         setName(data.place.name)
         setAddress(data.place.address)
+        setCity(data.place.city ?? '')
+        setCuisine(data.place.cuisine ?? '')
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -47,7 +54,12 @@ export default function EditPlacePage({ params }: { params: Promise<{ id: string
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, address }),
+        body: JSON.stringify({
+          name,
+          address,
+          city: city.trim() || null,
+          cuisine: cuisine || null,
+        }),
       })
 
       if (res.ok) {
@@ -94,6 +106,36 @@ export default function EditPlacePage({ params }: { params: Promise<{ id: string
               value={address}
               onChange={(e) => setAddress(e.target.value)}
             />
+          </div>
+
+          <div>
+            <label className="label">Stad</label>
+            <input
+              type="text"
+              className="input"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="bijv. Amsterdam"
+            />
+          </div>
+
+          <div>
+            <label className="label">Keuken</label>
+            <select
+              className="input"
+              value={cuisine}
+              onChange={(e) => setCuisine(e.target.value)}
+            >
+              <option value="">— Geen keuken ingesteld —</option>
+              {CUISINES.map((c) => (
+                <option key={c.key} value={c.key}>
+                  {c.icon} {c.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              Bepaalt de keuken-stempels in het Food Passport van reviewers.
+            </p>
           </div>
 
           <div className="border-t pt-4">

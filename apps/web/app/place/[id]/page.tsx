@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ReviewStatus } from '@prisma/client'
+import { cuisineLabel } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
 import { getSiteUrl } from '@/lib/site-url'
 import { safeJsonLd } from '@/lib/html'
@@ -16,6 +17,7 @@ interface PlaceRow {
   id: string
   name: string
   address: string
+  cuisine: string | null
   lat: number
   lng: number
   avg_rating: number | null
@@ -29,6 +31,7 @@ const getPlace = cache(async (id: string): Promise<PlaceRow | null> => {
       p.id,
       p.name,
       p.address,
+      p.cuisine,
       ST_Y(p.location::geometry) AS lat,
       ST_X(p.location::geometry) AS lng,
       ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
@@ -36,7 +39,7 @@ const getPlace = cache(async (id: string): Promise<PlaceRow | null> => {
     FROM places p
     LEFT JOIN reviews r ON r.place_id = p.id AND r.status = 'PUBLISHED'
     WHERE p.id = ${id}
-    GROUP BY p.id, p.name, p.address, p.location
+    GROUP BY p.id, p.name, p.address, p.cuisine, p.location
   `
   return place ?? null
 })
@@ -199,6 +202,11 @@ export default async function PlacePage({
           <div className="card p-5">
             <h1 className="text-2xl font-heading font-bold text-snack-text">{place.name}</h1>
             <p className="mt-1 text-sm text-snack-muted">{place.address}</p>
+            {cuisineLabel(place.cuisine) && (
+              <span className="mt-2 inline-block rounded-full bg-snack-surface px-2.5 py-1 text-xs font-medium text-snack-primary">
+                {cuisineLabel(place.cuisine)}
+              </span>
+            )}
 
             <div className="mt-4 flex items-center gap-4 rounded-xl bg-snack-surface px-4 py-3">
               <div>
