@@ -4,10 +4,14 @@ import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { parseQuery, serverError, isResponse } from '@/lib/api-helpers'
 
+// The dashboard sends empty strings for unset filters; treat those as absent
+// so they fall through to the default.
+const emptyToUndefined = (v: unknown) => (v === '' ? undefined : v)
+
 const ListFlaggedQuery = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(50),
-  status: z.enum(['PENDING', 'APPROVED', 'DELETED']).default('PENDING'),
+  status: z.preprocess(emptyToUndefined, z.enum(['PENDING', 'APPROVED', 'DELETED']).default('PENDING')),
 })
 
 // GET /api/comments/flagged - List flagged comments

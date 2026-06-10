@@ -5,11 +5,15 @@ import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { parseQuery, serverError, isResponse } from '@/lib/api-helpers'
 
+// The dashboard sends empty strings for unset filters (e.g. `status=`);
+// treat those as absent so they fall through to the default/no-filter case.
+const emptyToUndefined = (v: unknown) => (v === '' ? undefined : v)
+
 const ListReviewsQuery = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),
   search: z.string().default(''),
-  status: z.enum(['PUBLISHED', 'HIDDEN', 'DELETED']).optional(),
+  status: z.preprocess(emptyToUndefined, z.enum(['PUBLISHED', 'HIDDEN', 'DELETED']).optional()),
 })
 
 // GET /api/reviews - List all reviews
