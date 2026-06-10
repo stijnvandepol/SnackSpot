@@ -31,10 +31,18 @@ async function main() {
     )
     const appliedSet = new Set(applied.map((r) => r.name))
 
-    const files = fs
+    // Strict naming guard: only NNN_snake_case.sql runs. This blocks stray
+    // editor/sync artifacts (e.g. macOS "name 2.sql" duplicates) from being
+    // applied and wedging the migration sequence.
+    const MIGRATION_NAME_RE = /^\d{3}_[a-z0-9_]+\.sql$/
+    const allSqlFiles = fs
       .readdirSync(MIGRATIONS_DIR)
       .filter((f) => f.endsWith('.sql'))
       .sort()
+    const files = allSqlFiles.filter((f) => MIGRATION_NAME_RE.test(f))
+    for (const ignored of allSqlFiles.filter((f) => !MIGRATION_NAME_RE.test(f))) {
+      console.warn(`[warn]  Ignoring unexpected file in migrations dir: ${ignored}`)
+    }
 
     for (const file of files) {
       if (appliedSet.has(file)) {

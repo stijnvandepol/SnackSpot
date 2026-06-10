@@ -9,6 +9,7 @@ import { VerifiedBadge } from '@/components/verified-badge'
 import { NotificationSettings } from '@/components/notification-settings'
 import { PushSettings } from '@/components/push-settings'
 import { PassportPanel } from '@/components/passport-panel'
+import { DailyQuestsStrip } from '@/components/daily-quests-strip'
 import { ThemeSettings } from '@/components/theme-settings'
 import { LeaderboardPanel } from '@/components/leaderboard-panel'
 import dynamic from 'next/dynamic'
@@ -487,6 +488,7 @@ function ProfileContent() {
 
           {tab === 'stats' && (
             <div className="space-y-4">
+              <DailyQuestsStrip />
               {statsPanel}
               <PassportPanel />
               <LeaderboardPanel />
@@ -674,6 +676,7 @@ function ProfileContent() {
 
       {tab === 'stats' && (
         <>
+          <DailyQuestsStrip />
           {statsPanel}
           <PassportPanel />
           <LeaderboardPanel />

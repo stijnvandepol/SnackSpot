@@ -236,14 +236,13 @@ export default function AddBitePage() {
           {success.leveledUp ? ` · Level up! You're now level ${success.level} (${success.title})` : ''}
         </p>
         <div className="space-y-2">
-          {success.placeId && (
-            <Link
-              href={`/add-review?placeId=${encodeURIComponent(success.placeId)}`}
-              className="btn-primary block w-full"
-            >
-              Rate this place →
-            </Link>
-          )}
+          {/* The conversion moment: nudge the private bite toward a public review. */}
+          <Link
+            href={success.placeId ? `/add-review?placeId=${encodeURIComponent(success.placeId)}` : '/add-review'}
+            className="btn-primary block w-full"
+          >
+            Turn it into a Snack review → +75 XP
+          </Link>
           <button type="button" className="btn-secondary block w-full" onClick={resetForm}>
             Log another bite
           </button>
@@ -278,6 +277,17 @@ export default function AddBitePage() {
         </p>
       </div>
 
+      <Link
+        href="/add-review"
+        className="block rounded-xl border border-snack-primary/30 bg-snack-primary/10 px-4 py-3 text-sm"
+      >
+        <span className="font-semibold text-snack-text">Eating something worth recommending?</span>{' '}
+        <span className="text-snack-primary font-semibold">Share a Snack instead → +75 XP</span>
+        <span className="mt-0.5 block text-xs text-snack-muted">
+          A public review that puts the spot on the map for everyone.
+        </span>
+      </Link>
+
       <input
         id="bite-photo-input"
         ref={fileInputRef}
@@ -291,8 +301,10 @@ export default function AddBitePage() {
         }}
       />
 
-      {previewUrl ? (
+      {previewUrl?.startsWith('blob:') ? (
         <div className="relative aspect-square overflow-hidden rounded-2xl bg-snack-surface">
+          {/* Scheme guard: only browser-generated blob: object URLs are ever
+              rendered as the preview source (CodeQL js/xss-through-dom). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={previewUrl} alt="Your meal" className="h-full w-full object-cover" />
           {photoStatus === 'uploading' && (
