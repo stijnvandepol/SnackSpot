@@ -18,6 +18,8 @@ import { recalculateUserBadges } from '@/lib/badge-service'
 import { notifyCommentMention, notifyReviewComment } from '@/lib/notification-service'
 import { getBlockedWordsCache, filterText } from '@/lib/blocked-words'
 import { checkReviewVisibility, processCommentMentions } from '@/lib/review-helpers'
+import { awardXp } from '@/lib/xp-service'
+import { bumpQuestProgress } from '@/lib/quest-service'
 
 export async function GET(
   req: NextRequest,
@@ -109,12 +111,17 @@ export async function POST(
       },
     })
 
-    // Owner notification, badge recalculation and mention processing are
-    // independent of each other — run them in parallel.
+    // Owner notification, badge recalculation, mention processing and XP are
+    // independent of each other — run them in parallel. No XP for commenting
+    // on your own review.
     await Promise.all([
       notifyReviewComment(id, comment.id, auth.sub),
       recalculateUserBadges(review.userId, { criteriaTypes: ['COMMENTS_RECEIVED_COUNT'] }),
       processCommentMentions(text, id, comment.id, auth.sub, review.userId, notifyCommentMention),
+      ...(review.userId !== auth.sub
+        ? [awardXp({ userId: auth.sub, reason: 'COMMENT_POSTED', refType: 'comment', refId: comment.id })]
+        : []),
+      bumpQuestProgress(auth.sub, 'COMMENTS_POSTED'),
     ])
 
     return created({

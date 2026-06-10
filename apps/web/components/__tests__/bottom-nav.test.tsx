@@ -33,7 +33,7 @@ describe('BottomNav — link structure', () => {
     render(<BottomNav />)
     expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Explore' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Create new post' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Log a bite' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Nearby' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Profile' })).toBeInTheDocument()
   })
@@ -42,7 +42,7 @@ describe('BottomNav — link structure', () => {
     render(<BottomNav />)
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: 'Explore' })).toHaveAttribute('href', '/search')
-    expect(screen.getByRole('link', { name: 'Create new post' })).toHaveAttribute('href', '/add-review')
+    expect(screen.getByRole('link', { name: 'Log a bite' })).toHaveAttribute('href', '/add-bite')
     expect(screen.getByRole('link', { name: 'Nearby' })).toHaveAttribute('href', '/nearby')
     expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('href', '/profile')
   })
@@ -96,19 +96,19 @@ describe('BottomNav — active state (aria-current)', () => {
   })
 })
 
-describe('BottomNav — "Post" button accessibility', () => {
+describe('BottomNav — "Log" button accessibility', () => {
   beforeEach(() => {
     mockUsePathname.mockReturnValue('/')
     render(<BottomNav />)
   })
 
-  it('Post link has aria-label "Create new post"', () => {
-    expect(screen.getByRole('link', { name: 'Create new post' })).toBeInTheDocument()
+  it('Log link has aria-label "Log a bite"', () => {
+    expect(screen.getByRole('link', { name: 'Log a bite' })).toBeInTheDocument()
   })
 
-  it('Post link has a visually hidden label text', () => {
-    // The sr-only span inside the Post link
-    const srText = screen.getByText('Post')
+  it('Log link has a visually hidden label text', () => {
+    // The sr-only span inside the Log link
+    const srText = screen.getByText('Log')
     expect(srText).toHaveClass('sr-only')
   })
 })

@@ -11,6 +11,9 @@ import { notifyMention } from '@/lib/notification-service'
 import { logger } from '@/lib/logger'
 import { getBlockedWordsCache, filterText } from '@/lib/blocked-words'
 import { validatePhotos, processMentions } from '@/lib/review-helpers'
+import { awardXp } from '@/lib/xp-service'
+import { bumpQuestProgress } from '@/lib/quest-service'
+import { recalculateCollectibles } from '@/lib/collectible-service'
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
@@ -119,10 +122,28 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Fire-and-forget — badge failures must never roll back a successful review.
-    await recalculateUserBadges(auth.sub).catch((error) => {
-      logger.error({ err: error, userId: auth.sub, reviewId: review.id }, 'Badge recalculation failed after review create')
-    })
+    // XP: base award + photo bonus, plus the "First Bite" discovery bonus for
+    // the very first published review of a place. awardXp never throws.
+    const isFirstReviewOfPlace =
+      (await prisma.review.count({
+        where: { placeId: placeId!, status: 'PUBLISHED', id: { not: review.id } },
+      })) === 0
+    await Promise.all([
+      awardXp({ userId: auth.sub, reason: 'REVIEW_CREATED', refType: 'review', refId: review.id }),
+      awardXp({ userId: auth.sub, reason: 'REVIEW_PHOTO_BONUS', refType: 'review', refId: review.id }),
+      ...(isFirstReviewOfPlace
+        ? [awardXp({ userId: auth.sub, reason: 'FIRST_REVIEW_OF_PLACE', refType: 'place', refId: placeId! })]
+        : []),
+      bumpQuestProgress(auth.sub, 'REVIEWS_POSTED'),
+    ])
+
+    // Fire-and-forget — badge/passport failures must never roll back a review.
+    await Promise.all([
+      recalculateUserBadges(auth.sub).catch((error) => {
+        logger.error({ err: error, userId: auth.sub, reviewId: review.id }, 'Badge recalculation failed after review create')
+      }),
+      recalculateCollectibles(auth.sub), // never throws
+    ])
 
     // Create mentions and send notifications
     await processMentions(body.text, review.id, auth.sub, body.mentionedUserIds, notifyMention)

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import type { Prisma } from '@prisma/client'
+import { CUISINE_KEYS } from '@snackspot/shared'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { parseBody, serverError, mapPrismaError, isResponse } from '@/lib/api-helpers'
@@ -14,6 +15,14 @@ const UpdatePlaceBody = z.object({
   address: z.string().optional(),
   lat: z.number().optional(),
   lng: z.number().optional(),
+  city: z.string().trim().max(100).nullable().optional(),
+  cuisine: z
+    .string()
+    .nullable()
+    .optional()
+    .refine((v) => v === null || v === undefined || CUISINE_KEYS.includes(v), {
+      message: 'Onbekende keuken',
+    }),
 })
 
 // GET /api/places/[id] - Get place details
@@ -29,6 +38,8 @@ export async function GET(req: NextRequest, { params }: Params) {
         id: true,
         name: true,
         address: true,
+        city: true,
+        cuisine: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -83,7 +94,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const body = await parseBody(req, UpdatePlaceBody)
   if (isResponse(body)) return body
-  const { name, address, lat, lng } = body
+  const { name, address, lat, lng, city, cuisine } = body
 
   try {
     if (lat !== undefined && lng !== undefined) {
@@ -96,11 +107,17 @@ export async function PATCH(req: NextRequest, { params }: Params) {
           updated_at = NOW()
         WHERE id = ${id}
       `
-    } else {
-      const updateData: Prisma.PlaceUpdateInput = {}
+    }
+
+    const updateData: Prisma.PlaceUpdateInput = {}
+    if (lat === undefined || lng === undefined) {
       if (name !== undefined) updateData.name = name
       if (address !== undefined) updateData.address = address
+    }
+    if (city !== undefined) updateData.city = city === '' ? null : city
+    if (cuisine !== undefined) updateData.cuisine = cuisine
 
+    if (Object.keys(updateData).length > 0) {
       await db.place.update({
         where: { id },
         data: updateData,
@@ -113,6 +130,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         id: true,
         name: true,
         address: true,
+        city: true,
+        cuisine: true,
         createdAt: true,
         updatedAt: true,
       },

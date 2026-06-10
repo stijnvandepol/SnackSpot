@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { FeedClient } from '@/components/feed-client'
+import { FeedTabs } from '@/components/feed-tabs'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
 const title = 'SnackSpot — Discover Local Food Spots'
@@ -24,7 +24,7 @@ export default function FeedPage() {
         <p className="text-sm text-snack-muted">Discover photo reviews of local food spots near you — scroll, like, and find your next meal.</p>
       </div>
 
-      <FeedClient />
+      <FeedTabs />
     </div>
   )
 }
