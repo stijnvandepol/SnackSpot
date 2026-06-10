@@ -1,5 +1,6 @@
 'use client'
 import { Suspense, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { UserMentionInput } from '@/components/user-mention-input'
@@ -589,7 +590,19 @@ function AddReviewForm() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="text-2xl font-heading font-bold text-snack-text mb-6">Create Post</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-heading font-bold text-snack-text">Share a Snack</h1>
+        <p className="mt-1 text-sm text-snack-muted">
+          A public review: your photo, the dish and your ratings put this spot on the map for
+          everyone. <span className="font-semibold text-snack-primary">+75 XP</span>
+        </p>
+        <Link
+          href="/add-bite"
+          className="mt-2 inline-block text-xs text-snack-muted underline-offset-2 hover:text-snack-primary hover:underline"
+        >
+          Just logging a quick bite for yourself? Quick Bite →
+        </Link>
+      </div>
 
       {/* Step indicators */}
       <div className="mb-8" aria-label="Create post progress">

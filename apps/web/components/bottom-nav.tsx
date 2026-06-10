@@ -10,7 +10,9 @@ type IconName = 'home' | 'search' | 'plus' | 'map' | 'user'
 const links = [
   { href: SHARED_NAV_LINKS[0].href, icon: 'home'   as IconName, label: SHARED_NAV_LINKS[0].label },
   { href: SHARED_NAV_LINKS[1].href, icon: 'search' as IconName, label: SHARED_NAV_LINKS[1].label },
-  { href: '/add-bite',              icon: 'plus'   as IconName, label: 'Log', accent: true },
+  // Primary action = the public review ("Snack"); the private Quick Bite is
+  // reachable from inside that flow. Reviews are the content engine.
+  { href: '/add-review',            icon: 'plus'   as IconName, label: 'Snack', accent: true },
   { href: SHARED_NAV_LINKS[2].href, icon: 'map'    as IconName, label: SHARED_NAV_LINKS[2].label },
   { href: '/profile',               icon: 'user'   as IconName, label: 'Profile' },
 ]
@@ -44,7 +46,7 @@ export function BottomNav() {
               <Link
                 href={l.href}
                 aria-current={active ? 'page' : undefined}
-                aria-label={l.accent ? 'Log a bite' : l.label}
+                aria-label={l.accent ? 'Share a snack' : l.label}
                 className={`flex flex-col items-center gap-0.5 py-1 text-xs font-medium transition min-h-[44px] justify-center ${
                   l.accent
                     ? 'text-white'
