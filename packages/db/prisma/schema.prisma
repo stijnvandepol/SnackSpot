@@ -116,6 +116,7 @@ model User {
   followers                 Follow[] @relation("Followers")
   pushSubscriptions         PushSubscription[]
   userQuests                UserQuest[]
+  userCollectibles          UserCollectible[]
 
   @@map("users")
 }
@@ -169,6 +170,10 @@ model Place {
   id        String   @id @default(cuid())
   name      String
   address   String
+  /// Backfilled from the address (last comma segment); admin-correctable
+  city      String?
+  /// Cuisine taxonomy key; filled by admin/heuristics, unlocks cuisine collectibles
+  cuisine   String?
   /// Stored as geography(Point,4326); use raw SQL for spatial ops
   location  Unsupported("geography(Point, 4326)")
   createdAt DateTime @default(now()) @map("created_at")
@@ -531,6 +536,37 @@ model XpEvent {
   @@unique([userId, reason, refType, refId])
   @@index([userId, createdAt(sort: Desc)])
   @@map("xp_events")
+}
+
+/// Food Passport stamp definitions; criteria in JSONB so sets ship as content.
+model Collectible {
+  id          String   @id @default(cuid())
+  setKey      String   @map("set_key")
+  itemKey     String   @map("item_key")
+  name        String
+  description String
+  icon        String
+  criteria    Json
+  sortOrder   Int      @default(0) @map("sort_order")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userCollectibles UserCollectible[]
+
+  @@unique([setKey, itemKey])
+  @@map("collectibles")
+}
+
+model UserCollectible {
+  userId        String   @map("user_id")
+  collectibleId String   @map("collectible_id")
+  earnedAt      DateTime @default(now()) @map("earned_at")
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collectible Collectible @relation(fields: [collectibleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, collectibleId])
+  @@map("user_collectibles")
 }
 
 /// Daily quest content pool; admin-editable later.

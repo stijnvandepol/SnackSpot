@@ -13,6 +13,7 @@ import { getBlockedWordsCache, filterText } from '@/lib/blocked-words'
 import { validatePhotos, processMentions } from '@/lib/review-helpers'
 import { awardXp } from '@/lib/xp-service'
 import { bumpQuestProgress } from '@/lib/quest-service'
+import { recalculateCollectibles } from '@/lib/collectible-service'
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
@@ -136,10 +137,13 @@ export async function POST(req: NextRequest) {
       bumpQuestProgress(auth.sub, 'REVIEWS_POSTED'),
     ])
 
-    // Fire-and-forget — badge failures must never roll back a successful review.
-    await recalculateUserBadges(auth.sub).catch((error) => {
-      logger.error({ err: error, userId: auth.sub, reviewId: review.id }, 'Badge recalculation failed after review create')
-    })
+    // Fire-and-forget — badge/passport failures must never roll back a review.
+    await Promise.all([
+      recalculateUserBadges(auth.sub).catch((error) => {
+        logger.error({ err: error, userId: auth.sub, reviewId: review.id }, 'Badge recalculation failed after review create')
+      }),
+      recalculateCollectibles(auth.sub), // never throws
+    ])
 
     // Create mentions and send notifications
     await processMentions(body.text, review.id, auth.sub, body.mentionedUserIds, notifyMention)

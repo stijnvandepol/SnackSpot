@@ -8,6 +8,7 @@ import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { VerifiedBadge } from '@/components/verified-badge'
 import { NotificationSettings } from '@/components/notification-settings'
 import { PushSettings } from '@/components/push-settings'
+import { PassportPanel } from '@/components/passport-panel'
 import { ThemeSettings } from '@/components/theme-settings'
 import { LeaderboardPanel } from '@/components/leaderboard-panel'
 import dynamic from 'next/dynamic'
@@ -487,6 +488,7 @@ function ProfileContent() {
           {tab === 'stats' && (
             <div className="space-y-4">
               {statsPanel}
+              <PassportPanel />
               <LeaderboardPanel />
               {achievementsPanel}
             </div>
@@ -673,6 +675,7 @@ function ProfileContent() {
       {tab === 'stats' && (
         <>
           {statsPanel}
+          <PassportPanel />
           <LeaderboardPanel />
           {achievementsPanel}
         </>
