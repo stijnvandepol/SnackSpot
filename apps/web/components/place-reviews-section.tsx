@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { ReviewCard } from '@/components/review-card'
 import { useAuth } from '@/components/auth-provider'
 
-interface Review {
+export interface PlaceReviewListItem {
   id: string
   rating: number
   text: string
@@ -26,17 +26,27 @@ interface PlaceReviewsSectionProps {
   placeName: string
   placeAddress: string
   from?: string
+  /** Server-rendered first page ("new" sort) so content is crawlable and
+   *  instantly visible without a client round-trip. */
+  initialReviews?: PlaceReviewListItem[]
 }
 
-export function PlaceReviewsSection({ placeId, placeName, placeAddress, from }: PlaceReviewsSectionProps) {
+export function PlaceReviewsSection({ placeId, placeName, placeAddress, from, initialReviews }: PlaceReviewsSectionProps) {
   const { accessToken, loading: authLoading } = useAuth()
-  const [reviews, setReviews] = useState<Review[]>([])
+  const [reviews, setReviews] = useState<PlaceReviewListItem[]>(initialReviews ?? [])
   const [sort, setSort] = useState<'new' | 'top'>('new')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!initialReviews)
   const [reviewsError, setReviewsError] = useState<string | null>(null)
 
   const fetchReviews = useCallback(() => {
     if (authLoading) return
+    // The server already rendered the "new" sort; anonymous visitors need no
+    // refetch. Signed-in users refetch once for their like-state, and any
+    // sort change always fetches.
+    if (initialReviews && sort === 'new' && !accessToken) {
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setReviewsError(null)
     fetch(`/api/v1/places/${placeId}/reviews?sort=${sort}&limit=20`, {
@@ -46,7 +56,7 @@ export function PlaceReviewsSection({ placeId, placeName, placeAddress, from }: 
       .then((json) => setReviews(json.data?.data ?? []))
       .catch(() => setReviewsError('Could not load reviews for this place.'))
       .finally(() => setLoading(false))
-  }, [placeId, sort, accessToken, authLoading])
+  }, [placeId, sort, accessToken, authLoading, initialReviews])
 
   useEffect(() => {
     fetchReviews()

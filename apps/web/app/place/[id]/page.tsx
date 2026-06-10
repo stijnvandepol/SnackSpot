@@ -1,9 +1,14 @@
+import { cache } from 'react'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { ReviewStatus } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { getSiteUrl } from '@/lib/site-url'
 import { safeJsonLd } from '@/lib/html'
-import { PlaceReviewsSection } from '@/components/place-reviews-section'
+import { extractCity } from '@/lib/utils'
+import { reviewListSelect, serializeReview } from '@/lib/review-helpers'
+import { PlaceReviewsSection, type PlaceReviewListItem } from '@/components/place-reviews-section'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { PlaceMapEmbed } from '@/components/place-map-embed'
 
@@ -15,6 +20,50 @@ interface PlaceRow {
   lng: number
   avg_rating: number | null
   review_count: number
+}
+
+// Cached so the page body and generateMetadata share a single query per request.
+const getPlace = cache(async (id: string): Promise<PlaceRow | null> => {
+  const [place] = await prisma.$queryRaw<PlaceRow[]>`
+    SELECT
+      p.id,
+      p.name,
+      p.address,
+      ST_Y(p.location::geometry) AS lat,
+      ST_X(p.location::geometry) AS lng,
+      ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
+      COUNT(r.id)::int AS review_count
+    FROM places p
+    LEFT JOIN reviews r ON r.place_id = p.id AND r.status = 'PUBLISHED'
+    WHERE p.id = ${id}
+    GROUP BY p.id, p.name, p.address, p.location
+  `
+  return place ?? null
+})
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const place = await getPlace(id)
+  if (!place) return { title: 'Place' }
+
+  const city = extractCity(place.address)
+  const title = city ? `${place.name} — ${city}` : place.name
+  const description =
+    place.avg_rating !== null && place.review_count > 0
+      ? `${place.name} is rated ${place.avg_rating.toFixed(1)}★ from ${place.review_count} photo review${place.review_count === 1 ? '' : 's'} on SnackSpot. See real dishes and know what to order before you go.`
+      : `Discover ${place.name} on SnackSpot — photo reviews from real people, so you know what to order before you go.`
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/place/${place.id}` },
+    openGraph: { type: 'website', title, description },
+    twitter: { card: 'summary_large_image', title, description },
+  }
 }
 
 function buildPlaceBreadcrumb(from: string | undefined, placeName: string): Array<{ label: string; href?: string }> {
@@ -54,22 +103,22 @@ export default async function PlacePage({
   const { id } = await params
   const { from } = await searchParams
 
-  const [place] = await prisma.$queryRaw<PlaceRow[]>`
-    SELECT
-      p.id,
-      p.name,
-      p.address,
-      ST_Y(p.location::geometry) AS lat,
-      ST_X(p.location::geometry) AS lng,
-      ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
-      COUNT(r.id)::int AS review_count
-    FROM places p
-    LEFT JOIN reviews r ON r.place_id = p.id AND r.status = 'PUBLISHED'
-    WHERE p.id = ${id}
-    GROUP BY p.id, p.name, p.address, p.location
-  `
+  const place = await getPlace(id)
 
   if (!place) notFound()
+
+  // Server-render the first page of reviews so the content is crawlable and
+  // instantly visible; the client section takes over for sorting and like-state.
+  const initialReviewRows = await prisma.review.findMany({
+    where: { placeId: id, status: ReviewStatus.PUBLISHED },
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+    select: reviewListSelect(),
+  })
+  const initialReviews = initialReviewRows.map((row) => ({
+    ...serializeReview(row),
+    createdAt: row.createdAt.toISOString(),
+  })) as unknown as PlaceReviewListItem[]
 
   const backHref = resolveBackHref(from)
 
@@ -170,6 +219,7 @@ export default async function PlacePage({
             placeName={place.name}
             placeAddress={place.address}
             from={from}
+            initialReviews={initialReviews}
           />
         </div>
       </div>

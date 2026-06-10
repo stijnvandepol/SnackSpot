@@ -265,6 +265,28 @@ function ProfileContent() {
   const statsPanel = stats ? (
     <div className="card p-4 mb-6">
       <h2 className="font-heading font-semibold text-snack-text mb-4">Stats</h2>
+      <div
+        className={`mb-3 flex items-center gap-3 rounded-xl px-4 py-3 ${
+          stats.streak.current > 0
+            ? 'bg-snack-primary/10 border border-snack-primary/30'
+            : 'bg-snack-surface'
+        }`}
+      >
+        <span className="text-3xl" aria-hidden="true">{stats.streak.current > 0 ? '🔥' : '🍽️'}</span>
+        <div>
+          <p className="text-2xl font-bold leading-none text-snack-text">
+            {stats.streak.current}
+            <span className="ml-1.5 text-sm font-medium text-snack-muted">
+              day{stats.streak.current === 1 ? '' : 's'} streak
+            </span>
+          </p>
+          <p className="mt-1 text-xs text-snack-muted">
+            {stats.streak.current > 0
+              ? 'Post today to keep it going.'
+              : 'Post a review today to start a streak.'}
+          </p>
+        </div>
+      </div>
       <div className="grid grid-cols-2 gap-3">
         {[
           { value: stats.totalPosts, label: 'Reviews written' },
