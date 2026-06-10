@@ -12,6 +12,7 @@ import { logger } from '@/lib/logger'
 import { getBlockedWordsCache, filterText } from '@/lib/blocked-words'
 import { validatePhotos, processMentions } from '@/lib/review-helpers'
 import { awardXp } from '@/lib/xp-service'
+import { bumpQuestProgress } from '@/lib/quest-service'
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
@@ -132,6 +133,7 @@ export async function POST(req: NextRequest) {
       ...(isFirstReviewOfPlace
         ? [awardXp({ userId: auth.sub, reason: 'FIRST_REVIEW_OF_PLACE', refType: 'place', refId: placeId! })]
         : []),
+      bumpQuestProgress(auth.sub, 'REVIEWS_POSTED'),
     ])
 
     // Fire-and-forget — badge failures must never roll back a successful review.

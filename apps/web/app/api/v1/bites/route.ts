@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { created, err, parseBody, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
 import { rateLimitUser } from '@/lib/rate-limit'
 import { awardXp, XP_DAILY_EVENT_CAPS } from '@/lib/xp-service'
+import { bumpQuestProgress } from '@/lib/quest-service'
 import { getProgressSnapshot } from '@/lib/user-stats'
 import { logger } from '@/lib/logger'
 
@@ -109,6 +110,10 @@ export async function POST(req: NextRequest) {
       bitesToday < biteCap
         ? await awardXp({ userId: auth.sub, reason: 'BITE_LOGGED', refType: 'bite', refId: bite.id })
         : null
+
+    // Quest progress before the snapshot so quest XP is reflected in the totals.
+    await bumpQuestProgress(auth.sub, 'BITES_LOGGED')
+    if (body.placeId) await bumpQuestProgress(auth.sub, 'PLACE_BITES_LOGGED')
 
     const snapshot = await getProgressSnapshot(auth.sub)
 

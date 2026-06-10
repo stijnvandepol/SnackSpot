@@ -115,6 +115,7 @@ model User {
   following                 Follow[] @relation("Following")
   followers                 Follow[] @relation("Followers")
   pushSubscriptions         PushSubscription[]
+  userQuests                UserQuest[]
 
   @@map("users")
 }
@@ -530,6 +531,47 @@ model XpEvent {
   @@unique([userId, reason, refType, refId])
   @@index([userId, createdAt(sort: Desc)])
   @@map("xp_events")
+}
+
+/// Daily quest content pool; admin-editable later.
+model QuestTemplate {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  title        String
+  description  String
+  criteriaType String   @map("criteria_type")
+  target       Int      @default(1)
+  rewardXp     Int      @map("reward_xp")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  userQuests UserQuest[]
+
+  @@map("quest_templates")
+}
+
+/// A quest assigned to a user for one local day. Criteria/target/reward are
+/// snapshotted at assignment so template edits never change a quest mid-day.
+model UserQuest {
+  id           String    @id @default(cuid())
+  userId       String    @map("user_id")
+  templateId   String    @map("template_id")
+  assignedDate DateTime  @map("assigned_date") @db.Date
+  criteriaType String    @map("criteria_type")
+  title        String
+  description  String
+  progress     Int       @default(0)
+  target       Int
+  rewardXp     Int       @map("reward_xp")
+  completedAt  DateTime? @map("completed_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template QuestTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, templateId, assignedDate])
+  @@index([userId, assignedDate(sort: Desc)])
+  @@map("user_quests")
 }
 
 /// One row per browser/device push subscription (Web Push API).

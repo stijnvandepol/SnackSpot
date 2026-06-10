@@ -19,6 +19,7 @@ import { notifyCommentMention, notifyReviewComment } from '@/lib/notification-se
 import { getBlockedWordsCache, filterText } from '@/lib/blocked-words'
 import { checkReviewVisibility, processCommentMentions } from '@/lib/review-helpers'
 import { awardXp } from '@/lib/xp-service'
+import { bumpQuestProgress } from '@/lib/quest-service'
 
 export async function GET(
   req: NextRequest,
@@ -120,6 +121,7 @@ export async function POST(
       ...(review.userId !== auth.sub
         ? [awardXp({ userId: auth.sub, reason: 'COMMENT_POSTED', refType: 'comment', refId: comment.id })]
         : []),
+      bumpQuestProgress(auth.sub, 'COMMENTS_POSTED'),
     ])
 
     return created({

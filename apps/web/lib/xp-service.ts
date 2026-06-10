@@ -22,6 +22,8 @@ export const XP_AMOUNTS = {
   FIRST_REVIEW_OF_PLACE: 100,
   LIKE_RECEIVED: 2,
   COMMENT_POSTED: 5,
+  // Quests carry their own reward; awardXp is called with an explicit amount.
+  QUEST_COMPLETED: 0,
 } as const
 
 export type XpReason = keyof typeof XP_AMOUNTS
@@ -125,8 +127,11 @@ export async function awardXp(opts: {
   reason: XpReason
   refType?: string
   refId?: string
+  /** Override for reasons with variable rewards (quests). */
+  amount?: number
 }): Promise<XpAward | null> {
-  const amount = XP_AMOUNTS[opts.reason]
+  const amount = opts.amount ?? XP_AMOUNTS[opts.reason]
+  if (amount <= 0) return null
   try {
     const cap = XP_DAILY_EVENT_CAPS[opts.reason]
     if (cap !== undefined) {
