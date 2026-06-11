@@ -6,11 +6,12 @@ import { useEffect, useRef, useState } from 'react'
 interface VerifyResult {
   placeId: string | null
   provider: string
-  providerPlaceId: string
+  providerPlaceId: string | null
   name: string
   address: string
   lat: number
   lng: number
+  reviewCount: number
 }
 
 /** What the picker hands back to the form. Exactly one of placeId/verifiedPlace
@@ -33,17 +34,23 @@ interface PlacePickerProps {
   accessToken: string | null
   value: PickedPlace | null
   onChange: (picked: PickedPlace | null) => void
-  /** Optional user coordinates to bias results toward what's nearby. */
-  coords?: { lat: number; lng: number } | null
 }
 
-export function PlacePicker({ accessToken, value, onChange, coords }: PlacePickerProps) {
+export function PlacePicker({ accessToken, value, onChange }: PlacePickerProps) {
   const [query, setQuery] = useState(value?.name ?? '')
   const [results, setResults] = useState<VerifyResult[]>([])
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // The user's location, used to surface nearby venues first. Opt-in.
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [locating, setLocating] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const coordsRef = useRef<{ lat: number; lng: number } | null>(null)
+
+  useEffect(() => {
+    coordsRef.current = coords
+  }, [coords])
 
   useEffect(() => {
     return () => {
@@ -52,8 +59,28 @@ export function PlacePicker({ accessToken, value, onChange, coords }: PlacePicke
     }
   }, [])
 
+  const useMyLocation = () => {
+    if (!navigator.geolocation) return
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const next = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        setCoords(next)
+        coordsRef.current = next
+        setLocating(false)
+        if (query.trim().length >= 2) void runSearch(query) // re-rank with location
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60 * 1000 },
+    )
+  }
+
   const runSearch = async (q: string) => {
-    if (!accessToken || q.trim().length < 2) {
+    const trimmed = q.trim()
+    const c = coordsRef.current
+    // With a short term and no location there's nothing to show. With a short
+    // term but a location, fall through to "nearby" mode (empty q + coords).
+    if (!accessToken || (trimmed.length < 2 && !c)) {
       setResults([])
       return
     }
@@ -66,10 +93,11 @@ export function PlacePicker({ accessToken, value, onChange, coords }: PlacePicke
     setSearching(true)
     setError(null)
     try {
-      const params = new URLSearchParams({ q })
-      if (coords) {
-        params.set('lat', String(coords.lat))
-        params.set('lng', String(coords.lng))
+      const params = new URLSearchParams()
+      if (trimmed.length >= 2) params.set('q', trimmed)
+      if (c) {
+        params.set('lat', String(c.lat))
+        params.set('lng', String(c.lng))
       }
       const res = await fetch(`/api/v1/places/verify?${params}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -96,22 +124,24 @@ export function PlacePicker({ accessToken, value, onChange, coords }: PlacePicke
   }
 
   const select = (r: VerifyResult) => {
-    onChange(
-      r.placeId
-        ? { placeId: r.placeId, name: r.name, address: r.address }
-        : {
-            verifiedPlace: {
-              provider: r.provider,
-              providerPlaceId: r.providerPlaceId,
-              name: r.name,
-              address: r.address,
-              lat: r.lat,
-              lng: r.lng,
-            },
-            name: r.name,
-            address: r.address,
-          },
-    )
+    // Existing place → reuse by id. Provider venue (placeId null) → send the
+    // verified payload. providerPlaceId is always set for provider venues.
+    if (r.placeId) {
+      onChange({ placeId: r.placeId, name: r.name, address: r.address })
+    } else if (r.providerPlaceId) {
+      onChange({
+        verifiedPlace: {
+          provider: r.provider,
+          providerPlaceId: r.providerPlaceId,
+          name: r.name,
+          address: r.address,
+          lat: r.lat,
+          lng: r.lng,
+        },
+        name: r.name,
+        address: r.address,
+      })
+    }
     setQuery(r.name)
     setResults([])
   }
@@ -123,8 +153,8 @@ export function PlacePicker({ accessToken, value, onChange, coords }: PlacePicke
           Find the place *
         </label>
         <p className="mb-2 text-xs text-snack-muted">
-          Search for the restaurant, café or snackbar. Pick it from the list so it&apos;s a real,
-          verified spot — no duplicates, no typos.
+          Search for the restaurant, café or snackbar. Pick it from the list — places already on
+          SnackSpot show first, so you never create a duplicate.
         </p>
         <input
           id="place-search"
@@ -132,6 +162,12 @@ export function PlacePicker({ accessToken, value, onChange, coords }: PlacePicke
           placeholder="Start typing a place name…"
           value={query}
           onChange={(e) => onInput(e.target.value)}
+          onFocus={() => {
+            // Reopen nearby/last results when refocusing an empty field.
+            if (coordsRef.current && query.trim().length < 2 && results.length === 0) {
+              void runSearch('')
+            }
+          }}
           autoComplete="off"
           role="combobox"
           aria-expanded={results.length > 0}
@@ -139,13 +175,32 @@ export function PlacePicker({ accessToken, value, onChange, coords }: PlacePicke
         />
         {searching && <div className="absolute right-3 top-10 text-xs text-snack-muted">🔍…</div>}
 
+        <button
+          type="button"
+          onClick={useMyLocation}
+          disabled={locating}
+          className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-snack-primary disabled:opacity-50"
+        >
+          <span aria-hidden="true">📍</span>
+          {locating
+            ? 'Finding you…'
+            : coords
+              ? 'Showing places near you'
+              : 'Show places near me'}
+        </button>
+
         {results.length > 0 && (
           <ul
             id="place-results"
             className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-snack-border bg-snack-background shadow-lg"
           >
+            {query.trim().length < 2 && (
+              <li className="border-b border-snack-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-snack-muted">
+                Near you
+              </li>
+            )}
             {results.map((r) => (
-              <li key={`${r.provider}:${r.providerPlaceId}`}>
+              <li key={r.placeId ?? `${r.provider}:${r.providerPlaceId}`}>
                 <button
                   type="button"
                   onClick={() => select(r)}
@@ -155,11 +210,13 @@ export function PlacePicker({ accessToken, value, onChange, coords }: PlacePicke
                     <span className="font-medium text-snack-text">{r.name}</span>
                     {r.placeId ? (
                       <span className="rounded-full bg-snack-primary/10 px-2 py-0.5 text-[10px] font-semibold text-snack-primary">
-                        On SnackSpot
+                        {r.reviewCount > 0
+                          ? `On SnackSpot · ${r.reviewCount} review${r.reviewCount === 1 ? '' : 's'}`
+                          : 'On SnackSpot'}
                       </span>
                     ) : (
                       <span className="rounded-full bg-snack-surface px-2 py-0.5 text-[10px] font-semibold text-snack-muted">
-                        Verified · new
+                        Add new
                       </span>
                     )}
                   </div>
@@ -172,7 +229,8 @@ export function PlacePicker({ accessToken, value, onChange, coords }: PlacePicke
 
         {!searching && query.trim().length >= 2 && results.length === 0 && !error && (
           <div className="mt-2 rounded-xl border border-dashed border-snack-border px-4 py-3 text-sm text-snack-muted">
-            No verified place matched. Try the exact name, or add the street and city.
+            No place matched. Try the exact name, add the street or city, or tap{' '}
+            <span className="font-medium text-snack-text">Search near me</span>.
           </div>
         )}
         {error && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>}

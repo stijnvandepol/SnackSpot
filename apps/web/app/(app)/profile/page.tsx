@@ -586,7 +586,7 @@ function ProfileContent() {
 
   // Desktop Layout
   return (
-    <div className="hidden md:block mx-auto max-w-2xl px-4 py-6 space-y-6">
+    <div className="hidden md:block mx-auto max-w-3xl px-4 py-6 space-y-6">
       <div className="card p-6 flex items-center gap-4">
         <AvatarLightbox
           avatarKey={meProfile?.avatarKey}
@@ -650,7 +650,7 @@ function ProfileContent() {
           {!loading && reviews.length === 0 && (
             <div className="text-center py-12">
               <p className="text-snack-muted text-sm">You haven&apos;t written any reviews yet.</p>
-              <a href="/add-review" className="btn-primary mt-4 hidden md:inline-block">Add your first review</a>
+              <a href="/add-review" className="btn-primary mt-4 inline-block">Add your first review</a>
             </div>
           )}
 
@@ -678,8 +678,11 @@ function ProfileContent() {
         <>
           <DailyQuestsStrip />
           {statsPanel}
-          <PassportPanel />
-          <LeaderboardPanel />
+          {/* Passport and leaderboard sit side by side on desktop to use the width. */}
+          <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start space-y-6 lg:space-y-0">
+            <PassportPanel />
+            <LeaderboardPanel />
+          </div>
           {achievementsPanel}
         </>
       )}
