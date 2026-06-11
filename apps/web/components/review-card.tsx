@@ -132,7 +132,7 @@ export function ReviewCard({
                 {review.user.isVerified && <VerifiedBadge className="w-3.5 h-3.5" />}
               </Link>
             </div>
-            <time className="text-xs text-snack-muted">{timeAgo(review.createdAt)}</time>
+            <time dateTime={new Date(review.createdAt).toISOString()} className="text-xs text-snack-muted">{timeAgo(review.createdAt)}</time>
           </div>
         </div>
       </div>

@@ -4,6 +4,10 @@ import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { sendMarketingEmail } from '@/lib/email'
 import { parseBody, serverError, isResponse } from '@/lib/api-helpers'
+import { rateLimit } from '@/lib/rate-limit'
+
+// Resend allows ~10 req/s; pace sends so a broadcast can't trip the provider.
+const SEND_THROTTLE_MS = 120
 
 const BodySchema = z.object({
   subject:      z.string().min(1).max(200),
@@ -22,6 +26,15 @@ const BodySchema = z.object({
 export async function POST(req: NextRequest) {
   const admin = requireAdmin(req)
   if (isResponse(admin)) return admin
+
+  // A broadcast hits the entire user base; cap how often any admin can fire one.
+  const rl = await rateLimit(`marketing-email:${admin.sub}`, 5, 3600)
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Te veel mailings verstuurd. Probeer het later opnieuw.' },
+      { status: 429 },
+    )
+  }
 
   const body = await parseBody(req, BodySchema)
   if (isResponse(body)) return body
@@ -61,6 +74,8 @@ export async function POST(req: NextRequest) {
       } catch {
         failed++
       }
+      // Pace the loop so a large recipient list stays under the provider rate.
+      if (users.length > 1) await new Promise((resolve) => setTimeout(resolve, SEND_THROTTLE_MS))
     }
 
     return NextResponse.json({ sent, failed, total: users.length })

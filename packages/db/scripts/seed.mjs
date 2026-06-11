@@ -13,6 +13,13 @@ const DEMO_PASSWORD_HASH =
 const { Client } = pg
 
 async function main() {
+  // Hard guard: these are dev fixtures with a publicly-known password and a
+  // default ADMIN account. They must never touch a production database.
+  if (process.env.NODE_ENV === 'production') {
+    console.error('Refusing to seed: NODE_ENV=production. Seed data is for development only.')
+    process.exit(1)
+  }
+
   const client = new Client({ connectionString: process.env.DATABASE_URL })
   await client.connect()
 

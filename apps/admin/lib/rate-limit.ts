@@ -1,4 +1,5 @@
 import { redis } from './redis'
+import { env } from './env'
 import { SLIDING_WINDOW_LUA, type RateLimitResult } from '@snackspot/shared'
 
 export async function rateLimit(
@@ -30,13 +31,16 @@ export async function rateLimit(
   }
 }
 
+/** Extract client IP. Trust proxy headers only when explicitly configured,
+ *  otherwise they are attacker-controlled and rate limits become bypassable. */
 export function getClientIp(headers: Headers): string {
-  const xRealIp = headers.get('x-real-ip')?.trim()
-  if (xRealIp) return xRealIp
+  if (env.TRUST_PROXY) {
+    const xRealIp = headers.get('x-real-ip')?.trim()
+    if (xRealIp) return xRealIp
 
-  const xForwardedFor = headers.get('x-forwarded-for') ?? ''
-  const firstForwarded = xForwardedFor.split(',')[0]?.trim()
-  if (firstForwarded) return firstForwarded
-
+    const xForwardedFor = headers.get('x-forwarded-for') ?? ''
+    const firstForwarded = xForwardedFor.split(',')[0]?.trim()
+    if (firstForwarded) return firstForwarded
+  }
   return '127.0.0.1'
 }

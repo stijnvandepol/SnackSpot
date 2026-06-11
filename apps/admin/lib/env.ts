@@ -22,6 +22,12 @@ const envSchema = z.object({
   MINIO_ACCESS_KEY: z.string().min(1),
   MINIO_SECRET_KEY: z.string().min(1),
   MINIO_BUCKET: z.string().min(1),
+  // Proxy headers (X-Real-IP / X-Forwarded-For) are spoofable; only trust them
+  // when explicitly running behind a known reverse proxy (Cloudflare/nginx).
+  TRUST_PROXY: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true'),
 })
 
 const parsed = envSchema.safeParse(process.env)

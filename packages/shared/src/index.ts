@@ -41,6 +41,19 @@ export const CreatePlaceSchema = z.object({
   lng: z.number().min(-180).max(180),
 })
 
+// A venue picked from provider-backed autocomplete. The server re-verifies the
+// id and stores the provider's canonical data, so the same venue always maps to
+// one place row (no near-duplicates). Coordinates are advisory; the server's
+// lookup wins.
+export const VerifiedPlaceSchema = z.object({
+  provider: z.string().min(1).max(32),
+  providerPlaceId: z.string().min(1).max(128),
+  name: z.string().min(1).max(120),
+  address: z.string().min(1).max(255),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+})
+
 export const PlaceSearchSchema = z.object({
   q: z.string().max(200).optional(),
   lat: z.coerce.number().min(-90).max(90).optional(),
@@ -75,6 +88,9 @@ export const ReviewTagSchema = z.enum(REVIEW_TAG_VALUES)
 
 export const CreateReviewSchema = z.object({
   placeId: z.string().min(1).optional(),
+  /** A provider-verified venue picked from autocomplete (preferred). */
+  verifiedPlace: VerifiedPlaceSchema.optional(),
+  /** Legacy free-text place creation — retained for admin/fallback only. */
   place: CreatePlaceSchema.optional(),
   rating: RatingValueSchema.optional(),
   ratings: z.object({

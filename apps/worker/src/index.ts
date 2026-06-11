@@ -542,10 +542,12 @@ async function deliverPush(job: PushJob): Promise<void> {
       if (first !== 'OK') return
     }
 
-    // Hard daily cap across all social categories.
+    // Hard daily cap across all social categories. EXPIRE is set on every call
+    // (idempotent) so a crash between INCR and EXPIRE can't leave the key
+    // without a TTL and block pushes for that user/day indefinitely.
     const capKey = `push:daily:${job.userId}:${date}`
     const sentToday = await redis.incr(capKey)
-    if (sentToday === 1) await redis.expire(capKey, 36 * 60 * 60)
+    await redis.expire(capKey, 36 * 60 * 60)
     if (sentToday > SOCIAL_DAILY_PUSH_CAP) return
   }
 

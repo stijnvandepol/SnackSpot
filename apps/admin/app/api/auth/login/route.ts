@@ -15,6 +15,10 @@ import { serverError } from '@/lib/api-helpers'
 
 const LOGIN_RATE_LIMIT = 5
 const LOGIN_RATE_WINDOW_SECONDS = 15 * 60
+// Per-account cap, independent of source IP, so a single target admin account
+// stays protected even if the IP key is diluted (e.g. proxy misconfig).
+const ACCOUNT_RATE_LIMIT = 10
+const ACCOUNT_RATE_WINDOW_SECONDS = 15 * 60
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers)
@@ -36,6 +40,18 @@ export async function POST(req: NextRequest) {
       )
     }
     const { email, password } = parsed.data
+
+    const accountRl = await rateLimit(
+      `admin-login-account:${email.toLowerCase()}`,
+      ACCOUNT_RATE_LIMIT,
+      ACCOUNT_RATE_WINDOW_SECONDS,
+    )
+    if (!accountRl.allowed) {
+      return NextResponse.json(
+        { error: 'Te veel inlogpogingen. Probeer het later opnieuw.' },
+        { status: 429 }
+      )
+    }
 
     const user = await db.user.findUnique({
       where: { email },

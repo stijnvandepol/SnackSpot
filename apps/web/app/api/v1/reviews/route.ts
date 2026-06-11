@@ -14,6 +14,7 @@ import { validatePhotos, processMentions } from '@/lib/review-helpers'
 import { awardXp } from '@/lib/xp-service'
 import { bumpQuestProgress } from '@/lib/quest-service'
 import { recalculateCollectibles } from '@/lib/collectible-service'
+import { resolveProviderPlace, resolveManualPlace } from '@/lib/place-service'
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
@@ -22,8 +23,8 @@ export async function POST(req: NextRequest) {
   const body = await parseBody(req, CreateReviewSchema)
   if (isResponse(body)) return body
 
-  if (!body.placeId && !body.place) {
-    return err('Either placeId or place details are required', 422)
+  if (!body.placeId && !body.verifiedPlace && !body.place) {
+    return err('A place is required: pick one or select a verified venue', 422)
   }
   if (body.photoIds.length === 0) {
     return err('At least one photo is required', 422)
@@ -48,19 +49,24 @@ export async function POST(req: NextRequest) {
 
     let placeId = body.placeId
 
-    // Create place inline if not provided
-    if (!placeId && body.place) {
-      const p = body.place
-      const [created] = await prisma.$queryRaw<Array<{ id: string }>>`
-        INSERT INTO places (name, address, location)
-        VALUES (
-          ${p.name},
-          ${p.address},
-          ST_SetSRID(ST_MakePoint(${p.lng}, ${p.lat}), 4326)::geography
-        )
-        RETURNING id
-      `
-      placeId = created.id
+    // Resolve the place. Order of preference:
+    // 1. An existing placeId (already verified).
+    // 2. A provider-verified venue from autocomplete — server re-verifies the
+    //    id and dedupes via the unique (provider, provider_place_id) index.
+    // 3. Legacy free-text place — guarded against near-duplicates by name+proximity.
+    if (!placeId && body.verifiedPlace) {
+      const resolved = await resolveProviderPlace(body.verifiedPlace, { verify: true })
+      if ('error' in resolved) return err(resolved.error, 422)
+      placeId = resolved.id
+    } else if (!placeId && body.place) {
+      // Free-text place creation bypasses venue verification, so it is
+      // restricted to moderators/admins (e.g. adding a real venue the provider
+      // doesn't list). Regular users must pick a verified venue.
+      if (auth.role !== 'ADMIN' && auth.role !== 'MODERATOR') {
+        return err('Pick a verified place from the list instead of free text', 422)
+      }
+      const resolved = await resolveManualPlace(body.place)
+      placeId = resolved.id
     }
 
     // Validate photos belong to this user and are not yet attached to any review

@@ -189,12 +189,13 @@ export function NotificationBell() {
                           <NotificationContent notification={notification} />
                         </Link>
                       ) : (
-                        <div
+                        <button
+                          type="button"
                           onClick={() => markAsRead(notification.id)}
-                          className="cursor-pointer"
+                          className="block w-full text-left"
                         >
                           <NotificationContent notification={notification} />
-                        </div>
+                        </button>
                       )}
                     </div>
                   ))}
