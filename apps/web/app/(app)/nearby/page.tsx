@@ -5,7 +5,8 @@ import { PlaceCard } from '@/components/place-card'
 
 const PlaceMap = dynamic(() => import('@/components/place-map').then((mod) => ({ default: mod.PlaceMap })), {
   ssr: false,
-  loading: () => <div className="w-full h-96 bg-snack-surface rounded-xl animate-pulse border border-snack-border mb-6" />,
+  // Match the real map height (place-map.tsx) so the layout doesn't shift on load.
+  loading: () => <div className="w-full h-[420px] bg-snack-surface rounded-xl animate-pulse border border-snack-border mb-6" />,
 })
 
 interface Place {
@@ -253,7 +254,7 @@ export default function NearbyPage() {
                 key={r}
                 type="button"
                 onClick={() => setRadius(r)}
-                className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${radius === r ? 'bg-snack-primary text-white' : 'bg-snack-surface text-snack-muted'}`}
+                className={`min-h-[44px] rounded-lg px-3.5 text-xs font-medium transition ${radius === r ? 'bg-snack-primary text-white' : 'bg-snack-surface text-snack-muted'}`}
               >
                 {r >= 1000 ? `${r / 1000} km` : `${r} m`}
               </button>

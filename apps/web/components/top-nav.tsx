@@ -1,4 +1,5 @@
 'use client'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
@@ -6,7 +7,55 @@ import { useAuth } from './auth-provider'
 import { avatarUrl } from '@/lib/avatar'
 import { NotificationBell } from './notification-bell'
 import { SnackSpotLogo } from './snack-spot-logo'
+import { CreateOptions } from '@/components/create-options'
 import { SHARED_NAV_LINKS } from '@/lib/nav-links'
+
+/** Desktop "Post" button → popover with the same Review/Bite chooser as mobile. */
+function CreatePopover() {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  return (
+    <div className="relative ml-2" ref={ref}>
+      <button
+        type="button"
+        className="btn-primary py-2 text-sm"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        Post
+      </button>
+      {open && (
+        <div
+          role="dialog"
+          aria-label="Create a review or bite"
+          className="absolute right-0 top-full z-40 mt-2 w-80 rounded-2xl border p-4 shadow-xl"
+          style={{ backgroundColor: 'var(--snack-bg)', borderColor: 'var(--snack-border-soft)' }}
+        >
+          <p className="mb-3 text-sm font-semibold text-snack-text">What are you sharing?</p>
+          <CreateOptions onPick={() => setOpen(false)} />
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function TopNav() {
   const { user, logout } = useAuth()
@@ -37,9 +86,7 @@ export function TopNav() {
               {l.label}
             </Link>
           ))}
-          <Link href="/add-review" className="btn-primary py-2 text-sm ml-2">
-            Post
-          </Link>
+          <CreatePopover />
         </nav>
 
         <div className="flex items-center gap-2">
