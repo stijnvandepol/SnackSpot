@@ -14,15 +14,6 @@ import { MentionText } from '@/components/mention-text'
 import { ImageLightbox } from '@/components/image-lightbox'
 import { Breadcrumb } from '@/components/breadcrumb'
 
-const dateFormatter = new Intl.DateTimeFormat('en-GB', {
-  dateStyle: 'medium',
-  timeZone: 'UTC',
-})
-
-function formatDate(dateInput: Date) {
-  return dateFormatter.format(dateInput)
-}
-
 function resolveBackHref(from: string | undefined, parsedPlaceContext: { placeId: string; origin: string } | null): string {
   if (!from) return '/'
   if (from === 'feed') return '/'

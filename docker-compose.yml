@@ -9,7 +9,9 @@ x-common-env: &common-env
   MINIO_BUCKET: ${MINIO_BUCKET:-snackspot}
   MINIO_REGION: ${MINIO_REGION:-us-east-1}
   MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?MINIO_PUBLIC_URL is required}
-  AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+  # Production runs behind HTTPS (Cloudflare); secure cookies are the safe
+  # default. Override to false only for local plain-HTTP runs.
+  AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-true}
   TRUST_PROXY: ${TRUST_PROXY:-true}
 
 services:
@@ -195,7 +197,9 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
       JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
       JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS:-7}
-      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-true}
+      # Trust proxy headers for client-IP rate-limiting (behind Cloudflare/nginx).
+      TRUST_PROXY: ${TRUST_PROXY:-true}
       RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-SnackSpot <noreply@snackspot.online>}
       NODE_ENV: production

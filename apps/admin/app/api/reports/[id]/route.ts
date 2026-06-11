@@ -126,59 +126,57 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         )
       }
 
-      // Execute the action based on type
+      // The moderation action and its audit-log entry commit atomically, so a
+      // report mutation is never applied without an accurate log (and vice versa).
+      // HIDE and DELETE are distinct outcomes and are logged as what they are.
+      const logAction = (actionType: ModerationActionType) =>
+        db.moderationAction.create({
+          data: {
+            moderatorId: admin.sub,
+            actionType,
+            targetType: report.targetType,
+            targetId,
+          },
+        })
+
       switch (action) {
-        case 'DELETE_REVIEW':
         case 'HIDE_REVIEW':
           if (report.reviewId) {
-            await db.review.update({
-              where: { id: report.reviewId },
-              data: { status: 'DELETED' },
-            })
-            await db.report.update({
-              where: { id: id },
-              data: { status: 'RESOLVED' },
-            })
+            await db.$transaction([
+              db.review.update({ where: { id: report.reviewId }, data: { status: 'HIDDEN' } }),
+              db.report.update({ where: { id }, data: { status: 'RESOLVED' } }),
+              logAction('HIDE_REVIEW'),
+            ])
+          }
+          break
+
+        case 'DELETE_REVIEW':
+          if (report.reviewId) {
+            await db.$transaction([
+              db.review.update({ where: { id: report.reviewId }, data: { status: 'DELETED' } }),
+              db.report.update({ where: { id }, data: { status: 'RESOLVED' } }),
+              logAction('DELETE_REVIEW'),
+            ])
           }
           break
 
         case 'DELETE_PHOTO':
           if (report.photoId) {
-            await db.photo.update({
-              where: { id: report.photoId },
-              data: { moderationStatus: 'REJECTED' },
-            })
-            await db.report.update({
-              where: { id: id },
-              data: { status: 'RESOLVED' },
-            })
+            await db.$transaction([
+              db.photo.update({ where: { id: report.photoId }, data: { moderationStatus: 'REJECTED' } }),
+              db.report.update({ where: { id }, data: { status: 'RESOLVED' } }),
+              logAction('DELETE_PHOTO'),
+            ])
           }
           break
 
         case 'DISMISS':
-          await db.report.update({
-            where: { id: id },
-            data: { status: 'DISMISSED' },
-          })
+          await db.$transaction([
+            db.report.update({ where: { id }, data: { status: 'DISMISSED' } }),
+            logAction('DISMISS_REPORT'),
+          ])
           break
       }
-
-      // Log the moderation action
-      const actionType =
-        action === 'DISMISS'
-          ? 'DISMISS_REPORT'
-          : action === 'HIDE_REVIEW'
-            ? 'DELETE_REVIEW'
-            : action
-
-      await db.moderationAction.create({
-        data: {
-          moderatorId: admin.sub,
-          actionType: actionType as ModerationActionType,
-          targetType: report.targetType,
-          targetId: targetId,
-        },
-      })
 
       return NextResponse.json({ success: true, action })
     }

@@ -277,17 +277,6 @@ export default function AddBitePage() {
         </p>
       </div>
 
-      <Link
-        href="/add-review"
-        className="block rounded-xl border border-snack-primary/30 bg-snack-primary/10 px-4 py-3 text-sm"
-      >
-        <span className="font-semibold text-snack-text">Eating something worth recommending?</span>{' '}
-        <span className="text-snack-primary font-semibold">Share a Snack instead → +75 XP</span>
-        <span className="mt-0.5 block text-xs text-snack-muted">
-          A public review that puts the spot on the map for everyone.
-        </span>
-      </Link>
-
       <input
         id="bite-photo-input"
         ref={fileInputRef}

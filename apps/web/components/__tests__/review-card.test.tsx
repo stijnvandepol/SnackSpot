@@ -55,7 +55,7 @@ const baseReview = {
   overallRating: 4,
   text: 'Great fries and friendly staff — really worth it.',
   dishName: 'Friet Speciaal',
-  createdAt: new Date(Date.now() - 30_000).toISOString(), // renders as "zojuist"
+  createdAt: new Date(Date.now() - 30_000).toISOString(), // renders as "just now"
   user: {
     id: 'user-1',
     username: 'foodie_nl',

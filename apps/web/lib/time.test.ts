@@ -4,7 +4,7 @@ import { timeAgo } from './time'
 // Pin the clock so every assertion uses a stable "now"
 const NOW = new Date('2024-06-15T12:00:00.000Z')
 
-describe('timeAgo — Dutch relative time', () => {
+describe('timeAgo — English relative time', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.setSystemTime(NOW)
@@ -16,16 +16,16 @@ describe('timeAgo — Dutch relative time', () => {
 
   // ─── "zojuist" threshold ────────────────────────────────────────────────────
 
-  it('returns "zojuist" for an event 0 seconds ago', () => {
-    expect(timeAgo(NOW)).toBe('zojuist')
+  it('returns "just now" for an event 0 seconds ago', () => {
+    expect(timeAgo(NOW)).toBe('just now')
   })
 
-  it('returns "zojuist" for an event 59 seconds ago', () => {
-    expect(timeAgo(new Date(NOW.getTime() - 59_000))).toBe('zojuist')
+  it('returns "just now" for an event 59 seconds ago', () => {
+    expect(timeAgo(new Date(NOW.getTime() - 59_000))).toBe('just now')
   })
 
   it('does NOT return "zojuist" for an event exactly 60 seconds ago', () => {
-    expect(timeAgo(new Date(NOW.getTime() - 60_000))).not.toBe('zojuist')
+    expect(timeAgo(new Date(NOW.getTime() - 60_000))).not.toBe('just now')
   })
 
   // ─── Minutes ────────────────────────────────────────────────────────────────
@@ -48,20 +48,20 @@ describe('timeAgo — Dutch relative time', () => {
 
   // ─── Hours ──────────────────────────────────────────────────────────────────
 
-  it('returns "1u" for exactly 1 hour ago', () => {
-    expect(timeAgo(new Date(NOW.getTime() - 3_600_000))).toBe('1u')
+  it('returns "1h" for exactly 1 hour ago', () => {
+    expect(timeAgo(new Date(NOW.getTime() - 3_600_000))).toBe('1h')
   })
 
-  it('returns "2u" for 2 hours ago', () => {
-    expect(timeAgo(new Date(NOW.getTime() - 2 * 3_600_000))).toBe('2u')
+  it('returns "2h" for 2 hours ago', () => {
+    expect(timeAgo(new Date(NOW.getTime() - 2 * 3_600_000))).toBe('2h')
   })
 
-  it('returns "23u" for 23 hours ago', () => {
-    expect(timeAgo(new Date(NOW.getTime() - 23 * 3_600_000))).toBe('23u')
+  it('returns "23h" for 23 hours ago', () => {
+    expect(timeAgo(new Date(NOW.getTime() - 23 * 3_600_000))).toBe('23h')
   })
 
   it('does NOT return an hours value for exactly 24 hours ago', () => {
-    expect(timeAgo(new Date(NOW.getTime() - 24 * 3_600_000))).not.toMatch(/u$/)
+    expect(timeAgo(new Date(NOW.getTime() - 24 * 3_600_000))).not.toMatch(/h$/)
   })
 
   // ─── Days ───────────────────────────────────────────────────────────────────
@@ -84,15 +84,15 @@ describe('timeAgo — Dutch relative time', () => {
 
   // ─── Locale date ────────────────────────────────────────────────────────────
 
-  it('returns a nl-NL formatted date for events 7+ days ago', () => {
+  it('returns an en-GB formatted date for events 7+ days ago', () => {
     const result = timeAgo(new Date(NOW.getTime() - 7 * 86_400_000))
-    // Should look like "8 jun" — at least one digit + space + alpha month abbreviation
-    expect(result).toMatch(/^\d{1,2} [a-z]{3}$/)
+    // Should look like "8 Jun" — at least one digit + space + alpha month abbreviation
+    expect(result).toMatch(/^\d{1,2} [A-Za-z]{3}$/)
   })
 
   it('accepts a date string (ISO format)', () => {
     const isoString = new Date(NOW.getTime() - 30_000).toISOString()
-    expect(timeAgo(isoString)).toBe('zojuist')
+    expect(timeAgo(isoString)).toBe('just now')
   })
 
   it('accepts a Date object', () => {
