@@ -56,10 +56,12 @@ interface NominatimResult {
 }
 
 function isFoodVenue(r: NominatimResult): boolean {
+  // Only accept actual food/drink POIs. A named-but-uncategorised result
+  // (park, office, monument) is not reviewable, so it is rejected.
   if (r.category === 'amenity' || r.category === 'shop') {
     return FOOD_CATEGORIES.has(r.type ?? '')
   }
-  return Boolean(r.name) // named POIs without a clear category are allowed if they have a name
+  return false
 }
 
 function toProviderPlace(r: NominatimResult): ProviderPlace | null {

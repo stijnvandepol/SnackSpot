@@ -43,10 +43,12 @@ export function PlacePicker({ accessToken, value, onChange, coords }: PlacePicke
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      abortRef.current?.abort()
     }
   }, [])
 
@@ -55,6 +57,12 @@ export function PlacePicker({ accessToken, value, onChange, coords }: PlacePicke
       setResults([])
       return
     }
+    // Cancel any in-flight request so a slow earlier response can't overwrite
+    // the results of a newer query.
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     setSearching(true)
     setError(null)
     try {
@@ -65,15 +73,17 @@ export function PlacePicker({ accessToken, value, onChange, coords }: PlacePicke
       }
       const res = await fetch(`/api/v1/places/verify?${params}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
+        signal: controller.signal,
       })
       if (!res.ok) throw new Error('search failed')
       const json = await res.json()
-      setResults(json.data?.data ?? [])
-    } catch {
+      if (!controller.signal.aborted) setResults(json.data?.data ?? [])
+    } catch (e) {
+      if ((e as Error)?.name === 'AbortError') return // superseded by a newer query
       setError('Could not search places. Check your connection and try again.')
       setResults([])
     } finally {
-      setSearching(false)
+      if (abortRef.current === controller) setSearching(false)
     }
   }
 

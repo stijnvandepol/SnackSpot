@@ -59,6 +59,12 @@ export async function POST(req: NextRequest) {
       if ('error' in resolved) return err(resolved.error, 422)
       placeId = resolved.id
     } else if (!placeId && body.place) {
+      // Free-text place creation bypasses venue verification, so it is
+      // restricted to moderators/admins (e.g. adding a real venue the provider
+      // doesn't list). Regular users must pick a verified venue.
+      if (auth.role !== 'ADMIN' && auth.role !== 'MODERATOR') {
+        return err('Pick a verified place from the list instead of free text', 422)
+      }
       const resolved = await resolveManualPlace(body.place)
       placeId = resolved.id
     }

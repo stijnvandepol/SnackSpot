@@ -36,7 +36,13 @@ export async function resolveProviderPlace(
   if (existing) return existing
 
   let venue: ProviderPlace | null = null
-  if (opts.verify && input.provider === placesProvider.id) {
+  if (opts.verify) {
+    // Verification requested: the provider must be the active one and the
+    // lookup must succeed. We never fall back to client-supplied coordinates
+    // here — that would defeat the point of verifying.
+    if (input.provider !== placesProvider.id) {
+      return { error: 'Unknown place provider.' }
+    }
     venue = await placesProvider.lookup(input.providerPlaceId)
     if (!venue) return { error: 'Could not verify this place. Pick it from the list again.' }
   } else if (input.name && input.address && input.lat != null && input.lng != null) {
@@ -88,27 +94,34 @@ export async function resolveManualPlace(input: {
 }): Promise<{ id: string; deduped: boolean }> {
   const normalized = normalizeName(input.name)
 
-  const nearby = await prisma.$queryRaw<Array<{ id: string; name: string }>>`
-    SELECT id, name
-    FROM places
-    WHERE ST_DWithin(
-      location,
-      ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography,
-      ${DUPLICATE_RADIUS_METRES}
-    )
-  `
-  const match = nearby.find((p) => normalizeName(p.name) === normalized)
-  if (match) return { id: match.id, deduped: true }
+  return prisma.$transaction(async (tx) => {
+    // Serialize concurrent inserts of the same normalized name via a
+    // transaction-scoped advisory lock, so two requests can't both pass the
+    // dedup check and create a near-duplicate. hashtext keeps the key stable.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`place:${normalized}`}))`
 
-  const [created] = await prisma.$queryRaw<Array<{ id: string }>>`
-    INSERT INTO places (name, address, provider, location)
-    VALUES (
-      ${input.name}, ${input.address}, 'manual',
-      ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography
-    )
-    RETURNING id
-  `
-  return { id: created.id, deduped: false }
+    const nearby = await tx.$queryRaw<Array<{ id: string; name: string }>>`
+      SELECT id, name
+      FROM places
+      WHERE ST_DWithin(
+        location,
+        ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography,
+        ${DUPLICATE_RADIUS_METRES}
+      )
+    `
+    const match = nearby.find((p) => normalizeName(p.name) === normalized)
+    if (match) return { id: match.id, deduped: true }
+
+    const [created] = await tx.$queryRaw<Array<{ id: string }>>`
+      INSERT INTO places (name, address, provider, location)
+      VALUES (
+        ${input.name}, ${input.address}, 'manual',
+        ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography
+      )
+      RETURNING id
+    `
+    return { id: created.id, deduped: false }
+  })
 }
 
 export { Prisma }
