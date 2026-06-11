@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { BottomNav } from '../bottom-nav'
 
@@ -29,11 +29,11 @@ describe('BottomNav — link structure', () => {
     mockUsePathname.mockReturnValue('/')
   })
 
-  it('renders all 5 navigation links', () => {
+  it('renders 4 navigation links and the create button', () => {
     render(<BottomNav />)
     expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Explore' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Log a bite' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Create a review or bite' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Nearby' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Profile' })).toBeInTheDocument()
   })
@@ -42,9 +42,34 @@ describe('BottomNav — link structure', () => {
     render(<BottomNav />)
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: 'Explore' })).toHaveAttribute('href', '/search')
-    expect(screen.getByRole('link', { name: 'Log a bite' })).toHaveAttribute('href', '/add-bite')
     expect(screen.getByRole('link', { name: 'Nearby' })).toHaveAttribute('href', '/nearby')
     expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('href', '/profile')
+  })
+})
+
+describe('BottomNav — create sheet', () => {
+  beforeEach(() => {
+    mockUsePathname.mockReturnValue('/')
+    render(<BottomNav />)
+  })
+
+  it('opens the chooser with a Review and a Bite option', () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Create a review or bite' }))
+    expect(screen.getByRole('dialog', { name: 'Create a review or bite' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Review/ })).toHaveAttribute('href', '/add-review')
+    expect(screen.getByRole('link', { name: /Bite/ })).toHaveAttribute('href', '/add-bite')
+  })
+
+  it('explains both options', () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Create a review or bite' }))
+    expect(screen.getByText(/Public and permanent/)).toBeInTheDocument()
+    expect(screen.getByText(/Friends see it for 24 hours/)).toBeInTheDocument()
+  })
+
+  it('closes via the backdrop', () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Create a review or bite' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })
 
@@ -96,19 +121,20 @@ describe('BottomNav — active state (aria-current)', () => {
   })
 })
 
-describe('BottomNav — "Log" button accessibility', () => {
+describe('BottomNav — create button accessibility', () => {
   beforeEach(() => {
     mockUsePathname.mockReturnValue('/')
     render(<BottomNav />)
   })
 
-  it('Log link has aria-label "Log a bite"', () => {
-    expect(screen.getByRole('link', { name: 'Log a bite' })).toBeInTheDocument()
+  it('create button announces the dialog it opens', () => {
+    const button = screen.getByRole('button', { name: 'Create a review or bite' })
+    expect(button).toHaveAttribute('aria-haspopup', 'dialog')
+    expect(button).toHaveAttribute('aria-expanded', 'false')
   })
 
-  it('Log link has a visually hidden label text', () => {
-    // The sr-only span inside the Log link
-    const srText = screen.getByText('Log')
+  it('create button has a visually hidden label text', () => {
+    const srText = screen.getByText('Post')
     expect(srText).toHaveClass('sr-only')
   })
 })

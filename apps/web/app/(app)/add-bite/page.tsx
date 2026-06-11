@@ -241,7 +241,7 @@ export default function AddBitePage() {
             href={success.placeId ? `/add-review?placeId=${encodeURIComponent(success.placeId)}` : '/add-review'}
             className="btn-primary block w-full"
           >
-            Turn it into a Snack review → +75 XP
+            Turn it into a review → +75 XP
           </Link>
           <button type="button" className="btn-secondary block w-full" onClick={resetForm}>
             Log another bite
@@ -263,17 +263,17 @@ export default function AddBitePage() {
         className="block rounded-xl border border-snack-primary/30 bg-snack-primary/10 px-4 py-3 text-sm"
       >
         <span className="font-semibold text-snack-text">Eating something worth recommending?</span>{' '}
-        <span className="text-snack-primary font-semibold">Share a Snack instead → +75 XP</span>
+        <span className="text-snack-primary font-semibold">Write a review instead → +75 XP</span>
         <span className="mt-0.5 block text-xs text-snack-muted">
-          A public review that puts the spot on the map for everyone.
+          Public and permanent — it puts the spot on the map for everyone.
         </span>
       </Link>
 
       <div>
-        <h1 className="text-2xl font-heading font-bold text-snack-text">Quick Bite</h1>
+        <h1 className="text-2xl font-heading font-bold text-snack-text">Bite</h1>
         <p className="mt-1 text-sm text-snack-muted">
-          Your private food log for the in-between moments: one photo, done. Only mutual
-          follows see it — it never appears in the public feed. Keeps your streak alive. +10 XP
+          A quick photo of what you&apos;re eating right now. Friends see it for 24 hours, then
+          it&apos;s gone from their feed. Keeps your streak alive. +10 XP
         </p>
       </div>
 
