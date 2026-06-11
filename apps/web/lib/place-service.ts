@@ -124,4 +124,73 @@ export async function resolveManualPlace(input: {
   })
 }
 
+/** A place as shown in the picker: existing SnackSpot place (placeId set) or a
+ *  provider venue to add (placeId null). */
+export interface PickerPlace {
+  placeId: string | null
+  provider: string
+  providerPlaceId: string | null
+  name: string
+  address: string
+  lat: number
+  lng: number
+  reviewCount: number
+  distanceM: number | null
+}
+
+/**
+ * Searches existing SnackSpot places by name (trigram/ILIKE on the lowercased
+ * name, backed by idx_places_name_lower_trgm). When coordinates are given,
+ * results are ordered nearest-first; otherwise by review count. This is what
+ * makes already-known venues — including community/manual places the external
+ * provider may not have — show up before we ever hit the provider.
+ */
+export async function searchDbPlaces(
+  q: string,
+  coords: { lat: number; lng: number } | null,
+  limit: number,
+): Promise<PickerPlace[]> {
+  const pattern = `%${q.trim()}%`
+
+  if (coords) {
+    return prisma.$queryRaw<PickerPlace[]>`
+      SELECT
+        p.id AS "placeId",
+        p.provider,
+        p.provider_place_id AS "providerPlaceId",
+        p.name,
+        p.address,
+        ST_Y(p.location::geometry) AS lat,
+        ST_X(p.location::geometry) AS lng,
+        COUNT(r.id)::int AS "reviewCount",
+        ST_Distance(p.location, ST_SetSRID(ST_MakePoint(${coords.lng}, ${coords.lat}), 4326)::geography) AS "distanceM"
+      FROM places p
+      LEFT JOIN reviews r ON r.place_id = p.id AND r.status = 'PUBLISHED'
+      WHERE LOWER(p.name) ILIKE LOWER(${pattern})
+      GROUP BY p.id, p.name, p.address, p.provider, p.provider_place_id, p.location
+      ORDER BY "distanceM" ASC
+      LIMIT ${limit}
+    `
+  }
+
+  return prisma.$queryRaw<PickerPlace[]>`
+    SELECT
+      p.id AS "placeId",
+      p.provider,
+      p.provider_place_id AS "providerPlaceId",
+      p.name,
+      p.address,
+      ST_Y(p.location::geometry) AS lat,
+      ST_X(p.location::geometry) AS lng,
+      COUNT(r.id)::int AS "reviewCount",
+      NULL::float AS "distanceM"
+    FROM places p
+    LEFT JOIN reviews r ON r.place_id = p.id AND r.status = 'PUBLISHED'
+    WHERE LOWER(p.name) ILIKE LOWER(${pattern})
+    GROUP BY p.id, p.name, p.address, p.provider, p.provider_place_id, p.location
+    ORDER BY "reviewCount" DESC, p.name ASC
+    LIMIT ${limit}
+  `
+}
+
 export { Prisma }
