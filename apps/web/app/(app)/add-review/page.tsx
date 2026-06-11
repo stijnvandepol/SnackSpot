@@ -4,31 +4,12 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { UserMentionInput } from '@/components/user-mention-input'
+import { PlacePicker, type PickedPlace } from '@/components/place-picker'
 import { computeOverallRating } from '@/lib/ratings'
 import { REVIEW_TAG_OPTIONS, type ReviewTag } from '@/lib/review-tags'
 import { shouldUseDirectBrowserUpload, normalizeUploadMime, compressImage } from '@/lib/upload'
 
 type Step = 'place' | 'review' | 'photos'
-
-interface PlaceForm {
-  mode: 'new' | 'existing'
-  placeId?: string
-  name: string
-  address: string
-  lat: string
-  lng: string
-}
-
-interface SearchPlace {
-  id: string
-  name: string
-  address: string
-  lat: number
-  lng: number
-  distance_m?: number
-  avg_rating: number | null
-  review_count: number
-}
 
 interface UploadedPhoto {
   photoId: string
@@ -95,12 +76,8 @@ function AddReviewForm() {
   const isDev = process.env.NODE_ENV !== 'production'
   // The photo comes first: the camera is the habit, the details follow.
   const [step, setStep] = useState<Step>('photos')
-  const [place, setPlace] = useState<PlaceForm>({
-    mode: 'existing', name: '', address: '', lat: '', lng: '',
-  })
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<SearchPlace[]>([])
-  const [searching, setSearching] = useState(false)
+  // A verified place (existing SnackSpot place or a provider-verified venue).
+  const [pickedPlace, setPickedPlace] = useState<PickedPlace | null>(null)
   // Ratings start unset (0) so a published review always reflects a deliberate
   // choice — silent defaults would pollute place averages.
   const [ratings, setRatings] = useState<RatingDraft>({
@@ -116,10 +93,7 @@ function AddReviewForm() {
   const [photos, setPhotos] = useState<UploadedPhoto[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [fetchingLocation, setFetchingLocation] = useState(false)
-  const [geocoding, setGeocoding] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const photosRef = useRef<UploadedPhoto[]>([])
 
   const revokePreviewUrl = (url: string) => {
@@ -128,36 +102,13 @@ function AddReviewForm() {
     }
   }
 
-  // Search for existing places
-  const handleSearchPlaces = async (query: string) => {
-    if (!query || query.length < 2) {
-      setSearchResults([])
-      return
-    }
-    
-    setSearching(true)
-    try {
-      const res = await fetch(
-        `/api/v1/places/search?q=${encodeURIComponent(query)}&limit=10`,
-        { credentials: 'include' }
-      )
-      if (!res.ok) throw new Error('Search failed')
-      const json = await res.json()
-      setSearchResults(json.data.data || [])
-    } catch (e) {
-      console.error('Place search failed:', e)
-      setSearchResults([])
-    } finally {
-      setSearching(false)
-    }
-  }
-
+  // Photos effect mirror (kept in sync for cleanup on unmount).
   useEffect(() => {
     photosRef.current = photos
   }, [photos])
 
-  // Arriving via "Write review" on a place page (?placeId=...) pre-selects
-  // that place so the user never has to search for it again.
+  // Arriving via "Write review" on a place page (?placeId=...) pre-selects that
+  // place so the user never has to search for it again.
   useEffect(() => {
     if (!prefillPlaceId) return
     let cancelled = false
@@ -167,18 +118,12 @@ function AddReviewForm() {
         if (cancelled) return
         const p = json?.data
         if (!p?.id) return
-        setPlace({
-          mode: 'existing',
-          placeId: p.id,
-          name: p.name ?? '',
-          address: p.address ?? '',
-          lat: String(p.lat ?? ''),
-          lng: String(p.lng ?? ''),
-        })
-        setSearchQuery(p.name ?? '')
+        setPickedPlace({ placeId: p.id, name: p.name ?? '', address: p.address ?? '' })
       })
       .catch(() => undefined) // unknown place id: the user picks one in the place step
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [prefillPlaceId])
 
   useEffect(() => {
@@ -186,181 +131,6 @@ function AddReviewForm() {
       photosRef.current.forEach((photo) => revokePreviewUrl(photo.previewUrl))
     }
   }, [])
-
-  // Debounced search
-  const handleSearchInputChange = (query: string) => {
-    setSearchQuery(query)
-    
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current)
-    }
-    
-    searchTimeoutRef.current = setTimeout(() => {
-      handleSearchPlaces(query)
-    }, 300)
-  }
-
-  // Select a place from search results
-  const handleSelectPlace = (selectedPlace: SearchPlace) => {
-    setPlace((p) => ({
-      ...p,
-      placeId: selectedPlace.id,
-      name: selectedPlace.name,
-      address: selectedPlace.address,
-      lat: selectedPlace.lat.toString(),
-      lng: selectedPlace.lng.toString(),
-    }))
-    setSearchQuery(selectedPlace.name)
-    setSearchResults([])
-  }
-
-  // Get current location and reverse geocode to address
-  const handleUseCurrentLocation = async () => {
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser')
-      return
-    }
-    
-    setFetchingLocation(true)
-    setError(null)
-    
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude
-        const lng = position.coords.longitude
-        
-        if (isDev) console.log('Current position:', lat, lng)
-        
-        try {
-          // Add small delay to respect Nominatim usage policy
-          await new Promise(resolve => setTimeout(resolve, 1000))
-          
-          // Reverse geocode: coordinates -> address
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&zoom=18`,
-            { 
-              headers: { 
-                'User-Agent': 'SnackSpot/1.0 (contact@snackspot.app)',
-                'Accept-Language': 'nl,en'
-              } 
-            }
-          )
-          
-          if (!res.ok) {
-            throw new Error(`HTTP ${res.status}`)
-          }
-          
-          const data = await res.json()
-          if (isDev) console.log('Reverse geocoding result:', data)
-          
-          if (data.address) {
-            const addr = data.address
-            // Build a clean "Street HouseNumber, City" address from components
-            const street = [addr.road, addr.house_number].filter(Boolean).join(' ')
-            const city = addr.city || addr.town || addr.village || addr.municipality || ''
-            const parts = [street, city].filter(Boolean)
-            const addressStr = parts.length > 0 ? parts.join(', ') : data.display_name
-            
-            setPlace((p) => ({
-              ...p,
-              address: addressStr,
-              lat: lat.toString(),
-              lng: lng.toString(),
-            }))
-          } else {
-            // Still set coordinates even if address lookup failed
-            setPlace((p) => ({ 
-              ...p, 
-              lat: lat.toString(), 
-              lng: lng.toString() 
-            }))
-            setError('Got your location! Please enter the address manually.')
-          }
-        } catch (e) {
-          console.error('Reverse geocoding failed:', e)
-          // Still set coordinates
-          setPlace((p) => ({ 
-            ...p, 
-            lat: lat.toString(), 
-            lng: lng.toString() 
-          }))
-          setError('Got your location! Please enter the address manually.')
-        } finally {
-          setFetchingLocation(false)
-        }
-      },
-      (err) => {
-        console.error('Geolocation error:', err)
-        setError(`Location error: ${err.message}`)
-        setFetchingLocation(false)
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    )
-  }
-
-  // Geocode address to get coordinates
-  const handleGeocodeAddress = async () => {
-    if (!place.address || place.address.length < 3) {
-      return // Don't geocode very short text
-    }
-    
-    setGeocoding(true)
-    setError(null)
-    
-    try {
-      // Add small delay to respect Nominatim usage policy
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(place.address)}&format=json&addressdetails=1&limit=3&countrycodes=nl,be,de`,
-        { 
-          headers: { 
-            'User-Agent': 'SnackSpot/1.0 (contact@snackspot.app)',
-            'Accept-Language': 'nl,en'
-          } 
-        }
-      )
-      
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`)
-      }
-      
-      const data = await res.json()
-      if (isDev) console.log('Geocoding results:', data)
-      
-      if (data && data.length > 0) {
-        const result = data[0]
-        // Build a clean "Street HouseNumber, City" address from components
-        let cleanAddress = place.address
-        if (result.address) {
-          const addr = result.address
-          const street = [addr.road, addr.house_number].filter(Boolean).join(' ')
-          const city = addr.city || addr.town || addr.village || addr.municipality || ''
-          const parts = [street, city].filter(Boolean)
-          if (parts.length > 0) cleanAddress = parts.join(', ')
-        }
-        setPlace((p) => ({
-          ...p,
-          lat: result.lat,
-          lng: result.lon,
-          address: cleanAddress,
-        }))
-        if (isDev) console.log('Coordinates found:', result.lat, result.lon)
-      } else {
-        if (isDev) console.warn('No results for address:', place.address)
-        setError('Address not found. Try a more specific address (e.g., "Dam 1, Amsterdam")')
-      }
-    } catch (e) {
-      console.error('Geocoding error:', e)
-      setError(`Could not pin address: ${e instanceof Error ? e.message : 'Unknown error'}. Try again or use current location.`)
-    } finally {
-      setGeocoding(false)
-    }
-  }
 
   if (loading) return null
 
@@ -533,30 +303,19 @@ function AddReviewForm() {
     setError(null)
     setSubmitting(true)
 
-    const payload = place.mode === 'existing'
-      ? {
-          placeId: place.placeId,
-          ratings,
-          text: text.trim(),
-          dishName: dishName.trim() || undefined,
-          tags: selectedTags,
-          photoIds: photos.filter((p) => p.status === 'ready').map((p) => p.photoId),
-          mentionedUserIds,
-        }
-      : {
-          place: {
-            name: place.name.trim(),
-            address: place.address.trim(),
-            lat: parseFloat(place.lat),
-            lng: parseFloat(place.lng),
-          },
-          ratings,
-          text: text.trim(),
-          dishName: dishName.trim() || undefined,
-          tags: selectedTags,
-          photoIds: photos.filter((p) => p.status === 'ready').map((p) => p.photoId),
-          mentionedUserIds,
-        }
+    if (!pickedPlace) { setError('Pick a place first'); return }
+
+    const payload = {
+      ...(pickedPlace.placeId
+        ? { placeId: pickedPlace.placeId }
+        : { verifiedPlace: pickedPlace.verifiedPlace }),
+      ratings,
+      text: text.trim(),
+      dishName: dishName.trim() || undefined,
+      tags: selectedTags,
+      photoIds: photos.filter((p) => p.status === 'ready').map((p) => p.photoId),
+      mentionedUserIds,
+    }
 
     try {
       const res = await fetch('/api/v1/reviews', {
@@ -580,11 +339,11 @@ function AddReviewForm() {
   const photosBusy = photos.some((p) => p.status === 'uploading' || p.status === 'confirming')
   const ratingsComplete =
     isHalfStepRating(ratings.taste) && isHalfStepRating(ratings.value) && isHalfStepRating(ratings.portion)
-  const selectedPlaceSummary = (place.name || place.address) ? (
+  const selectedPlaceSummary = pickedPlace ? (
     <div className="rounded-xl border border-snack-border bg-snack-surface px-4 py-3">
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-snack-muted">Place</p>
-      <p className="mt-1 font-semibold text-snack-text">{place.name || 'New place'}</p>
-      {place.address && <p className="mt-1 text-sm text-snack-muted">{place.address}</p>}
+      <p className="mt-1 font-semibold text-snack-text">{pickedPlace.name}</p>
+      {pickedPlace.address && <p className="mt-1 text-sm text-snack-muted">{pickedPlace.address}</p>}
     </div>
   ) : null
 
@@ -625,153 +384,14 @@ function AddReviewForm() {
         </div>
       </div>
 
-      {/* Step 1: Place */}
+      {/* Place step: pick a verified venue (existing or provider-verified) */}
       {step === 'place' && (
         <div className="space-y-4">
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setPlace((p) => ({ ...p, mode: 'existing', placeId: undefined, name: '', address: '', lat: '', lng: '' }))
-                setSearchQuery('')
-                setSearchResults([])
-              }}
-              className={`flex-1 rounded-xl border px-4 py-2 text-sm font-medium transition ${place.mode === 'existing' ? 'border-snack-primary bg-snack-surface text-snack-primary' : 'border-snack-border text-snack-muted'}`}
-            >
-              Existing place
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setPlace((p) => ({ ...p, mode: 'new', placeId: undefined, name: '', address: '', lat: '', lng: '' }))
-                setSearchQuery('')
-                setSearchResults([])
-              }}
-              className={`flex-1 rounded-xl border px-4 py-2 text-sm font-medium transition ${place.mode === 'new' ? 'border-snack-primary bg-snack-surface text-snack-primary' : 'border-snack-border text-snack-muted'}`}
-            >
-              New place
-            </button>
-          </div>
-
-          {place.mode === 'existing' ? (
-            <>
-              <div className="relative">
-                <label className="label">Search for a place *</label>
-                <p className="mb-2 text-xs text-snack-muted">Choose an existing place so your post lands on the right place page.</p>
-                <input 
-                  className="input" 
-                  placeholder="Start typing place name..." 
-                  value={searchQuery} 
-                  onChange={(e) => handleSearchInputChange(e.target.value)}
-                  autoComplete="off"
-                />
-                {searching && (
-                  <div className="absolute right-3 top-10 text-xs text-snack-muted">
-                    🔍...
-                  </div>
-                )}
-                
-                {/* Search results dropdown */}
-                {searchResults.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-snack-background border border-snack-border rounded-xl shadow-lg max-h-64 overflow-y-auto">
-                    {searchResults.map((result) => (
-                      <button
-                        key={result.id}
-                        type="button"
-                        onClick={() => handleSelectPlace(result)}
-                        className="w-full text-left px-4 py-3 hover:bg-snack-surface border-b border-snack-border last:border-b-0 transition"
-                      >
-                        <div className="font-medium text-snack-text">{result.name}</div>
-                        <div className="text-xs text-snack-muted mt-0.5">{result.address}</div>
-                        <div className="flex gap-3 mt-1 text-xs text-snack-muted">
-                          {result.avg_rating && (
-                            <span>⭐ {result.avg_rating.toFixed(1)}</span>
-                          )}
-                          <span>📝 {result.review_count} reviews</span>
-                          {result.distance_m !== undefined && (
-                            <span>📍 {(result.distance_m / 1000).toFixed(1)} km</span>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {!searching && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
-                  <div className="mt-2 rounded-xl border border-dashed border-snack-border px-4 py-3 text-sm text-snack-muted">
-                    No place matched your search. Use <span className="font-medium text-snack-text">New place</span> if you want to add it.
-                  </div>
-                )}
-              </div>
-              
-              {place.placeId && (
-                <div className="px-4 py-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-xl">
-                  <div className="flex items-start gap-2">
-                    <span className="text-lg" aria-hidden="true">+</span>
-                    <div className="flex-1">
-                      <div className="font-medium text-snack-text">Selected place: {place.name}</div>
-                      <div className="text-xs text-snack-muted mt-0.5">{place.address}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <div>
-                <label className="label">Place name *</label>
-                <input 
-                  className="input" 
-                  placeholder="e.g. Café Stroopwafel" 
-                  value={place.name} 
-                  onChange={(e) => setPlace((p) => ({ ...p, name: e.target.value }))}
-                  autoComplete="off"
-                />
-              </div>
-              
-              <div>
-                <label className="label">Address *</label>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <input 
-                    className="input flex-1" 
-                    placeholder="Street, City" 
-                    value={place.address} 
-                    onChange={(e) => setPlace((p) => ({ ...p, address: e.target.value }))} 
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        void handleGeocodeAddress()
-                      }
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleGeocodeAddress}
-                    disabled={geocoding || !place.address}
-                    className="btn-secondary px-3 whitespace-nowrap sm:flex-none"
-                  >
-                    {geocoding ? 'Pin...' : 'Pin'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleUseCurrentLocation}
-                    disabled={fetchingLocation}
-                    className="btn-secondary px-3 whitespace-nowrap sm:flex-none"
-                  >
-                    {fetchingLocation ? 'Locating...' : 'Use current location'}
-                  </button>
-                </div>
-                <p className="text-xs text-snack-muted mt-1">
-                  Type an address and press Enter/Pin, or use your current location.
-                </p>
-              </div>
-              
-              {place.lat && place.lng && (
-                <div className="px-3 py-2 bg-snack-surface rounded-lg text-xs text-snack-muted">
-                  Coordinates pinned at {parseFloat(place.lat).toFixed(4)}, {parseFloat(place.lng).toFixed(4)}
-                </div>
-              )}
-            </>
-          )}
+          <PlacePicker
+            accessToken={accessToken}
+            value={pickedPlace}
+            onChange={setPickedPlace}
+          />
 
           {error && <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400" role="status" aria-live="polite">{error}</div>}
 
@@ -780,21 +400,10 @@ function AddReviewForm() {
             <button
               className="btn-primary flex-1"
               type="button"
-              disabled={submitting || geocoding || fetchingLocation}
+              disabled={submitting}
               onClick={() => {
-                if (place.mode === 'existing') {
-                  if (!place.placeId) {
-                    setError('Please select a place from the search results'); return
-                  }
-                } else {
-                  // mode === 'new'
-                  if (!place.name || !place.address) {
-                    setError('Place name and address are required'); return
-                  }
-                  if (!place.lat || !place.lng) {
-                    setError('Please pin the address (Enter/Pin) or use your current location first')
-                    return
-                  }
+                if (!pickedPlace) {
+                  setError('Pick a place from the list'); return
                 }
                 setError(null)
                 void handleSubmit()
@@ -912,7 +521,7 @@ function AddReviewForm() {
                 setStep('place')
               }}
             >
-              {place.placeId ? 'Next: Confirm place' : 'Next: Choose place'}
+              {pickedPlace ? 'Next: Confirm place' : 'Next: Choose place'}
             </button>
           </div>
         </div>
