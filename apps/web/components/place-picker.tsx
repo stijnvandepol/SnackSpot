@@ -76,7 +76,11 @@ export function PlacePicker({ accessToken, value, onChange }: PlacePickerProps) 
   }
 
   const runSearch = async (q: string) => {
-    if (!accessToken || q.trim().length < 2) {
+    const trimmed = q.trim()
+    const c = coordsRef.current
+    // With a short term and no location there's nothing to show. With a short
+    // term but a location, fall through to "nearby" mode (empty q + coords).
+    if (!accessToken || (trimmed.length < 2 && !c)) {
       setResults([])
       return
     }
@@ -89,8 +93,8 @@ export function PlacePicker({ accessToken, value, onChange }: PlacePickerProps) 
     setSearching(true)
     setError(null)
     try {
-      const params = new URLSearchParams({ q })
-      const c = coordsRef.current
+      const params = new URLSearchParams()
+      if (trimmed.length >= 2) params.set('q', trimmed)
       if (c) {
         params.set('lat', String(c.lat))
         params.set('lng', String(c.lng))
@@ -158,6 +162,12 @@ export function PlacePicker({ accessToken, value, onChange }: PlacePickerProps) 
           placeholder="Start typing a place name…"
           value={query}
           onChange={(e) => onInput(e.target.value)}
+          onFocus={() => {
+            // Reopen nearby/last results when refocusing an empty field.
+            if (coordsRef.current && query.trim().length < 2 && results.length === 0) {
+              void runSearch('')
+            }
+          }}
           autoComplete="off"
           role="combobox"
           aria-expanded={results.length > 0}
@@ -172,7 +182,11 @@ export function PlacePicker({ accessToken, value, onChange }: PlacePickerProps) 
           className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-snack-primary disabled:opacity-50"
         >
           <span aria-hidden="true">📍</span>
-          {locating ? 'Finding you…' : coords ? 'Using your location · nearest first' : 'Search near me'}
+          {locating
+            ? 'Finding you…'
+            : coords
+              ? 'Showing places near you'
+              : 'Show places near me'}
         </button>
 
         {results.length > 0 && (
@@ -180,6 +194,11 @@ export function PlacePicker({ accessToken, value, onChange }: PlacePickerProps) 
             id="place-results"
             className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-snack-border bg-snack-background shadow-lg"
           >
+            {query.trim().length < 2 && (
+              <li className="border-b border-snack-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-snack-muted">
+                Near you
+              </li>
+            )}
             {results.map((r) => (
               <li key={r.placeId ?? `${r.provider}:${r.providerPlaceId}`}>
                 <button

@@ -4,7 +4,10 @@ import { ok, err, parseQuery, requireAuth, serverError, isResponse } from '@/lib
 import { getClientIP, rateLimitIP, rateLimit } from '@/lib/rate-limit'
 import { buildCacheKey, getCachedJson, setCachedJson } from '@/lib/cache'
 import { placesProvider, type ProviderPlace } from '@/lib/places-provider'
-import { searchDbPlaces } from '@/lib/place-service'
+import { searchDbPlaces, nearbyDbPlaces } from '@/lib/place-service'
+
+// Radius for the "places near you" shortcut (empty query + coordinates).
+const NEARBY_RADIUS_METRES = 2000
 
 /** Normalize a name for duplicate matching (diacritics + punctuation insensitive). */
 function normalizeName(name: string): string {
@@ -28,7 +31,8 @@ function providerCacheKey(q: string, lat?: number, lng?: number): string {
 }
 
 const VerifyQuery = z.object({
-  q: z.string().trim().min(2).max(120),
+  // q may be empty in "nearby" mode (coords present, no search term).
+  q: z.string().trim().max(120).optional().default(''),
   lat: z.coerce.number().min(-90).max(90).optional(),
   lng: z.coerce.number().min(-180).max(180).optional(),
 })
@@ -65,10 +69,32 @@ export async function GET(req: NextRequest) {
     const coords = query.lat !== undefined && query.lng !== undefined
       ? { lat: query.lat, lng: query.lng }
       : null
+    const term = query.q.trim()
+
+    // Nearby mode: no search term but a location → show existing SnackSpot
+    // places near the user so they can reuse one with a single tap. (The
+    // provider has no clean "POIs near me" without a term, so this surfaces our
+    // own verified venues.)
+    if (term.length < 2) {
+      if (!coords) return ok({ data: [] })
+      const near = await nearbyDbPlaces(coords, NEARBY_RADIUS_METRES, 10)
+      return ok({
+        data: near.map((p) => ({
+          placeId: p.placeId,
+          provider: p.provider,
+          providerPlaceId: p.providerPlaceId,
+          name: p.name,
+          address: p.address,
+          lat: p.lat,
+          lng: p.lng,
+          reviewCount: p.reviewCount,
+        })),
+      })
+    }
 
     // 1. Existing SnackSpot places first (the dedup fix): match by name, nearest
     //    or most-reviewed first.
-    const dbPlaces = await searchDbPlaces(query.q, coords, 8)
+    const dbPlaces = await searchDbPlaces(term, coords, 8)
     const dbResults: VerifyResult[] = dbPlaces.map((p) => ({
       placeId: p.placeId,
       provider: p.provider,
@@ -88,12 +114,12 @@ export async function GET(req: NextRequest) {
 
     // 2. Provider results (cached + globally throttled), appended for venues we
     //    don't have yet.
-    const cacheKey = providerCacheKey(query.q, query.lat, query.lng)
+    const cacheKey = providerCacheKey(term, query.lat, query.lng)
     let providerResults = await getCachedJson<ProviderPlace[]>(cacheKey)
     if (providerResults === null) {
       const globalGate = await rateLimit('rl:places-provider:global', 60, 60)
       if (globalGate.allowed) {
-        providerResults = await placesProvider.search(query.q, {
+        providerResults = await placesProvider.search(term, {
           lat: query.lat,
           lng: query.lng,
           limit: 8,

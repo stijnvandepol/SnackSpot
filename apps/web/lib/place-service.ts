@@ -193,4 +193,37 @@ export async function searchDbPlaces(
   `
 }
 
+/**
+ * Nearby existing SnackSpot places (no text filter), nearest first. Powers the
+ * "places near you" shortcut so a user can reuse an existing venue with one tap.
+ */
+export async function nearbyDbPlaces(
+  coords: { lat: number; lng: number },
+  radiusMetres: number,
+  limit: number,
+): Promise<PickerPlace[]> {
+  return prisma.$queryRaw<PickerPlace[]>`
+    SELECT
+      p.id AS "placeId",
+      p.provider,
+      p.provider_place_id AS "providerPlaceId",
+      p.name,
+      p.address,
+      ST_Y(p.location::geometry) AS lat,
+      ST_X(p.location::geometry) AS lng,
+      COUNT(r.id)::int AS "reviewCount",
+      ST_Distance(p.location, ST_SetSRID(ST_MakePoint(${coords.lng}, ${coords.lat}), 4326)::geography) AS "distanceM"
+    FROM places p
+    LEFT JOIN reviews r ON r.place_id = p.id AND r.status = 'PUBLISHED'
+    WHERE ST_DWithin(
+      p.location,
+      ST_SetSRID(ST_MakePoint(${coords.lng}, ${coords.lat}), 4326)::geography,
+      ${radiusMetres}
+    )
+    GROUP BY p.id, p.name, p.address, p.provider, p.provider_place_id, p.location
+    ORDER BY "distanceM" ASC
+    LIMIT ${limit}
+  `
+}
+
 export { Prisma }
