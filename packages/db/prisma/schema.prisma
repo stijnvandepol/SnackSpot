@@ -203,6 +203,10 @@ model Review {
   text     String
   dishName String?      @map("dish_name")
   status   ReviewStatus @default(PUBLISHED)
+  /// When the review was soft-deleted; purged after the 30-day restore window
+  deletedAt   DateTime? @map("deleted_at")
+  /// Who soft-deleted it: the owner (restorable) or a moderator (not restorable)
+  deletedById String?   @map("deleted_by_user_id")
   createdAt DateTime    @default(now()) @map("created_at")
   updatedAt DateTime    @updatedAt @map("updated_at")
 
@@ -226,7 +230,25 @@ model Review {
   @@index([placeId, status, rating(sort: Desc), createdAt(sort: Desc)])
   @@index([userId, status, placeId])
   @@index([userId, status, id])
+  @@index([deletedAt])
   @@map("reviews")
+}
+
+/// Append-only audit trail of privacy-sensitive actions (account deletion,
+/// data export, photo deletion, review purge). Deliberately NO relation to
+/// User: entries must survive account erasure. Stores only the opaque user
+/// id - never email/username - so the log is not linkable to a person after
+/// erasure (GDPR Art. 5(2) accountability + data minimisation).
+model PrivacyAuditLog {
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  userId    String   @map("user_id")
+  action    String
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([action, createdAt(sort: Desc)])
+  @@map("privacy_audit_log")
 }
 
 model ReviewTag {
