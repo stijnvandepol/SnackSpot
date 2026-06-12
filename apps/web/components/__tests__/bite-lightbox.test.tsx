@@ -37,6 +37,7 @@ describe('BiteLightbox', () => {
   it('renders nothing when the photo has no usable variant', () => {
     render(<BiteLightbox bite={{ ...baseBite, photo: { variants: {} } }} onClose={() => {}} />)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(document.body.style.overflow).not.toBe('hidden')
   })
 
   it('shows the large photo variant with meal, date, place and note', () => {

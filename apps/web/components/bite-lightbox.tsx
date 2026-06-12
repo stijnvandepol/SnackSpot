@@ -22,7 +22,8 @@ const dateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', ti
 
 /** Fullscreen viewer for a bite photo with a compact info bar. Open when `bite` is set. */
 export function BiteLightbox({ bite, onClose }: BiteLightboxProps) {
-  const open = bite !== null
+  const src = bite ? photoVariantUrl(bite.photo.variants, ['large', 'medium', 'thumb']) : null
+  const open = src !== null
 
   useEffect(() => {
     if (!open) return
@@ -41,9 +42,7 @@ export function BiteLightbox({ bite, onClose }: BiteLightboxProps) {
     return () => document.removeEventListener('keydown', handleEscape)
   }, [open, onClose])
 
-  if (!bite) return null
-  const src = photoVariantUrl(bite.photo.variants, ['large', 'medium', 'thumb'])
-  if (!src) return null
+  if (!bite || !src) return null
   const label = mealLabel(bite.mealSlot)
 
   return (
