@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth-provider'
+import { BiteLightbox } from '@/components/bite-lightbox'
 import { Modal } from '@/components/ui/modal'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { mealEmoji, mealLabel as mealLabelFor } from '@/lib/meal'
@@ -27,6 +28,7 @@ export default function MyBitesPage() {
   const [hasMore, setHasMore] = useState(true)
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [zoomBite, setZoomBite] = useState<Bite | null>(null)
   const [toDelete, setToDelete] = useState<Bite | null>(null)
   const [deleteBusy, setDeleteBusy] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -156,8 +158,15 @@ export default function MyBitesPage() {
               <li key={bite.id} className="card group relative overflow-hidden p-0">
                 <div className="aspect-square bg-snack-surface">
                   {src ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- user photo via variant URL
-                    <img src={src} alt={bite.note ?? `${mealLabel} bite`} className="h-full w-full object-cover" loading="lazy" />
+                    <button
+                      type="button"
+                      onClick={() => setZoomBite(bite)}
+                      className="block h-full w-full cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-inset focus:ring-snack-primary"
+                      aria-label={`View ${mealLabel} bite photo from ${dateLabel}`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element -- user photo via variant URL */}
+                      <img src={src} alt={bite.note ?? `${mealLabel} bite`} className="h-full w-full object-cover" loading="lazy" />
+                    </button>
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-3xl">
                       {mealEmoji(bite.mealSlot)}
@@ -193,6 +202,8 @@ export default function MyBitesPage() {
           {loading ? 'Loading more…' : ''}
         </div>
       )}
+
+      <BiteLightbox bite={zoomBite} onClose={() => setZoomBite(null)} />
 
       <Modal
         open={toDelete !== null}
