@@ -1,6 +1,13 @@
 import { redis } from './redis'
 import { env } from './env'
+import { logger } from './logger'
 import { SLIDING_WINDOW_LUA, type RateLimitResult } from '@snackspot/shared'
+
+// Rate limiting is a protection layer, not a correctness gate. If Redis is
+// briefly unavailable we fail OPEN (allow the request) and log loudly, rather
+// than 500-ing every rate-limited endpoint — a Redis blip must not take the
+// site, and especially auth, offline. The window of reduced protection is
+// short, and per-attempt cost (Argon2id on the auth paths) caps the damage.
 
 /**
  * Sliding-window rate limiter backed by Redis sorted sets.
@@ -20,24 +27,30 @@ export async function rateLimit(
   const now = Date.now()
   const member = `${now}-${Math.random().toString(36).slice(2)}`
 
-  const result = await redis.eval(
-    SLIDING_WINDOW_LUA,
-    1,
-    key,
-    String(now),
-    String(windowSeconds * 1000),
-    String(limit),
-    member,
-    String(windowSeconds),
-  ) as [number, number]
+  try {
+    const result = await redis.eval(
+      SLIDING_WINDOW_LUA,
+      1,
+      key,
+      String(now),
+      String(windowSeconds * 1000),
+      String(limit),
+      member,
+      String(windowSeconds),
+    ) as [number, number]
 
-  const count = result[0]
-  const allowed = result[1] === 1
+    const count = result[0]
+    const allowed = result[1] === 1
 
-  return {
-    allowed,
-    remaining: Math.max(0, limit - count),
-    resetInSeconds: windowSeconds,
+    return {
+      allowed,
+      remaining: Math.max(0, limit - count),
+      resetInSeconds: windowSeconds,
+    }
+  } catch (err) {
+    // Fail open: Redis unavailable must not break the endpoint.
+    logger.error({ err, key }, 'Rate limiter unavailable (Redis) — failing open')
+    return { allowed: true, remaining: limit, resetInSeconds: windowSeconds }
   }
 }
 
@@ -64,34 +77,50 @@ function loginFailEmailKey(email: string): string {
 }
 
 export async function incrementLoginFailures(ip: string, email: string): Promise<void> {
-  const pipeline = redis.pipeline()
-  pipeline.incr(loginFailIPKey(ip))
-  pipeline.incr(loginFailEmailKey(email))
-  // Pipeline results are [[err, value], ...]. INCR returns 1 only when it
-  // creates a brand-new key — that's the signal to set TTL. We avoid touching
-  // the TTL of existing keys so repeated failures don't keep extending the window.
-  const results = await pipeline.exec() as Array<[Error | null, number]> | null
-  const ipNew = results?.[0]?.[1] === 1
-  const emailNew = results?.[1]?.[1] === 1
-  const expirePipeline = redis.pipeline()
-  if (ipNew) expirePipeline.expire(loginFailIPKey(ip), LOGIN_FAIL_TTL)
-  if (emailNew) expirePipeline.expire(loginFailEmailKey(email), LOGIN_FAIL_TTL)
-  if (ipNew || emailNew) await expirePipeline.exec()
+  // Best-effort: a failure to record a failed attempt must not break login.
+  try {
+    const pipeline = redis.pipeline()
+    pipeline.incr(loginFailIPKey(ip))
+    pipeline.incr(loginFailEmailKey(email))
+    // Pipeline results are [[err, value], ...]. INCR returns 1 only when it
+    // creates a brand-new key — that's the signal to set TTL. We avoid touching
+    // the TTL of existing keys so repeated failures don't keep extending the window.
+    const results = await pipeline.exec() as Array<[Error | null, number]> | null
+    const ipNew = results?.[0]?.[1] === 1
+    const emailNew = results?.[1]?.[1] === 1
+    const expirePipeline = redis.pipeline()
+    if (ipNew) expirePipeline.expire(loginFailIPKey(ip), LOGIN_FAIL_TTL)
+    if (emailNew) expirePipeline.expire(loginFailEmailKey(email), LOGIN_FAIL_TTL)
+    if (ipNew || emailNew) await expirePipeline.exec()
+  } catch (err) {
+    logger.error({ err }, 'Failed to record login failure (Redis) — continuing')
+  }
 }
 
 export async function resetLoginFailures(ip: string, email: string): Promise<void> {
-  await redis.del(loginFailIPKey(ip), loginFailEmailKey(email))
+  try {
+    await redis.del(loginFailIPKey(ip), loginFailEmailKey(email))
+  } catch (err) {
+    logger.error({ err }, 'Failed to reset login failures (Redis) — continuing')
+  }
 }
 
 export async function getLoginFailureCount(
   ip: string,
   email: string,
 ): Promise<{ ip: number; email: number }> {
-  if (!email) return { ip: Number((await redis.get(loginFailIPKey(ip))) ?? 0), email: 0 }
-  const [ipCount, emailCount] = await redis.mget(loginFailIPKey(ip), loginFailEmailKey(email))
-  return {
-    ip: Number(ipCount ?? 0),
-    email: Number(emailCount ?? 0),
+  // On Redis failure, report zero failures: degrades to "no CAPTCHA required"
+  // (fail open) so a Redis outage doesn't block legitimate logins.
+  try {
+    if (!email) return { ip: Number((await redis.get(loginFailIPKey(ip))) ?? 0), email: 0 }
+    const [ipCount, emailCount] = await redis.mget(loginFailIPKey(ip), loginFailEmailKey(email))
+    return {
+      ip: Number(ipCount ?? 0),
+      email: Number(emailCount ?? 0),
+    }
+  } catch (err) {
+    logger.error({ err }, 'Failed to read login failure counts (Redis) — assuming zero')
+    return { ip: 0, email: 0 }
   }
 }
 
