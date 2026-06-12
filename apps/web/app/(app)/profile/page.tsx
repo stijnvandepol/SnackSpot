@@ -328,17 +328,24 @@ function ProfileContent() {
       <div className="grid grid-cols-2 gap-3">
         {[
           { value: stats.totalPosts, label: 'Reviews written' },
-          { value: stats.bitesCount, label: 'Bites logged' },
+          { value: stats.bitesCount, label: 'Bites logged', href: '/bites' },
           { value: stats.totalLikesReceived, label: 'Likes received' },
           { value: stats.uniqueLocationsVisited, label: 'Locations visited' },
           { value: stats.streak.best, label: 'Best streak (days)' },
           { value: stats.xp.total, label: 'Total XP' },
-        ].map(({ value, label }) => (
-          <div key={label} className="rounded-xl bg-snack-surface p-3">
-            <p className="text-2xl font-bold text-snack-text">{value}</p>
-            <p className="text-xs text-snack-muted mt-0.5">{label}</p>
-          </div>
-        ))}
+        ].map(({ value, label, href }) =>
+          href ? (
+            <Link key={label} href={href} className="rounded-xl bg-snack-surface p-3 transition hover:bg-snack-border/40 focus:outline-none focus:ring-2 focus:ring-snack-primary">
+              <p className="text-2xl font-bold text-snack-text">{value}</p>
+              <p className="text-xs text-snack-muted mt-0.5 flex items-center gap-1">{label} <span aria-hidden="true">→</span></p>
+            </Link>
+          ) : (
+            <div key={label} className="rounded-xl bg-snack-surface p-3">
+              <p className="text-2xl font-bold text-snack-text">{value}</p>
+              <p className="text-xs text-snack-muted mt-0.5">{label}</p>
+            </div>
+          ),
+        )}
       </div>
     </div>
   ) : null

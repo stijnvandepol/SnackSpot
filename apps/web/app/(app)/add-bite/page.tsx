@@ -246,6 +246,9 @@ export default function AddBitePage() {
           <button type="button" className="btn-secondary block w-full" onClick={resetForm}>
             Log another bite
           </button>
+          <Link href="/bites" className="btn-secondary block w-full">
+            View my bites
+          </Link>
           <Link href="/" className="block w-full py-2 text-sm text-snack-muted hover:text-snack-primary">
             Done
           </Link>
