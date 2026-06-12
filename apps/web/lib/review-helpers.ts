@@ -94,8 +94,10 @@ export function checkReviewVisibility(
   review: { status: ReviewStatus; userId: string },
   auth: AccessTokenPayload | null,
 ): Response | null {
-  if (review.status === ReviewStatus.DELETED) return err('Review not found', 404)
-  if (review.status === ReviewStatus.HIDDEN) {
+  // DELETED and HIDDEN reviews stay reachable for the owner (so they can use
+  // the 30-day restore window) and for mods; everyone else gets a 404 so the
+  // existence of removed content is not leaked.
+  if (review.status === ReviewStatus.DELETED || review.status === ReviewStatus.HIDDEN) {
     const isOwner = auth?.sub === review.userId
     const isMod = auth?.role === 'MODERATOR' || auth?.role === 'ADMIN'
     if (!isOwner && !isMod) return err('Review not found', 404)

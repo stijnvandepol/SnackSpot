@@ -29,14 +29,16 @@ export async function POST(req: NextRequest) {
       case 'UNHIDE_REVIEW':
         mutation = prisma.review.update({
           where: { id: body.targetId },
-          data: { status: ReviewStatus.PUBLISHED },
+          data: { status: ReviewStatus.PUBLISHED, deletedAt: null, deletedById: null },
         })
         break
 
       case 'DELETE_REVIEW':
+        // deletedById = the moderator: the owner cannot restore a takedown,
+        // and the purge job still erases it after the 30-day window.
         mutation = prisma.review.update({
           where: { id: body.targetId },
-          data: { status: ReviewStatus.DELETED },
+          data: { status: ReviewStatus.DELETED, deletedAt: new Date(), deletedById: auth.sub },
         })
         break
 

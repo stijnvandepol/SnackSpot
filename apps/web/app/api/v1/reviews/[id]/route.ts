@@ -4,7 +4,6 @@ import { prisma } from '@/lib/db'
 import { env } from '@/lib/env'
 import {
   ok,
-  noContent,
   err,
   parseBody,
   requireAuth,
@@ -13,6 +12,7 @@ import {
   isResponse,
   withNoStore,
 } from '@/lib/api-helpers'
+import { restorableUntil } from '@/lib/privacy'
 import { ReviewStatus } from '@prisma/client'
 import { normalizeRatings } from '@/lib/ratings'
 import { recalculateUserBadges } from '@/lib/badge-service'
@@ -33,6 +33,8 @@ export async function GET(
       select: {
         ...reviewListSelect(auth?.sub),
         updatedAt: true,
+        deletedAt: true,
+        deletedById: true,
         reviewPhotos: {
           orderBy: { sortOrder: 'asc' as const },
           select: { sortOrder: true, photo: { select: { id: true, variants: true } } },
@@ -214,12 +216,19 @@ export async function DELETE(
     const isMod = auth.role === 'MODERATOR' || auth.role === 'ADMIN'
     if (!isOwner && !isMod) return err('Forbidden', 403)
 
+    // Soft delete with a restore window: deletedAt drives the worker's purge
+    // job (hard delete after 30 days, GDPR Art. 17) and deletedById records
+    // who deleted it - only self-deleted reviews are restorable by the owner.
+    const deletedAt = new Date()
     await prisma.review.update({
       where: { id },
-      data: { status: ReviewStatus.DELETED },
+      data: { status: ReviewStatus.DELETED, deletedAt, deletedById: auth.sub },
     })
     await recalculateUserBadges(review.userId)
-    return noContent()
+    return ok({
+      message: 'Review deleted',
+      restorableUntil: isOwner ? restorableUntil(deletedAt).toISOString() : null,
+    })
   } catch (e) {
     return serverError('reviews/[id] DELETE', e)
   }
