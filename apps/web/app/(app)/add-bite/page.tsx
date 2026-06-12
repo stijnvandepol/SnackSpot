@@ -55,12 +55,22 @@ export default function AddBitePage() {
   const [success, setSuccess] = useState<BiteSuccess | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const searchAbortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     return () => {
       if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl)
     }
   }, [previewUrl])
+
+  // Cancel a pending debounced search + in-flight request on unmount so neither
+  // fires against an unmounted component.
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+      searchAbortRef.current?.abort()
+    }
+  }, [])
 
   if (loading) return null
   if (!user) {
@@ -160,10 +170,15 @@ export default function AddBitePage() {
       return
     }
     searchTimeoutRef.current = setTimeout(() => {
-      fetch(`/api/v1/places/search?q=${encodeURIComponent(query)}&limit=6`, { credentials: 'include' })
+      // Abort any earlier in-flight search so a slow response can't overwrite a
+      // newer query's results out of order.
+      searchAbortRef.current?.abort()
+      const controller = new AbortController()
+      searchAbortRef.current = controller
+      fetch(`/api/v1/places/search?q=${encodeURIComponent(query)}&limit=6`, { credentials: 'include', signal: controller.signal })
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error('search failed'))))
         .then((json) => setPlaceResults(json.data?.data ?? []))
-        .catch(() => setPlaceResults([]))
+        .catch((err) => { if (err?.name !== 'AbortError') setPlaceResults([]) })
     }, 300)
   }
 

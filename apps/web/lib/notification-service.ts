@@ -189,11 +189,11 @@ async function safeNotify(
 
 export function notifyReviewLike(reviewId: string, actorId: string) {
   return safeNotify('review like', { reviewId, actorId }, async () => {
-    const review = await findReviewOwnerForNotification(reviewId, 'like')
-    if (!review) return null
-
-    const actorName = await findActorUsername(actorId)
-    if (!actorName) return null
+    const [review, actorName] = await Promise.all([
+      findReviewOwnerForNotification(reviewId, 'like'),
+      findActorUsername(actorId),
+    ])
+    if (!review || !actorName) return null
 
     return createNotification({
       userId: review.userId,
@@ -211,11 +211,11 @@ export function notifyReviewLike(reviewId: string, actorId: string) {
 
 export function notifyReviewComment(reviewId: string, commentId: string, actorId: string) {
   return safeNotify('review comment', { reviewId, commentId, actorId }, async () => {
-    const review = await findReviewOwnerForNotification(reviewId, 'comment')
-    if (!review) return null
-
-    const actorName = await findActorUsername(actorId)
-    if (!actorName) return null
+    const [review, actorName] = await Promise.all([
+      findReviewOwnerForNotification(reviewId, 'comment'),
+      findActorUsername(actorId),
+    ])
+    if (!review || !actorName) return null
 
     return createNotification({
       userId: review.userId,
@@ -234,11 +234,11 @@ export function notifyReviewComment(reviewId: string, commentId: string, actorId
 
 export function notifyMention(mentionedUserId: string, reviewId: string, actorId: string) {
   return safeNotify('mention', { mentionedUserId, reviewId, actorId }, async () => {
-    const review = await findReviewPlaceForNotification(reviewId, 'mention')
-    if (!review) return null
-
-    const actorName = await findActorUsername(actorId)
-    if (!actorName) return null
+    const [review, actorName] = await Promise.all([
+      findReviewPlaceForNotification(reviewId, 'mention'),
+      findActorUsername(actorId),
+    ])
+    if (!review || !actorName) return null
 
     return createNotification({
       userId: mentionedUserId,
@@ -261,11 +261,11 @@ export function notifyCommentMention(
   actorId: string,
 ) {
   return safeNotify('comment mention', { mentionedUserId, reviewId, commentId, actorId }, async () => {
-    const review = await findReviewPlaceForNotification(reviewId, 'comment mention')
-    if (!review) return null
-
-    const actorName = await findActorUsername(actorId)
-    if (!actorName) return null
+    const [review, actorName] = await Promise.all([
+      findReviewPlaceForNotification(reviewId, 'comment mention'),
+      findActorUsername(actorId),
+    ])
+    if (!review || !actorName) return null
 
     return createNotification({
       userId: mentionedUserId,

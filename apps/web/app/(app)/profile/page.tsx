@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useMemo, useState, Suspense } from 'react'
 import { useAuth } from '@/components/auth-provider'
 import { ReviewCard } from '@/components/review-card'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -80,6 +80,16 @@ interface MeProfile {
   nextUsernameChangeAt: string | null
   role: string
   isVerified: boolean
+}
+
+// Stable reference so the memoized ReviewCard can skip unchanged cards.
+const PROFILE_VARIANT_PREF = ['large', 'medium', 'thumb'] as const
+
+const TIER_LABEL: Record<string, string> = { BRONZE: 'Bronze', SILVER: 'Silver', GOLD: 'Gold' }
+const TIER_CLASS: Record<string, string> = {
+  BRONZE: 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800',
+  SILVER: 'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700',
+  GOLD: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-950/30 border-yellow-300 dark:border-yellow-700',
 }
 
 function ProfileContent() {
@@ -263,20 +273,19 @@ function ProfileContent() {
     </div>
   )
 
-  const TIER_LABEL: Record<string, string> = { BRONZE: 'Bronze', SILVER: 'Silver', GOLD: 'Gold' }
-  const TIER_CLASS: Record<string, string> = {
-    BRONZE: 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800',
-    SILVER: 'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700',
-    GOLD: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-950/30 border-yellow-300 dark:border-yellow-700',
-  }
-
-  const allBadgeRows = [
-    ...earnedBadges.map((b) => ({ ...b, earned: true as const })),
-    ...inProgressBadges.map((b) => ({ ...b, earned: false as const })),
-  ].sort((a, b) => {
-    if (a.earned !== b.earned) return a.earned ? -1 : 1
-    return (b.progressCurrent / Math.max(1, b.progressTarget)) - (a.progressCurrent / Math.max(1, a.progressTarget))
-  })
+  // Merge + sort earned/in-progress badges only when those inputs change, not on
+  // every keystroke in the profile form fields.
+  const allBadgeRows = useMemo(
+    () =>
+      [
+        ...earnedBadges.map((b) => ({ ...b, earned: true as const })),
+        ...inProgressBadges.map((b) => ({ ...b, earned: false as const })),
+      ].sort((a, b) => {
+        if (a.earned !== b.earned) return a.earned ? -1 : 1
+        return (b.progressCurrent / Math.max(1, b.progressTarget)) - (a.progressCurrent / Math.max(1, a.progressTarget))
+      }),
+    [earnedBadges, inProgressBadges],
+  )
 
   const statsPanel = stats ? (
     <div className="card p-4 mb-6">
@@ -483,7 +492,7 @@ function ProfileContent() {
                   <ReviewCard
                     key={r.id}
                     review={r}
-                    photoVariantPreference={['large', 'medium', 'thumb']}
+                    photoVariantPreference={PROFILE_VARIANT_PREF}
                     backContext="profile"
                   />
                 ))}
@@ -674,7 +683,7 @@ function ProfileContent() {
               <ReviewCard
                 key={r.id}
                 review={r}
-                photoVariantPreference={['large', 'medium', 'thumb']}
+                photoVariantPreference={PROFILE_VARIANT_PREF}
                 backContext="profile"
               />
             ))}

@@ -82,9 +82,12 @@ export default function MyBitesPage() {
   }, [accessToken, loadPage])
 
   // Infinite scroll: load the next page when the sentinel comes into view.
+  // The observer stays mounted regardless of `loading` — loadPage's requestedRef
+  // dedup already prevents duplicate fetches, so depending on `loading` here only
+  // thrashed the observer (tear down + rebuild) each load cycle.
   useEffect(() => {
     const el = sentinelRef.current
-    if (!el || !hasMore || loading) return
+    if (!el || !hasMore) return
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && cursor) void loadPage(cursor)
@@ -93,7 +96,7 @@ export default function MyBitesPage() {
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [cursor, hasMore, loading, loadPage])
+  }, [cursor, hasMore, loadPage])
 
   const deleteBite = async (id: string) => {
     if (!accessToken) return
@@ -160,12 +163,14 @@ export default function MyBitesPage() {
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {bites.map((bite) => {
             const src = photoVariantUrl(bite.photo.variants, ['medium', 'thumb', 'large'])
+            const dateLabel = dateFormatter.format(new Date(bite.createdAt))
+            const mealLabel = MEAL_LABEL[bite.mealSlot] ?? 'Meal'
             return (
               <li key={bite.id} className="card group relative overflow-hidden p-0">
                 <div className="aspect-square bg-snack-surface">
                   {src ? (
                     // eslint-disable-next-line @next/next/no-img-element -- user photo via variant URL
-                    <img src={src} alt={bite.note ?? `${MEAL_LABEL[bite.mealSlot] ?? 'Meal'} bite`} className="h-full w-full object-cover" loading="lazy" />
+                    <img src={src} alt={bite.note ?? `${mealLabel} bite`} className="h-full w-full object-cover" loading="lazy" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-3xl">
                       {MEAL_EMOJI[bite.mealSlot] ?? '🍽️'}
@@ -175,7 +180,7 @@ export default function MyBitesPage() {
                 <button
                   type="button"
                   onClick={() => { setToDelete(bite); setDeleteError(null) }}
-                  aria-label={`Delete ${MEAL_LABEL[bite.mealSlot] ?? 'meal'} bite from ${dateFormatter.format(new Date(bite.createdAt))}`}
+                  aria-label={`Delete ${mealLabel} bite from ${dateLabel}`}
                   className="absolute right-1.5 top-1.5 rounded-full bg-black/55 p-1.5 text-white opacity-100 transition hover:bg-red-600 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -184,9 +189,9 @@ export default function MyBitesPage() {
                 </button>
                 <div className="p-2">
                   <p className="text-xs font-medium text-snack-text">
-                    <span aria-hidden="true">{MEAL_EMOJI[bite.mealSlot] ?? '🍽️'}</span> {MEAL_LABEL[bite.mealSlot] ?? 'Meal'}
+                    <span aria-hidden="true">{MEAL_EMOJI[bite.mealSlot] ?? '🍽️'}</span> {mealLabel}
                   </p>
-                  <p className="text-[11px] text-snack-muted">{dateFormatter.format(new Date(bite.createdAt))}</p>
+                  <p className="text-[11px] text-snack-muted">{dateLabel}</p>
                   {bite.place && <p className="truncate text-[11px] text-snack-muted">{bite.place.name}</p>}
                   {bite.note && <p className="mt-1 line-clamp-2 text-[11px] text-snack-muted">{bite.note}</p>}
                 </div>

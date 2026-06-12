@@ -8,15 +8,20 @@ import { notifyReviewLike } from '@/lib/notification-service'
 import { awardXp } from '@/lib/xp-service'
 import { bumpQuestProgress } from '@/lib/quest-service'
 
-async function getLikeState(reviewId: string, userId?: string) {
+async function getLikeState(reviewId: string, userId?: string, knownLikedByMe?: boolean) {
+  // After a like/unlike write the caller already knows likedByMe (true/false),
+  // so it passes it in and we skip the membership query — only GET, where the
+  // state is genuinely unknown, pays for the findUnique.
   const [likeCount, likedByMe] = await Promise.all([
     prisma.reviewLike.count({ where: { reviewId } }),
-    userId
-      ? prisma.reviewLike.findUnique({
-          where: { userId_reviewId: { userId, reviewId } },
-          select: { userId: true },
-        }).then((row: { userId: string } | null) => Boolean(row))
-      : Promise.resolve(false),
+    knownLikedByMe !== undefined
+      ? Promise.resolve(knownLikedByMe)
+      : userId
+        ? prisma.reviewLike.findUnique({
+            where: { userId_reviewId: { userId, reviewId } },
+            select: { userId: true },
+          }).then((row: { userId: string } | null) => Boolean(row))
+        : Promise.resolve(false),
   ])
 
   return { likeCount, likedByMe }
@@ -78,7 +83,7 @@ export async function POST(
     // independent of each other — run them in parallel. The XP ref includes
     // the liker, so like/unlike cycles can never award twice.
     const [state] = await Promise.all([
-      getLikeState(id, auth.sub),
+      getLikeState(id, auth.sub, true), // just liked → likedByMe is true
       notifyReviewLike(id, auth.sub),
       recalculateUserBadges(review.userId, { criteriaTypes: ['LIKES_RECEIVED_COUNT'] }),
       ...(review.userId !== auth.sub
@@ -117,7 +122,7 @@ export async function DELETE(
     })
 
     const [state] = await Promise.all([
-      getLikeState(id, auth.sub),
+      getLikeState(id, auth.sub, false), // just unliked → likedByMe is false
       recalculateUserBadges(review.userId, { criteriaTypes: ['LIKES_RECEIVED_COUNT'] }),
     ])
     return ok(state)

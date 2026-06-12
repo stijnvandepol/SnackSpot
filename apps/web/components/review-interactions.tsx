@@ -76,25 +76,31 @@ export function ReviewInteractions({
       setLikeStatusLoaded(true)
       return
     }
+    // Guard against a stale response landing after reviewId/accessToken changed
+    // or the component unmounted (otherwise an older review's state can win).
+    let cancelled = false
     fetch(`/api/v1/reviews/${reviewId}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
       .then((r) => r.json().catch(() => ({})))
-      .then((json) => setLikedByMe(Boolean(json.data?.likedByMe)))
+      .then((json) => { if (!cancelled) setLikedByMe(Boolean(json.data?.likedByMe)) })
       .catch(() => {})
-      .finally(() => setLikeStatusLoaded(true))
+      .finally(() => { if (!cancelled) setLikeStatusLoaded(true) })
+    return () => { cancelled = true }
   }, [reviewId, accessToken, authLoading])
 
   useEffect(() => {
+    let cancelled = false
     fetch(`/api/v1/reviews/${reviewId}/comments?limit=50`, {
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
     })
       .then((r) => r.json().catch(() => ({})))
       .then((json) => {
-        if (Array.isArray(json.data)) setComments(json.data)
+        if (!cancelled && Array.isArray(json.data)) setComments(json.data)
       })
       .catch(() => {})
-      .finally(() => setCommentsLoading(false))
+      .finally(() => { if (!cancelled) setCommentsLoading(false) })
+    return () => { cancelled = true }
   }, [reviewId, accessToken])
 
   const submitComment = async () => {
