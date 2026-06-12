@@ -215,6 +215,25 @@ async function listObjectKeys(prefix: string): Promise<string[]> {
   })
 }
 
+// Apply an async op across many items with a bounded number in flight. An
+// unbounded Promise.all over millions of MinIO deletes would open millions of
+// sockets at once and overwhelm the object store; this caps concurrency while
+// still parallelising.
+const REMOVE_CONCURRENCY = 50
+
+async function removeObjectsBounded(keys: string[]): Promise<number> {
+  let removed = 0
+  for (let i = 0; i < keys.length; i += REMOVE_CONCURRENCY) {
+    const batch = keys.slice(i, i + REMOVE_CONCURRENCY)
+    await Promise.all(
+      batch.map((key) =>
+        minio.removeObject(BUCKET, key).then(() => { removed += 1 }).catch(() => undefined),
+      ),
+    )
+  }
+  return removed
+}
+
 async function runTokenCleanup(): Promise<void> {
   const now = new Date()
 
@@ -369,18 +388,11 @@ async function runUnusedImageCleanup(): Promise<void> {
 
     if (stalePhotos.length === 0) break
 
-    await Promise.all(
-      stalePhotos.flatMap((photo) => {
-        const keys = [photo.storageKey, ...extractVariantKeys(photo.variants)]
-        return keys.map((key) =>
-          minio.removeObject(BUCKET, key)
-            .then(() => {
-              photoObjectsDeleted += 1
-            })
-            .catch(() => undefined),
-        )
-      }),
-    )
+    const staleKeys = stalePhotos.flatMap((photo) => [
+      photo.storageKey,
+      ...extractVariantKeys(photo.variants),
+    ])
+    photoObjectsDeleted += await removeObjectsBounded(staleKeys)
 
     const { count } = await prisma.photo.deleteMany({
       where: { id: { in: stalePhotos.map((photo) => photo.id) } },
@@ -388,29 +400,49 @@ async function runUnusedImageCleanup(): Promise<void> {
     photosDeleted += count
   }
 
+  // Reconciliation pass: collect every key still referenced by a DB row, then
+  // delete MinIO objects that match none of them (truly orphaned files — failed
+  // uploads, interrupted deletes). Read the photo and avatar rows in cursor
+  // batches rather than one findMany: at millions of rows a single query would
+  // materialise every row object (with parsed variant JSON) into memory at once.
   const referencedKeys = new Set<string>()
 
-  const photos = await prisma.photo.findMany({
-    select: {
-      storageKey: true,
-      variants: true,
-    },
-  })
-  for (const photo of photos) {
-    referencedKeys.add(photo.storageKey)
-    for (const variantKey of extractVariantKeys(photo.variants)) {
-      referencedKeys.add(variantKey)
+  let photoCursor: string | undefined
+  for (;;) {
+    const batch = await prisma.photo.findMany({
+      select: { id: true, storageKey: true, variants: true },
+      orderBy: { id: 'asc' },
+      take: CLEANUP_BATCH_SIZE,
+      ...(photoCursor ? { skip: 1, cursor: { id: photoCursor } } : {}),
+    })
+    if (batch.length === 0) break
+    for (const photo of batch) {
+      referencedKeys.add(photo.storageKey)
+      for (const variantKey of extractVariantKeys(photo.variants)) {
+        referencedKeys.add(variantKey)
+      }
     }
+    photoCursor = batch[batch.length - 1].id
+    if (batch.length < CLEANUP_BATCH_SIZE) break
   }
 
-  const usersWithAvatar = await prisma.user.findMany({
-    where: { avatarKey: { not: null } },
-    select: { avatarKey: true },
-  })
-  for (const user of usersWithAvatar) {
-    if (!user.avatarKey) continue
-    referencedKeys.add(user.avatarKey)
-    referencedKeys.add(avatarVariantKey(user.avatarKey))
+  let avatarCursor: string | undefined
+  for (;;) {
+    const batch = await prisma.user.findMany({
+      where: { avatarKey: { not: null } },
+      select: { id: true, avatarKey: true },
+      orderBy: { id: 'asc' },
+      take: CLEANUP_BATCH_SIZE,
+      ...(avatarCursor ? { skip: 1, cursor: { id: avatarCursor } } : {}),
+    })
+    if (batch.length === 0) break
+    for (const user of batch) {
+      if (!user.avatarKey) continue
+      referencedKeys.add(user.avatarKey)
+      referencedKeys.add(avatarVariantKey(user.avatarKey))
+    }
+    avatarCursor = batch[batch.length - 1].id
+    if (batch.length < CLEANUP_BATCH_SIZE) break
   }
 
   const existingKeys = [
@@ -420,7 +452,7 @@ async function runUnusedImageCleanup(): Promise<void> {
   ]
 
   const orphanKeys = existingKeys.filter((key) => !referencedKeys.has(key))
-  await Promise.all(orphanKeys.map((key) => minio.removeObject(BUCKET, key).catch(() => undefined)))
+  await removeObjectsBounded(orphanKeys)
 
   log.info(
     {
