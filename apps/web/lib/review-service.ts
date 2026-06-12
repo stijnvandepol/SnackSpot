@@ -315,7 +315,8 @@ export async function updateReview(params: {
         text: true,
         dishName: true,
         updatedAt: true,
-        tags: { orderBy: { tag: 'asc' }, select: { tag: true } },
+        // Tags are deliberately NOT selected here: they are rewritten below, so
+        // a select at this point would echo the pre-update tags. Re-read after.
       },
     })
 
@@ -335,7 +336,15 @@ export async function updateReview(params: {
       }
     }
 
-    return savedReview
+    // Read tags after the rewrite so the response reflects the final state
+    // (unchanged when the caller didn't send tags).
+    const tags = await tx.reviewTag.findMany({
+      where: { reviewId },
+      orderBy: { tag: 'asc' },
+      select: { tag: true },
+    })
+
+    return { ...savedReview, tags }
   })
 
   return { ok: true, value: serializeRatings(updated) }

@@ -533,8 +533,9 @@ function ProfileContent() {
                     </div>
 
                     <div>
-                      <label className="label text-xs">Username</label>
+                      <label htmlFor="profile-username" className="label text-xs">Username</label>
                       <input
+                        id="profile-username"
                         className="input text-sm"
                         value={editUsername}
                         onChange={(e) => setEditUsername(e.target.value)}
@@ -546,8 +547,10 @@ function ProfileContent() {
                     </div>
 
                     <div>
-                      <label className="label text-xs">Bio ({editBio.length}/280)</label>
+                      <label htmlFor="profile-bio" className="label text-xs">Bio ({editBio.length}/280)</label>
                       <textarea
+                        id="profile-bio"
+                        aria-label="Bio"
                         className="input min-h-[80px] resize-none text-sm"
                         value={editBio}
                         onChange={(e) => setEditBio(e.target.value)}
@@ -727,8 +730,9 @@ function ProfileContent() {
               </div>
 
               <div>
-                <label className="label">Username</label>
+                <label htmlFor="profile-username" className="label">Username</label>
                 <input
+                  id="profile-username"
                   className="input"
                   value={editUsername}
                   onChange={(e) => setEditUsername(e.target.value)}
@@ -747,8 +751,10 @@ function ProfileContent() {
               </div>
 
               <div>
-                <label className="label">Bio <span className="text-snack-muted font-normal">({editBio.length}/280)</span></label>
+                <label htmlFor="profile-bio" className="label">Bio <span className="text-snack-muted font-normal">({editBio.length}/280)</span></label>
                 <textarea
+                  id="profile-bio"
+                  aria-label="Bio"
                   className="input min-h-[100px] resize-none"
                   value={editBio}
                   onChange={(e) => setEditBio(e.target.value)}
