@@ -1,8 +1,11 @@
+import { MEAL_SLOT_VALUES, type MealSlotValue } from '@snackspot/shared'
+
 const MEAL_EMOJI: Record<string, string> = {
   BREAKFAST: '🍳',
   LUNCH: '🥪',
   DINNER: '🍝',
   SNACK: '🍟',
+  DRINK: '☕',
 }
 
 const MEAL_LABEL: Record<string, string> = {
@@ -10,11 +13,10 @@ const MEAL_LABEL: Record<string, string> = {
   LUNCH: 'Lunch',
   DINNER: 'Dinner',
   SNACK: 'Snack',
+  DRINK: 'Drink',
 }
 
-const MEAL_SLOT_VALUES = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'] as const
-
-export type MealSlot = (typeof MEAL_SLOT_VALUES)[number]
+export type MealSlot = MealSlotValue
 
 /** Ordered meal slots for pickers: value + display label + emoji. */
 export const MEAL_SLOTS: ReadonlyArray<{ value: MealSlot; label: string; emoji: string }> =

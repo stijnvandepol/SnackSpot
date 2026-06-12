@@ -171,7 +171,7 @@ export function cuisineLabel(key: string | null | undefined): string | null {
 // The daily logging unit: a photo of any meal, place optional. Private by
 // design choice "FRIENDS": bites are visible to mutual follows, never public.
 
-export const MEAL_SLOT_VALUES = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'] as const
+export const MEAL_SLOT_VALUES = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK', 'DRINK'] as const
 export type MealSlotValue = (typeof MEAL_SLOT_VALUES)[number]
 
 export const BITE_VISIBILITY_VALUES = ['PRIVATE', 'FRIENDS'] as const
