@@ -33,7 +33,7 @@ async function main() {
         ('user_mod_01',   'mod@snackspot.local',   'mod',   $1, 'MODERATOR'),
         ('user_test_01',  'alice@example.com',     'alice', $1, 'USER'),
         ('user_test_02',  'bob@example.com',       'bob',   $1, 'USER')
-      ON CONFLICT (id) DO NOTHING
+      ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash
     `, [DEMO_PASSWORD_HASH])
 
     await client.query(`
@@ -49,22 +49,26 @@ async function main() {
     `)
 
     // The structured rating columns (migration 006) are NOT NULL with a
-    // 1.0-5.0 range check, so they must be seeded explicitly.
+    // 1.0-5.0 range check, so they must be seeded explicitly. The app derives
+    // rating (and rating_overall) as the half-step-rounded mean of
+    // taste/value/portion (lib/ratings.ts computeOverallRating) — keep the
+    // seeded values consistent with that, or editing a seeded review without
+    // changes would alter its rating.
     await client.query(`
       INSERT INTO reviews (id, user_id, place_id, rating,
                            rating_taste, rating_value, rating_portion, rating_overall,
                            text, dish_name, status)
       VALUES
-        ('rev_01', 'user_test_01', 'place_01', 5, 5, 4, 5, 5.0,
+        ('rev_01', 'user_test_01', 'place_01', 4.5, 5, 4, 5, 4.5,
          'Best stroopwafels in Amsterdam! Crispy, warm, and perfectly sweet.',
          'Stroopwafel', 'PUBLISHED'),
-        ('rev_02', 'user_test_02', 'place_01', 4, 4, 4, 3, 4.0,
+        ('rev_02', 'user_test_02', 'place_01', 3.5, 4, 4, 3, 3.5,
          'Really good but the queue was long. Worth the wait though.',
          'Mini Stroopwafel', 'PUBLISHED'),
-        ('rev_03', 'user_test_01', 'place_02', 5, 5, 5, 4, 5.0,
+        ('rev_03', 'user_test_01', 'place_02', 4.5, 5, 5, 4, 4.5,
          'Fresh herring from the bucket, just like oma used to make.',
          'Hollandse Nieuwe', 'PUBLISHED'),
-        ('rev_04', 'user_test_02', 'place_03', 4, 4, 3, 4, 4.0,
+        ('rev_04', 'user_test_02', 'place_03', 3.5, 4, 3, 4, 3.5,
          'Crunchy bitterballen, great mustard dip. Perfect biersnack.',
          'Bitterballen', 'PUBLISHED')
       ON CONFLICT (id) DO NOTHING
