@@ -1,3 +1,10 @@
+const utcMediumDate = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeZone: 'UTC' })
+
+/** Formats a date as e.g. "12 Jun 2026" (UTC, matching the app's English UI copy). */
+export function formatDateMedium(date: Date | string): string {
+  return utcMediumDate.format(typeof date === 'string' ? new Date(date) : date)
+}
+
 /**
  * Formats a date as a human-readable relative time string (English, matching
  * the app's `<html lang="en">` and English UI copy).

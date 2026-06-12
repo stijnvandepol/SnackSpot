@@ -472,6 +472,12 @@ function ProfileContent() {
           {/* Posts Tab */}
           {tab === 'posts' && (
             <>
+              <Link
+                href="/bites"
+                className="btn-secondary mb-4 flex w-full items-center justify-center gap-1.5 text-sm"
+              >
+                <span aria-hidden="true">🍟</span> My Bites
+              </Link>
               {loading && (
                 <div className="space-y-4">
                   {[...Array(3)].map((_, i) => (
@@ -661,7 +667,12 @@ function ProfileContent() {
 
       {tab === 'posts' && (
         <>
-          <h2 className="font-heading font-semibold text-lg text-snack-text">My Posts</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-heading font-semibold text-lg text-snack-text">My Posts</h2>
+            <Link href="/bites" className="btn-secondary text-sm">
+              <span aria-hidden="true">🍟</span> My Bites
+            </Link>
+          </div>
 
           {loading && (
             <div className="space-y-4">

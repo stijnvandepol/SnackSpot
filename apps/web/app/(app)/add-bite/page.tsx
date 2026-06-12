@@ -3,17 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth-provider'
 import { normalizeUploadMime, shouldUseDirectBrowserUpload, compressImage } from '@/lib/upload'
+import { MEAL_SLOTS, type MealSlot } from '@/lib/meal'
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
-
-type MealSlot = 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK'
-
-const MEAL_SLOTS: Array<{ value: MealSlot; label: string; emoji: string }> = [
-  { value: 'BREAKFAST', label: 'Breakfast', emoji: '🍳' },
-  { value: 'LUNCH', label: 'Lunch', emoji: '🥪' },
-  { value: 'DINNER', label: 'Dinner', emoji: '🍝' },
-  { value: 'SNACK', label: 'Snack', emoji: '🍟' },
-]
 
 function defaultMealSlot(): MealSlot {
   const hour = new Date().getHours()

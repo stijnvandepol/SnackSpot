@@ -2,24 +2,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth-provider'
+import { BiteLightbox } from '@/components/bite-lightbox'
 import { Modal } from '@/components/ui/modal'
 import { photoVariantUrl } from '@/lib/photo-url'
-
-const MEAL_EMOJI: Record<string, string> = {
-  BREAKFAST: '🍳',
-  LUNCH: '🥪',
-  DINNER: '🍝',
-  SNACK: '🍟',
-}
-
-const MEAL_LABEL: Record<string, string> = {
-  BREAKFAST: 'Breakfast',
-  LUNCH: 'Lunch',
-  DINNER: 'Dinner',
-  SNACK: 'Snack',
-}
-
-const dateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeZone: 'UTC' })
+import { mealEmoji, mealLabel } from '@/lib/meal'
+import { formatDateMedium } from '@/lib/time'
 
 interface Bite {
   id: string
@@ -40,6 +27,7 @@ export default function MyBitesPage() {
   const [hasMore, setHasMore] = useState(true)
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [zoomBite, setZoomBite] = useState<Bite | null>(null)
   const [toDelete, setToDelete] = useState<Bite | null>(null)
   const [deleteBusy, setDeleteBusy] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -163,24 +151,31 @@ export default function MyBitesPage() {
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {bites.map((bite) => {
             const src = photoVariantUrl(bite.photo.variants, ['medium', 'thumb', 'large'])
-            const dateLabel = dateFormatter.format(new Date(bite.createdAt))
-            const mealLabel = MEAL_LABEL[bite.mealSlot] ?? 'Meal'
+            const dateLabel = formatDateMedium(bite.createdAt)
+            const label = mealLabel(bite.mealSlot)
             return (
               <li key={bite.id} className="card group relative overflow-hidden p-0">
                 <div className="aspect-square bg-snack-surface">
                   {src ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- user photo via variant URL
-                    <img src={src} alt={bite.note ?? `${mealLabel} bite`} className="h-full w-full object-cover" loading="lazy" />
+                    <button
+                      type="button"
+                      onClick={() => setZoomBite(bite)}
+                      className="block h-full w-full cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-inset focus:ring-snack-primary"
+                      aria-label={`View ${label} bite photo from ${dateLabel}`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element -- user photo via variant URL */}
+                      <img src={src} alt={bite.note ?? `${label} bite`} className="h-full w-full object-cover" loading="lazy" />
+                    </button>
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-3xl">
-                      {MEAL_EMOJI[bite.mealSlot] ?? '🍽️'}
+                      {mealEmoji(bite.mealSlot)}
                     </div>
                   )}
                 </div>
                 <button
                   type="button"
                   onClick={() => { setToDelete(bite); setDeleteError(null) }}
-                  aria-label={`Delete ${mealLabel} bite from ${dateLabel}`}
+                  aria-label={`Delete ${label} bite from ${dateLabel}`}
                   className="absolute right-1.5 top-1.5 rounded-full bg-black/55 p-1.5 text-white opacity-100 transition hover:bg-red-600 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -189,7 +184,7 @@ export default function MyBitesPage() {
                 </button>
                 <div className="p-2">
                   <p className="text-xs font-medium text-snack-text">
-                    <span aria-hidden="true">{MEAL_EMOJI[bite.mealSlot] ?? '🍽️'}</span> {mealLabel}
+                    <span aria-hidden="true">{mealEmoji(bite.mealSlot)}</span> {label}
                   </p>
                   <p className="text-[11px] text-snack-muted">{dateLabel}</p>
                   {bite.place && <p className="truncate text-[11px] text-snack-muted">{bite.place.name}</p>}
@@ -206,6 +201,8 @@ export default function MyBitesPage() {
           {loading ? 'Loading more…' : ''}
         </div>
       )}
+
+      <BiteLightbox bite={zoomBite} onClose={() => setZoomBite(null)} />
 
       <Modal
         open={toDelete !== null}
