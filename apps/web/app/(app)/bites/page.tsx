@@ -4,20 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/components/auth-provider'
 import { Modal } from '@/components/ui/modal'
 import { photoVariantUrl } from '@/lib/photo-url'
-
-const MEAL_EMOJI: Record<string, string> = {
-  BREAKFAST: '🍳',
-  LUNCH: '🥪',
-  DINNER: '🍝',
-  SNACK: '🍟',
-}
-
-const MEAL_LABEL: Record<string, string> = {
-  BREAKFAST: 'Breakfast',
-  LUNCH: 'Lunch',
-  DINNER: 'Dinner',
-  SNACK: 'Snack',
-}
+import { mealEmoji, mealLabel as mealLabelFor } from '@/lib/meal'
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeZone: 'UTC' })
 
@@ -164,7 +151,7 @@ export default function MyBitesPage() {
           {bites.map((bite) => {
             const src = photoVariantUrl(bite.photo.variants, ['medium', 'thumb', 'large'])
             const dateLabel = dateFormatter.format(new Date(bite.createdAt))
-            const mealLabel = MEAL_LABEL[bite.mealSlot] ?? 'Meal'
+            const mealLabel = mealLabelFor(bite.mealSlot)
             return (
               <li key={bite.id} className="card group relative overflow-hidden p-0">
                 <div className="aspect-square bg-snack-surface">
@@ -173,7 +160,7 @@ export default function MyBitesPage() {
                     <img src={src} alt={bite.note ?? `${mealLabel} bite`} className="h-full w-full object-cover" loading="lazy" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-3xl">
-                      {MEAL_EMOJI[bite.mealSlot] ?? '🍽️'}
+                      {mealEmoji(bite.mealSlot)}
                     </div>
                   )}
                 </div>
@@ -189,7 +176,7 @@ export default function MyBitesPage() {
                 </button>
                 <div className="p-2">
                   <p className="text-xs font-medium text-snack-text">
-                    <span aria-hidden="true">{MEAL_EMOJI[bite.mealSlot] ?? '🍽️'}</span> {mealLabel}
+                    <span aria-hidden="true">{mealEmoji(bite.mealSlot)}</span> {mealLabel}
                   </p>
                   <p className="text-[11px] text-snack-muted">{dateLabel}</p>
                   {bite.place && <p className="truncate text-[11px] text-snack-muted">{bite.place.name}</p>}

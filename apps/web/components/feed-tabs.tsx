@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { FeedClient } from '@/components/feed-client'
 import { useAuth } from '@/components/auth-provider'
 import { photoVariantUrl } from '@/lib/photo-url'
+import { mealEmoji } from '@/lib/meal'
 
 type Scope = 'discover' | 'following'
 
@@ -15,13 +16,6 @@ interface FriendBite {
   user: { id: string; username: string; avatarKey: string | null }
   photo: { id: string; variants: Record<string, string> }
   place: { id: string; name: string } | null
-}
-
-const MEAL_EMOJI: Record<string, string> = {
-  BREAKFAST: '🍳',
-  LUNCH: '🥪',
-  DINNER: '🍝',
-  SNACK: '🍟',
 }
 
 /** Horizontal strip of the last 24h of bites from mutual follows. */
@@ -59,7 +53,7 @@ function FriendsBitesStrip() {
                   <img src={src} alt="" className="h-full w-full object-cover" loading="lazy" />
                 )}
                 <span className="absolute bottom-1 right-1 text-sm" aria-hidden="true">
-                  {MEAL_EMOJI[b.mealSlot] ?? '🍽️'}
+                  {mealEmoji(b.mealSlot)}
                 </span>
               </div>
               <Link
