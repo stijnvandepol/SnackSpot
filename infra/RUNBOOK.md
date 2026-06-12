@@ -134,3 +134,47 @@ Tracked, not done. Highest-value order:
 3. **Metrics** — `/metrics` (Prometheus) or OpenTelemetry auto-instrumentation
    for request latency, query time, queue depth, cache hit rate.
 4. **Error tracking** — Sentry for deduplicated exception trends.
+
+---
+
+## Go-live checklist
+
+The application code is production-grade and the full stack builds and boots
+healthy via `docker compose up`. The items below are the operator's
+responsibility — they need real secrets, accounts, or infra decisions and
+cannot be baked into the repo.
+
+### Must do before first production deploy
+
+- [ ] **Secrets**: generate strong unique values for `POSTGRES_PASSWORD`,
+      `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`, and 32+ byte `JWT_ACCESS_SECRET` /
+      `JWT_REFRESH_SECRET` (`openssl rand -hex 32`). Never reuse the throwaway
+      values from local `.env`. Prefer a secret manager over plain compose env.
+- [ ] **Third-party keys**: real `RESEND_API_KEY` (transactional email) and
+      Cloudflare Turnstile `TURNSTILE_SECRET_KEY` + `NEXT_PUBLIC_TURNSTILE_SITE_KEY`.
+- [ ] **TLS + domain**: terminate HTTPS (Cloudflare/again in front of nginx),
+      set `NEXT_PUBLIC_APP_URL`, `CORS_ORIGINS`, `MINIO_PUBLIC_URL` to the real
+      origins, and `AUTH_COOKIE_SECURE=true`, `TRUST_PROXY=true`.
+- [ ] **Web push (optional)**: set `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`
+      (`npx web-push generate-vapid-keys`) or push stays disabled.
+- [ ] **Admin access**: lock down the admin app (port 3001) per
+      `apps/admin/SECURITY.md` (Cloudflare Tunnel + IP allowlist / VPN).
+- [ ] **Backups**: wire `scripts/backup.sh` into cron AND ship `$BACKUP_DIR`
+      off-host (see Backups section). Do one restore drill before launch.
+
+### Strongly recommended within the first weeks
+
+- [ ] Error tracking (Sentry) + uptime monitor on `/api/health/ready` + alerts.
+- [ ] Move PostgreSQL, Redis and object storage to managed/replicated services
+      (see the HA path) before traffic grows past a single host.
+- [ ] Verify the CD pipeline (migrate → deploy → health-gate → rollback) on a
+      staging run before trusting it in production.
+
+### Already handled in the codebase
+
+Argon2id passwords · refresh-token rotation with theft detection · per-endpoint
+rate limiting · strict CSP/HSTS/security headers · same-origin checks · Zod
+input validation · magic-byte upload checks · EXIF/GPS stripping · GDPR rights
+(export, erasure, retention, audit log) · advisory-locked idempotent migrations ·
+non-root read-only containers with resource limits and real healthchecks ·
+daily token/photo/review cleanup jobs.
