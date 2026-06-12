@@ -5,6 +5,7 @@ import { useAuth } from '@/components/auth-provider'
 import { ReviewLikeButton } from '@/components/review-like-button'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { MentionText } from '@/components/mention-text'
+import { Modal } from '@/components/ui/modal'
 
 interface CommentItem {
   id: string
@@ -62,6 +63,12 @@ export function ReviewInteractions({
   const [reporting, setReporting] = useState(false)
   const [reported, setReported] = useState(false)
   const [reportError, setReportError] = useState<string | null>(null)
+  // Review deletion modal: 'confirm' asks first, 'deleted' offers undo.
+  const [deleteStep, setDeleteStep] = useState<'closed' | 'confirm' | 'deleted'>('closed')
+  const [deleteBusy, setDeleteBusy] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [commentToDelete, setCommentToDelete] = useState<CommentItem | null>(null)
+  const [commentDeleteBusy, setCommentDeleteBusy] = useState(false)
 
   useEffect(() => {
     if (authLoading) return
@@ -119,16 +126,64 @@ export function ReviewInteractions({
   const deleteComment = async (commentId: string) => {
     if (!accessToken) return
     setCommentError(null)
-    const res = await fetch(`/api/v1/comments/${commentId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-    if (!res.ok) {
-      setCommentError('Could not delete comment. Please try again.')
-      return
+    setCommentDeleteBusy(true)
+    try {
+      const res = await fetch(`/api/v1/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (!res.ok) {
+        setCommentError('Could not delete comment. Please try again.')
+        return
+      }
+      setComments((prev) => prev.filter((c) => c.id !== commentId))
+      setCommentCount((n) => Math.max(0, n - 1))
+    } finally {
+      setCommentDeleteBusy(false)
+      setCommentToDelete(null)
     }
-    setComments((prev) => prev.filter((c) => c.id !== commentId))
-    setCommentCount((n) => Math.max(0, n - 1))
+  }
+
+  const deleteReview = async () => {
+    if (!accessToken) return
+    setDeleteBusy(true)
+    setDeleteError(null)
+    try {
+      const res = await fetch(`/api/v1/reviews/${reviewId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (!res.ok) {
+        setDeleteError('Could not delete review. Please try again.')
+        return
+      }
+      setDeleteStep('deleted')
+    } catch {
+      setDeleteError('Could not delete review. Please try again.')
+    } finally {
+      setDeleteBusy(false)
+    }
+  }
+
+  const undoDeleteReview = async () => {
+    if (!accessToken) return
+    setDeleteBusy(true)
+    setDeleteError(null)
+    try {
+      const res = await fetch(`/api/v1/reviews/${reviewId}/restore`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (!res.ok) {
+        setDeleteError('Could not restore review. Please try again.')
+        return
+      }
+      setDeleteStep('closed')
+    } catch {
+      setDeleteError('Could not restore review. Please try again.')
+    } finally {
+      setDeleteBusy(false)
+    }
   }
 
   const submitReport = async () => {
@@ -228,7 +283,7 @@ export function ReviewInteractions({
                     <button
                       type="button"
                       className="text-xs text-red-600 hover:underline"
-                      onClick={() => void deleteComment(comment.id)}
+                      onClick={() => setCommentToDelete(comment)}
                     >
                       Delete
                     </button>
@@ -247,16 +302,84 @@ export function ReviewInteractions({
           <button
             type="button"
             className="btn-secondary flex-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
-            onClick={async () => {
-              if (!confirm('Delete this review?')) return
-              await fetch(`/api/v1/reviews/${reviewId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } })
-              window.location.href = '/'
-            }}
+            onClick={() => { setDeleteStep('confirm'); setDeleteError(null) }}
           >
             Delete
           </button>
         </div>
       )}
+
+      <Modal
+        open={deleteStep === 'confirm'}
+        onClose={() => { if (!deleteBusy) setDeleteStep('closed') }}
+        title="Delete this review?"
+      >
+        <p className="text-sm text-snack-muted mb-4">
+          Your review will no longer be visible. You can restore it within 30 days;
+          after that it is permanently erased, including its photos.
+        </p>
+        {deleteError && <p className="text-xs text-red-500 mb-3" role="status" aria-live="polite">{deleteError}</p>}
+        <div className="flex gap-2">
+          <button type="button" className="btn-secondary flex-1 text-sm" onClick={() => setDeleteStep('closed')} disabled={deleteBusy}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="flex-1 text-sm py-2 px-4 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium disabled:opacity-50"
+            onClick={() => void deleteReview()}
+            disabled={deleteBusy}
+          >
+            {deleteBusy ? 'Deleting...' : 'Delete review'}
+          </button>
+        </div>
+      </Modal>
+
+      <Modal
+        open={deleteStep === 'deleted'}
+        // Deletion is already committed; dismissing without choosing Undo just
+        // leaves, same as Done — the deleted review is gone from this page.
+        onClose={() => { if (!deleteBusy) window.location.href = '/' }}
+        title="Review deleted"
+      >
+        <p className="text-sm text-snack-muted mb-4">
+          Your review has been deleted. You can restore it from this page for 30 days.
+        </p>
+        {deleteError && <p className="text-xs text-red-500 mb-3" role="status" aria-live="polite">{deleteError}</p>}
+        <div className="flex gap-2">
+          <button type="button" className="btn-secondary flex-1 text-sm" onClick={() => void undoDeleteReview()} disabled={deleteBusy}>
+            {deleteBusy ? 'Restoring...' : 'Undo'}
+          </button>
+          <button
+            type="button"
+            className="btn-primary flex-1 text-sm"
+            onClick={() => { window.location.href = '/' }}
+            disabled={deleteBusy}
+          >
+            Done
+          </button>
+        </div>
+      </Modal>
+
+      <Modal
+        open={commentToDelete !== null}
+        onClose={() => { if (!commentDeleteBusy) setCommentToDelete(null) }}
+        title="Delete this comment?"
+      >
+        <p className="text-sm text-snack-muted mb-4">This permanently deletes the comment. This cannot be undone.</p>
+        <div className="flex gap-2">
+          <button type="button" className="btn-secondary flex-1 text-sm" onClick={() => setCommentToDelete(null)} disabled={commentDeleteBusy}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="flex-1 text-sm py-2 px-4 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium disabled:opacity-50"
+            onClick={() => { if (commentToDelete) void deleteComment(commentToDelete.id) }}
+            disabled={commentDeleteBusy}
+          >
+            {commentDeleteBusy ? 'Deleting...' : 'Delete comment'}
+          </button>
+        </div>
+      </Modal>
 
       {user && !isOwner && !reported && (
         <details className="rounded-xl border border-snack-border px-4 py-3 text-sm">

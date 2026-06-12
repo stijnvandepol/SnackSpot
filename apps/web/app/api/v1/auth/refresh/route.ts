@@ -43,8 +43,12 @@ export async function POST(req: NextRequest) {
     // Invalidate the entire family to force both parties to re-authenticate.
     if (stored.usedAt !== null) {
       const usedAgoMs = Date.now() - stored.usedAt.getTime()
-      if (usedAgoMs > 5 * 60 * 1000) {
-        // Used more than 5 minutes ago — strong theft signal, nuke the family.
+      // 30s covers genuine concurrent retries (multi-tab races resolve within
+      // network latency); anything beyond that is a replayed stolen token. A
+      // longer window would hand an attacker that much time to rotate
+      // undetected.
+      if (usedAgoMs > 30 * 1000) {
+        // Strong theft signal — nuke the family so both parties re-authenticate.
         await prisma.refreshToken.deleteMany({
           where: { family: stored.family },
         })

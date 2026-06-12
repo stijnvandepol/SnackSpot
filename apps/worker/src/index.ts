@@ -14,7 +14,7 @@ import Redis from 'ioredis'
 import * as Minio from 'minio'
 import sharp from 'sharp'
 import webpush from 'web-push'
-import { PrismaClient, PhotoModerationStatus } from '@prisma/client'
+import { PrismaClient, PhotoModerationStatus, ReviewStatus } from '@prisma/client'
 import pino from 'pino'
 
 // ─── Logger ──────────────────────────────────────────────────────────────────
@@ -215,6 +215,25 @@ async function listObjectKeys(prefix: string): Promise<string[]> {
   })
 }
 
+// Apply an async op across many items with a bounded number in flight. An
+// unbounded Promise.all over millions of MinIO deletes would open millions of
+// sockets at once and overwhelm the object store; this caps concurrency while
+// still parallelising.
+const REMOVE_CONCURRENCY = 50
+
+async function removeObjectsBounded(keys: string[]): Promise<number> {
+  let removed = 0
+  for (let i = 0; i < keys.length; i += REMOVE_CONCURRENCY) {
+    const batch = keys.slice(i, i + REMOVE_CONCURRENCY)
+    await Promise.all(
+      batch.map((key) =>
+        minio.removeObject(BUCKET, key).then(() => { removed += 1 }).catch(() => undefined),
+      ),
+    )
+  }
+  return removed
+}
+
 async function runTokenCleanup(): Promise<void> {
   const now = new Date()
 
@@ -256,7 +275,61 @@ async function runTokenCleanup(): Promise<void> {
     resetDeleted += count
   }
 
-  log.info({ refreshDeleted, resetDeleted }, 'Token cleanup completed')
+  // Email verification tokens: same retention rule as reset tokens (GDPR
+  // storage limitation - expired/used tokens serve no purpose anymore).
+  let verificationDeleted = 0
+  while (true) {
+    const expiredIds = await prisma.emailVerificationToken.findMany({
+      where: { OR: [{ expiresAt: { lt: now } }, { usedAt: { not: null } }] },
+      select: { id: true },
+      take: CLEANUP_BATCH_SIZE,
+    })
+    if (expiredIds.length === 0) break
+    const { count } = await prisma.emailVerificationToken.deleteMany({
+      where: { id: { in: expiredIds.map((r) => r.id) } },
+    })
+    verificationDeleted += count
+  }
+
+  log.info({ refreshDeleted, resetDeleted, verificationDeleted }, 'Token cleanup completed')
+}
+
+// ─── Soft-deleted review purge (GDPR Art. 17) ─────────────────────────────────
+// Reviews soft-deleted longer than the restore window ago are hard-deleted.
+// The cascade removes the ReviewPhoto links; the detached photos (and their
+// MinIO objects) are then swept by the unused-image cleanup in the same run.
+
+const REVIEW_RESTORE_WINDOW_DAYS = 30
+
+async function runReviewPurge(): Promise<void> {
+  const cutoff = new Date(Date.now() - REVIEW_RESTORE_WINDOW_DAYS * 24 * 60 * 60 * 1000)
+  let reviewsPurged = 0
+
+  while (true) {
+    const expired = await prisma.review.findMany({
+      where: { status: ReviewStatus.DELETED, deletedAt: { lt: cutoff } },
+      select: { id: true, userId: true },
+      take: CLEANUP_BATCH_SIZE,
+    })
+    if (expired.length === 0) break
+
+    const { count } = await prisma.review.deleteMany({
+      where: { id: { in: expired.map((r) => r.id) } },
+    })
+    reviewsPurged += count
+
+    // Accountability trail: one entry per purged review. Only opaque ids -
+    // the content itself is gone, which is the point.
+    await prisma.privacyAuditLog.createMany({
+      data: expired.map((r) => ({
+        userId: r.userId,
+        action: 'REVIEW_PURGED',
+        metadata: { reviewId: r.id },
+      })),
+    })
+  }
+
+  log.info({ reviewsPurged }, 'Soft-deleted review purge completed')
 }
 
 // ─── Orphaned photo cleanup ───────────────────────────────────────────────────
@@ -315,18 +388,11 @@ async function runUnusedImageCleanup(): Promise<void> {
 
     if (stalePhotos.length === 0) break
 
-    await Promise.all(
-      stalePhotos.flatMap((photo) => {
-        const keys = [photo.storageKey, ...extractVariantKeys(photo.variants)]
-        return keys.map((key) =>
-          minio.removeObject(BUCKET, key)
-            .then(() => {
-              photoObjectsDeleted += 1
-            })
-            .catch(() => undefined),
-        )
-      }),
-    )
+    const staleKeys = stalePhotos.flatMap((photo) => [
+      photo.storageKey,
+      ...extractVariantKeys(photo.variants),
+    ])
+    photoObjectsDeleted += await removeObjectsBounded(staleKeys)
 
     const { count } = await prisma.photo.deleteMany({
       where: { id: { in: stalePhotos.map((photo) => photo.id) } },
@@ -334,29 +400,49 @@ async function runUnusedImageCleanup(): Promise<void> {
     photosDeleted += count
   }
 
+  // Reconciliation pass: collect every key still referenced by a DB row, then
+  // delete MinIO objects that match none of them (truly orphaned files — failed
+  // uploads, interrupted deletes). Read the photo and avatar rows in cursor
+  // batches rather than one findMany: at millions of rows a single query would
+  // materialise every row object (with parsed variant JSON) into memory at once.
   const referencedKeys = new Set<string>()
 
-  const photos = await prisma.photo.findMany({
-    select: {
-      storageKey: true,
-      variants: true,
-    },
-  })
-  for (const photo of photos) {
-    referencedKeys.add(photo.storageKey)
-    for (const variantKey of extractVariantKeys(photo.variants)) {
-      referencedKeys.add(variantKey)
+  let photoCursor: string | undefined
+  for (;;) {
+    const batch = await prisma.photo.findMany({
+      select: { id: true, storageKey: true, variants: true },
+      orderBy: { id: 'asc' },
+      take: CLEANUP_BATCH_SIZE,
+      ...(photoCursor ? { skip: 1, cursor: { id: photoCursor } } : {}),
+    })
+    if (batch.length === 0) break
+    for (const photo of batch) {
+      referencedKeys.add(photo.storageKey)
+      for (const variantKey of extractVariantKeys(photo.variants)) {
+        referencedKeys.add(variantKey)
+      }
     }
+    photoCursor = batch[batch.length - 1].id
+    if (batch.length < CLEANUP_BATCH_SIZE) break
   }
 
-  const usersWithAvatar = await prisma.user.findMany({
-    where: { avatarKey: { not: null } },
-    select: { avatarKey: true },
-  })
-  for (const user of usersWithAvatar) {
-    if (!user.avatarKey) continue
-    referencedKeys.add(user.avatarKey)
-    referencedKeys.add(avatarVariantKey(user.avatarKey))
+  let avatarCursor: string | undefined
+  for (;;) {
+    const batch = await prisma.user.findMany({
+      where: { avatarKey: { not: null } },
+      select: { id: true, avatarKey: true },
+      orderBy: { id: 'asc' },
+      take: CLEANUP_BATCH_SIZE,
+      ...(avatarCursor ? { skip: 1, cursor: { id: avatarCursor } } : {}),
+    })
+    if (batch.length === 0) break
+    for (const user of batch) {
+      if (!user.avatarKey) continue
+      referencedKeys.add(user.avatarKey)
+      referencedKeys.add(avatarVariantKey(user.avatarKey))
+    }
+    avatarCursor = batch[batch.length - 1].id
+    if (batch.length < CLEANUP_BATCH_SIZE) break
   }
 
   const existingKeys = [
@@ -366,7 +452,7 @@ async function runUnusedImageCleanup(): Promise<void> {
   ]
 
   const orphanKeys = existingKeys.filter((key) => !referencedKeys.has(key))
-  await Promise.all(orphanKeys.map((key) => minio.removeObject(BUCKET, key).catch(() => undefined)))
+  await removeObjectsBounded(orphanKeys)
 
   log.info(
     {
@@ -386,6 +472,9 @@ async function runCleanup(): Promise<void> {
   // BullMQ still marks the job as failed and the 'failed' handler logs it.
   const tasks: ReadonlyArray<readonly [string, () => Promise<void>]> = [
     ['token cleanup', runTokenCleanup],
+    // Purge before the image sweeps so photos detached by the purge are
+    // removed from MinIO in the same run instead of a day later.
+    ['review purge', runReviewPurge],
     ['orphaned photo cleanup', runOrphanPhotoCleanup],
     ['unused image cleanup', runUnusedImageCleanup],
   ]

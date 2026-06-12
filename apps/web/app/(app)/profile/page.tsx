@@ -12,6 +12,8 @@ import { PassportPanel } from '@/components/passport-panel'
 import { DailyQuestsStrip } from '@/components/daily-quests-strip'
 import { ThemeSettings } from '@/components/theme-settings'
 import { LeaderboardPanel } from '@/components/leaderboard-panel'
+import { PrivacyDataSettings } from '@/components/privacy-data-settings'
+import { Modal } from '@/components/ui/modal'
 import dynamic from 'next/dynamic'
 
 const NotificationsList = dynamic(() => import('@/components/notifications-list'), {
@@ -248,7 +250,8 @@ function ProfileContent() {
     <div className="card p-4 border border-red-200 dark:border-red-900">
       <h3 className="font-heading font-semibold text-red-600 dark:text-red-400 mb-1">Danger Zone</h3>
       <p className="text-xs text-snack-muted mb-3">
-        Permanently delete your account and all your data. This cannot be undone.
+        Permanently delete your account and all your data, including your photos.
+        This cannot be undone. Tip: download a copy of your data first via Privacy &amp; data.
       </p>
       <button
         type="button"
@@ -530,8 +533,9 @@ function ProfileContent() {
                     </div>
 
                     <div>
-                      <label className="label text-xs">Username</label>
+                      <label htmlFor="profile-username" className="label text-xs">Username</label>
                       <input
+                        id="profile-username"
                         className="input text-sm"
                         value={editUsername}
                         onChange={(e) => setEditUsername(e.target.value)}
@@ -543,8 +547,10 @@ function ProfileContent() {
                     </div>
 
                     <div>
-                      <label className="label text-xs">Bio ({editBio.length}/280)</label>
+                      <label htmlFor="profile-bio" className="label text-xs">Bio ({editBio.length}/280)</label>
                       <textarea
+                        id="profile-bio"
+                        aria-label="Bio"
                         className="input min-h-[80px] resize-none text-sm"
                         value={editBio}
                         onChange={(e) => setEditBio(e.target.value)}
@@ -575,6 +581,8 @@ function ProfileContent() {
                 <h3 className="font-heading font-semibold text-snack-text mb-3">Notification Preferences</h3>
                 <NotificationSettings embedded />
               </div>
+
+              <PrivacyDataSettings />
 
               {dangerZone}
             </div>
@@ -722,8 +730,9 @@ function ProfileContent() {
               </div>
 
               <div>
-                <label className="label">Username</label>
+                <label htmlFor="profile-username" className="label">Username</label>
                 <input
+                  id="profile-username"
                   className="input"
                   value={editUsername}
                   onChange={(e) => setEditUsername(e.target.value)}
@@ -742,8 +751,10 @@ function ProfileContent() {
               </div>
 
               <div>
-                <label className="label">Bio <span className="text-snack-muted font-normal">({editBio.length}/280)</span></label>
+                <label htmlFor="profile-bio" className="label">Bio <span className="text-snack-muted font-normal">({editBio.length}/280)</span></label>
                 <textarea
+                  id="profile-bio"
+                  aria-label="Bio"
                   className="input min-h-[100px] resize-none"
                   value={editBio}
                   onChange={(e) => setEditBio(e.target.value)}
@@ -776,47 +787,50 @@ function ProfileContent() {
             <NotificationSettings embedded />
           </div>
 
+          <div className="mb-6">
+            <PrivacyDataSettings />
+          </div>
+
           {dangerZone}
         </>
       )}
 
-      {deleteModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setDeleteModalOpen(false)}>
-          <div className="w-full max-w-sm card p-5" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-heading font-semibold text-snack-text mb-1">Delete account</h3>
-            <p className="text-sm text-snack-muted mb-4">
-              This permanently deletes your account, reviews, and all associated data. Enter your password to confirm.
-            </p>
-            <input
-              type="password"
-              className="input mb-3"
-              placeholder="Your password"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
-              autoFocus
-            />
-            {deleteError && <p className="text-xs text-red-500 mb-3">{deleteError}</p>}
-            <div className="flex gap-2">
-              <button
-                type="button"
-                className="btn-secondary flex-1 text-sm"
-                onClick={() => setDeleteModalOpen(false)}
-                disabled={deleteLoading}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="flex-1 text-sm py-2 px-4 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium disabled:opacity-50"
-                onClick={handleDeleteAccount}
-                disabled={deleteLoading || !deletePassword}
-              >
-                {deleteLoading ? 'Deleting...' : 'Delete account'}
-              </button>
-            </div>
-          </div>
+      <Modal
+        open={deleteModalOpen}
+        onClose={() => { if (!deleteLoading) setDeleteModalOpen(false) }}
+        title="Delete account"
+      >
+        <p className="text-sm text-snack-muted mb-4">
+          This permanently deletes your account, reviews, and all associated data. Enter your password to confirm.
+        </p>
+        <input
+          type="password"
+          className="input mb-3"
+          placeholder="Your password"
+          value={deletePassword}
+          onChange={(e) => setDeletePassword(e.target.value)}
+          autoFocus
+        />
+        {deleteError && <p className="text-xs text-red-500 mb-3">{deleteError}</p>}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="btn-secondary flex-1 text-sm"
+            onClick={() => setDeleteModalOpen(false)}
+            disabled={deleteLoading}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="flex-1 text-sm py-2 px-4 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium disabled:opacity-50"
+            onClick={handleDeleteAccount}
+            disabled={deleteLoading || !deletePassword}
+          >
+            {deleteLoading ? 'Deleting...' : 'Delete account'}
+          </button>
         </div>
-      )}
+      </Modal>
     </div>
   )
 }

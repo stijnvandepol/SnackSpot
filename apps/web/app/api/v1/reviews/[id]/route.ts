@@ -1,10 +1,8 @@
 import { type NextRequest } from 'next/server'
 import { UpdateReviewSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
-import { env } from '@/lib/env'
 import {
   ok,
-  noContent,
   err,
   parseBody,
   requireAuth,
@@ -13,12 +11,11 @@ import {
   isResponse,
   withNoStore,
 } from '@/lib/api-helpers'
+import { restorableUntil } from '@/lib/privacy'
 import { ReviewStatus } from '@prisma/client'
-import { normalizeRatings } from '@/lib/ratings'
 import { recalculateUserBadges } from '@/lib/badge-service'
-import { normalizeDishName } from '@/lib/text'
-import { getBlockedWordsCache, filterText } from '@/lib/blocked-words'
-import { reviewListSelect, serializeReview, checkReviewVisibility, validatePhotos } from '@/lib/review-helpers'
+import { reviewListSelect, serializeReview, checkReviewVisibility } from '@/lib/review-helpers'
+import { updateReview } from '@/lib/review-service'
 
 export async function GET(
   req: NextRequest,
@@ -33,6 +30,8 @@ export async function GET(
       select: {
         ...reviewListSelect(auth?.sub),
         updatedAt: true,
+        deletedAt: true,
+        deletedById: true,
         reviewPhotos: {
           orderBy: { sortOrder: 'asc' as const },
           select: { sortOrder: true, photo: { select: { id: true, variants: true } } },
@@ -66,129 +65,9 @@ export async function PATCH(
   if (isResponse(body)) return body
 
   try {
-    const normalized = body.ratings ? normalizeRatings(body.ratings) : null
-    const normalizedDishName = normalizeDishName(body.dishName)
-    const { regexes } = await getBlockedWordsCache()
-    const filteredText = body.text !== undefined ? filterText(body.text, regexes) : undefined
-    const nextTags = body.tags ?? null
-    const dedupedTags = nextTags !== null ? Array.from(new Set(nextTags)) : null
-    const nextPhotoIds = body.photoIds ?? null
-    const dedupedPhotoIds = nextPhotoIds !== null ? Array.from(new Set(nextPhotoIds)) : null
-
-    const review = await prisma.review.findUnique({
-      where: { id },
-      select: { userId: true, status: true },
-    })
-    if (!review || review.status === ReviewStatus.DELETED) return err('Review not found', 404)
-
-    if (review.userId !== auth.sub) return err('Forbidden', 403)
-
-    if (nextPhotoIds !== null && dedupedPhotoIds !== null) {
-      if (nextPhotoIds.length > env.MAX_PHOTOS_PER_REVIEW) {
-        return err(`Too many photos - max ${env.MAX_PHOTOS_PER_REVIEW}`, 422)
-      }
-
-      if (dedupedPhotoIds.length !== nextPhotoIds.length) {
-        return err('Duplicate photo IDs are not allowed', 422)
-      }
-
-      if (dedupedPhotoIds.length > 0) {
-        const photoError = await validatePhotos(dedupedPhotoIds, auth.sub, id)
-        if (photoError) return photoError
-      }
-    }
-
-    const reviewData = {
-      ...(body.ratings
-        ? {
-            rating: normalized!.overall,
-            ratingTaste: normalized!.taste,
-            ratingValue: normalized!.value,
-            ratingPortion: normalized!.portion,
-            ratingService: normalized!.service,
-            ratingOverall: normalized!.overall,
-          }
-        : body.rating !== undefined
-          ? {
-              rating: body.rating,
-              ratingTaste: body.rating,
-              ratingValue: body.rating,
-              ratingPortion: body.rating,
-              ratingService: null,
-              ratingOverall: body.rating,
-            }
-          : {}),
-      ...(filteredText !== undefined && { text: filteredText }),
-      ...(body.dishName !== undefined && { dishName: normalizedDishName }),
-    }
-
-    const updated = await prisma.$transaction(async (tx) => {
-      const savedReview = await tx.review.update({
-        where: { id },
-        data: reviewData,
-        select: {
-          id: true,
-          rating: true,
-          ratingTaste: true,
-          ratingValue: true,
-          ratingPortion: true,
-          ratingService: true,
-          ratingOverall: true,
-          text: true,
-          dishName: true,
-          updatedAt: true,
-          tags: {
-            orderBy: { tag: 'asc' },
-            select: { tag: true },
-          },
-        },
-      })
-
-      if (dedupedTags !== null) {
-        await tx.reviewTag.deleteMany({
-          where: { reviewId: id },
-        })
-
-        if (dedupedTags.length > 0) {
-          await tx.reviewTag.createMany({
-            data: dedupedTags.map((tag) => ({
-              reviewId: id,
-              tag,
-            })),
-          })
-        }
-      }
-
-      if (dedupedPhotoIds !== null) {
-        await tx.reviewPhoto.deleteMany({
-          where: { reviewId: id },
-        })
-
-        if (dedupedPhotoIds.length > 0) {
-          await tx.reviewPhoto.createMany({
-            data: dedupedPhotoIds.map((photoId, i) => ({
-              reviewId: id,
-              photoId,
-              sortOrder: i,
-            })),
-          })
-        }
-      }
-
-      return savedReview
-    })
-    return ok({
-      ...updated,
-      rating: Number(updated.rating),
-      ratings: {
-        taste: Number(updated.ratingTaste),
-        value: Number(updated.ratingValue),
-        portion: Number(updated.ratingPortion),
-        service: updated.ratingService === null ? null : Number(updated.ratingService),
-      },
-      overallRating: Number(updated.ratingOverall),
-      tags: updated.tags.map((item) => item.tag),
-    })
+    const result = await updateReview({ userId: auth.sub, reviewId: id, input: body })
+    if (!result.ok) return err(result.error, result.status)
+    return ok(result.value)
   } catch (e) {
     return serverError('reviews/[id] PATCH', e)
   }
@@ -214,12 +93,19 @@ export async function DELETE(
     const isMod = auth.role === 'MODERATOR' || auth.role === 'ADMIN'
     if (!isOwner && !isMod) return err('Forbidden', 403)
 
+    // Soft delete with a restore window: deletedAt drives the worker's purge
+    // job (hard delete after 30 days, GDPR Art. 17) and deletedById records
+    // who deleted it - only self-deleted reviews are restorable by the owner.
+    const deletedAt = new Date()
     await prisma.review.update({
       where: { id },
-      data: { status: ReviewStatus.DELETED },
+      data: { status: ReviewStatus.DELETED, deletedAt, deletedById: auth.sub },
     })
     await recalculateUserBadges(review.userId)
-    return noContent()
+    return ok({
+      message: 'Review deleted',
+      restorableUntil: isOwner ? restorableUntil(deletedAt).toISOString() : null,
+    })
   } catch (e) {
     return serverError('reviews/[id] DELETE', e)
   }

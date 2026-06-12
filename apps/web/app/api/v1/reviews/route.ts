@@ -1,20 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { CreateReviewSchema } from '@snackspot/shared'
-import { prisma } from '@/lib/db'
-import { env } from '@/lib/env'
 import { created, err, parseBody, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
-import { rateLimit, rateLimitUser } from '@/lib/rate-limit'
-import { normalizeRatings } from '@/lib/ratings'
-import { recalculateUserBadges } from '@/lib/badge-service'
-import { normalizeDishName } from '@/lib/text'
-import { notifyMention } from '@/lib/notification-service'
-import { logger } from '@/lib/logger'
-import { getBlockedWordsCache, filterText } from '@/lib/blocked-words'
-import { validatePhotos, processMentions } from '@/lib/review-helpers'
-import { awardXp } from '@/lib/xp-service'
-import { bumpQuestProgress } from '@/lib/quest-service'
-import { recalculateCollectibles } from '@/lib/collectible-service'
-import { resolveProviderPlace, resolveManualPlace } from '@/lib/place-service'
+import { createReview } from '@/lib/review-service'
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
@@ -23,149 +10,10 @@ export async function POST(req: NextRequest) {
   const body = await parseBody(req, CreateReviewSchema)
   if (isResponse(body)) return body
 
-  if (!body.placeId && !body.verifiedPlace && !body.place) {
-    return err('A place is required: pick one or select a verified venue', 422)
-  }
-  if (body.photoIds.length === 0) {
-    return err('At least one photo is required', 422)
-  }
-  if (body.photoIds.length > env.MAX_PHOTOS_PER_REVIEW) {
-    return err(`Too many photos - max ${env.MAX_PHOTOS_PER_REVIEW}`, 422)
-  }
-
   try {
-    const normalizedRatings = body.ratings
-      ? normalizeRatings(body.ratings)
-      : normalizeRatings({
-          taste: body.rating!,
-          value: body.rating!,
-          portion: body.rating!,
-          service: null,
-        })
-    const { regexes } = await getBlockedWordsCache()
-    const filteredText = filterText(body.text, regexes)
-    const normalizedDishName = normalizeDishName(body.dishName)
-    const reviewTags = Array.from(new Set(body.tags))
-
-    let placeId = body.placeId
-
-    // Resolve the place. Order of preference:
-    // 1. An existing placeId (already verified).
-    // 2. A provider-verified venue from autocomplete — server re-verifies the
-    //    id and dedupes via the unique (provider, provider_place_id) index.
-    // 3. Legacy free-text place — guarded against near-duplicates by name+proximity.
-    if (!placeId && body.verifiedPlace) {
-      const resolved = await resolveProviderPlace(body.verifiedPlace, { verify: true })
-      if ('error' in resolved) return err(resolved.error, 422)
-      placeId = resolved.id
-    } else if (!placeId && body.place) {
-      // Free-text place creation bypasses venue verification, so it is
-      // restricted to moderators/admins (e.g. adding a real venue the provider
-      // doesn't list). Regular users must pick a verified venue.
-      if (auth.role !== 'ADMIN' && auth.role !== 'MODERATOR') {
-        return err('Pick a verified place from the list instead of free text', 422)
-      }
-      const resolved = await resolveManualPlace(body.place)
-      placeId = resolved.id
-    }
-
-    // Validate photos belong to this user and are not yet attached to any review
-    const photoError = await validatePhotos(body.photoIds, auth.sub)
-    if (photoError) return photoError
-
-    // Run rate-limit after payload/photo validation so failed attempts don't burn quota as quickly.
-    const rl = await rateLimitUser(auth.sub, 'review_create', 60, 3600)
-    if (!rl.allowed) return err('Review rate limit exceeded', 429)
-
-    // Per-place limit: max 5 reviews per user per place per day to prevent spam on a single location.
-    const placeRl = await rateLimit(`rl:place_review:${auth.sub}:${placeId}`, 5, 86400)
-    if (!placeRl.allowed) return err('Too many reviews for this place', 429)
-
-    const review = await prisma.review.create({
-      data: {
-        userId: auth.sub,
-        placeId: placeId!,
-        rating: normalizedRatings.overall,
-        ratingTaste: normalizedRatings.taste,
-        ratingValue: normalizedRatings.value,
-        ratingPortion: normalizedRatings.portion,
-        ratingService: normalizedRatings.service,
-        ratingOverall: normalizedRatings.overall,
-        text: filteredText,
-        dishName: normalizedDishName,
-        tags: reviewTags.length > 0
-          ? {
-              createMany: {
-                data: reviewTags.map((tag) => ({ tag })),
-              },
-            }
-          : undefined,
-        reviewPhotos: {
-          create: body.photoIds.map((photoId, i) => ({ photoId, sortOrder: i })),
-        },
-      },
-      select: {
-        id: true,
-        rating: true,
-        ratingTaste: true,
-        ratingValue: true,
-        ratingPortion: true,
-        ratingService: true,
-        ratingOverall: true,
-        text: true,
-        dishName: true,
-        status: true,
-        createdAt: true,
-        tags: {
-          orderBy: { tag: 'asc' },
-          select: { tag: true },
-        },
-        place: { select: { id: true, name: true, address: true } },
-        reviewPhotos: {
-          orderBy: { sortOrder: 'asc' },
-          select: { photo: { select: { id: true, variants: true } } },
-        },
-      },
-    })
-
-    // XP: base award + photo bonus, plus the "First Bite" discovery bonus for
-    // the very first published review of a place. awardXp never throws.
-    const isFirstReviewOfPlace =
-      (await prisma.review.count({
-        where: { placeId: placeId!, status: 'PUBLISHED', id: { not: review.id } },
-      })) === 0
-    await Promise.all([
-      awardXp({ userId: auth.sub, reason: 'REVIEW_CREATED', refType: 'review', refId: review.id }),
-      awardXp({ userId: auth.sub, reason: 'REVIEW_PHOTO_BONUS', refType: 'review', refId: review.id }),
-      ...(isFirstReviewOfPlace
-        ? [awardXp({ userId: auth.sub, reason: 'FIRST_REVIEW_OF_PLACE', refType: 'place', refId: placeId! })]
-        : []),
-      bumpQuestProgress(auth.sub, 'REVIEWS_POSTED'),
-    ])
-
-    // Fire-and-forget — badge/passport failures must never roll back a review.
-    await Promise.all([
-      recalculateUserBadges(auth.sub).catch((error) => {
-        logger.error({ err: error, userId: auth.sub, reviewId: review.id }, 'Badge recalculation failed after review create')
-      }),
-      recalculateCollectibles(auth.sub), // never throws
-    ])
-
-    // Create mentions and send notifications
-    await processMentions(body.text, review.id, auth.sub, body.mentionedUserIds, notifyMention)
-
-    return created({
-      ...review,
-      rating: Number(review.rating),
-      ratings: {
-        taste: Number(review.ratingTaste),
-        value: Number(review.ratingValue),
-        portion: Number(review.ratingPortion),
-        service: review.ratingService === null ? null : Number(review.ratingService),
-      },
-      overallRating: Number(review.ratingOverall),
-      tags: review.tags.map((item) => item.tag),
-    })
+    const result = await createReview({ userId: auth.sub, role: auth.role, input: body })
+    if (!result.ok) return err(result.error, result.status)
+    return created(result.value)
   } catch (e) {
     return serverError('reviews POST', e)
   }

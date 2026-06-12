@@ -1,6 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
-import { ok, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
+import { ok, err, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
+import { rateLimitUser } from '@/lib/rate-limit'
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = requireAuth(req)
@@ -9,16 +10,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params
 
   try {
+    // Generous (a fast reader marks dozens per minute) but caps update-spam.
+    const rl = await rateLimitUser(auth.sub, 'notification_read', 120, 60)
+    if (!rl.allowed) return err('Too many requests', 429)
+
     const notification = await prisma.notification.findUnique({
       where: { id },
       select: { userId: true },
     })
 
     if (!notification || notification.userId !== auth.sub) {
-      return new Response(JSON.stringify({ error: 'Notification not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return err('Notification not found', 404)
     }
 
     const updated = await prisma.notification.update({

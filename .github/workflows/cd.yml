@@ -40,8 +40,45 @@ jobs:
           docker --version
           docker compose version
 
+      # Record the image currently serving each app BEFORE we rebuild, so a
+      # failed deploy can roll back to exactly what was running. Empty on the
+      # very first deploy (no prior images) — rollback then simply no-ops.
+      - name: Capture current images for rollback
+        id: snapshot
+        run: |
+          {
+            echo "web=$(docker compose images -q web 2>/dev/null || true)"
+            echo "admin=$(docker compose images -q admin 2>/dev/null || true)"
+            echo "worker=$(docker compose images -q worker 2>/dev/null || true)"
+          } >> "$GITHUB_OUTPUT"
+
+      # Build images first WITHOUT recreating running containers. If a build
+      # fails, production keeps serving the old version untouched.
+      - name: Build images
+        run: docker compose build
+
+      # Run migrations explicitly as a one-shot before swapping app containers.
+      # Failing here aborts the deploy while the old app + schema are still
+      # live, instead of leaving half-migrated state behind a silent compose
+      # dependency condition.
+      - name: Run database migrations
+        run: docker compose run --rm migrate
+
       - name: Deploy stack
-        run: docker compose up -d --build --force-recreate --remove-orphans
+        run: docker compose up -d --force-recreate --remove-orphans
+
+      # compose up returns once containers START, not once they are READY, so
+      # gate the deploy on the web app actually reporting healthy — otherwise a
+      # crash-looping new build would be recorded as a successful deploy.
+      - name: Wait for web health
+        run: |
+          for i in $(seq 1 30); do
+            if [ "$(docker compose ps web --format '{{.Health}}')" = "healthy" ]; then
+              echo "web healthy after ${i} checks"; exit 0
+            fi
+            sleep 5
+          done
+          echo "web did not become healthy in time"; exit 1
 
       - name: Show service status
         if: always()
@@ -50,6 +87,19 @@ jobs:
       - name: Show recent logs on failure
         if: failure()
         run: docker compose logs --tail=200
+
+      # Roll back to the previously-running images if migration, deploy, or the
+      # health gate failed. Skipped on the first-ever deploy when there is no
+      # prior image to restore.
+      - name: Roll back on failure
+        if: failure() && steps.snapshot.outputs.web != ''
+        run: |
+          echo "Deploy failed — rolling back to previous images"
+          docker tag "${{ steps.snapshot.outputs.web }}" "$(docker compose config --images web | head -1)"
+          docker tag "${{ steps.snapshot.outputs.admin }}" "$(docker compose config --images admin | head -1)"
+          docker tag "${{ steps.snapshot.outputs.worker }}" "$(docker compose config --images worker | head -1)"
+          docker compose up -d --force-recreate --no-build web admin worker
+          docker compose ps
 
       - name: Prune build cache
         if: success()

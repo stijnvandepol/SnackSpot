@@ -93,7 +93,16 @@ services:
       - miniodata:/data
     mem_limit: 512m
     healthcheck:
-      test: ["CMD-SHELL", "exit 0"]
+      # The minio server image ships no curl/wget/mc, but it does ship bash,
+      # whose /dev/tcp pseudo-device lets us hit the liveness endpoint with
+      # builtins only. A dummy "exit 0" would let dependents start against a
+      # hung object store. Liveness needs no credentials.
+      test:
+        - CMD
+        - bash
+        - -c
+        # $$ escapes compose interpolation so $status reaches the container literally.
+        - 'exec 3<>/dev/tcp/127.0.0.1/9000 && printf "GET /minio/health/live HTTP/1.0\r\nHost: localhost\r\n\r\n" >&3 && read -r status <&3 && case "$$status" in *200*) exit 0;; *) exit 1;; esac'
       interval: 10s
       timeout: 5s
       retries: 10

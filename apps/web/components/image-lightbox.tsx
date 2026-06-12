@@ -112,7 +112,7 @@ export function ImageLightbox({
           onClick={close}
           role="dialog"
           aria-modal="true"
-          aria-label="Image viewer"
+          aria-label={count > 1 ? `Image viewer, ${openIndex! + 1} of ${count}` : 'Image viewer'}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >

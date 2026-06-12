@@ -92,6 +92,11 @@ export async function DELETE(
   const { username } = await params
 
   try {
+    // Same bucket as POST: a follow/unfollow flip-flop loop is the abuse
+    // pattern (notification spam, counter churn), so both share one budget.
+    const rl = await rateLimitUser(auth.sub, 'follow', 60, 3600)
+    if (!rl.allowed) return err('Too many follow actions', 429)
+
     const target = await resolveUser(username)
     if (!target) return err('User not found', 404)
 
