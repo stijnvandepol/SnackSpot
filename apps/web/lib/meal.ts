@@ -5,7 +5,7 @@ const MEAL_EMOJI: Record<string, string> = {
   LUNCH: '🥪',
   DINNER: '🍝',
   SNACK: '🍟',
-  DRINK: '☕',
+  DRINK: '🍺',
 }
 
 const MEAL_LABEL: Record<string, string> = {

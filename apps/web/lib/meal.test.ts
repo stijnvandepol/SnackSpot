@@ -5,7 +5,7 @@ describe('meal helpers', () => {
   it('maps known meal slots', () => {
     expect(mealEmoji('BREAKFAST')).toBe('🍳')
     expect(mealEmoji('SNACK')).toBe('🍟')
-    expect(mealEmoji('DRINK')).toBe('☕')
+    expect(mealEmoji('DRINK')).toBe('🍺')
     expect(mealLabel('LUNCH')).toBe('Lunch')
     expect(mealLabel('DINNER')).toBe('Dinner')
     expect(mealLabel('DRINK')).toBe('Drink')
@@ -20,6 +20,6 @@ describe('meal helpers', () => {
     expect(MEAL_SLOTS.map((s) => s.value)).toEqual([
       'BREAKFAST', 'LUNCH', 'DINNER', 'SNACK', 'DRINK',
     ])
-    expect(MEAL_SLOTS.at(-1)).toEqual({ value: 'DRINK', label: 'Drink', emoji: '☕' })
+    expect(MEAL_SLOTS.at(-1)).toEqual({ value: 'DRINK', label: 'Drink', emoji: '🍺' })
   })
 })
