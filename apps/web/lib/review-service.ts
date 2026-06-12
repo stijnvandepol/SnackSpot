@@ -226,12 +226,18 @@ export async function createReview(params: {
     },
   })
 
-  // XP: base award + photo bonus, plus the "First Bite" discovery bonus for the
-  // very first published review of a place. awardXp never throws.
+  // The "First Bite" discovery bonus needs the place's prior review count, so
+  // that one read must precede the XP awards (it decides whether the bonus is
+  // granted). Everything else is an independent post-write side effect.
   const isFirstReviewOfPlace =
     (await prisma.review.count({
       where: { placeId, status: 'PUBLISHED', id: { not: review.id } },
     })) === 0
+
+  // All side effects are independent (badges/collectibles read review counts,
+  // not XP; mentions write their own rows) and each handles its own failure, so
+  // run them concurrently instead of in three serial blocks. A badge/passport
+  // failure must never roll back the review — hence the .catch.
   await Promise.all([
     awardXp({ userId, reason: 'REVIEW_CREATED', refType: 'review', refId: review.id }),
     awardXp({ userId, reason: 'REVIEW_PHOTO_BONUS', refType: 'review', refId: review.id }),
@@ -239,17 +245,12 @@ export async function createReview(params: {
       ? [awardXp({ userId, reason: 'FIRST_REVIEW_OF_PLACE', refType: 'place', refId: placeId })]
       : []),
     bumpQuestProgress(userId, 'REVIEWS_POSTED'),
-  ])
-
-  // Badge/passport failures must never roll back a review.
-  await Promise.all([
     recalculateUserBadges(userId).catch((error) => {
       logger.error({ err: error, userId, reviewId: review.id }, 'Badge recalculation failed after review create')
     }),
     recalculateCollectibles(userId), // never throws
+    processMentions(input.text, review.id, userId, input.mentionedUserIds, notifyMention), // catches internally
   ])
-
-  await processMentions(input.text, review.id, userId, input.mentionedUserIds, notifyMention)
 
   return { ok: true, value: serializeRatings(review) }
 }

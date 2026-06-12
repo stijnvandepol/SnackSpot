@@ -28,14 +28,13 @@ export async function GET(
     const review = await prisma.review.findUnique({
       where: { id },
       select: {
+        // reviewListSelect already selects reviewPhotos (ordered by sortOrder,
+        // take: 5, { photo: { id, variants } }) — don't re-declare it, which
+        // previously dropped the take cap and selected an unused sortOrder.
         ...reviewListSelect(auth?.sub),
         updatedAt: true,
         deletedAt: true,
         deletedById: true,
-        reviewPhotos: {
-          orderBy: { sortOrder: 'asc' as const },
-          select: { sortOrder: true, photo: { select: { id: true, variants: true } } },
-        },
       },
     })
 

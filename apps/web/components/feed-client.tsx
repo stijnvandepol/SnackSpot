@@ -5,6 +5,10 @@ import { ReviewCard } from '@/components/review-card'
 import { useAuth } from '@/components/auth-provider'
 import { PullToRefresh } from '@/components/pull-to-refresh'
 
+// Module constant so the prop reference is stable across renders — required for
+// the memoized ReviewCard to actually skip unchanged cards.
+const FEED_VARIANT_PREF = ['medium', 'large', 'thumb'] as const
+
 interface Review {
   id: string
   rating: number
@@ -153,7 +157,7 @@ export function FeedClient({ scope = 'discover' }: { scope?: 'discover' | 'follo
           <ReviewCard
             key={r.id}
             review={r}
-            photoVariantPreference={['medium', 'large', 'thumb']}
+            photoVariantPreference={FEED_VARIANT_PREF}
             backContext="feed"
             priority={i === 0}
           />

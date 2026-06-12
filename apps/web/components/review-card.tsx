@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { photoVariantUrl } from '@/lib/photo-url'
@@ -41,7 +42,10 @@ function Stars({ rating }: { rating: number }) {
   )
 }
 
-export function ReviewCard({
+// Memoized: in a long feed, appending a page must not re-render every existing
+// card. All props are stable per item (review object refs are kept across
+// renders, the variant-preference arrays are module constants at the call sites).
+export const ReviewCard = memo(function ReviewCard({
   review,
   showPlace = true,
   photoVariantPreference = ['thumb', 'medium', 'large'],
@@ -56,6 +60,10 @@ export function ReviewCard({
   const reviewHref = backContext
     ? `/review/${review.id}?from=${encodeURIComponent(backContext)}`
     : `/review/${review.id}`
+
+  // Compute once instead of twice per card across a long feed.
+  const createdAt = new Date(review.createdAt)
+  const city = showPlace && review.place ? extractCity(review.place.address) : null
 
   return (
     <article className="card isolate overflow-hidden transition hover:shadow-md">
@@ -86,8 +94,8 @@ export function ReviewCard({
               {showPlace && review.place && (
                 <p className="truncate text-xs text-snack-muted">
                   {review.place.name}
-                  {extractCity(review.place.address) && (
-                    <span className="text-snack-muted/60"> · {extractCity(review.place.address)}</span>
+                  {city && (
+                    <span className="text-snack-muted/60"> · {city}</span>
                   )}
                 </p>
               )}
@@ -132,7 +140,7 @@ export function ReviewCard({
                 {review.user.isVerified && <VerifiedBadge className="w-3.5 h-3.5" />}
               </Link>
             </div>
-            <time dateTime={new Date(review.createdAt).toISOString()} className="text-xs text-snack-muted">{timeAgo(review.createdAt)}</time>
+            <time dateTime={createdAt.toISOString()} className="text-xs text-snack-muted">{timeAgo(review.createdAt)}</time>
           </div>
         </div>
       </div>
@@ -148,4 +156,4 @@ export function ReviewCard({
       </div>
     </article>
   )
-}
+})
