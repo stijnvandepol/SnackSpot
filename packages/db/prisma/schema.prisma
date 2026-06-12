@@ -499,6 +499,7 @@ enum MealSlot {
   LUNCH
   DINNER
   SNACK
+  DRINK
 }
 
 enum BiteVisibility {
