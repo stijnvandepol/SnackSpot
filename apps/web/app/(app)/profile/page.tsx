@@ -12,6 +12,7 @@ import { PassportPanel } from '@/components/passport-panel'
 import { DailyQuestsStrip } from '@/components/daily-quests-strip'
 import { ThemeSettings } from '@/components/theme-settings'
 import { LeaderboardPanel } from '@/components/leaderboard-panel'
+import { PrivacyDataSettings } from '@/components/privacy-data-settings'
 import dynamic from 'next/dynamic'
 
 const NotificationsList = dynamic(() => import('@/components/notifications-list'), {
@@ -248,7 +249,8 @@ function ProfileContent() {
     <div className="card p-4 border border-red-200 dark:border-red-900">
       <h3 className="font-heading font-semibold text-red-600 dark:text-red-400 mb-1">Danger Zone</h3>
       <p className="text-xs text-snack-muted mb-3">
-        Permanently delete your account and all your data. This cannot be undone.
+        Permanently delete your account and all your data, including your photos.
+        This cannot be undone. Tip: download a copy of your data first via Privacy &amp; data.
       </p>
       <button
         type="button"
@@ -576,6 +578,8 @@ function ProfileContent() {
                 <NotificationSettings embedded />
               </div>
 
+              <PrivacyDataSettings />
+
               {dangerZone}
             </div>
           )}
@@ -774,6 +778,10 @@ function ProfileContent() {
             <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Notification Settings</h2>
             <PushSettings />
             <NotificationSettings embedded />
+          </div>
+
+          <div className="mb-6">
+            <PrivacyDataSettings />
           </div>
 
           {dangerZone}

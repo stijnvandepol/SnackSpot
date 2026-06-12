@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false)
@@ -29,7 +30,8 @@ export function CookieConsent() {
         <p className="text-sm font-semibold text-snack-text mb-1">Cookies</p>
         <p className="text-xs text-snack-muted mb-3">
           We use one session cookie to keep you
-          logged in. No tracking or advertising cookies.
+          logged in. No tracking or advertising cookies. See our{' '}
+          <Link href="/privacy" className="text-snack-primary hover:underline">privacy policy</Link>.
         </p>
         <div className="flex gap-2">
           <button
