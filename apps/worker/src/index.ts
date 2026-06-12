@@ -14,7 +14,7 @@ import Redis from 'ioredis'
 import * as Minio from 'minio'
 import sharp from 'sharp'
 import webpush from 'web-push'
-import { PrismaClient, PhotoModerationStatus } from '@prisma/client'
+import { PrismaClient, PhotoModerationStatus, ReviewStatus } from '@prisma/client'
 import pino from 'pino'
 
 // ─── Logger ──────────────────────────────────────────────────────────────────
@@ -256,7 +256,61 @@ async function runTokenCleanup(): Promise<void> {
     resetDeleted += count
   }
 
-  log.info({ refreshDeleted, resetDeleted }, 'Token cleanup completed')
+  // Email verification tokens: same retention rule as reset tokens (GDPR
+  // storage limitation - expired/used tokens serve no purpose anymore).
+  let verificationDeleted = 0
+  while (true) {
+    const expiredIds = await prisma.emailVerificationToken.findMany({
+      where: { OR: [{ expiresAt: { lt: now } }, { usedAt: { not: null } }] },
+      select: { id: true },
+      take: CLEANUP_BATCH_SIZE,
+    })
+    if (expiredIds.length === 0) break
+    const { count } = await prisma.emailVerificationToken.deleteMany({
+      where: { id: { in: expiredIds.map((r) => r.id) } },
+    })
+    verificationDeleted += count
+  }
+
+  log.info({ refreshDeleted, resetDeleted, verificationDeleted }, 'Token cleanup completed')
+}
+
+// ─── Soft-deleted review purge (GDPR Art. 17) ─────────────────────────────────
+// Reviews soft-deleted longer than the restore window ago are hard-deleted.
+// The cascade removes the ReviewPhoto links; the detached photos (and their
+// MinIO objects) are then swept by the unused-image cleanup in the same run.
+
+const REVIEW_RESTORE_WINDOW_DAYS = 30
+
+async function runReviewPurge(): Promise<void> {
+  const cutoff = new Date(Date.now() - REVIEW_RESTORE_WINDOW_DAYS * 24 * 60 * 60 * 1000)
+  let reviewsPurged = 0
+
+  while (true) {
+    const expired = await prisma.review.findMany({
+      where: { status: ReviewStatus.DELETED, deletedAt: { lt: cutoff } },
+      select: { id: true, userId: true },
+      take: CLEANUP_BATCH_SIZE,
+    })
+    if (expired.length === 0) break
+
+    const { count } = await prisma.review.deleteMany({
+      where: { id: { in: expired.map((r) => r.id) } },
+    })
+    reviewsPurged += count
+
+    // Accountability trail: one entry per purged review. Only opaque ids -
+    // the content itself is gone, which is the point.
+    await prisma.privacyAuditLog.createMany({
+      data: expired.map((r) => ({
+        userId: r.userId,
+        action: 'REVIEW_PURGED',
+        metadata: { reviewId: r.id },
+      })),
+    })
+  }
+
+  log.info({ reviewsPurged }, 'Soft-deleted review purge completed')
 }
 
 // ─── Orphaned photo cleanup ───────────────────────────────────────────────────
@@ -386,6 +440,9 @@ async function runCleanup(): Promise<void> {
   // BullMQ still marks the job as failed and the 'failed' handler logs it.
   const tasks: ReadonlyArray<readonly [string, () => Promise<void>]> = [
     ['token cleanup', runTokenCleanup],
+    // Purge before the image sweeps so photos detached by the purge are
+    // removed from MinIO in the same run instead of a day later.
+    ['review purge', runReviewPurge],
     ['orphaned photo cleanup', runOrphanPhotoCleanup],
     ['unused image cleanup', runUnusedImageCleanup],
   ]
