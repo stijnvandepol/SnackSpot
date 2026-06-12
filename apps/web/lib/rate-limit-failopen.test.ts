@@ -38,9 +38,16 @@ describe('rate limiting fails open when Redis is unavailable', () => {
     expect(r.allowed).toBe(true)
   })
 
-  it('getLoginFailureCount reports zero (→ no CAPTCHA forced) on Redis failure', async () => {
-    expect(await getLoginFailureCount('1.2.3.4', 'a@b.com')).toEqual({ ip: 0, email: 0 })
-    expect(await getLoginFailureCount('1.2.3.4', '')).toEqual({ ip: 0, email: 0 })
+  it('getLoginFailureCount forces CAPTCHA (fail closed) on Redis failure', async () => {
+    // The CAPTCHA gate triggers at 3 failures; on a Redis outage we return a
+    // count far above that so brute-force protection survives (availability of
+    // rate limiting fails open, but the security gate fails closed).
+    const CAPTCHA_THRESHOLD = 3
+    const withEmail = await getLoginFailureCount('1.2.3.4', 'a@b.com')
+    expect(withEmail.ip).toBeGreaterThanOrEqual(CAPTCHA_THRESHOLD)
+    expect(withEmail.email).toBeGreaterThanOrEqual(CAPTCHA_THRESHOLD)
+    const ipOnly = await getLoginFailureCount('1.2.3.4', '')
+    expect(ipOnly.ip).toBeGreaterThanOrEqual(CAPTCHA_THRESHOLD)
   })
 
   it('incrementLoginFailures and resetLoginFailures swallow Redis errors', async () => {

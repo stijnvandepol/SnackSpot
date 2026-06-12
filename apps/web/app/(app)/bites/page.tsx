@@ -104,7 +104,7 @@ export default function MyBitesPage() {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${accessToken}` },
       })
-      if (!res.ok && res.status !== 204) {
+      if (!res.ok) {
         setDeleteError('Could not delete this bite. Please try again.')
         return
       }
