@@ -1,3 +1,5 @@
+import { cache } from 'react'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
@@ -18,10 +20,9 @@ function formatDate(dateInput: Date) {
   return dateFormatter.format(dateInput)
 }
 
-export default async function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
-  const { username } = await params
-
-  const user = await prisma.user.findFirst({
+// Cached so generateMetadata and the page body share a single query per request.
+const getProfileUser = cache((username: string) =>
+  prisma.user.findFirst({
     where: { username: { equals: username, mode: 'insensitive' }, bannedAt: null },
     select: {
       id: true,
@@ -33,7 +34,39 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
       createdAt: true,
       _count: { select: { reviews: { where: { status: 'PUBLISHED' } }, favorites: true } },
     },
-  })
+  }),
+)
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>
+}): Promise<Metadata> {
+  const { username } = await params
+  const user = await getProfileUser(username)
+
+  if (!user) return { title: 'User not found', robots: { index: false } }
+
+  const reviewCount = user._count.reviews
+  const title = `${user.username} (@${user.username}) on SnackSpot`
+  const description = user.bio?.trim()
+    ? user.bio.trim()
+    : `${user.username} has shared ${reviewCount} food ${reviewCount === 1 ? 'review' : 'reviews'} on SnackSpot.`
+  const canonical = `/u/${encodeURIComponent(user.username)}`
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { type: 'profile', title, description, url: canonical },
+    twitter: { card: 'summary', title, description },
+  }
+}
+
+export default async function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
+  const { username } = await params
+
+  const user = await getProfileUser(username)
 
   if (!user) notFound()
 

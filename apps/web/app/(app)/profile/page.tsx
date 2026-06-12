@@ -13,6 +13,7 @@ import { DailyQuestsStrip } from '@/components/daily-quests-strip'
 import { ThemeSettings } from '@/components/theme-settings'
 import { LeaderboardPanel } from '@/components/leaderboard-panel'
 import { PrivacyDataSettings } from '@/components/privacy-data-settings'
+import { Modal } from '@/components/ui/modal'
 import dynamic from 'next/dynamic'
 
 const NotificationsList = dynamic(() => import('@/components/notifications-list'), {
@@ -788,43 +789,42 @@ function ProfileContent() {
         </>
       )}
 
-      {deleteModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setDeleteModalOpen(false)}>
-          <div className="w-full max-w-sm card p-5" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-heading font-semibold text-snack-text mb-1">Delete account</h3>
-            <p className="text-sm text-snack-muted mb-4">
-              This permanently deletes your account, reviews, and all associated data. Enter your password to confirm.
-            </p>
-            <input
-              type="password"
-              className="input mb-3"
-              placeholder="Your password"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
-              autoFocus
-            />
-            {deleteError && <p className="text-xs text-red-500 mb-3">{deleteError}</p>}
-            <div className="flex gap-2">
-              <button
-                type="button"
-                className="btn-secondary flex-1 text-sm"
-                onClick={() => setDeleteModalOpen(false)}
-                disabled={deleteLoading}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="flex-1 text-sm py-2 px-4 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium disabled:opacity-50"
-                onClick={handleDeleteAccount}
-                disabled={deleteLoading || !deletePassword}
-              >
-                {deleteLoading ? 'Deleting...' : 'Delete account'}
-              </button>
-            </div>
-          </div>
+      <Modal
+        open={deleteModalOpen}
+        onClose={() => { if (!deleteLoading) setDeleteModalOpen(false) }}
+        title="Delete account"
+      >
+        <p className="text-sm text-snack-muted mb-4">
+          This permanently deletes your account, reviews, and all associated data. Enter your password to confirm.
+        </p>
+        <input
+          type="password"
+          className="input mb-3"
+          placeholder="Your password"
+          value={deletePassword}
+          onChange={(e) => setDeletePassword(e.target.value)}
+          autoFocus
+        />
+        {deleteError && <p className="text-xs text-red-500 mb-3">{deleteError}</p>}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="btn-secondary flex-1 text-sm"
+            onClick={() => setDeleteModalOpen(false)}
+            disabled={deleteLoading}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="flex-1 text-sm py-2 px-4 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium disabled:opacity-50"
+            onClick={handleDeleteAccount}
+            disabled={deleteLoading || !deletePassword}
+          >
+            {deleteLoading ? 'Deleting...' : 'Delete account'}
+          </button>
         </div>
-      )}
+      </Modal>
     </div>
   )
 }

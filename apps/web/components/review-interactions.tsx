@@ -5,6 +5,7 @@ import { useAuth } from '@/components/auth-provider'
 import { ReviewLikeButton } from '@/components/review-like-button'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { MentionText } from '@/components/mention-text'
+import { Modal } from '@/components/ui/modal'
 
 interface CommentItem {
   id: string
@@ -308,84 +309,77 @@ export function ReviewInteractions({
         </div>
       )}
 
-      {deleteStep !== 'closed' && (
-        <div
-          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
-          onClick={() => { if (deleteStep === 'confirm' && !deleteBusy) setDeleteStep('closed') }}
-        >
-          <div className="w-full max-w-sm card p-5" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-            {deleteStep === 'confirm' ? (
-              <>
-                <h3 className="font-heading font-semibold text-snack-text mb-1">Delete this review?</h3>
-                <p className="text-sm text-snack-muted mb-4">
-                  Your review will no longer be visible. You can restore it within 30 days;
-                  after that it is permanently erased, including its photos.
-                </p>
-                {deleteError && <p className="text-xs text-red-500 mb-3" role="status" aria-live="polite">{deleteError}</p>}
-                <div className="flex gap-2">
-                  <button type="button" className="btn-secondary flex-1 text-sm" onClick={() => setDeleteStep('closed')} disabled={deleteBusy}>
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="flex-1 text-sm py-2 px-4 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium disabled:opacity-50"
-                    onClick={() => void deleteReview()}
-                    disabled={deleteBusy}
-                  >
-                    {deleteBusy ? 'Deleting...' : 'Delete review'}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <h3 className="font-heading font-semibold text-snack-text mb-1">Review deleted</h3>
-                <p className="text-sm text-snack-muted mb-4">
-                  Your review has been deleted. You can restore it from this page for 30 days.
-                </p>
-                {deleteError && <p className="text-xs text-red-500 mb-3" role="status" aria-live="polite">{deleteError}</p>}
-                <div className="flex gap-2">
-                  <button type="button" className="btn-secondary flex-1 text-sm" onClick={() => void undoDeleteReview()} disabled={deleteBusy}>
-                    {deleteBusy ? 'Restoring...' : 'Undo'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-primary flex-1 text-sm"
-                    onClick={() => { window.location.href = '/' }}
-                    disabled={deleteBusy}
-                  >
-                    Done
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+      <Modal
+        open={deleteStep === 'confirm'}
+        onClose={() => { if (!deleteBusy) setDeleteStep('closed') }}
+        title="Delete this review?"
+      >
+        <p className="text-sm text-snack-muted mb-4">
+          Your review will no longer be visible. You can restore it within 30 days;
+          after that it is permanently erased, including its photos.
+        </p>
+        {deleteError && <p className="text-xs text-red-500 mb-3" role="status" aria-live="polite">{deleteError}</p>}
+        <div className="flex gap-2">
+          <button type="button" className="btn-secondary flex-1 text-sm" onClick={() => setDeleteStep('closed')} disabled={deleteBusy}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="flex-1 text-sm py-2 px-4 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium disabled:opacity-50"
+            onClick={() => void deleteReview()}
+            disabled={deleteBusy}
+          >
+            {deleteBusy ? 'Deleting...' : 'Delete review'}
+          </button>
         </div>
-      )}
+      </Modal>
 
-      {commentToDelete && (
-        <div
-          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
-          onClick={() => { if (!commentDeleteBusy) setCommentToDelete(null) }}
-        >
-          <div className="w-full max-w-sm card p-5" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-            <h3 className="font-heading font-semibold text-snack-text mb-1">Delete this comment?</h3>
-            <p className="text-sm text-snack-muted mb-4">This permanently deletes the comment. This cannot be undone.</p>
-            <div className="flex gap-2">
-              <button type="button" className="btn-secondary flex-1 text-sm" onClick={() => setCommentToDelete(null)} disabled={commentDeleteBusy}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="flex-1 text-sm py-2 px-4 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium disabled:opacity-50"
-                onClick={() => void deleteComment(commentToDelete.id)}
-                disabled={commentDeleteBusy}
-              >
-                {commentDeleteBusy ? 'Deleting...' : 'Delete comment'}
-              </button>
-            </div>
-          </div>
+      <Modal
+        open={deleteStep === 'deleted'}
+        // Deletion is already committed; dismissing without choosing Undo just
+        // leaves, same as Done — the deleted review is gone from this page.
+        onClose={() => { if (!deleteBusy) window.location.href = '/' }}
+        title="Review deleted"
+      >
+        <p className="text-sm text-snack-muted mb-4">
+          Your review has been deleted. You can restore it from this page for 30 days.
+        </p>
+        {deleteError && <p className="text-xs text-red-500 mb-3" role="status" aria-live="polite">{deleteError}</p>}
+        <div className="flex gap-2">
+          <button type="button" className="btn-secondary flex-1 text-sm" onClick={() => void undoDeleteReview()} disabled={deleteBusy}>
+            {deleteBusy ? 'Restoring...' : 'Undo'}
+          </button>
+          <button
+            type="button"
+            className="btn-primary flex-1 text-sm"
+            onClick={() => { window.location.href = '/' }}
+            disabled={deleteBusy}
+          >
+            Done
+          </button>
         </div>
-      )}
+      </Modal>
+
+      <Modal
+        open={commentToDelete !== null}
+        onClose={() => { if (!commentDeleteBusy) setCommentToDelete(null) }}
+        title="Delete this comment?"
+      >
+        <p className="text-sm text-snack-muted mb-4">This permanently deletes the comment. This cannot be undone.</p>
+        <div className="flex gap-2">
+          <button type="button" className="btn-secondary flex-1 text-sm" onClick={() => setCommentToDelete(null)} disabled={commentDeleteBusy}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="flex-1 text-sm py-2 px-4 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium disabled:opacity-50"
+            onClick={() => { if (commentToDelete) void deleteComment(commentToDelete.id) }}
+            disabled={commentDeleteBusy}
+          >
+            {commentDeleteBusy ? 'Deleting...' : 'Delete comment'}
+          </button>
+        </div>
+      </Modal>
 
       {user && !isOwner && !reported && (
         <details className="rounded-xl border border-snack-border px-4 py-3 text-sm">
