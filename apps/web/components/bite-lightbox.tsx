@@ -20,7 +20,7 @@ interface BiteLightboxProps {
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeZone: 'UTC' })
 
-/** Fullscreen viewer for a bite photo with a compact info bar. Open when `bite` is set. */
+/** Fullscreen viewer for a bite photo with a compact info bar. Open when `bite` is set and has a displayable photo variant. */
 export function BiteLightbox({ bite, onClose }: BiteLightboxProps) {
   const src = bite ? photoVariantUrl(bite.photo.variants, ['large', 'medium', 'thumb']) : null
   const open = src !== null

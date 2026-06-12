@@ -52,8 +52,9 @@ export function FriendsBitesStrip() {
               <button
                 type="button"
                 onClick={() => setSelected(b)}
-                className="relative mx-auto block h-20 w-20 cursor-zoom-in overflow-hidden rounded-2xl bg-snack-surface focus:outline-none focus:ring-2 focus:ring-snack-primary"
-                aria-label={`View ${b.user.username}'s bite photo`}
+                disabled={!src}
+                className="relative mx-auto block h-20 w-20 cursor-zoom-in overflow-hidden rounded-2xl bg-snack-surface focus:outline-none focus:ring-2 focus:ring-snack-primary disabled:cursor-default"
+                aria-label={src ? `View ${b.user.username}'s bite photo` : undefined}
               >
                 {src && (
                   // eslint-disable-next-line @next/next/no-img-element
