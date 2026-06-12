@@ -49,11 +49,22 @@ async function main() {
       console.warn(`[warn]  Ignoring unexpected file in migrations dir: ${ignored}`)
     }
 
+    // Known, accepted historical collisions. Number 012 was shipped twice
+    // (012_half_star_ratings + 012_remove_push); the two are independent
+    // (rating columns vs push tables) and the alphabetical sort already gives a
+    // correct, deterministic order — half_star, then remove_push, which sits
+    // between 011 (adds push) and 028 (re-adds push). They must NOT be
+    // renumbered: 012_remove_push uses DROP IF EXISTS, so re-running it under a
+    // new name on an existing database would drop the push columns that 028
+    // restored. The fix is to grandfather the collision here, not rename.
+    const KNOWN_DUPLICATE_NUMBERS = new Set(['012'])
+
     // Collision guard: two migrations sharing a sequence number means the
-    // intended linear order is ambiguous. We hard-fail only when at least one
-    // of the colliding files is not yet applied (a genuine new mistake);
-    // already-applied historical collisions are tolerated so existing
-    // databases keep deploying.
+    // intended linear order is ambiguous. Hard-fail on any *new* collision so
+    // mistakes are caught before they ship — but skip the grandfathered set so
+    // both fresh installs and existing databases keep deploying. (The previous
+    // "tolerate if already applied" check wrongly blocked fresh installs, where
+    // every migration is unapplied.)
     const byNumber = new Map()
     for (const file of files) {
       const num = file.slice(0, 3)
@@ -61,7 +72,7 @@ async function main() {
       byNumber.get(num).push(file)
     }
     for (const [num, group] of byNumber) {
-      if (group.length > 1 && group.some((f) => !appliedSet.has(f))) {
+      if (group.length > 1 && !KNOWN_DUPLICATE_NUMBERS.has(num)) {
         throw new Error(
           `Migration number ${num} is used by multiple files: ${group.join(', ')}. ` +
             `Renumber so each migration has a unique prefix.`,
