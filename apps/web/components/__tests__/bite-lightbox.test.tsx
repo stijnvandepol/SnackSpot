@@ -68,25 +68,55 @@ describe('BiteLightbox', () => {
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
   })
 
-  it('closes on Escape, backdrop click and close button, but not on inner click', () => {
+  it('closes on Escape, backdrop press and close button, but not on inner press', () => {
     const onClose = vi.fn()
     render(<BiteLightbox bite={baseBite} onClose={onClose} />)
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(1)
-    // Click inside the photo/info area: must NOT close.
-    fireEvent.click(screen.getByRole('img'))
+    // Press inside the dialog (photo/info area): must NOT close — a drag that
+    // starts on content (e.g. selecting the note text) may end on the backdrop.
+    const dialog = screen.getByRole('dialog')
+    fireEvent.mouseDown(dialog)
+    fireEvent.mouseDown(screen.getByRole('img'))
     expect(onClose).toHaveBeenCalledTimes(1)
-    // Click the backdrop (the dialog element itself): must close.
-    fireEvent.click(screen.getByRole('dialog'))
+    // Press that starts on the backdrop itself: must close.
+    fireEvent.mouseDown(dialog.parentElement!)
     expect(onClose).toHaveBeenCalledTimes(2)
     fireEvent.click(screen.getByRole('button', { name: 'Close photo viewer' }))
     expect(onClose).toHaveBeenCalledTimes(3)
   })
 
-  it('locks body scroll while open and restores it on unmount', () => {
+  it('locks body scroll while open and restores the previous value on unmount', () => {
+    document.body.style.overflow = 'auto'
     const { unmount } = render(<BiteLightbox bite={baseBite} onClose={() => {}} />)
     expect(document.body.style.overflow).toBe('hidden')
     unmount()
-    expect(document.body.style.overflow).toBe('')
+    expect(document.body.style.overflow).toBe('auto')
+  })
+
+  it('moves focus into the dialog on open and restores it on unmount', () => {
+    const trigger = document.createElement('button')
+    document.body.appendChild(trigger)
+    trigger.focus()
+    const { unmount } = render(<BiteLightbox bite={baseBite} onClose={() => {}} />)
+    const dialog = screen.getByRole('dialog')
+    expect(dialog.contains(document.activeElement)).toBe(true)
+    unmount()
+    expect(document.activeElement).toBe(trigger)
+    trigger.remove()
+  })
+
+  it('traps focus: Tab on the last focusable wraps to the first', () => {
+    render(
+      <BiteLightbox bite={{ ...baseBite, user: { username: 'foodie_nl' } }} onClose={() => {}} />,
+    )
+    const closeButton = screen.getByRole('button', { name: 'Close photo viewer' })
+    const link = screen.getByRole('link', { name: '@foodie_nl' })
+    link.focus()
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(document.activeElement).toBe(closeButton)
+    closeButton.focus()
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
+    expect(document.activeElement).toBe(link)
   })
 })

@@ -49,21 +49,27 @@ export function FriendsBitesStrip() {
           const src = photoVariantUrl(b.photo.variants, ['thumb', 'medium', 'large'])
           return (
             <div key={b.id} className="w-20 flex-shrink-0 text-center">
-              <button
-                type="button"
-                onClick={() => setSelected(b)}
-                disabled={!src}
-                className="relative mx-auto block h-20 w-20 cursor-zoom-in overflow-hidden rounded-2xl bg-snack-surface focus:outline-none focus:ring-2 focus:ring-snack-primary disabled:cursor-default"
-                aria-label={src ? `View ${b.user.username}'s bite photo` : undefined}
-              >
-                {src && (
-                  // eslint-disable-next-line @next/next/no-img-element
+              {src ? (
+                <button
+                  type="button"
+                  onClick={() => setSelected(b)}
+                  className="relative mx-auto block h-20 w-20 cursor-zoom-in overflow-hidden rounded-2xl bg-snack-surface focus:outline-none focus:ring-2 focus:ring-snack-primary"
+                  aria-label={`View ${b.user.username}'s bite photo`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={src} alt="" className="h-full w-full object-cover" loading="lazy" />
-                )}
-                <span className="absolute bottom-1 right-1 text-sm" aria-hidden="true">
-                  {mealEmoji(b.mealSlot)}
-                </span>
-              </button>
+                  <span className="absolute bottom-1 right-1 text-sm" aria-hidden="true">
+                    {mealEmoji(b.mealSlot)}
+                  </span>
+                </button>
+              ) : (
+                // No usable photo variant (e.g. still processing): nothing to zoom.
+                <div className="relative mx-auto h-20 w-20 overflow-hidden rounded-2xl bg-snack-surface">
+                  <span className="absolute bottom-1 right-1 text-sm" aria-hidden="true">
+                    {mealEmoji(b.mealSlot)}
+                  </span>
+                </div>
+              )}
               <Link
                 href={`/u/${encodeURIComponent(b.user.username)}`}
                 className="mt-1 block truncate text-xs text-snack-muted hover:text-snack-primary"
