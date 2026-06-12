@@ -5,6 +5,7 @@ import { FeedClient } from '@/components/feed-client'
 import { useAuth } from '@/components/auth-provider'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { mealEmoji } from '@/lib/meal'
+import { BiteLightbox } from '@/components/bite-lightbox'
 
 type Scope = 'discover' | 'following'
 
@@ -18,10 +19,11 @@ interface FriendBite {
   place: { id: string; name: string } | null
 }
 
-/** Horizontal strip of the last 24h of bites from mutual follows. */
-function FriendsBitesStrip() {
+/** Horizontal strip of the last 24h of bites from mutual follows. Exported for tests. */
+export function FriendsBitesStrip() {
   const { user, accessToken } = useAuth()
   const [bites, setBites] = useState<FriendBite[]>([])
+  const [selected, setSelected] = useState<FriendBite | null>(null)
 
   useEffect(() => {
     if (!user || !accessToken) return
@@ -47,7 +49,12 @@ function FriendsBitesStrip() {
           const src = photoVariantUrl(b.photo.variants, ['thumb', 'medium', 'large'])
           return (
             <div key={b.id} className="w-20 flex-shrink-0 text-center">
-              <div className="relative mx-auto h-20 w-20 overflow-hidden rounded-2xl bg-snack-surface">
+              <button
+                type="button"
+                onClick={() => setSelected(b)}
+                className="relative mx-auto block h-20 w-20 cursor-zoom-in overflow-hidden rounded-2xl bg-snack-surface focus:outline-none focus:ring-2 focus:ring-snack-primary"
+                aria-label={`View ${b.user.username}'s bite photo`}
+              >
                 {src && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={src} alt="" className="h-full w-full object-cover" loading="lazy" />
@@ -55,7 +62,7 @@ function FriendsBitesStrip() {
                 <span className="absolute bottom-1 right-1 text-sm" aria-hidden="true">
                   {mealEmoji(b.mealSlot)}
                 </span>
-              </div>
+              </button>
               <Link
                 href={`/u/${encodeURIComponent(b.user.username)}`}
                 className="mt-1 block truncate text-xs text-snack-muted hover:text-snack-primary"
@@ -66,6 +73,7 @@ function FriendsBitesStrip() {
           )
         })}
       </div>
+      <BiteLightbox bite={selected} onClose={() => setSelected(null)} />
     </div>
   )
 }
