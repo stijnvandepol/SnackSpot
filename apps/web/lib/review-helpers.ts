@@ -107,16 +107,23 @@ export function checkReviewVisibility(
 
 // ─── Photo validation ───────────────────────────────────────────────────────
 
+/** A validation failure: an HTTP status plus a human-readable message. */
+export interface PhotoValidationError {
+  status: number
+  error: string
+}
+
 /** Validates that the given photo IDs belong to the user, are confirmed
  *  (not PENDING), and are not already attached to another review.
- *  Returns an error Response or null if all photos are valid.
+ *  Returns a {status, error} on failure or null when all photos are valid —
+ *  transport-agnostic so callers (route or service) map it as they see fit.
  *  Pass `currentReviewId` when editing an existing review so photos already
  *  attached to *that* review are not rejected. */
 export async function validatePhotos(
   photoIds: string[],
   uploaderId: string,
   currentReviewId?: string,
-): Promise<Response | null> {
+): Promise<PhotoValidationError | null> {
   const photos = await prisma.photo.findMany({
     where: { id: { in: photoIds }, uploaderId },
     select: {
@@ -127,24 +134,24 @@ export async function validatePhotos(
   })
 
   if (photos.length !== photoIds.length) {
-    return err('One or more photo IDs are invalid', 422)
+    return { status: 422, error: 'One or more photo IDs are invalid' }
   }
 
   const pending = photos.filter((p) => p.moderationStatus === 'PENDING')
   if (pending.length > 0) {
-    return err('One or more photos are not uploaded yet - please wait for upload confirmation', 409)
+    return { status: 409, error: 'One or more photos are not uploaded yet - please wait for upload confirmation' }
   }
 
   const attachedElsewhere = photos.filter(
     (p) => p.reviewPhotos.length > 0 && p.reviewPhotos[0].reviewId !== currentReviewId,
   )
   if (attachedElsewhere.length > 0) {
-    return err(
-      currentReviewId
+    return {
+      status: 409,
+      error: currentReviewId
         ? 'One or more photos are already attached to another review'
         : 'One or more photos are already attached to a review',
-      409,
-    )
+    }
   }
 
   return null
