@@ -82,11 +82,12 @@ export async function rotateRefreshToken(
   if (!existing || existing.expiresAt < new Date()) return null
   if (existing.user.role !== 'ADMIN') return null
 
-  // Theft detection: token already used → invalidate entire family
+  // Theft detection: token already used → invalidate entire family.
+  // 30s grace covers genuine concurrent retries; a longer window would let a
+  // replayed stolen token rotate itself into fresh credentials undetected.
   if (existing.usedAt) {
     const usedAgo = Date.now() - existing.usedAt.getTime()
-    // Grace period for concurrent requests (5 minutes)
-    if (usedAgo > 5 * 60 * 1000) {
+    if (usedAgo > 30 * 1000) {
       await db.refreshToken.deleteMany({ where: { family: existing.family } })
       return null
     }

@@ -1,6 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import { ok, err, requireAuth, getAuthPayload, serverError, isResponse } from '@/lib/api-helpers'
+import { rateLimitUser } from '@/lib/rate-limit'
 import { ReviewStatus } from '@prisma/client'
 import { recalculateUserBadges } from '@/lib/badge-service'
 import { notifyReviewLike } from '@/lib/notification-service'
@@ -52,6 +53,11 @@ export async function POST(
   const { id } = await params
 
   try {
+    // Each like fans out to notification + badge recalc + XP — without a cap
+    // a like-spam loop turns into a backend DoS on those side effects.
+    const rl = await rateLimitUser(auth.sub, 'review_like', 120, 3600)
+    if (!rl.allowed) return err('Too many requests', 429)
+
     const review = await prisma.review.findUnique({
       where: { id },
       select: { id: true, status: true, userId: true },
@@ -95,6 +101,11 @@ export async function DELETE(
   const { id } = await params
 
   try {
+    // Same bucket as POST: a like/unlike flip-flop loop is the abuse pattern,
+    // so both directions draw from one budget.
+    const rl = await rateLimitUser(auth.sub, 'review_like', 120, 3600)
+    if (!rl.allowed) return err('Too many requests', 429)
+
     const review = await prisma.review.findUnique({
       where: { id },
       select: { userId: true },
