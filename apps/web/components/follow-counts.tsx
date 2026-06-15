@@ -36,18 +36,20 @@ export function FollowCounts({ username }: { username: string }) {
   if (!counts) return null
 
   return (
-    <p className="text-sm text-snack-muted">
-      <button type="button" onClick={() => setOpenList('followers')} className="hover:underline">
-        <span className="font-semibold text-snack-text">{counts.followerCount}</span> follower
-        {counts.followerCount === 1 ? '' : 's'}
-      </button>
-      <span className="mx-1.5">·</span>
-      <button type="button" onClick={() => setOpenList('following')} className="hover:underline">
-        <span className="font-semibold text-snack-text">{counts.followingCount}</span> following
-      </button>
+    <>
+      <p className="text-sm text-snack-muted">
+        <button type="button" onClick={() => setOpenList('followers')} className="hover:underline">
+          <span className="font-semibold text-snack-text">{counts.followerCount}</span> follower
+          {counts.followerCount === 1 ? '' : 's'}
+        </button>
+        <span className="mx-1.5">·</span>
+        <button type="button" onClick={() => setOpenList('following')} className="hover:underline">
+          <span className="font-semibold text-snack-text">{counts.followingCount}</span> following
+        </button>
+      </p>
       {openList && (
         <FollowListModal username={username} type={openList} onClose={() => setOpenList(null)} />
       )}
-    </p>
+    </>
   )
 }
