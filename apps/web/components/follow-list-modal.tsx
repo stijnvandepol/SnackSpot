@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth-provider'
+import { Modal } from '@/components/ui/modal'
 import { VerifiedBadge } from '@/components/verified-badge'
 import { avatarUrl } from '@/lib/avatar'
 
@@ -32,7 +33,11 @@ const EMPTY: Record<FollowListType, string> = {
   following: 'Not following anyone yet.',
 }
 
-/** Modal listing a profile's followers or who they follow, with cursor paging. */
+/**
+ * Lists a profile's followers or who they follow, with cursor paging.
+ * Built on the shared Modal so it inherits the app's mobile-correct chrome
+ * (centered, edge padding, scroll lock, focus trap, ESC/backdrop close).
+ */
 export function FollowListModal({ username, type, onClose }: FollowListModalProps) {
   const { accessToken } = useAuth()
   const [users, setUsers] = useState<FollowUser[]>([])
@@ -75,108 +80,66 @@ export function FollowListModal({ username, type, onClose }: FollowListModalProp
     load(null)
   }, [load])
 
-  // Close on Escape and lock background scroll while open.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = ''
-    }
-  }, [onClose])
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={TITLES[type]}
-    >
-      <div
-        className="w-full max-w-md max-h-[80vh] overflow-hidden rounded-t-2xl bg-snack-background shadow-xl sm:rounded-2xl flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between border-b border-snack-border p-4">
-          <h2 className="font-heading font-semibold text-snack-text">{TITLES[type]}</h2>
+    <Modal open onClose={onClose} title={TITLES[type]}>
+      <div className="-mx-2 mt-2 max-h-[60vh] overflow-y-auto">
+        {users.map((u) => (
+          <Link
+            key={u.username}
+            href={`/u/${encodeURIComponent(u.username)}`}
+            onClick={onClose}
+            className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-snack-surface"
+          >
+            <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold uppercase">
+              {u.avatarKey ? (
+                <Image
+                  src={avatarUrl(u.avatarKey) as string}
+                  alt={u.username}
+                  width={40}
+                  height={40}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                u.username.charAt(0)
+              )}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-1 text-sm font-medium text-snack-text">
+                <span className="truncate">{u.username}</span>
+                {u.isVerified && <VerifiedBadge className="h-4 w-4 shrink-0" />}
+              </span>
+              {u.bio?.trim() && (
+                <span className="block truncate text-xs text-snack-muted">{u.bio.trim()}</span>
+              )}
+            </span>
+          </Link>
+        ))}
+
+        {!loading && !error && users.length === 0 && (
+          <p className="p-6 text-center text-sm text-snack-muted">{EMPTY[type]}</p>
+        )}
+
+        {error && (
+          <div className="p-6 text-center">
+            <p className="text-sm text-snack-muted">Could not load this list.</p>
+            <button type="button" onClick={() => load(cursor)} className="btn-secondary mt-3 text-sm">
+              Try again
+            </button>
+          </div>
+        )}
+
+        {loading && <p className="p-6 text-center text-sm text-snack-muted">Loading...</p>}
+
+        {!loading && hasMore && (
           <button
             type="button"
-            onClick={onClose}
-            className="text-snack-muted hover:text-snack-text text-xl leading-none"
-            aria-label="Close"
+            onClick={() => load(cursor)}
+            className="btn-secondary mx-auto my-2 block text-sm"
           >
-            ×
+            Load more
           </button>
-        </div>
-
-        <div className="overflow-y-auto p-2">
-          {users.map((u) => (
-            <Link
-              key={u.username}
-              href={`/u/${encodeURIComponent(u.username)}`}
-              onClick={onClose}
-              className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-snack-surface"
-            >
-              <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold uppercase">
-                {u.avatarKey ? (
-                  <Image
-                    src={avatarUrl(u.avatarKey) as string}
-                    alt={u.username}
-                    width={40}
-                    height={40}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  u.username.charAt(0)
-                )}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-1 text-sm font-medium text-snack-text">
-                  <span className="truncate">{u.username}</span>
-                  {u.isVerified && <VerifiedBadge className="h-4 w-4 shrink-0" />}
-                </span>
-                {u.bio?.trim() && (
-                  <span className="block truncate text-xs text-snack-muted">{u.bio.trim()}</span>
-                )}
-              </span>
-            </Link>
-          ))}
-
-          {!loading && !error && users.length === 0 && (
-            <p className="p-6 text-center text-sm text-snack-muted">{EMPTY[type]}</p>
-          )}
-
-          {error && (
-            <div className="p-6 text-center">
-              <p className="text-sm text-snack-muted">Could not load this list.</p>
-              <button
-                type="button"
-                onClick={() => load(cursor)}
-                className="btn-secondary mt-3 text-sm"
-              >
-                Try again
-              </button>
-            </div>
-          )}
-
-          {loading && (
-            <p className="p-6 text-center text-sm text-snack-muted">Loading...</p>
-          )}
-
-          {!loading && hasMore && (
-            <button
-              type="button"
-              onClick={() => load(cursor)}
-              className="btn-secondary mx-auto my-2 block text-sm"
-            >
-              Load more
-            </button>
-          )}
-        </div>
+        )}
       </div>
-    </div>
+    </Modal>
   )
 }
