@@ -7,6 +7,7 @@ interface NotificationPreferences {
   emailOnComment: boolean
   emailOnMention: boolean
   emailOnBadge: boolean
+  emailOnFollow: boolean
 }
 
 interface NotificationSettingsProps {
@@ -161,6 +162,21 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
             checked={preferences.emailOnBadge}
             onChange={(e) =>
               setPreferences({ ...preferences, emailOnBadge: e.target.checked })
+            }
+            className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 rounded-xl p-3 transition hover:bg-snack-surface cursor-pointer">
+          <div>
+            <p className="text-sm font-medium text-snack-text">New followers</p>
+            <p className="text-xs text-snack-muted">Email me when someone starts following me</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={preferences.emailOnFollow}
+            onChange={(e) =>
+              setPreferences({ ...preferences, emailOnFollow: e.target.checked })
             }
             className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
           />

@@ -181,6 +181,39 @@ export async function sendNotificationBadgeEmail(
   })
 }
 
+export async function sendNotificationFollowEmail(
+  to: string,
+  recipientUsername: string,
+  actorUsername: string,
+  followerProfileUrl: string,
+): Promise<void> {
+  const subject = `${safeSubjectPart(actorUsername)} started following you on SnackSpot`
+  await sendEmailWithFallback({
+    to,
+    subject,
+    html: renderBrandedEmail({
+      previewText: subject,
+      eyebrow: 'New follower',
+      title: 'You have a new follower',
+      intro: html(
+        `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(recipientUsername)}</strong>, <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(actorUsername)}</strong> just started following you on SnackSpot.`,
+      ),
+      action: { label: 'View their profile', href: followerProfileUrl },
+      calloutTitle: 'Grow your community',
+      calloutBody: html('Keep sharing reviews to reach more food lovers who follow your taste.'),
+    }),
+    fallbackHtml: renderFallbackEmail({
+      title: 'You have a new follower',
+      body: `Hi ${escapeHtml(recipientUsername)}, ${escapeHtml(actorUsername)} just started following you on SnackSpot.`,
+      linkLabel: 'View their profile',
+      linkHref: followerProfileUrl,
+      footer: 'You can manage notification preferences in your profile settings.',
+    }),
+    text: `${safeSubjectPart(actorUsername)} started following you on SnackSpot.\n\nView their profile: ${followerProfileUrl}\n\nManage notifications in your profile settings.`,
+    category: 'notification-follow',
+  })
+}
+
 // ─── Marketing / broadcast email ─────────────────────────────────────────────
 
 export async function sendMarketingEmail(

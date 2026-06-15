@@ -48,8 +48,8 @@ async function buildUserExport(userId: string, archive: archiver.Archiver): Prom
     prisma.notificationPreferences.findUnique({
       where: { userId },
       select: {
-        emailOnLike: true, emailOnComment: true, emailOnMention: true, emailOnBadge: true,
-        pushOnLike: true, pushOnComment: true, pushOnMention: true, pushOnBadge: true,
+        emailOnLike: true, emailOnComment: true, emailOnMention: true, emailOnBadge: true, emailOnFollow: true,
+        pushOnLike: true, pushOnComment: true, pushOnMention: true, pushOnBadge: true, pushOnFollow: true,
         pushStreakReminder: true,
       },
     }),

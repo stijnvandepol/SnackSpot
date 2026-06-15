@@ -497,6 +497,7 @@ export async function POST(req: NextRequest) {
         emailOnComment: r.emailOnComment,
         emailOnMention: r.emailOnMention,
         emailOnBadge: r.emailOnBadge,
+        emailOnFollow: r.emailOnFollow,
         createdAt: new Date(r.createdAt),
         updatedAt: new Date(r.updatedAt),
       }))
