@@ -2,6 +2,7 @@ import { type NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import { ok, err, requireAuth, getAuthPayload, serverError, isResponse, withNoStore } from '@/lib/api-helpers'
 import { rateLimitUser } from '@/lib/rate-limit'
+import { notifyNewFollower } from '@/lib/notification-service'
 
 async function resolveUser(username: string) {
   return prisma.user.findFirst({
@@ -70,10 +71,16 @@ export async function POST(
     if (!target) return err('User not found', 404)
     if (target.id === auth.sub) return err('You cannot follow yourself', 422)
 
-    await prisma.follow.createMany({
+    const created = await prisma.follow.createMany({
       data: [{ followerId: auth.sub, followeeId: target.id }],
       skipDuplicates: true,
     })
+
+    // Only notify on a genuinely new follow — re-following an existing follow
+    // (skipDuplicates yields count 0) must not re-trigger the alert.
+    if (created.count > 0) {
+      void notifyNewFollower(target.id, auth.sub)
+    }
 
     const followerCount = await prisma.follow.count({ where: { followeeId: target.id } })
     return ok({ following: true, followerCount })

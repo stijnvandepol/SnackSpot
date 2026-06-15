@@ -532,7 +532,7 @@ if (PUSH_ENABLED) {
 
 const PUSH_QUEUE = 'push-notifications'
 
-type PushCategory = 'LIKE' | 'COMMENT' | 'MENTION' | 'BADGE' | 'STREAK'
+type PushCategory = 'LIKE' | 'COMMENT' | 'MENTION' | 'BADGE' | 'STREAK' | 'FOLLOW'
 
 interface PushJob {
   userId: string
@@ -549,6 +549,7 @@ function pushCategoryAllowed(
     pushOnComment: boolean
     pushOnMention: boolean
     pushOnBadge: boolean
+    pushOnFollow: boolean
     pushStreakReminder: boolean
   } | null,
 ): boolean {
@@ -558,6 +559,7 @@ function pushCategoryAllowed(
     case 'COMMENT': return prefs.pushOnComment
     case 'MENTION': return prefs.pushOnMention
     case 'BADGE': return prefs.pushOnBadge
+    case 'FOLLOW': return prefs.pushOnFollow
     case 'STREAK': return prefs.pushStreakReminder
   }
 }
@@ -600,6 +602,7 @@ async function deliverPush(job: PushJob): Promise<void> {
             pushOnComment: true,
             pushOnMention: true,
             pushOnBadge: true,
+            pushOnFollow: true,
             pushStreakReminder: true,
           },
         },

@@ -6,7 +6,7 @@ import { logger } from './logger'
 // preferences and subscriptions and does the actual Web Push delivery.
 export const PUSH_QUEUE = 'push-notifications'
 
-export type PushCategory = 'LIKE' | 'COMMENT' | 'MENTION' | 'BADGE' | 'STREAK'
+export type PushCategory = 'LIKE' | 'COMMENT' | 'MENTION' | 'BADGE' | 'STREAK' | 'FOLLOW'
 
 export interface PushJob {
   userId: string
