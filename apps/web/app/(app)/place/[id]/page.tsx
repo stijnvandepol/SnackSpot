@@ -200,7 +200,7 @@ export default async function PlacePage({
         {/* Left column: place info card + map */}
         <div className="md:col-span-5 mb-6 md:mb-0 space-y-4">
           <div className="card p-5">
-            <h1 className="text-2xl font-heading font-bold text-snack-text">{place.name}</h1>
+            <h1 className="text-2xl font-heading font-bold text-snack-text break-words">{place.name}</h1>
             <p className="mt-1 text-sm text-snack-muted">{place.address}</p>
             {cuisineLabel(place.cuisine) && (
               <span className="mt-2 inline-block rounded-full bg-snack-surface px-2.5 py-1 text-xs font-medium text-snack-primary">

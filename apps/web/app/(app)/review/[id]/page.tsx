@@ -220,8 +220,8 @@ export default async function ReviewPage({
       {/* Review body */}
       <div className="card p-5 space-y-3">
         <div className="flex items-start justify-between gap-2">
-          <div>
-            <h1 className="font-heading font-bold text-lg text-snack-text">
+          <div className="min-w-0">
+            <h1 className="font-heading font-bold text-lg text-snack-text break-words">
               {review.dishName ?? review.place.name}
             </h1>
             {review.dishName && (
