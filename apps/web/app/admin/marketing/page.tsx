@@ -91,7 +91,7 @@ export default function MarketingPage() {
         setResult(json.data)
       }
     } catch {
-      setErrorMsg('Network error — could not reach the server.')
+      setErrorMsg('Network error, could not reach the server.')
     } finally {
       setSending(false)
     }
@@ -260,7 +260,7 @@ export default function MarketingPage() {
             {recipientMode === 'specific' && (
               <div className="ml-7">
                 <label className="mb-1.5 block text-xs font-medium text-snack-muted" htmlFor="usernames">
-                  Usernames — one per line or comma-separated (@ is optional)
+                  Usernames, one per line or comma-separated (@ is optional)
                 </label>
                 <textarea
                   id="usernames"

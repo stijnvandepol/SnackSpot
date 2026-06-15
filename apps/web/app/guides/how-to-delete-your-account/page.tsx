@@ -71,7 +71,7 @@ export default function HowToDeleteYourAccountPage() {
           <h2>Before you delete</h2>
           <p>
             Make sure you want to permanently remove your account. There is no way to recover your data after deletion.
-            If you just want a break, you can simply stop using the app — your account will remain untouched.
+            If you just want a break, you can simply stop using the app, your account will remain untouched.
           </p>
 
           <h2>Steps to delete your account</h2>

@@ -42,7 +42,7 @@ export function FriendsBitesStrip() {
   return (
     <div className="mb-4">
       <p className="mb-2 text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">
-        Bites from your circle — last 24h
+        Bites from your circle, last 24h
       </p>
       <div className="flex gap-3 overflow-x-auto pb-1">
         {bites.map((b) => {

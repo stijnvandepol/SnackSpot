@@ -54,11 +54,11 @@ export async function generateMetadata({
   if (!place) return { title: 'Place' }
 
   const city = extractCity(place.address)
-  const title = city ? `${place.name} — ${city}` : place.name
+  const title = city ? `${place.name}, ${city}` : place.name
   const description =
     place.avg_rating !== null && place.review_count > 0
       ? `${place.name} is rated ${place.avg_rating.toFixed(1)}★ from ${place.review_count} photo review${place.review_count === 1 ? '' : 's'} on SnackSpot. See real dishes and know what to order before you go.`
-      : `Discover ${place.name} on SnackSpot — photo reviews from real people, so you know what to order before you go.`
+      : `Discover ${place.name} on SnackSpot, photo reviews from real people, so you know what to order before you go.`
 
   return {
     title,
@@ -212,8 +212,8 @@ export default async function PlacePage({
               <div>
                 <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Rating</p>
                 <div className="mt-1 flex items-center gap-1.5">
-                  <span className="text-snack-rating text-sm">{place.avg_rating !== null ? '★'.repeat(Math.max(1, Math.round(place.avg_rating ?? 0))) : '—'}</span>
-                  <span className="font-semibold text-snack-text">{place.avg_rating?.toFixed(1) ?? '—'}</span>
+                  <span className="text-snack-rating text-sm">{place.avg_rating !== null ? '★'.repeat(Math.max(1, Math.round(place.avg_rating ?? 0))) : '-'}</span>
+                  <span className="font-semibold text-snack-text">{place.avg_rating?.toFixed(1) ?? '-'}</span>
                 </div>
               </div>
               <div className="h-8 w-px bg-snack-border" />

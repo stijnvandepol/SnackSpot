@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 const benefits = [
   {
     title: 'Know what to order before you sit down',
-    body: 'Every review is about a dish, not just a place. See the exact plate, the half-star ratings for taste, value and portion size — then walk in and order like a regular.',
+    body: 'Every review is about a dish, not just a place. See the exact plate, the half-star ratings for taste, value and portion size, then walk in and order like a regular.',
     icon: '🍜',
   },
   {
@@ -53,7 +53,7 @@ const benefits = [
   },
   {
     title: 'Reviews that take 60 seconds, not 600',
-    body: 'Snap up to five photos, slide the stars, tag it, done. No essay required — the photo does the talking.',
+    body: 'Snap up to five photos, slide the stars, tag it, done. No essay required, the photo does the talking.',
     icon: '📸',
   },
 ]
@@ -67,7 +67,7 @@ const steps = [
   {
     step: '02',
     title: 'Snap it',
-    body: "Food arrives? Camera first, fork second. It's the SnackSpot way — your table will get used to it.",
+    body: "Food arrives? Camera first, fork second. It's the SnackSpot way, your table will get used to it.",
   },
   {
     step: '03',
@@ -77,14 +77,14 @@ const steps = [
   {
     step: '04',
     title: 'Share it',
-    body: 'Your review goes live in the feed. Likes, comments and badges roll in — and someone nearby just found their new favorite spot because of you.',
+    body: 'Your review goes live in the feed. Likes, comments and badges roll in, and someone nearby just found their new favorite spot because of you.',
   },
 ]
 
 const faqs = [
   {
     q: 'What is SnackSpot?',
-    a: 'SnackSpot is a free community app for discovering hidden food gems — the small local places big review sites overlook. Members share photo reviews of specific dishes with honest half-star ratings for taste, value, portion size and service.',
+    a: 'SnackSpot is a free community app for discovering hidden food gems, the small local places big review sites overlook. Members share photo reviews of specific dishes with honest half-star ratings for taste, value, portion size and service.',
   },
   {
     q: 'Is SnackSpot free?',
@@ -92,15 +92,15 @@ const faqs = [
   },
   {
     q: 'Do I need to download an app?',
-    a: 'No. SnackSpot runs in your browser and works like an app on your phone — you can add it to your home screen in two taps. No app store, no storage space sacrificed.',
+    a: 'No. SnackSpot runs in your browser and works like an app on your phone, you can add it to your home screen in two taps. No app store, no storage space sacrificed.',
   },
   {
     q: 'How is SnackSpot different from Google Maps or Tripadvisor reviews?',
-    a: 'Three ways: we focus on small local spots instead of chains and tourist magnets; every review is photo-first and about a specific dish, not a vague place average; and ratings are split into taste, value, portion and service — so "4 stars" actually tells you something.',
+    a: 'Three ways: we focus on small local spots instead of chains and tourist magnets; every review is photo-first and about a specific dish, not a vague place average; and ratings are split into taste, value, portion and service, so "4 stars" actually tells you something.',
   },
   {
     q: 'Can I find food spots near me?',
-    a: "Yes — the nearby view shows community-reviewed places around your location, so you can see what's good within walking distance.",
+    a: "Yes, the nearby view shows community-reviewed places around your location, so you can see what's good within walking distance.",
   },
   {
     q: 'Do I have to write long reviews?',
@@ -108,7 +108,7 @@ const faqs = [
   },
   {
     q: 'What are streaks, badges and the Food Passport?',
-    a: 'Log a photo of any meal to build a daily streak, earn XP and levels, and collect passport stamps for dishes, cuisines and cities you review. No pressure — just bragging rights.',
+    a: 'Log a photo of any meal to build a daily streak, earn XP and levels, and collect passport stamps for dishes, cuisines and cities you review. No pressure, just bragging rights.',
   },
   {
     q: 'Can restaurant owners join?',
@@ -116,7 +116,7 @@ const faqs = [
   },
   {
     q: 'Who sees my reviews?',
-    a: "Reviews and profiles are public — that's the point: your find helps the next hungry person. Daily meal logs (bites) are only visible to people you mutually follow. You choose your username, and you control what you post.",
+    a: "Reviews and profiles are public, that's the point: your find helps the next hungry person. Daily meal logs (bites) are only visible to people you mutually follow. You choose your username, and you control what you post.",
   },
 ]
 
@@ -221,7 +221,7 @@ export default async function ProductPage() {
       <section className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-[1.1fr_0.9fr] md:items-center md:py-24">
         <div>
           <p className="mb-4 inline-flex rounded-full border border-snack-primary/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-snack-primary">
-            📍 Hidden gems only — chains need not apply
+            📍 Hidden gems only, chains need not apply
           </p>
           <h1 className="max-w-3xl font-heading text-5xl font-bold leading-tight text-snack-text md:text-7xl">
             Your camera eats first.
@@ -232,7 +232,7 @@ export default async function ProductPage() {
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link href="/auth/register?ref=hero" className="btn-primary text-sm">
-              Start spotting — it&apos;s free
+              Start spotting, it&apos;s free
             </Link>
             <Link href="/" className="btn-secondary text-sm">
               Peek at the feed first
@@ -262,7 +262,7 @@ export default async function ProductPage() {
                   />
                   {i === 0 && photo.dishName && (
                     <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2.5 py-1 text-xs font-semibold text-white">
-                      ★ {photo.rating.toFixed(1)} — {photo.dishName}
+                      ★ {photo.rating.toFixed(1)}, {photo.dishName}
                     </span>
                   )}
                 </div>
@@ -375,7 +375,7 @@ export default async function ProductPage() {
                 This only works because of people like you
               </h2>
               <p className="mt-4 text-sm leading-6 text-white/85">
-                Every gem on SnackSpot was found, photographed and rated by a real person — not an
+                Every gem on SnackSpot was found, photographed and rated by a real person, not an
                 algorithm, not an ad budget. The little bánh mì counter gets discovered because
                 someone took thirty seconds to share it. That someone could be you.
               </p>
@@ -396,7 +396,7 @@ export default async function ProductPage() {
               ) : (
                 <div className="rounded-2xl bg-snack-surface p-5">
                   <p className="text-sm leading-6 text-snack-muted">
-                    We&apos;re early — which means the gems you add now are the ones everyone else
+                    We&apos;re early, which means the gems you add now are the ones everyone else
                     discovers later. First spotters get the First Bite credit, forever.
                   </p>
                 </div>
@@ -440,7 +440,7 @@ export default async function ProductPage() {
         <div className="rounded-[1.75rem] bg-gradient-to-r from-snack-primary to-snack-accent p-10 text-center text-white md:p-14">
           <h2 className="font-heading text-3xl font-bold md:text-5xl">Hungry? Good. Stay that way.</h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/85 md:text-base">
-            Join the food lovers mapping the best small spots around — one photo at a time.
+            Join the food lovers mapping the best small spots around, one photo at a time.
           </p>
           <Link
             href="/auth/register?ref=footer"

@@ -29,7 +29,7 @@ export default function GuidesHubPage() {
             SnackSpot Guides
           </h1>
           <p className="mt-4 text-base leading-7 text-snack-muted md:text-lg">
-            Everything you need to get started with SnackSpot — from creating an account and posting your first review
+            Everything you need to get started with SnackSpot, from creating an account and posting your first review
             to managing your profile and adding new places.
           </p>
         </header>

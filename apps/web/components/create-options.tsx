@@ -18,7 +18,7 @@ export function CreateOptions({ onPick }: { onPick?: () => void }) {
           <span className="rounded-full bg-snack-primary px-2.5 py-0.5 text-xs font-semibold text-white">+75 XP</span>
         </span>
         <span className="mt-1 block text-sm text-snack-muted">
-          A dish at a place, with photos and ratings. Public and permanent — it puts the spot on
+          A dish at a place, with photos and ratings. Public and permanent, it puts the spot on
           the map and helps others choose.
         </span>
       </Link>
