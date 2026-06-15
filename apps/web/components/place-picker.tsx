@@ -153,7 +153,7 @@ export function PlacePicker({ accessToken, value, onChange }: PlacePickerProps) 
           Find the place *
         </label>
         <p className="mb-2 text-xs text-snack-muted">
-          Search for the restaurant, café or snackbar. Pick it from the list — places already on
+          Search for the restaurant, café or snackbar. Pick it from the list, places already on
           SnackSpot show first, so you never create a duplicate.
         </p>
         <input

@@ -68,7 +68,7 @@ export default function HowToPostAReviewPage() {
           <h1>How to post a review on SnackSpot</h1>
 
           <p>
-            Posting a review on SnackSpot lets you share a food spot with others — add photos, rate the experience, and
+            Posting a review on SnackSpot lets you share a food spot with others, add photos, rate the experience, and
             write a short description so other users know what to expect.
           </p>
 
@@ -87,13 +87,13 @@ export default function HowToPostAReviewPage() {
             </li>
             <li>
               Search for the place you want to review. Type the name or address in the search field.
-              If the place is not on SnackSpot yet, you can add it —{' '}
+              If the place is not on SnackSpot yet, you can add it,{' '}
               <Link href="/guides/how-to-add-a-place">see the guide on adding a place</Link>.
             </li>
             <li>Select the correct place from the results.</li>
             <li>Add one or more photos. You can upload up to 5 images.</li>
             <li>
-              Enter the name of the dish or item you ordered (optional but recommended — it helps others know what to get).
+              Enter the name of the dish or item you ordered (optional but recommended, it helps others know what to get).
             </li>
             <li>Give a rating by selecting the number of stars.</li>
             <li>Write a short description of your experience.</li>

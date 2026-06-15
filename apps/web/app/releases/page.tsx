@@ -4,19 +4,19 @@ import { MarketingShell } from '@/components/marketing-shell'
 
 export const metadata: Metadata = {
   title: { absolute: 'Release Notes | SnackSpot' },
-  description: "What's new in SnackSpot — features, improvements, and fixes.",
+  description: "What's new in SnackSpot, features, improvements, and fixes.",
   alternates: { canonical: '/releases' },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
     title: 'Release Notes | SnackSpot',
-    description: "What's new in SnackSpot — features, improvements, and fixes.",
+    description: "What's new in SnackSpot, features, improvements, and fixes.",
     images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Release Notes | SnackSpot',
-    description: "What's new in SnackSpot — features, improvements, and fixes.",
+    description: "What's new in SnackSpot, features, improvements, and fixes.",
     images: ['/twitter-image'],
   },
 }
@@ -50,16 +50,16 @@ const releases: Release[] = [
     summary: 'Email notifications, feed standardization, and bug fixes.',
     changes: [
       { type: 'new',      text: 'Email notifications for likes, comments, mentions, and badge awards.' },
-      { type: 'new',      text: 'Feed post layout standardized — every review card now shows the dish name, place, rating, tags, and like count in a consistent format.' },
+      { type: 'new',      text: 'Feed post layout standardized, every review card now shows the dish name, place, rating, tags, and like count in a consistent format.' },
       { type: 'new',      text: 'Dynamic Open Graph images for places, reviews, and user profiles.' },
       { type: 'new',      text: 'Release notes page added to track changes.' },
       { type: 'improved', text: 'Like button redesigned with a filled heart animation, matching familiar social app patterns.' },
       { type: 'improved', text: 'Likes now correctly reflect your previous activity when reopening the app.' },
       { type: 'improved', text: 'Stats and achievements page redesigned with inline descriptions and a unified earned/in-progress list.' },
       { type: 'improved', text: 'Place page titles now include the city name for better search results.' },
-      { type: 'fixed',    text: 'Like state was lost after reopening the app — the feed now waits for your session to restore before loading.' },
+      { type: 'fixed',    text: 'Like state was lost after reopening the app, the feed now waits for your session to restore before loading.' },
       { type: 'fixed',    text: 'Several hardcoded colors replaced with dark mode-aware tokens across add-review, search, notifications, and profile pages.' },
-      { type: 'removed',  text: 'Push notification settings removed — push was never fully functional.' },
+      { type: 'removed',  text: 'Push notification settings removed, push was never fully functional.' },
     ],
   },
   {
@@ -67,7 +67,7 @@ const releases: Release[] = [
     date: '14 March 2026',
     summary: 'Dark mode support and verification badges.',
     changes: [
-      { type: 'new',      text: 'Dark mode added across the entire app — toggle it in your profile settings.' },
+      { type: 'new',      text: 'Dark mode added across the entire app, toggle it in your profile settings.' },
       { type: 'new',      text: 'Verification badge shown on profiles of trusted contributors.' },
       { type: 'improved', text: 'Admin panel: review title and body can now be edited directly from the dashboard.' },
       { type: 'fixed',    text: 'Hardcoded colors replaced with design tokens throughout the app for full dark mode compatibility.' },
@@ -100,7 +100,7 @@ export default function ReleasesPage() {
             Release Notes
           </h1>
           <p className="mt-4 text-base leading-7 text-snack-muted">
-            What we&apos;ve shipped — new features, improvements, and fixes.
+            What we&apos;ve shipped, new features, improvements, and fixes.
           </p>
         </div>
 

@@ -123,7 +123,7 @@ export function PushSettings() {
               ? 'Likes, comments, mentions and streak reminders arrive on this device.'
               : state === 'denied'
                 ? 'Notifications are blocked in your browser settings for this site.'
-                : 'Get a heads-up for likes, comments, mentions and streak rescues — never more than a few a day.'}
+                : 'Get a heads-up for likes, comments, mentions and streak rescues, never more than a few a day.'}
           </p>
         </div>
         {state !== 'denied' && (

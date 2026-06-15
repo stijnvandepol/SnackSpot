@@ -275,7 +275,7 @@ export default function AddBitePage() {
         <span className="font-semibold text-snack-text">Eating something worth recommending?</span>{' '}
         <span className="text-snack-primary font-semibold">Write a review instead → +75 XP</span>
         <span className="mt-0.5 block text-xs text-snack-muted">
-          Public and permanent — it puts the spot on the map for everyone.
+          Public and permanent, it puts the spot on the map for everyone.
         </span>
       </Link>
 
