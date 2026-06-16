@@ -80,7 +80,7 @@ model User {
   username         String    @unique
   bio              String?
   usernameChangedAt DateTime? @map("username_changed_at")
-  passwordHash     String    @map("password_hash")
+  passwordHash     String?   @map("password_hash")
   role             Role      @default(USER)
   isVerified       Boolean   @default(false) @map("is_verified")
   avatarKey        String?   @map("avatar_key")
@@ -117,6 +117,7 @@ model User {
   pushSubscriptions         PushSubscription[]
   userQuests                UserQuest[]
   userCollectibles          UserCollectible[]
+  accounts                  Account[]
 
   @@map("users")
 }
@@ -135,6 +136,20 @@ model RefreshToken {
   @@index([family])
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+model Account {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  provider          String   // 'google'
+  providerAccountId String   @map("provider_account_id") // Google 'sub'
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
 }
 
 model EmailVerificationToken {
