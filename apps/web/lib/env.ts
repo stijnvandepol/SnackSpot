@@ -39,6 +39,11 @@ const envSchema = z.object({
   // Cloudflare Turnstile (site key is a NEXT_PUBLIC_ build-time var — NOT validated here)
   TURNSTILE_SECRET_KEY: z.string().min(1),
 
+  // Google SSO is optional: without both vars the Google routes 404 and the
+  // login/register buttons hide themselves (same pattern as VAPID web-push).
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+
   CORS_ORIGINS: z.string().default('https://snackspot.online'),
   ALLOWED_HOSTS: z.string().optional(),
   MAX_JSON_BODY_BYTES: z.coerce.number().int().positive().default(256 * 1024),
