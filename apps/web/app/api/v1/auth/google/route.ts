@@ -1,10 +1,9 @@
 import { type NextRequest } from 'next/server'
 import { generateState, generateCodeVerifier } from 'arctic'
 import { getGoogleProvider, createGoogleAuthUrl } from '@/lib/oauth/google'
+import { OAUTH_STATE_COOKIE, OAUTH_VERIFIER_COOKIE } from '@/lib/oauth/oauth-cookies'
 import { err } from '@/lib/api-helpers'
 
-export const OAUTH_STATE_COOKIE = 'snackspot_oauth_state'
-export const OAUTH_VERIFIER_COOKIE = 'snackspot_oauth_verifier'
 const TEN_MINUTES = 60 * 10
 
 function tempCookie(name: string, value: string, secure: boolean): string {

@@ -7,7 +7,7 @@ import { issueSession } from '@/lib/session'
 import { getGoogleProvider, validateGoogleCallback } from '@/lib/oauth/google'
 import { decideAccountAction, type GoogleClaims } from '@/lib/oauth/account-resolution'
 import { generateUniqueUsername } from '@/lib/username'
-import { OAUTH_STATE_COOKIE, OAUTH_VERIFIER_COOKIE } from '../route'
+import { OAUTH_STATE_COOKIE, OAUTH_VERIFIER_COOKIE } from '@/lib/oauth/oauth-cookies'
 
 type SessionUser = { id: string; email: string; username: string; role: 'USER' | 'MODERATOR' | 'ADMIN' }
 type ResolveResult = { ok: true; user: SessionUser } | { ok: false; reason: string }
