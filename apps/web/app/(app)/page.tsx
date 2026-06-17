@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { FeedTabs } from '@/components/feed-tabs'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
-const title = 'SnackSpot, Discover Local Food Spots'
+const title = 'SnackSpot — Discover Local Food Spots'
 const description =
   'Discover under-the-radar food spots near you. Browse reviews of local snack bars, cafés, and hidden gems shared by the community.'
 
