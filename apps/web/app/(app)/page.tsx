@@ -21,7 +21,7 @@ export default function FeedPage() {
 
       <div className="mb-6 space-y-1">
         <h1 className="text-2xl md:text-3xl font-heading font-bold text-snack-text">Latest Food Reviews</h1>
-        <p className="text-sm text-snack-muted">Discover photo reviews of local food spots near you, scroll, like, and find your next meal.</p>
+        <p className="text-sm text-snack-muted">Discover reviews of local food spots, scroll, like and find your next meal.</p>
       </div>
 
       <FeedTabs />
