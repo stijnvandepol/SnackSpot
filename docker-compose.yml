@@ -55,7 +55,12 @@ services:
     networks: [snackspot]
 
   pgbouncer:
-    image: edoburu/pgbouncer:v1.24.0-p1
+    # Pinned by digest: the host had a stale image cached under this tag whose
+    # variant lacks pg_isready, so the healthcheck exited 127 ("not found") and
+    # pgbouncer never became healthy, blocking the whole stack. Pinning the
+    # digest forces the host to pull the exact verified image (which ships
+    # pg_isready) instead of silently reusing the stale tag.
+    image: edoburu/pgbouncer:v1.24.0-p1@sha256:b586115b87833b55926ae88e459840e4c3afb2ae45b4c2f2919146bd457fed3a
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-snackspot}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/${POSTGRES_DB:-snackspot}

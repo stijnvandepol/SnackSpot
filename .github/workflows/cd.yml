@@ -27,6 +27,17 @@ jobs:
       - self-hosted
     timeout-minutes: 30
 
+    # Pin the compose file so the deploy is deterministic. Without this, bare
+    # `docker compose` auto-merges any docker-compose.override.yml sitting in
+    # the runner workspace — and `clean: false` lets such a stray file survive
+    # across deploys. A polluted override (e.g. one that bleeds the admin app's
+    # build/ports/env into the pgbouncer service) silently rewrites production
+    # and is invisible to the repo. Loading only the version-controlled file
+    # removes that whole failure class. `.env` is still auto-loaded (it is not
+    # an override file), so secrets/config keep working.
+    env:
+      COMPOSE_FILE: docker-compose.yml
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -40,17 +51,29 @@ jobs:
           docker --version
           docker compose version
 
-      # Record the image currently serving each app BEFORE we rebuild, so a
-      # failed deploy can roll back to exactly what was running. Empty on the
-      # very first deploy (no prior images) — rollback then simply no-ops.
+      # Pin the image currently serving each app BEFORE we rebuild, so a failed
+      # deploy can roll back to exactly what was running. We retag under a stable
+      # snackspot-rollback:<svc> tag rather than recording the bare image ID:
+      # the upcoming `docker compose build` (and the prune step) would otherwise
+      # leave the old image dangling and free it for garbage collection, so a
+      # recorded ID can vanish before rollback runs. A dedicated tag keeps it
+      # alive. have_rollback stays false on the first-ever deploy (no prior
+      # images), which makes the rollback step no-op instead of erroring.
       - name: Capture current images for rollback
         id: snapshot
         run: |
-          {
-            echo "web=$(docker compose images -q web 2>/dev/null || true)"
-            echo "admin=$(docker compose images -q admin 2>/dev/null || true)"
-            echo "worker=$(docker compose images -q worker 2>/dev/null || true)"
-          } >> "$GITHUB_OUTPUT"
+          have_rollback=false
+          for svc in web admin worker; do
+            img="$(docker compose images -q "$svc" 2>/dev/null | head -1 || true)"
+            if [ -n "$img" ]; then
+              docker tag "$img" "snackspot-rollback:${svc}"
+              have_rollback=true
+              echo "pinned ${svc} (${img}) -> snackspot-rollback:${svc}"
+            else
+              echo "no current image for ${svc}; nothing to pin"
+            fi
+          done
+          echo "have_rollback=${have_rollback}" >> "$GITHUB_OUTPUT"
 
       # Build images first WITHOUT recreating running containers. If a build
       # fails, production keeps serving the old version untouched.
@@ -82,22 +105,66 @@ jobs:
 
       - name: Show service status
         if: always()
-        run: docker compose ps
+        run: docker compose ps -a
 
-      - name: Show recent logs on failure
+      # Rich failure diagnostics. The old single `logs --tail=200` was useless
+      # when one container crash-loops: its repeated output filled the whole
+      # tail and buried every other service plus the real cause. Here we split
+      # per service, dump the merged config (surfaces any host override), and —
+      # crucially — print each container's healthcheck probe output, which is
+      # what flips a service to (un)healthy yet never appears in plain logs.
+      - name: Diagnostics on failure
         if: failure()
-        run: docker compose logs --tail=200
+        run: |
+          set +e
+
+          echo "::group::Merged compose config (reveals host overrides)"
+          docker compose config
+          echo "::endgroup::"
+
+          echo "::group::Containers (all, including exited)"
+          docker compose ps -a
+          echo "::endgroup::"
+
+          for svc in $(docker compose config --services); do
+            echo "::group::logs: ${svc} (last 120)"
+            docker compose logs --no-color --tail=120 "$svc" 2>&1
+            echo "::endgroup::"
+          done
+
+          echo "::group::Healthcheck probe output per container"
+          for c in $(docker compose ps -aq); do
+            name="$(docker inspect --format '{{.Name}}' "$c" 2>/dev/null)"
+            image="$(docker inspect --format '{{.Config.Image}}' "$c" 2>/dev/null)"
+            echo "== ${name} (${image}) =="
+            docker inspect --format '{{if .State.Health}}status={{.State.Health.Status}}{{range .State.Health.Log}} | exit={{.ExitCode}} out={{printf "%q" .Output}}{{end}}{{else}}<no healthcheck>{{end}}' "$c" 2>/dev/null
+            echo
+          done
+          echo "::endgroup::"
 
       # Roll back to the previously-running images if migration, deploy, or the
       # health gate failed. Skipped on the first-ever deploy when there is no
-      # prior image to restore.
+      # prior image to restore. Restore each service independently and do NOT
+      # abort on the first miss (-e off) — one absent image must not block
+      # restoring the others, the bug that previously left production down.
       - name: Roll back on failure
-        if: failure() && steps.snapshot.outputs.web != ''
+        if: failure() && steps.snapshot.outputs.have_rollback == 'true'
         run: |
-          echo "Deploy failed — rolling back to previous images"
-          docker tag "${{ steps.snapshot.outputs.web }}" "$(docker compose config --images web | head -1)"
-          docker tag "${{ steps.snapshot.outputs.admin }}" "$(docker compose config --images admin | head -1)"
-          docker tag "${{ steps.snapshot.outputs.worker }}" "$(docker compose config --images worker | head -1)"
+          set +e
+          echo "Deploy failed — rolling back to previously-running images"
+          for svc in web admin worker; do
+            src="snackspot-rollback:${svc}"
+            if ! docker image inspect "$src" >/dev/null 2>&1; then
+              echo "no pinned rollback image for ${svc}; skipping"
+              continue
+            fi
+            target="$(docker compose config --images "$svc" | head -1)"
+            if [ -z "$target" ]; then
+              echo "could not resolve target image name for ${svc}; skipping"
+              continue
+            fi
+            docker tag "$src" "$target" && echo "restored ${svc} -> ${target}"
+          done
           docker compose up -d --force-recreate --no-build web admin worker
           docker compose ps
 
