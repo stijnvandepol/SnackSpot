@@ -113,12 +113,20 @@ export async function generateMetadata({
   const description =
     review.text.length > 155 ? `${review.text.slice(0, 152).trimEnd()}…` : review.text
 
+  // Use the review's own food photo as the social-share image; falls back to the
+  // site-wide OG image (root layout) when the review has no photo. Relative URLs are
+  // resolved against metadataBase by Next.js.
+  const firstPhoto = review.reviewPhotos[0]?.photo.variants
+  const ogImage = firstPhoto
+    ? photoVariantUrl(firstPhoto as Record<string, string>, ['large', 'medium', 'thumb'])
+    : null
+
   return {
     title,
     description,
     alternates: { canonical: `/review/${review.id}` },
-    openGraph: { type: 'article', title, description },
-    twitter: { card: 'summary_large_image', title, description },
+    openGraph: { type: 'article', title, description, ...(ogImage ? { images: [ogImage] } : {}) },
+    twitter: { card: 'summary_large_image', title, description, ...(ogImage ? { images: [ogImage] } : {}) },
   }
 }
 

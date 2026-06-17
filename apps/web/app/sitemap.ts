@@ -4,7 +4,9 @@ import { getSiteUrl } from '@/lib/site-url'
 import { PILLAR_GUIDES } from '@/lib/guides'
 import { logger } from '@/lib/logger'
 
-export const dynamic = 'force-dynamic'
+// Cached for an hour via ISR so crawlers don't trigger a full places+reviews+users
+// scan on every hit. getSiteUrl() is env-only (no request state), so the route is
+// safely static between revalidations. (force-dynamic would have voided revalidate.)
 export const revalidate = 3600
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

@@ -137,6 +137,18 @@ export default function SearchPage() {
     }
   }, [])
 
+  // Prefill and run a search from the ?q= URL param so search results are shareable
+  // and Google's sitelinks SearchAction lands on real results. Reads location directly
+  // to avoid the Suspense boundary that useSearchParams() would require here.
+  useEffect(() => {
+    const initial = new URLSearchParams(window.location.search).get('q')?.trim()
+    if (initial) {
+      setQ(initial)
+      void search(initial)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
+  }, [search])
+
   const resetSearch = useCallback(() => {
     setQ('')
     setPlaces([])
