@@ -29,10 +29,15 @@ ARG NEXT_PUBLIC_APP_URL=https://snackspot.online
 ARG NEXT_PUBLIC_MINIO_PUBLIC_URL=https://snackspot.online
 ARG NEXT_PUBLIC_MINIO_BUCKET=snackspot
 ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
+# Build-time gate for the "Continue with Google" button. NEXT_PUBLIC_* values
+# are baked into the client bundle at `next build`, so this must be present as a
+# build arg (not just a runtime env) or the button stays hidden. Defaults to 0.
+ARG NEXT_PUBLIC_GOOGLE_ENABLED=0
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_MINIO_PUBLIC_URL=$NEXT_PUBLIC_MINIO_PUBLIC_URL
 ENV NEXT_PUBLIC_MINIO_BUCKET=$NEXT_PUBLIC_MINIO_BUCKET
 ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY
+ENV NEXT_PUBLIC_GOOGLE_ENABLED=$NEXT_PUBLIC_GOOGLE_ENABLED
 
 # Placeholder server-side env vars for Next.js build analysis.
 ENV NODE_ENV=production \
