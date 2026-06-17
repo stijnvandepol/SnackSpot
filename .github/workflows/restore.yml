@@ -1,0 +1,58 @@
+name: Restore — Production (manual, destructive)
+
+# Restores a snapshot produced by the Backup workflow. DESTRUCTIVE: it overwrites
+# the live database and object storage. Manual only, and double-guarded — the
+# job runs only when `confirm` is typed exactly, and scripts/restore.sh itself
+# refuses to run without CONFIRM=yes. Runs on the self-hosted production runner.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type "restore-production" to confirm this DESTRUCTIVE restore
+        required: true
+        type: string
+      backup_dir:
+        description: Snapshot directory to restore (blank = newest on the host)
+        required: false
+        type: string
+      mirror_remove:
+        description: Also delete objects newer than the backup (exact-match restore)
+        type: boolean
+        default: false
+
+# Serialise against the backup workflow so a restore can't race a snapshot.
+concurrency:
+  group: prod-backup
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  restore:
+    name: Restore database + object storage
+    # Guard #1: only proceed when the confirmation phrase matches exactly.
+    if: ${{ inputs.confirm == 'restore-production' }}
+    runs-on:
+      - self-hosted
+    timeout-minutes: 60
+    env:
+      COMPOSE_FILE: docker-compose.yml
+      BACKUP_ROOT: ${{ vars.BACKUP_DIR }}
+      MIRROR_REMOVE: ${{ inputs.mirror_remove && '1' || '0' }}
+      # Passed via env (not inlined into the script) to avoid shell injection.
+      BACKUP_DIR_INPUT: ${{ inputs.backup_dir }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          clean: false
+
+      - name: Restore snapshot
+        run: |
+          export BACKUP_ROOT="${BACKUP_ROOT:-$HOME/snackspot-backups}"
+          chmod +x scripts/restore.sh
+          # Guard #2: the script also requires CONFIRM=yes.
+          CONFIRM=yes ./scripts/restore.sh "$BACKUP_DIR_INPUT"

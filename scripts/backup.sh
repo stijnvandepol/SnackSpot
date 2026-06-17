@@ -7,19 +7,22 @@
 #   - objects/       full mirror of the MinIO bucket
 #   - MANIFEST.txt   sizes, row/object counts and the git ref for provenance
 #
-# It is designed to run from the deploy host (where `docker compose` and the
-# stack live) as a cron job, e.g. daily at 03:00:
-#   0 3 * * *  cd /opt/snackspot && ./scripts/backup.sh >> /var/log/snackspot-backup.log 2>&1
+# It runs from the deploy host (where `docker compose` and the stack live).
+# In this repo it is driven weekly by .github/workflows/backup.yml on the
+# self-hosted production runner; it can equally run from a host cron, e.g.:
+#   0 3 * * 0  cd /opt/snackspot && ./scripts/backup.sh >> /var/log/snackspot-backup.log 2>&1
 #
-# Retention: backups older than $RETENTION_DAYS (default 14) are pruned at the
-# end of a successful run. Ship $BACKUP_DIR off-host (rsync/S3) for real DR —
-# a backup on the same disk as the data does not survive a disk failure.
+# Retention: only the newest $KEEP_LAST backups are kept (default 1 — a single
+# rolling snapshot); older ones are pruned after a successful run. Ship
+# $BACKUP_DIR off-host (the backup workflow can upload it as an artifact) for
+# real DR — a backup on the same disk as the data does not survive a disk
+# failure. Restore with scripts/restore.sh.
 
 set -Eeuo pipefail
 
 # ─── Config (override via env) ────────────────────────────────────────────────
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/snackspot}"
-RETENTION_DAYS="${RETENTION_DAYS:-14}"
+KEEP_LAST="${KEEP_LAST:-1}"
 COMPOSE="${COMPOSE:-docker compose}"
 DB_SERVICE="${DB_SERVICE:-db}"
 MINIO_SERVICE="${MINIO_SERVICE:-minio}"
@@ -83,9 +86,16 @@ log "MinIO objects: ${object_count} files, ${objects_size}"
 } > "${dest}/MANIFEST.txt"
 
 # ─── Retention ────────────────────────────────────────────────────────────────
+# Keep only the newest $KEEP_LAST backups. The one just written is newest, so it
+# is always retained; everything past the cutoff is removed. Pruning runs only
+# after a successful backup (ERR trap cleared), so a failed run never deletes the
+# previous good snapshot.
 trap - ERR
-log "Pruning backups older than ${RETENTION_DAYS} days"
-find "${BACKUP_DIR}" -mindepth 1 -maxdepth 1 -type d -mtime "+${RETENTION_DAYS}" \
-  -exec rm -rf {} + 2>/dev/null || true
+log "Pruning old backups (keeping newest ${KEEP_LAST})"
+# shellcheck disable=SC2012 -- dir names are ISO timestamps; ls -t ordering is safe
+ls -1dt "${BACKUP_DIR}"/*/ 2>/dev/null | tail -n "+$((KEEP_LAST + 1))" | while read -r old; do
+  log "  removing old backup ${old}"
+  rm -rf "${old}"
+done
 
 log "DONE — ${dest}"

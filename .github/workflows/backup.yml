@@ -1,0 +1,66 @@
+name: Backup — Weekly Production Snapshot
+
+# Backs up PostgreSQL + MinIO object storage on a weekly schedule. Runs on the
+# self-hosted runner that lives on the production host (the same one the deploy
+# uses), so it can talk to the running stack via `docker compose` — no host cron
+# to maintain and no SSH. Retention is one rolling snapshot (KEEP_LAST=1); the
+# snapshot is also uploaded as an off-host artifact for disaster recovery.
+on:
+  schedule:
+    - cron: '0 3 * * 0' # Sundays 03:00 UTC
+  workflow_dispatch:
+    inputs:
+      upload_offsite:
+        description: Also upload the snapshot as an off-host artifact
+        type: boolean
+        default: true
+
+# Never let a backup and a restore (or two backups) run at once.
+concurrency:
+  group: prod-backup
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    name: Back up database + object storage
+    runs-on:
+      - self-hosted
+    timeout-minutes: 60
+    env:
+      # Pin the compose file so we target the same project/stack as the deploy
+      # and never auto-merge a stray host override.
+      COMPOSE_FILE: docker-compose.yml
+      KEEP_LAST: '1'
+      # Persistent host location for snapshots. Override with a repo variable
+      # (Settings → Variables → BACKUP_DIR) to point at a mounted/durable disk.
+      BACKUP_DIR: ${{ vars.BACKUP_DIR }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          clean: false
+
+      - name: Run backup
+        id: backup
+        run: |
+          export BACKUP_DIR="${BACKUP_DIR:-$HOME/snackspot-backups}"
+          echo "BACKUP_DIR=$BACKUP_DIR" >> "$GITHUB_ENV"
+          chmod +x scripts/backup.sh
+          ./scripts/backup.sh
+          snapshot="$(ls -1dt "$BACKUP_DIR"/*/ | head -n 1)"
+          echo "snapshot=${snapshot%/}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload off-host artifact
+        if: ${{ github.event_name == 'schedule' || inputs.upload_offsite }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: snackspot-backup
+          path: ${{ steps.backup.outputs.snapshot }}
+          # One off-host copy at a time, kept long enough to notice a bad run.
+          retention-days: 14
+          if-no-files-found: error

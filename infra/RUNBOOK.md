@@ -14,57 +14,68 @@ and `.github/workflows/cd.yml`.
 - `objects/` — full mirror of the MinIO bucket
 - `MANIFEST.txt` — sizes, counts and the git ref at backup time
 
-### Schedule it (deploy host)
+### Schedule (automated)
+
+Backups run **weekly** via `.github/workflows/backup.yml` on the self-hosted
+production runner (`Sundays 03:00 UTC`, plus manual `workflow_dispatch`). The
+runner lives on the deploy host, so it talks to the running stack with
+`docker compose` — no host cron to maintain. Each run also uploads the snapshot
+as a GitHub Actions **artifact** (14-day retention) so there is an off-host
+copy for DR.
+
+Tunables (env): `BACKUP_DIR` (default `$HOME/snackspot-backups` on the runner;
+override with the repo variable `BACKUP_DIR` to point at a durable/mounted
+disk), `KEEP_LAST` (default `1` — a single rolling snapshot on-host), and the
+service/credential names if they differ from the compose defaults.
+
+A host cron is still supported if you prefer it:
 
 ```cron
-# Daily at 03:00 UTC, log to a file
-0 3 * * *  cd /opt/snackspot && ./scripts/backup.sh >> /var/log/snackspot-backup.log 2>&1
+# Weekly on Sunday 03:00 UTC, keep one snapshot, log to a file
+0 3 * * 0  cd /opt/snackspot && KEEP_LAST=1 ./scripts/backup.sh >> /var/log/snackspot-backup.log 2>&1
 ```
 
-Tunables (env): `BACKUP_DIR` (default `/var/backups/snackspot`),
-`RETENTION_DAYS` (default 14), and the service/credential names if they differ
-from the compose defaults.
-
-> **Off-host copy is mandatory for real DR.** A backup on the same disk as the
-> live data does not survive a disk failure. Ship `$BACKUP_DIR` elsewhere —
-> e.g. `rsync` to another host or `aws s3 sync` to a bucket — as a second cron
-> line right after the backup.
-
-### Verify a backup restores (do this monthly)
-
-A backup you have never restored is a guess. Restore into a throwaway database
-and confirm row counts. The restore path below is the same one exercised in
-testing: `pg_restore` of `db.dump` brings every table back, and MinIO objects
-copy straight back into the bucket.
+> **Off-host copy.** A backup on the same disk as the live data does not survive
+> a disk failure. The backup workflow's artifact upload covers this; if you run
+> backups from host cron instead, ship `$BACKUP_DIR` elsewhere (`rsync`/`aws s3
+> sync`) right after.
 
 ---
 
 ## Restore
 
-### PostgreSQL
+`scripts/restore.sh` restores both tiers (DB via `pg_restore`, MinIO via
+`mc mirror`) from a snapshot. It is **destructive** — it overwrites live data —
+so it stops the app containers during the restore, refuses to run without
+`CONFIRM=yes`, and defaults to the newest snapshot under `$BACKUP_ROOT`.
+
+### Easiest: the Restore workflow (no SSH)
+
+Run `.github/workflows/restore.yml` from the Actions tab. Type
+`restore-production` in the `confirm` field; optionally pass a specific
+`backup_dir` (blank = newest) and `mirror_remove` (delete objects newer than
+the backup, for an exact-match restore). It runs `restore.sh` on the prod host.
+
+### From the host shell
 
 ```bash
-# Into the running stack's database (stop the apps first to avoid writes):
-docker compose stop web admin worker
-DUMP=/var/backups/snackspot/<timestamp>/db.dump
-docker compose exec -T db pg_restore -U snackspot -d snackspot --clean --if-exists --no-owner < "$DUMP"
-docker compose start web admin worker
+# Newest snapshot, apps paused automatically, default object-mirror (keeps
+# objects newer than the backup):
+CONFIRM=yes ./scripts/restore.sh
+
+# A specific snapshot, exact-match object restore:
+CONFIRM=yes MIRROR_REMOVE=1 ./scripts/restore.sh /var/backups/snackspot/<timestamp>
 ```
 
-`--clean --if-exists` drops and recreates objects so the restore is repeatable.
-A few "already exists" notices on the PostGIS extension are expected and
-harmless. For a fresh database, drop `--clean`.
+Under the hood: `pg_restore --clean --if-exists --no-owner` (a few "already
+exists" notices on the PostGIS extension are expected and harmless), then the
+MinIO objects mirror back into the bucket.
 
-### MinIO objects
+### Verify a backup restores (do this periodically)
 
-```bash
-# Copy the backed-up tree into the minio container, then mc-mirror it back:
-docker compose cp /var/backups/snackspot/<timestamp>/objects/. minio:/tmp/restore
-docker compose exec -T minio sh -c '
-  mc alias set local http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
-  mc mirror --overwrite /tmp/restore local/snackspot
-  rm -rf /tmp/restore'
-```
+A backup you have never restored is a guess. After a backup, run the restore
+into a staging stack (or trigger the Restore workflow against a non-prod target)
+and confirm row counts and that photos load.
 
 ---
 
