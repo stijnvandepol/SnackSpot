@@ -143,6 +143,7 @@ services:
         NEXT_PUBLIC_MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?MINIO_PUBLIC_URL is required}
         NEXT_PUBLIC_MINIO_BUCKET: ${MINIO_BUCKET:-snackspot}
         NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:?NEXT_PUBLIC_TURNSTILE_SITE_KEY is required}
+        NEXT_PUBLIC_GOOGLE_ENABLED: ${NEXT_PUBLIC_GOOGLE_ENABLED:-0}
     restart: unless-stopped
     init: true
     ports:
@@ -161,6 +162,11 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-SnackSpot <noreply@snackspot.online>}
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:?TURNSTILE_SECRET_KEY is required}
+      # Google SSO (optional): without both the /auth/google route 404s. These
+      # are server-side runtime config; the build-time button gate is the
+      # NEXT_PUBLIC_GOOGLE_ENABLED build arg above.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       # Web push (optional): without keys the subscribe UI hides itself.
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
     depends_on:
