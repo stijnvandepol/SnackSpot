@@ -29,6 +29,15 @@ function buildJsonLd(appUrl: string) {
     name: 'SnackSpot',
     url: appUrl,
     description: appDescription,
+    // Enables Google's sitelinks search box: searches resolve to /search?q=…
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${appUrl}/search?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
   }
   const webApp = {
     '@context': 'https://schema.org',

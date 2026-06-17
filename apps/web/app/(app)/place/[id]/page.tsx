@@ -7,6 +7,7 @@ import { cuisineLabel } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
 import { getSiteUrl } from '@/lib/site-url'
 import { safeJsonLd } from '@/lib/html'
+import { photoVariantUrl } from '@/lib/photo-url'
 import { extractCity } from '@/lib/utils'
 import { reviewListSelect, serializeReview } from '@/lib/review-helpers'
 import { PlaceReviewsSection, type PlaceReviewListItem } from '@/components/place-reviews-section'
@@ -44,6 +45,24 @@ const getPlace = cache(async (id: string): Promise<PlaceRow | null> => {
   return place ?? null
 })
 
+// Most recent published food photo for the place — used as the social-share (OG)
+// image and the Restaurant JSON-LD image. Cached so metadata + body share one query.
+const getPlacePhoto = cache(async (id: string): Promise<string | null> => {
+  const review = await prisma.review.findFirst({
+    where: { placeId: id, status: ReviewStatus.PUBLISHED, reviewPhotos: { some: {} } },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      reviewPhotos: {
+        orderBy: { sortOrder: 'asc' },
+        take: 1,
+        select: { photo: { select: { variants: true } } },
+      },
+    },
+  })
+  const variants = review?.reviewPhotos[0]?.photo.variants
+  return variants ? photoVariantUrl(variants as Record<string, string>, ['large', 'medium', 'thumb']) : null
+})
+
 export async function generateMetadata({
   params,
 }: {
@@ -60,12 +79,14 @@ export async function generateMetadata({
       ? `${place.name} is rated ${place.avg_rating.toFixed(1)}★ from ${place.review_count} photo review${place.review_count === 1 ? '' : 's'} on SnackSpot. See real dishes and know what to order before you go.`
       : `Discover ${place.name} on SnackSpot, photo reviews from real people, so you know what to order before you go.`
 
+  const ogImage = await getPlacePhoto(id)
+
   return {
     title,
     description,
     alternates: { canonical: `/place/${place.id}` },
-    openGraph: { type: 'website', title, description },
-    twitter: { card: 'summary_large_image', title, description },
+    openGraph: { type: 'website', title, description, ...(ogImage ? { images: [ogImage] } : {}) },
+    twitter: { card: 'summary_large_image', title, description, ...(ogImage ? { images: [ogImage] } : {}) },
   }
 }
 
@@ -148,13 +169,17 @@ export default async function PlacePage({
   const backHref = resolveBackHref(from)
 
   const appUrl = getSiteUrl()
+  const photoUrl = await getPlacePhoto(id)
+  const cuisine = cuisineLabel(place.cuisine)
+  const city = extractCity(place.address)
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
+    '@type': 'Restaurant',
     name: place.name,
     address: {
       '@type': 'PostalAddress',
       streetAddress: place.address,
+      ...(city ? { addressLocality: city } : {}),
     },
     geo: {
       '@type': 'GeoCoordinates',
@@ -162,6 +187,8 @@ export default async function PlacePage({
       longitude: place.lng,
     },
     url: `${appUrl}/place/${place.id}`,
+    ...(cuisine ? { servesCuisine: cuisine } : {}),
+    ...(photoUrl ? { image: [`${appUrl}${photoUrl}`] } : {}),
     ...(place.avg_rating !== null && place.review_count > 0
       ? {
           aggregateRating: {
