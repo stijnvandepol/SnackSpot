@@ -1,16 +1,8 @@
 import { type NextRequest } from 'next/server'
 import { LoginSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
-import {
-  verifyPassword,
-  hashPassword,
-  signAccessToken,
-  generateRefreshToken,
-  generateTokenFamily,
-  hashRefreshToken,
-  refreshTokenExpiresAt,
-  buildSetCookie,
-} from '@/lib/auth'
+import { verifyPassword, hashPassword } from '@/lib/auth'
+import { issueSession } from '@/lib/session'
 import { ok, err, parseBody, serverError, isResponse, requireSameOrigin, withNoStore } from '@/lib/api-helpers'
 import {
   rateLimitIP,
@@ -89,17 +81,11 @@ export async function POST(req: NextRequest) {
 
     await resetLoginFailures(ip, body.email)
 
-    const accessToken = signAccessToken({ sub: user.id, email: user.email, username: user.username, role: user.role })
-    const rawRefresh = generateRefreshToken()
-    const expiresAt = refreshTokenExpiresAt()
-
-    await prisma.refreshToken.create({
-      data: { userId: user.id, tokenHash: hashRefreshToken(rawRefresh), family: generateTokenFamily(), expiresAt },
-    })
+    const { accessToken, setCookie } = await issueSession(user)
 
     const { passwordHash: _, ...safeUser } = user
     const response = withNoStore(ok({ user: safeUser, access_token: accessToken }))
-    response.headers.set('Set-Cookie', buildSetCookie(rawRefresh, expiresAt))
+    response.headers.set('Set-Cookie', setCookie)
     return response
   } catch (e) {
     return serverError('login', e)

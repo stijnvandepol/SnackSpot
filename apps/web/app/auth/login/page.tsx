@@ -6,6 +6,7 @@ import { Turnstile } from '@marsidev/react-turnstile'
 import type { TurnstileInstance } from '@marsidev/react-turnstile'
 import { useAuth } from '@/components/auth-provider'
 import { SnackSpotLogo } from '@/components/snack-spot-logo'
+import { GoogleSignInButton } from '@/components/google-sign-in-button'
 
 const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ''
 
@@ -14,6 +15,7 @@ function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const sessionExpired = searchParams.get('expired') === '1'
+  const oauthError = searchParams.get('error')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -76,6 +78,12 @@ function LoginContent() {
         </div>
 
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">
+          <GoogleSignInButton label="Log in with Google" />
+          {oauthError && (
+            <div className="bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl border border-red-100 dark:border-red-900">
+              Google sign-in failed. Please try again or use email and password.
+            </div>
+          )}
           {sessionExpired && !error && (
             <div className="bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-sm px-4 py-3 rounded-xl border border-amber-100 dark:border-amber-900">
               Your session has expired. Please log in again.

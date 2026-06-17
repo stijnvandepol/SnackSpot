@@ -3,7 +3,20 @@ import {
   generateRefreshToken,
   generateTokenFamily,
   hashRefreshToken,
+  verifyPassword,
 } from '@/lib/auth'
+
+// ─── verifyPassword with no stored hash ──────────────────────────────────────
+
+describe('verifyPassword with no stored hash', () => {
+  it('returns false for null hash without throwing', async () => {
+    await expect(verifyPassword(null, 'whatever123')).resolves.toBe(false)
+  })
+
+  it('returns false for empty-string hash', async () => {
+    await expect(verifyPassword('', 'whatever123')).resolves.toBe(false)
+  })
+})
 
 // ─── generateRefreshToken ─────────────────────────────────────────────────────
 

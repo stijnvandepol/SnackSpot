@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth-provider'
 import { SnackSpotLogo } from '@/components/snack-spot-logo'
+import { GoogleSignInButton } from '@/components/google-sign-in-button'
 
 export default function RegisterPage() {
   const { register } = useAuth()
@@ -37,6 +38,7 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">
+          <GoogleSignInButton label="Sign up with Google" />
           {error && (
             <div className="bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl border border-red-100 dark:border-red-900">
               {error}
