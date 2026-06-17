@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth-provider'
+import { FollowListModal, type FollowListType } from '@/components/follow-list-modal'
 
 interface FollowState {
   following: boolean
@@ -14,6 +15,7 @@ export function FollowButton({ username }: { username: string }) {
   const { user, accessToken, loading: authLoading } = useAuth()
   const [state, setState] = useState<FollowState | null>(null)
   const [busy, setBusy] = useState(false)
+  const [openList, setOpenList] = useState<FollowListType | null>(null)
 
   useEffect(() => {
     if (authLoading) return
@@ -67,11 +69,26 @@ export function FollowButton({ username }: { username: string }) {
     <div className="flex items-center gap-4">
       {state && (
         <p className="text-sm text-snack-muted">
-          <span className="font-semibold text-snack-text">{state.followerCount}</span> follower
-          {state.followerCount === 1 ? '' : 's'}
+          <button
+            type="button"
+            onClick={() => setOpenList('followers')}
+            className="hover:underline"
+          >
+            <span className="font-semibold text-snack-text">{state.followerCount}</span> follower
+            {state.followerCount === 1 ? '' : 's'}
+          </button>
           <span className="mx-1.5">·</span>
-          <span className="font-semibold text-snack-text">{state.followingCount}</span> following
+          <button
+            type="button"
+            onClick={() => setOpenList('following')}
+            className="hover:underline"
+          >
+            <span className="font-semibold text-snack-text">{state.followingCount}</span> following
+          </button>
         </p>
+      )}
+      {openList && (
+        <FollowListModal username={username} type={openList} onClose={() => setOpenList(null)} />
       )}
       {user && !isOwnProfile && state && (
         <button

@@ -62,7 +62,7 @@ export function PassportPanel() {
                       ? 'border-snack-primary/40 bg-snack-primary/10'
                       : 'border-dashed border-snack-border bg-snack-surface opacity-50'
                   }`}
-                  title={`${item.name} — ${item.description}`}
+                  title={`${item.name}, ${item.description}`}
                 >
                   <span
                     className={`text-xl ${item.earned ? '' : 'grayscale'}`}

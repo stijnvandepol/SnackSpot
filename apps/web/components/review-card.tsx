@@ -133,14 +133,14 @@ export const ReviewCard = memo(function ReviewCard({
           />
 
           <div className="flex items-center justify-between pt-1">
-            <div className="pointer-events-auto flex items-center gap-2">
+            <div className="pointer-events-auto flex items-center gap-2 min-w-0">
               <AvatarLightbox avatarKey={review.user.avatarKey} username={review.user.username} size="sm" />
-              <Link href={`/u/${review.user.username}`} className="text-xs text-snack-muted hover:underline flex items-center gap-1">
-                {review.user.username}
-                {review.user.isVerified && <VerifiedBadge className="w-3.5 h-3.5" />}
+              <Link href={`/u/${review.user.username}`} className="text-xs text-snack-muted hover:underline flex items-center gap-1 min-w-0">
+                <span className="truncate">{review.user.username}</span>
+                {review.user.isVerified && <VerifiedBadge className="w-3.5 h-3.5 shrink-0" />}
               </Link>
             </div>
-            <time dateTime={createdAt.toISOString()} className="text-xs text-snack-muted">{timeAgo(review.createdAt)}</time>
+            <time dateTime={createdAt.toISOString()} className="text-xs text-snack-muted shrink-0">{timeAgo(review.createdAt)}</time>
           </div>
         </div>
       </div>

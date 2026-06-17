@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { VerifiedBadge } from '@/components/verified-badge'
+import { FollowCounts } from '@/components/follow-counts'
 import { NotificationSettings } from '@/components/notification-settings'
 import { PushSettings } from '@/components/push-settings'
 import { PassportPanel } from '@/components/passport-panel'
@@ -439,6 +440,9 @@ function ProfileContent() {
               </h1>
               <p className="text-xs text-snack-muted">@{meProfile?.username ?? user.username}</p>
               <p className="mt-1 text-xs text-snack-muted line-clamp-2">{meProfile?.bio?.trim() || 'Snack hunter & reviewer'}</p>
+              <div className="mt-1">
+                <FollowCounts username={meProfile?.username ?? user.username} />
+              </div>
             </div>
             <button
               onClick={async () => { await logout(); router.push('/auth/login') }}
@@ -630,6 +634,9 @@ function ProfileContent() {
           </h1>
           <p className="text-sm text-snack-muted">@{meProfile?.username ?? user.username}</p>
           <p className="text-xs text-snack-muted mt-1">{meProfile?.bio?.trim() || 'Snack hunter & reviewer'}</p>
+          <div className="mt-1">
+            <FollowCounts username={meProfile?.username ?? user.username} />
+          </div>
           <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${
             user.role === 'ADMIN' ? 'bg-red-100 text-red-700'
             : user.role === 'MODERATOR' ? 'bg-purple-100 text-purple-700'

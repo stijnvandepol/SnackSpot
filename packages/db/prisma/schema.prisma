@@ -70,6 +70,7 @@ enum NotificationType {
   REVIEW_MENTION
   COMMENT_MENTION
   BADGE_EARNED
+  NEW_FOLLOWER
 
   @@map("notification_type")
 }
@@ -480,10 +481,12 @@ model NotificationPreferences {
   emailOnComment     Boolean  @default(true)  @map("email_on_comment")
   emailOnMention     Boolean  @default(false) @map("email_on_mention")
   emailOnBadge       Boolean  @default(false) @map("email_on_badge")
+  emailOnFollow      Boolean  @default(true)  @map("email_on_follow")
   pushOnLike         Boolean  @default(true)  @map("push_on_like")
   pushOnComment      Boolean  @default(true)  @map("push_on_comment")
   pushOnMention      Boolean  @default(true)  @map("push_on_mention")
   pushOnBadge        Boolean  @default(true)  @map("push_on_badge")
+  pushOnFollow       Boolean  @default(true)  @map("push_on_follow")
   pushStreakReminder Boolean  @default(true)  @map("push_streak_reminder")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")

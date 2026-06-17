@@ -103,11 +103,11 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
             size="lg"
           />
           <div className="min-w-0">
-            <h1 className="font-heading font-bold text-xl text-snack-text flex items-center gap-1.5">
-              {user.username}
-              {user.isVerified && <VerifiedBadge className="w-5 h-5" />}
+            <h1 className="font-heading font-bold text-xl text-snack-text flex items-center gap-1.5 min-w-0">
+              <span className="truncate">{user.username}</span>
+              {user.isVerified && <VerifiedBadge className="w-5 h-5 shrink-0" />}
             </h1>
-            <p className="text-sm text-snack-muted">@{user.username}</p>
+            <p className="text-sm text-snack-muted truncate">@{user.username}</p>
             <p className="text-xs text-snack-muted mt-1">{user.bio?.trim() || 'SnackSpot member'}</p>
             <p className="text-xs text-snack-muted mt-1">Joined {formatDate(user.createdAt)}</p>
           </div>

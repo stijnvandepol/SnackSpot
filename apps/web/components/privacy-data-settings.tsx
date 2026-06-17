@@ -108,7 +108,7 @@ export function PrivacyDataSettings() {
       <h3 className="font-heading font-semibold text-snack-text mb-1">Privacy &amp; data</h3>
       <p className="text-xs text-snack-muted mb-3">
         We store your profile, reviews, photos, comments, likes, bites and notification
-        preferences — nothing else. Read the{' '}
+        preferences, nothing else. Read the{' '}
         <Link href="/privacy" className="text-snack-primary hover:underline">privacy policy</Link>{' '}
         for what we keep and for how long.
       </p>

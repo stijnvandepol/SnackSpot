@@ -6,10 +6,11 @@ import {
   sendNotificationCommentEmail,
   sendNotificationMentionEmail,
   sendNotificationBadgeEmail,
+  sendNotificationFollowEmail,
 } from './email'
 import { enqueuePush, type PushCategory } from './push-service'
 
-type NotificationType = 'REVIEW_LIKE' | 'REVIEW_COMMENT' | 'REVIEW_MENTION' | 'COMMENT_MENTION' | 'BADGE_EARNED'
+type NotificationType = 'REVIEW_LIKE' | 'REVIEW_COMMENT' | 'REVIEW_MENTION' | 'COMMENT_MENTION' | 'BADGE_EARNED' | 'NEW_FOLLOWER'
 
 const PUSH_CATEGORY_BY_TYPE: Record<NotificationType, PushCategory> = {
   REVIEW_LIKE: 'LIKE',
@@ -17,6 +18,7 @@ const PUSH_CATEGORY_BY_TYPE: Record<NotificationType, PushCategory> = {
   REVIEW_MENTION: 'MENTION',
   COMMENT_MENTION: 'MENTION',
   BADGE_EARNED: 'BADGE',
+  NEW_FOLLOWER: 'FOLLOW',
 }
 
 interface CreateNotificationParams {
@@ -137,6 +139,17 @@ async function sendEmailForNotification(params: CreateNotificationParams): Promi
           recipient.username,
           params.badgeName ?? 'New badge',
           profileUrl,
+        )
+      }
+      break
+    case 'NEW_FOLLOWER':
+      if (prefs?.emailOnFollow) {
+        await sendNotificationFollowEmail(
+          recipient.email,
+          recipient.username,
+          params.actorName ?? 'Someone',
+          // Link points at the new follower's profile (params.link is /u/<follower>).
+          params.link ? `${appUrl}${params.link}` : `${appUrl}/`,
         )
       }
       break
@@ -278,6 +291,23 @@ export function notifyCommentMention(
       commentId,
       actorName,
       placeName: review.place?.name ?? null,
+    })
+  })
+}
+
+export function notifyNewFollower(followeeId: string, followerUserId: string) {
+  return safeNotify('new follower', { followeeId, followerUserId }, async () => {
+    const followerName = await findActorUsername(followerUserId)
+    if (!followerName) return null
+
+    return createNotification({
+      userId: followeeId,
+      type: 'NEW_FOLLOWER',
+      title: 'New follower',
+      message: `${followerName} started following you`,
+      link: `/u/${followerName}`,
+      actorId: followerUserId,
+      actorName: followerName,
     })
   })
 }
