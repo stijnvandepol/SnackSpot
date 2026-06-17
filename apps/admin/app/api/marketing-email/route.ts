@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { sendMarketingEmail } from '@/lib/email'
+import { logger } from '@/lib/logger'
 import { parseBody, serverError, isResponse } from '@/lib/api-helpers'
 import { rateLimit } from '@/lib/rate-limit'
 
@@ -71,7 +72,10 @@ export async function POST(req: NextRequest) {
           body.action,
         )
         sent++
-      } catch {
+      } catch (err) {
+        // Don't abort the broadcast on one bad recipient, but don't hide the
+        // cause either — log it so failures are diagnosable server-side.
+        logger.error({ err }, 'marketing email send failed')
         failed++
       }
       // Pace the loop so a large recipient list stays under the provider rate.

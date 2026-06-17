@@ -65,11 +65,10 @@ export async function POST(req: NextRequest) {
   try {
     formData = await req.formData()
   } catch (err) {
-    const reason = err instanceof Error ? err.message : String(err)
+    // Log the parse detail server-side; don't echo internals back to the client.
+    logger.error({ err }, 'admin import: multipart parse failed')
     return Response.json(
-      {
-        error: `Upload kon niet worden verwerkt tijdens multipart parsing: ${reason}`,
-      },
+      { error: 'Upload kon niet worden verwerkt tijdens multipart parsing.' },
       { status: 413 },
     )
   }

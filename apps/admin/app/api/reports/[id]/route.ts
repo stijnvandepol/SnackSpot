@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { ReportStatus, ModerationActionType } from '@prisma/client'
+import { ModerationActionType } from '@prisma/client'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { serverError, mapPrismaError, parseBody, isResponse } from '@/lib/api-helpers'
@@ -8,10 +8,13 @@ import { serverError, mapPrismaError, parseBody, isResponse } from '@/lib/api-he
 type Params = { params: Promise<{ id: string }> }
 
 const VALID_REPORT_STATUSES = ['OPEN', 'RESOLVED', 'DISMISSED'] as const
+const VALID_REPORT_ACTIONS = ['HIDE_REVIEW', 'DELETE_REVIEW', 'DELETE_PHOTO', 'DISMISS'] as const
 
+// Validate the enums at the boundary so downstream code can trust the shape —
+// no runtime re-check and no `as ReportStatus` cast needed.
 const UpdateReportBody = z.object({
-  status: z.string().optional(),
-  action: z.string().optional(),
+  status: z.enum(VALID_REPORT_STATUSES).optional(),
+  action: z.enum(VALID_REPORT_ACTIONS).optional(),
   targetId: z.string().optional(),
 })
 
@@ -97,12 +100,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   try {
     // Update report status
-    if (status && (VALID_REPORT_STATUSES as readonly string[]).includes(status)) {
+    if (status) {
       const report = await db.report.update({
         where: { id: id },
-        // Runtime-validated against VALID_REPORT_STATUSES above; cast restores the
-        // enum typing the original inline body type provided.
-        data: { status: status as ReportStatus },
+        data: { status },
         select: {
           id: true,
           status: true,

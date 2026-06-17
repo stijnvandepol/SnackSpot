@@ -1,4 +1,5 @@
 import { type NextRequest } from 'next/server'
+import { z } from 'zod'
 import { CreateCommentSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
 import {
@@ -6,6 +7,7 @@ import {
   created,
   err,
   parseBody,
+  parseQuery,
   requireAuth,
   getAuthPayload,
   isResponse,
@@ -21,6 +23,10 @@ import { checkReviewVisibility, processCommentMentions } from '@/lib/review-help
 import { awardXp } from '@/lib/xp-service'
 import { bumpQuestProgress } from '@/lib/quest-service'
 
+const CommentsQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+})
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -28,8 +34,9 @@ export async function GET(
   const { id } = await params
   const auth = getAuthPayload(req)
 
-  const limitRaw = Number(req.nextUrl.searchParams.get('limit') ?? '20')
-  const limit = Number.isFinite(limitRaw) ? Math.min(50, Math.max(1, Math.trunc(limitRaw))) : 20
+  const query = parseQuery(req, CommentsQuerySchema)
+  if (isResponse(query)) return query
+  const { limit } = query
 
   try {
     const review = await prisma.review.findUnique({
