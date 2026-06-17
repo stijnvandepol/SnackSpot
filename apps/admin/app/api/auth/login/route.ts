@@ -64,7 +64,10 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    const passwordOk = user
+    // passwordHash is nullable since SSO accounts have no password; an OAuth-only
+    // user cannot log in here. Spend equivalent CPU in that case to avoid leaking
+    // whether the account exists / has a password.
+    const passwordOk = user?.passwordHash
       ? await argon2.verify(user.passwordHash, password)
       : await argon2.hash(password).then(() => false)
 

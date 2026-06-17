@@ -54,7 +54,7 @@ export async function generateMetadata({
   if (!place) return { title: 'Place' }
 
   const city = extractCity(place.address)
-  const title = city ? `${place.name}, ${city}` : place.name
+  const title = city ? `${place.name} — ${city}` : place.name
   const description =
     place.avg_rating !== null && place.review_count > 0
       ? `${place.name} is rated ${place.avg_rating.toFixed(1)}★ from ${place.review_count} photo review${place.review_count === 1 ? '' : 's'} on SnackSpot. See real dishes and know what to order before you go.`

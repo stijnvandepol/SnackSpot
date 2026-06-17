@@ -108,8 +108,8 @@ export async function generateMetadata({
   const rating = Number(review.ratingOverall).toFixed(1)
   const city = extractCity(review.place.address)
   const title = review.dishName
-    ? `${review.dishName} at ${review.place.name}${city ? `, ${city}` : ''}, ${rating}★`
-    : `${review.place.name}${city ? `, ${city}` : ''}, ${rating}★ review`
+    ? `${review.dishName} at ${review.place.name}${city ? `, ${city}` : ''} — ${rating}★`
+    : `${review.place.name}${city ? `, ${city}` : ''} — ${rating}★ review`
   const description =
     review.text.length > 155 ? `${review.text.slice(0, 152).trimEnd()}…` : review.text
 
