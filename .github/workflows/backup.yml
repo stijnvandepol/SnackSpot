@@ -57,7 +57,7 @@ jobs:
 
       - name: Upload off-host artifact
         if: ${{ github.event_name == 'schedule' || inputs.upload_offsite }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: snackspot-backup
           path: ${{ steps.backup.outputs.snapshot }}
