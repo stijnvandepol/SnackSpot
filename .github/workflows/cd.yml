@@ -27,6 +27,17 @@ jobs:
       - self-hosted
     timeout-minutes: 30
 
+    # Pin the compose file so the deploy is deterministic. Without this, bare
+    # `docker compose` auto-merges any docker-compose.override.yml sitting in
+    # the runner workspace — and `clean: false` lets such a stray file survive
+    # across deploys. A polluted override (e.g. one that bleeds the admin app's
+    # build/ports/env into the pgbouncer service) silently rewrites production
+    # and is invisible to the repo. Loading only the version-controlled file
+    # removes that whole failure class. `.env` is still auto-loaded (it is not
+    # an override file), so secrets/config keep working.
+    env:
+      COMPOSE_FILE: docker-compose.yml
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
