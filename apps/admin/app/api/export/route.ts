@@ -203,8 +203,7 @@ async function buildExport(
         photosExported++
       } catch {
         photosSkipped++
-        // eslint-disable-next-line no-console -- export skips are intentional operational warnings
-        console.error(`Export: skipped missing photo ${photo.id} (key: ${photo.storageKey})`)
+        logger.warn({ photoId: photo.id, key: photo.storageKey }, 'Export: skipped missing photo')
       }
     }
 
@@ -226,8 +225,7 @@ async function buildExport(
         objectsExported++
       } catch {
         objectsSkipped++
-        // eslint-disable-next-line no-console -- export skips are intentional operational warnings
-        console.warn(`Export: skipped missing object ${key}`)
+        logger.warn({ key }, 'Export: skipped missing object')
       }
     }
 
@@ -269,8 +267,7 @@ export async function GET(req: NextRequest) {
   })
   archive.on('warning', (err) => {
     if (err.code === 'ENOENT') {
-      // eslint-disable-next-line no-console -- archiver warnings are operational
-      console.warn('Export archiver warning:', err.message)
+      logger.warn({ err: err.message }, 'Export archiver warning')
     } else {
       pass.destroy(err)
     }

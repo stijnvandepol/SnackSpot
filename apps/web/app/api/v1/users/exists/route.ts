@@ -1,12 +1,22 @@
+import { type NextRequest } from 'next/server'
+import { z } from 'zod'
 import { prisma } from '@/lib/db'
-import { ok, serverError, withPublicCache } from '@/lib/api-helpers'
+import { ok, parseQuery, isResponse, serverError, withPublicCache } from '@/lib/api-helpers'
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_]{3,30}$/
 const MAX_USERNAMES_PER_REQUEST = 50
 
-export async function GET(req: Request) {
+// Comma-separated list; individual usernames are further validated against
+// USERNAME_PATTERN below. Cap the raw length to bound work per request.
+const ExistsQuerySchema = z.object({
+  usernames: z.string().max(2000).optional().default(''),
+})
+
+export async function GET(req: NextRequest) {
   try {
-    const rawUsernames = new URL(req.url).searchParams.get('usernames') ?? ''
+    const query = parseQuery(req, ExistsQuerySchema)
+    if (isResponse(query)) return query
+    const rawUsernames = query.usernames
     const usernames = [
       ...new Set(
         rawUsernames
