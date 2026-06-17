@@ -40,17 +40,29 @@ jobs:
           docker --version
           docker compose version
 
-      # Record the image currently serving each app BEFORE we rebuild, so a
-      # failed deploy can roll back to exactly what was running. Empty on the
-      # very first deploy (no prior images) — rollback then simply no-ops.
+      # Pin the image currently serving each app BEFORE we rebuild, so a failed
+      # deploy can roll back to exactly what was running. We retag under a stable
+      # snackspot-rollback:<svc> tag rather than recording the bare image ID:
+      # the upcoming `docker compose build` (and the prune step) would otherwise
+      # leave the old image dangling and free it for garbage collection, so a
+      # recorded ID can vanish before rollback runs. A dedicated tag keeps it
+      # alive. have_rollback stays false on the first-ever deploy (no prior
+      # images), which makes the rollback step no-op instead of erroring.
       - name: Capture current images for rollback
         id: snapshot
         run: |
-          {
-            echo "web=$(docker compose images -q web 2>/dev/null || true)"
-            echo "admin=$(docker compose images -q admin 2>/dev/null || true)"
-            echo "worker=$(docker compose images -q worker 2>/dev/null || true)"
-          } >> "$GITHUB_OUTPUT"
+          have_rollback=false
+          for svc in web admin worker; do
+            img="$(docker compose images -q "$svc" 2>/dev/null | head -1 || true)"
+            if [ -n "$img" ]; then
+              docker tag "$img" "snackspot-rollback:${svc}"
+              have_rollback=true
+              echo "pinned ${svc} (${img}) -> snackspot-rollback:${svc}"
+            else
+              echo "no current image for ${svc}; nothing to pin"
+            fi
+          done
+          echo "have_rollback=${have_rollback}" >> "$GITHUB_OUTPUT"
 
       # Build images first WITHOUT recreating running containers. If a build
       # fails, production keeps serving the old version untouched.
@@ -90,14 +102,27 @@ jobs:
 
       # Roll back to the previously-running images if migration, deploy, or the
       # health gate failed. Skipped on the first-ever deploy when there is no
-      # prior image to restore.
+      # prior image to restore. Restore each service independently and do NOT
+      # abort on the first miss (-e off) — one absent image must not block
+      # restoring the others, the bug that previously left production down.
       - name: Roll back on failure
-        if: failure() && steps.snapshot.outputs.web != ''
+        if: failure() && steps.snapshot.outputs.have_rollback == 'true'
         run: |
-          echo "Deploy failed — rolling back to previous images"
-          docker tag "${{ steps.snapshot.outputs.web }}" "$(docker compose config --images web | head -1)"
-          docker tag "${{ steps.snapshot.outputs.admin }}" "$(docker compose config --images admin | head -1)"
-          docker tag "${{ steps.snapshot.outputs.worker }}" "$(docker compose config --images worker | head -1)"
+          set +e
+          echo "Deploy failed — rolling back to previously-running images"
+          for svc in web admin worker; do
+            src="snackspot-rollback:${svc}"
+            if ! docker image inspect "$src" >/dev/null 2>&1; then
+              echo "no pinned rollback image for ${svc}; skipping"
+              continue
+            fi
+            target="$(docker compose config --images "$svc" | head -1)"
+            if [ -z "$target" ]; then
+              echo "could not resolve target image name for ${svc}; skipping"
+              continue
+            fi
+            docker tag "$src" "$target" && echo "restored ${svc} -> ${target}"
+          done
           docker compose up -d --force-recreate --no-build web admin worker
           docker compose ps
 
