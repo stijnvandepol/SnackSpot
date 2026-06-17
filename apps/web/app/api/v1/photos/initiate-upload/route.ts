@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto'
 import { prisma } from '@/lib/db'
 import { presignedPut, ensureBucket } from '@/lib/minio'
 import { env } from '@/lib/env'
-import { ok, err, parseBody, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
+import { created, err, parseBody, requireAuth, serverError, isResponse } from '@/lib/api-helpers'
 import { rateLimitUser } from '@/lib/rate-limit'
 import { ALLOWED_IMAGE_MIMES } from '@/lib/upload'
 
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     const uploadUrl = await presignedPut(storageKey)
 
-    return ok({
+    return created({
       photoId: photo.id,
       storageKey: photo.storageKey,
       uploadUrl,

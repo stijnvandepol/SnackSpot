@@ -32,7 +32,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       },
     })
 
-    return ok({ data: updated })
+    return ok(updated)
   } catch (e) {
     return serverError('notification/read', e)
   }

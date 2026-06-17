@@ -76,10 +76,10 @@ export async function GET(req: NextRequest) {
     // provider has no clean "POIs near me" without a term, so this surfaces our
     // own verified venues.)
     if (term.length < 2) {
-      if (!coords) return ok({ data: [] })
+      if (!coords) return ok([])
       const near = await nearbyDbPlaces(coords, NEARBY_RADIUS_METRES, 10)
-      return ok({
-        data: near.map((p) => ({
+      return ok(
+        near.map((p) => ({
           placeId: p.placeId,
           provider: p.provider,
           providerPlaceId: p.providerPlaceId,
@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
           lng: p.lng,
           reviewCount: p.reviewCount,
         })),
-      })
+      )
     }
 
     // 1. Existing SnackSpot places first (the dedup fix): match by name, nearest
@@ -146,7 +146,7 @@ export async function GET(req: NextRequest) {
         reviewCount: 0,
       }))
 
-    return ok({ data: [...dbResults, ...providerOnly] })
+    return ok([...dbResults, ...providerOnly])
   } catch (e) {
     return serverError('places/verify', e)
   }

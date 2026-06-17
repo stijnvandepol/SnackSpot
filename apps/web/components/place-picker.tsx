@@ -105,7 +105,7 @@ export function PlacePicker({ accessToken, value, onChange }: PlacePickerProps) 
       })
       if (!res.ok) throw new Error('search failed')
       const json = await res.json()
-      if (!controller.signal.aborted) setResults(json.data?.data ?? [])
+      if (!controller.signal.aborted) setResults(json.data ?? [])
     } catch (e) {
       if ((e as Error)?.name === 'AbortError') return // superseded by a newer query
       setError('Could not search places. Check your connection and try again.')

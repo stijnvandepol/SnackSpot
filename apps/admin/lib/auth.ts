@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import crypto from 'node:crypto'
 import { env } from './env'
 import { db } from './db'
+import { logger } from './logger'
 import type { Role } from '@prisma/client'
 
 export interface AdminTokenPayload {
@@ -115,7 +116,11 @@ export async function rotateRefreshToken(
 
 export async function revokeRefreshToken(rawToken: string): Promise<void> {
   const tokenHash = hashToken(rawToken)
-  await db.refreshToken.deleteMany({ where: { tokenHash } }).catch(() => {})
+  // Best-effort: logout/refresh-rotation must not fail if the row is already
+  // gone, but a real DB error here means a token wasn't revoked — log it.
+  await db.refreshToken
+    .deleteMany({ where: { tokenHash } })
+    .catch((err) => logger.warn({ err }, 'refresh token revoke failed'))
 }
 
 // ── Cookies ──────────────────────────────────────────────────────

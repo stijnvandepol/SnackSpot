@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    return ok({ data: { count: result.count } })
+    return ok({ count: result.count })
   } catch (e) {
     return serverError('notifications/read-all', e)
   }
