@@ -139,16 +139,6 @@ export const en: MarketingDict = {
     createAccount: 'Create account',
   },
   switcher: { label: 'Language', en: 'English', nl: 'Nederlands' },
-  guidesHub: {
-    title: 'SnackSpot Guides',
-    intro:
-      'Everything you need to get started with SnackSpot, from creating an account and posting your first review to managing your profile and adding new places.',
-    metaTitle: 'Guides – How to Use SnackSpot',
-    metaDescription:
-      'Step-by-step guides for using SnackSpot: create an account, post a review, add a place, manage your password, and more.',
-    eyebrow: 'Help & Guides',
-    readGuide: 'Read guide',
-  },
   releasesChrome: {
     title: 'Release Notes',
     intro: "What we've shipped, new features, improvements, and fixes.",

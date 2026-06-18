@@ -17,7 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = [
     { url: appUrl, lastModified: new Date() },
     { url: `${appUrl}/product`, lastModified: staticLastMod },
-    { url: `${appUrl}/product/guides`, lastModified: staticLastMod },
+    { url: `${appUrl}/guides`, lastModified: staticLastMod },
     { url: `${appUrl}/product/releases`, lastModified: staticLastMod },
     { url: `${appUrl}/search`, lastModified: staticLastMod },
     { url: `${appUrl}/nearby`, lastModified: staticLastMod },

@@ -139,16 +139,6 @@ export const nl: MarketingDict = {
     createAccount: 'Account maken',
   },
   switcher: { label: 'Taal', en: 'English', nl: 'Nederlands' },
-  guidesHub: {
-    title: 'SnackSpot Uitleg',
-    intro:
-      'Alles wat je nodig hebt om aan de slag te gaan met SnackSpot: van het aanmaken van een account en het plaatsen van je eerste review tot het beheren van je profiel en het toevoegen van nieuwe plekken.',
-    metaTitle: 'Uitleg – Zo gebruik je SnackSpot',
-    metaDescription:
-      'Stapsgewijze uitleg voor SnackSpot: een account aanmaken, een review plaatsen, een plek toevoegen, je wachtwoord beheren en meer.',
-    eyebrow: 'Hulp & Uitleg',
-    readGuide: 'Lees uitleg',
-  },
   releasesChrome: {
     title: 'Releasenotes',
     intro: 'Wat we hebben uitgebracht: nieuwe functies, verbeteringen en fixes.',
