@@ -292,6 +292,18 @@ export default async function PlacePage({
               lng={place.lng}
               className="h-48 rounded-xl overflow-hidden"
             />
+            <p className="mt-1.5 text-xs text-snack-muted">
+              Place &amp; map data &copy;{' '}
+              <a
+                href="https://www.openstreetmap.org/copyright"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
+              >
+                OpenStreetMap
+              </a>{' '}
+              contributors
+            </p>
           </div>
         </div>
 

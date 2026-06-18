@@ -42,6 +42,12 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
       <main>{children}</main>
 
       <footer className="px-4 pb-10 pt-4 text-center">
+        <nav aria-label="Legal" className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm text-snack-muted">
+          <Link href="/terms" className="hover:text-snack-text">Terms</Link>
+          <Link href="/privacy" className="hover:text-snack-text">Privacy</Link>
+          <Link href="/subprocessors" className="hover:text-snack-text">Sub-processors</Link>
+          <Link href="/imprint" className="hover:text-snack-text">Company info</Link>
+        </nav>
         <p className="text-sm font-medium text-snack-muted">&copy; {new Date().getFullYear()} SnackSpot</p>
       </footer>
     </div>
