@@ -6,119 +6,33 @@ import { photoVariantUrl } from '@/lib/photo-url'
 import { safeJsonLd } from '@/lib/html'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 import { MarketingShell } from '@/components/marketing-shell'
+import { resolveLocale, getMarketingDict } from '@/lib/i18n/locale'
 
 // Marketing page with live community data — re-rendered every 5 minutes.
 export const revalidate = 300
 
-export const metadata: Metadata = {
-  title: { absolute: 'Discover Hidden Food Gems Near You | SnackSpot' },
-  description:
-    'SnackSpot is the free community app where your camera eats first: photo reviews of specific dishes at the small local spots big review sites overlook.',
-  alternates: {
-    canonical: '/product',
-  },
-  openGraph: {
-    type: 'website',
-    title: 'Your camera eats first | SnackSpot',
-    description:
-      'Snap your food, rate the dish, and put the little places that deserve it on the map.',
-    images: ['/opengraph-image'],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Your camera eats first | SnackSpot',
-    description:
-      'Snap your food, rate the dish, and put the little places that deserve it on the map.',
-    images: ['/twitter-image'],
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = getMarketingDict(await resolveLocale())
+  return {
+    title: { absolute: dict.meta.productTitle },
+    description: dict.meta.productDescription,
+    alternates: {
+      canonical: '/product',
+    },
+    openGraph: {
+      type: 'website',
+      title: dict.meta.productTitle,
+      description: dict.meta.productDescription,
+      images: ['/opengraph-image'],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: dict.meta.productTitle,
+      description: dict.meta.productDescription,
+      images: ['/twitter-image'],
+    },
+  }
 }
-
-// ─── Copy (docs/product-vision/06-landing-cro.md) ────────────────────────────
-
-const benefits = [
-  {
-    title: 'Know what to order before you sit down',
-    body: 'Every review is about a dish, not just a place. See the exact plate, the half-star ratings for taste, value and portion size, then walk in and order like a regular.',
-    icon: '🍜',
-  },
-  {
-    title: 'Hidden gems, zero tourist traps',
-    body: 'SnackSpot is built for the hole-in-the-wall bakery and the snackbar with the legendary kapsalon. The big chains already have enough reviews.',
-    icon: '📍',
-  },
-  {
-    title: 'Your food diary, but useful',
-    body: 'Every photo you post builds your streak, your stamps and your taste profile. Six months from now, "where was that insane ramen place?" takes three seconds to answer.',
-    icon: '🔥',
-  },
-  {
-    title: 'Reviews that take 60 seconds, not 600',
-    body: 'Snap up to five photos, slide the stars, tag it, done. No essay required, the photo does the talking.',
-    icon: '📸',
-  },
-]
-
-const steps = [
-  {
-    step: '01',
-    title: 'Spot it',
-    body: 'Open the feed or the nearby map and find a place that makes you go "wait, what\'s that?"',
-  },
-  {
-    step: '02',
-    title: 'Snap it',
-    body: "Food arrives? Camera first, fork second. It's the SnackSpot way, your table will get used to it.",
-  },
-  {
-    step: '03',
-    title: 'Rate it',
-    body: 'Slide the half-stars for taste, value and portion. Name the dish. Thirty seconds, tops.',
-  },
-  {
-    step: '04',
-    title: 'Share it',
-    body: 'Your review goes live in the feed. Likes, comments and badges roll in, and someone nearby just found their new favorite spot because of you.',
-  },
-]
-
-const faqs = [
-  {
-    q: 'What is SnackSpot?',
-    a: 'SnackSpot is a free community app for discovering hidden food gems, the small local places big review sites overlook. Members share photo reviews of specific dishes with honest half-star ratings for taste, value, portion size and service.',
-  },
-  {
-    q: 'Is SnackSpot free?',
-    a: 'Completely. No subscription, no credit card, no catch. Create an account and start spotting.',
-  },
-  {
-    q: 'Do I need to download an app?',
-    a: 'No. SnackSpot runs in your browser and works like an app on your phone, you can add it to your home screen in two taps. No app store, no storage space sacrificed.',
-  },
-  {
-    q: 'How is SnackSpot different from Google Maps or Tripadvisor reviews?',
-    a: 'Three ways: we focus on small local spots instead of chains and tourist magnets; every review is photo-first and about a specific dish, not a vague place average; and ratings are split into taste, value, portion and service, so "4 stars" actually tells you something.',
-  },
-  {
-    q: 'Can I find food spots near me?',
-    a: "Yes, the nearby view shows community-reviewed places around your location, so you can see what's good within walking distance.",
-  },
-  {
-    q: 'Do I have to write long reviews?',
-    a: 'Nope. A review is photos plus ratings plus an optional note. Most take under a minute. The photo does the heavy lifting.',
-  },
-  {
-    q: 'What are streaks, badges and the Food Passport?',
-    a: 'Log a photo of any meal to build a daily streak, earn XP and levels, and collect passport stamps for dishes, cuisines and cities you review. No pressure, just bragging rights.',
-  },
-  {
-    q: 'Can restaurant owners join?',
-    a: "Owners can't review their own place (obviously), but we love it when they claim their spot's photos are accurate. A dedicated owner experience is on our roadmap.",
-  },
-  {
-    q: 'Who sees my reviews?',
-    a: "Reviews and profiles are public, that's the point: your find helps the next hungry person. Daily meal logs (bites) are only visible to people you mutually follow. You choose your username, and you control what you post.",
-  },
-]
 
 // ─── Live community data (honest social proof, thresholds per CRO doc) ───────
 
@@ -189,7 +103,11 @@ async function getCommunityData() {
 }
 
 export default async function ProductPage() {
-  const { wall, placesCount, citiesCount, photosThisWeek } = await getCommunityData()
+  const [{ wall, placesCount, citiesCount, photosThisWeek }, locale] = await Promise.all([
+    getCommunityData(),
+    resolveLocale(),
+  ])
+  const dict = getMarketingDict(locale)
 
   // A number only goes on the page when it impresses without context.
   const stats = [
@@ -198,12 +116,11 @@ export default async function ProductPage() {
     photosThisWeek >= 25 ? { value: photosThisWeek, label: 'Photos shared this week' } : null,
   ].filter((s): s is { value: number; label: string } => s !== null)
 
-  // Static FAQ copy serialized through the codebase's safeJsonLd sanitizer —
-  // same pattern as the breadcrumb/review JSON-LD on other pages.
+  // FAQ JSON-LD uses dict.faqs so it localizes with the rest.
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: faqs.map((f) => ({
+    mainEntity: dict.faqs.map((f) => ({
       '@type': 'Question',
       name: f.q,
       acceptedAnswer: { '@type': 'Answer', text: f.a },
@@ -213,7 +130,7 @@ export default async function ProductPage() {
   const heroWall = wall.slice(0, 5)
 
   return (
-    <MarketingShell>
+    <MarketingShell locale={locale} dict={dict}>
       <BreadcrumbJsonLd items={[{ name: 'About SnackSpot', path: '/product' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }} />
 
@@ -221,25 +138,24 @@ export default async function ProductPage() {
       <section className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-[1.1fr_0.9fr] md:items-center md:py-24">
         <div>
           <p className="mb-4 inline-flex rounded-full border border-snack-primary/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-snack-primary">
-            📍 Hidden gems only, chains need not apply
+            {dict.hero.eyebrow}
           </p>
           <h1 className="max-w-3xl font-heading text-5xl font-bold leading-tight text-snack-text md:text-7xl">
-            Your camera eats first.
+            {dict.hero.title}
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-snack-muted md:text-lg">
-            Snap your food, rate the dish, and put the little places that deserve it on the map.
-            SnackSpot is where food lovers share the spots Google hasn&apos;t ruined yet.
+            {dict.hero.subtitle}
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link href="/auth/register?ref=hero" className="btn-primary text-sm">
-              Start spotting, it&apos;s free
+              {dict.hero.ctaPrimary}
             </Link>
             <Link href="/" className="btn-secondary text-sm">
-              Peek at the feed first
+              {dict.hero.ctaSecondary}
             </Link>
           </div>
           <p className="mt-3 text-xs text-snack-muted">
-            No app store, no credit card. Works right in your browser.
+            {dict.hero.finePrint}
           </p>
         </div>
 
@@ -292,11 +208,11 @@ export default async function ProductPage() {
           </h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          {benefits.map((benefit) => (
-            <article key={benefit.title} className="card p-6">
-              <span className="text-3xl" aria-hidden="true">{benefit.icon}</span>
-              <h3 className="mt-3 font-heading text-xl font-semibold text-snack-text">{benefit.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-snack-muted">{benefit.body}</p>
+          {dict.features.map((feature) => (
+            <article key={feature.title} className="card p-6">
+              <span className="text-3xl" aria-hidden="true">{feature.icon}</span>
+              <h3 className="mt-3 font-heading text-xl font-semibold text-snack-text">{feature.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-snack-muted">{feature.body}</p>
             </article>
           ))}
         </div>
@@ -311,7 +227,7 @@ export default async function ProductPage() {
           </h2>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-          {steps.map((item) => (
+          {dict.steps.map((item) => (
             <article key={item.step} className="rounded-[1.5rem] border border-snack-border bg-white p-6 shadow-sm">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-snack-primary">{item.step}</p>
               <h3 className="mt-4 font-heading text-2xl font-semibold text-snack-text">{item.title}</h3>
@@ -370,17 +286,15 @@ export default async function ProductPage() {
         <div className="card overflow-hidden p-0">
           <div className="grid gap-0 md:grid-cols-[0.95fr_1.05fr]">
             <div className="bg-gradient-to-br from-snack-primary to-snack-accent p-8 text-white">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/75">Community</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/75">{dict.community.eyebrow}</p>
               <h2 className="mt-3 font-heading text-3xl font-bold">
-                This only works because of people like you
+                {dict.community.title}
               </h2>
               <p className="mt-4 text-sm leading-6 text-white/85">
-                Every gem on SnackSpot was found, photographed and rated by a real person, not an
-                algorithm, not an ad budget. The little bánh mì counter gets discovered because
-                someone took thirty seconds to share it. That someone could be you.
+                {dict.community.body}
               </p>
               <p className="mt-4 text-sm font-semibold text-white/90">
-                Small team, big appetite. Built in the Netherlands, hungry everywhere.
+                {dict.community.tagline}
               </p>
             </div>
             <div className="p-8">
@@ -403,10 +317,10 @@ export default async function ProductPage() {
               )}
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <Link href="/auth/register?ref=community" className="btn-primary text-sm">
-                  Add your first gem
+                  {dict.community.ctaAdd}
                 </Link>
                 <Link href="/nearby" className="btn-secondary text-sm">
-                  Explore nearby places
+                  {dict.community.ctaExplore}
                 </Link>
               </div>
             </div>
@@ -421,7 +335,7 @@ export default async function ProductPage() {
           <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">Fair questions</h2>
         </div>
         <div className="space-y-3">
-          {faqs.map((faq) => (
+          {dict.faqs.map((faq) => (
             <details key={faq.q} className="card group p-5">
               <summary className="cursor-pointer list-none font-heading text-base font-semibold text-snack-text">
                 <span className="flex items-center justify-between gap-3">

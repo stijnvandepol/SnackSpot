@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   description:
     'Share a photo review of a local food spot on SnackSpot. Step-by-step instructions for posting your first review.',
   alternates: {
-    canonical: '/guides/how-to-post-a-review',
+    canonical: '/product/guides/how-to-post-a-review',
   },
   openGraph: {
     type: 'article',
@@ -61,7 +61,7 @@ export default function HowToPostAReviewPage() {
   return (
     <GuidesShell>
       <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
-        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/guides' }, { name: 'How to Post a Review', path: '/guides/how-to-post-a-review' }]} />
+        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/product/guides' }, { name: 'How to Post a Review', path: '/product/guides/how-to-post-a-review' }]} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }} />
 
         <article className="guide-content guide-article prose prose-slate">
@@ -74,7 +74,7 @@ export default function HowToPostAReviewPage() {
 
           <h2>What you need</h2>
           <ul>
-            <li>A SnackSpot account (<Link href="/guides/how-to-create-an-account">create one here</Link> if you do not have one)</li>
+            <li>A SnackSpot account (<Link href="/product/guides/how-to-create-an-account">create one here</Link> if you do not have one)</li>
             <li>At least one photo of the food or place</li>
             <li>The name of the place you visited</li>
           </ul>
@@ -88,7 +88,7 @@ export default function HowToPostAReviewPage() {
             <li>
               Search for the place you want to review. Type the name or address in the search field.
               If the place is not on SnackSpot yet, you can add it,{' '}
-              <Link href="/guides/how-to-add-a-place">see the guide on adding a place</Link>.
+              <Link href="/product/guides/how-to-add-a-place">see the guide on adding a place</Link>.
             </li>
             <li>Select the correct place from the results.</li>
             <li>Add one or more photos. You can upload up to 5 images.</li>
@@ -120,7 +120,7 @@ export default function HowToPostAReviewPage() {
           ))}
         </article>
 
-        <RelatedGuides currentHref="/guides/how-to-post-a-review" />
+        <RelatedGuides currentHref="/product/guides/how-to-post-a-review" />
       </div>
     </GuidesShell>
   )

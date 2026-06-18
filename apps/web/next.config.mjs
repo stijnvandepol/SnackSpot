@@ -32,6 +32,14 @@ const nextConfig = {
     })(),
   },
 
+  async redirects() {
+    return [
+      { source: '/guides', destination: '/product/guides', permanent: true },
+      { source: '/guides/:slug', destination: '/product/guides/:slug', permanent: true },
+      { source: '/releases', destination: '/product/releases', permanent: true },
+    ]
+  },
+
   async headers() {
     const isProd = process.env.NODE_ENV === 'production'
     const minioEndpoint = process.env.MINIO_ENDPOINT ?? 'minio'

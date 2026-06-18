@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   description:
     'Create a free SnackSpot account in under a minute. All you need is an email address and a username.',
   alternates: {
-    canonical: '/guides/how-to-create-an-account',
+    canonical: '/product/guides/how-to-create-an-account',
   },
   openGraph: {
     type: 'article',
@@ -56,7 +56,7 @@ export default function HowToCreateAnAccountPage() {
   return (
     <GuidesShell>
       <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
-        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/guides' }, { name: 'How to Create an Account', path: '/guides/how-to-create-an-account' }]} />
+        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/product/guides' }, { name: 'How to Create an Account', path: '/product/guides/how-to-create-an-account' }]} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }} />
 
         <article className="guide-content guide-article prose prose-slate">
@@ -111,7 +111,7 @@ export default function HowToCreateAnAccountPage() {
           ))}
         </article>
 
-        <RelatedGuides currentHref="/guides/how-to-create-an-account" />
+        <RelatedGuides currentHref="/product/guides/how-to-create-an-account" />
       </div>
     </GuidesShell>
   )
