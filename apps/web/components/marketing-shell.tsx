@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { SnackSpotLogo } from './snack-spot-logo'
 import { LanguageSwitcher } from './language-switcher'
-import type { Locale } from '@/lib/i18n/locale'
+import type { Locale } from '@/lib/i18n/config'
 import type { MarketingDict } from '@/lib/i18n/types'
 
 export function MarketingShell({ children, locale, dict }: { children: React.ReactNode; locale: Locale; dict: MarketingDict }) {
@@ -21,9 +21,9 @@ export function MarketingShell({ children, locale, dict }: { children: React.Rea
   return (
     <div className="force-light min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.14),_transparent_32%),linear-gradient(180deg,#fff7ed_0%,#ffffff_28%,#ffffff_100%)] text-snack-text">
       <header className="sticky top-0 z-30 border-b backdrop-blur" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 h-16">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 h-16 sm:px-4 md:gap-4">
           <Link href="/product" className="shrink-0">
-            <SnackSpotLogo className="text-xl" />
+            <SnackSpotLogo className="text-lg sm:text-xl" />
           </Link>
           <nav aria-label="Product navigation" className="hidden items-center gap-5 text-sm text-snack-muted md:flex">
             {navItems.map((item) => {
@@ -35,10 +35,10 @@ export function MarketingShell({ children, locale, dict }: { children: React.Rea
               )
             })}
           </nav>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             <LanguageSwitcher current={locale} />
-            <Link href="/auth/login" className="btn-ghost px-2.5 text-sm">{dict.nav.login}</Link>
-            <Link href="/auth/register" className="btn-primary px-2.5 text-sm">{dict.nav.createAccount}</Link>
+            <Link href="/auth/login" className="btn-ghost whitespace-nowrap px-2 text-xs sm:px-2.5 sm:text-sm">{dict.nav.login}</Link>
+            <Link href="/auth/register" className="btn-primary whitespace-nowrap px-2 text-xs sm:px-2.5 sm:text-sm">{dict.nav.createAccount}</Link>
           </div>
         </div>
       </header>
