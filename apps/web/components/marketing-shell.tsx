@@ -3,17 +3,20 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { SnackSpotLogo } from './snack-spot-logo'
+import { LanguageSwitcher } from './language-switcher'
+import type { Locale } from '@/lib/i18n/locale'
+import type { MarketingDict } from '@/lib/i18n/types'
 
-const navItems = [
-  { href: '/product#problem', label: 'Problem', match: null },
-  { href: '/product#features', label: 'Features', match: null },
-  { href: '/product#why', label: 'Why SnackSpot', match: null },
-  { href: '/guides', label: 'Guides', match: '/guides' },
-  { href: '/releases', label: 'Release Notes', match: '/releases' },
-] as const
-
-export function MarketingShell({ children }: { children: React.ReactNode }) {
+export function MarketingShell({ children, locale, dict }: { children: React.ReactNode; locale: Locale; dict: MarketingDict }) {
   const pathname = usePathname()
+
+  const navItems = [
+    { href: '/product#problem', label: dict.nav.problem, match: null },
+    { href: '/product#features', label: dict.nav.features, match: null },
+    { href: '/product#why', label: dict.nav.why, match: null },
+    { href: '/product/guides', label: dict.nav.guides, match: '/product/guides' },
+    { href: '/product/releases', label: dict.nav.releases, match: '/product/releases' },
+  ]
 
   return (
     <div className="force-light min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.14),_transparent_32%),linear-gradient(180deg,#fff7ed_0%,#ffffff_28%,#ffffff_100%)] text-snack-text">
@@ -33,8 +36,9 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
           <div className="flex items-center gap-2">
-            <Link href="/auth/login" className="btn-ghost text-sm">Log in</Link>
-            <Link href="/auth/register" className="btn-primary text-sm">Create account</Link>
+            <LanguageSwitcher current={locale} />
+            <Link href="/auth/login" className="btn-ghost text-sm">{dict.nav.login}</Link>
+            <Link href="/auth/register" className="btn-primary text-sm">{dict.nav.createAccount}</Link>
           </div>
         </div>
       </header>

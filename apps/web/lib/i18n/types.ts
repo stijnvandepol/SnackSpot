@@ -11,4 +11,6 @@ export interface MarketingDict {
   community: { eyebrow: string; title: string; body: string; tagline: string; ctaAdd: string; ctaExplore: string }
   nav: { problem: string; features: string; why: string; guides: string; releases: string; login: string; createAccount: string }
   switcher: { label: string; en: string; nl: string }
+  guidesHub: { title: string; intro: string }
+  releasesChrome: { title: string; intro: string }
 }
