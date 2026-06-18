@@ -13,3 +13,9 @@ test('product page switches to Dutch and persists', async ({ page }) => {
   // a known Dutch string from the dict
   await expect(page.getByText('Je camera eet eerst')).toBeVisible()
 })
+
+test('product page renders 200 with hero visible', async ({ page }) => {
+  const res = await page.goto('/product')
+  expect(res?.status()).toBe(200)
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+})

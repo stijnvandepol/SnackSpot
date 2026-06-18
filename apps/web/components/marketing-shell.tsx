@@ -35,9 +35,9 @@ export function MarketingShell({ children, locale, dict }: { children: React.Rea
               )
             })}
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <LanguageSwitcher current={locale} />
-            <Link href="/auth/login" className="btn-ghost text-sm">{dict.nav.login}</Link>
+            <Link href="/auth/login" className="btn-ghost hidden text-sm sm:inline-flex">{dict.nav.login}</Link>
             <Link href="/auth/register" className="btn-primary text-sm">{dict.nav.createAccount}</Link>
           </div>
         </div>

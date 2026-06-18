@@ -135,7 +135,7 @@ export default async function ProductPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }} />
 
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
-      <section className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-[1.1fr_0.9fr] md:items-center md:py-24">
+      <section className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-[1.1fr_0.9fr] md:items-center md:py-20">
         <div>
           <p className="mb-4 inline-flex rounded-full border border-snack-primary/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-snack-primary">
             {dict.hero.eyebrow}
@@ -198,8 +198,8 @@ export default async function ProductPage() {
       </section>
 
       {/* ── Benefits ───────────────────────────────────────────────────────── */}
-      <section id="features" className="mx-auto max-w-6xl px-4 py-8 md:py-14">
-        <div className="mb-8 max-w-2xl">
+      <section id="features" className="mx-auto max-w-6xl px-4 py-6 md:py-10">
+        <div className="mb-6 max-w-2xl">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">
             Why food people get hooked
           </p>
@@ -219,38 +219,40 @@ export default async function ProductPage() {
       </section>
 
       {/* ── How it works ───────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-4 py-8 md:py-14">
-        <div className="mb-8 max-w-2xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">How it works</p>
-          <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
-            From hungry to helpful in four steps
-          </h2>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-          {dict.steps.map((item) => (
-            <article key={item.step} className="rounded-[1.5rem] border border-snack-border bg-white p-6 shadow-sm">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-snack-primary">{item.step}</p>
-              <h3 className="mt-4 font-heading text-2xl font-semibold text-snack-text">{item.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-snack-muted">{item.body}</p>
-            </article>
-          ))}
-        </div>
+      <section className="bg-snack-surface/50 py-6 md:py-10">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="mb-8 max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">How it works</p>
+            <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
+              From hungry to helpful in four steps
+            </h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+            {dict.steps.map((item) => (
+              <article key={item.step} className="rounded-[1.5rem] border border-snack-border bg-white p-6 shadow-sm">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-snack-primary">{item.step}</p>
+                <h3 className="mt-4 font-heading text-2xl font-semibold text-snack-text">{item.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-snack-muted">{item.body}</p>
+              </article>
+            ))}
+          </div>
 
-        {/* Mid-page CTA */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-4 rounded-[1.5rem] border border-snack-border bg-snack-surface px-6 py-5 sm:flex-row">
-          <p className="font-heading text-xl font-semibold text-snack-text">
-            Sixty seconds. That&apos;s one review.
-          </p>
-          <Link href="/auth/register?ref=midpage" className="btn-primary text-sm">
-            Post my first review
-          </Link>
+          {/* Mid-page CTA */}
+          <div className="mt-10 flex flex-col items-center justify-between gap-4 rounded-[1.5rem] border border-snack-border bg-snack-surface px-6 py-5 sm:flex-row">
+            <p className="font-heading text-xl font-semibold text-snack-text">
+              Sixty seconds. That&apos;s one review.
+            </p>
+            <Link href="/auth/register?ref=midpage" className="btn-primary text-sm">
+              Post my first review
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* ── Photo wall: activity is the social proof ───────────────────────── */}
       {wall.length >= 6 && (
-        <section className="mx-auto max-w-6xl px-4 py-8 md:py-14">
-          <div className="mb-8 max-w-2xl">
+        <section className="mx-auto max-w-6xl px-4 py-6 md:py-10">
+          <div className="mb-6 max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">
               Posted on SnackSpot
             </p>
@@ -258,7 +260,7 @@ export default async function ProductPage() {
               Real plates from real people
             </h2>
           </div>
-          <div className="grid grid-cols-3 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-3 gap-2 md:grid-cols-4">
             {wall.map((photo) => (
               <Link
                 key={photo.id}
@@ -282,46 +284,48 @@ export default async function ProductPage() {
       )}
 
       {/* ── Community & honest numbers ─────────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-4 py-8 md:py-14">
-        <div className="card overflow-hidden p-0">
-          <div className="grid gap-0 md:grid-cols-[0.95fr_1.05fr]">
-            <div className="bg-gradient-to-br from-snack-primary to-snack-accent p-8 text-white">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/75">{dict.community.eyebrow}</p>
-              <h2 className="mt-3 font-heading text-3xl font-bold">
-                {dict.community.title}
-              </h2>
-              <p className="mt-4 text-sm leading-6 text-white/85">
-                {dict.community.body}
-              </p>
-              <p className="mt-4 text-sm font-semibold text-white/90">
-                {dict.community.tagline}
-              </p>
-            </div>
-            <div className="p-8">
-              {stats.length > 0 ? (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {stats.map((stat) => (
-                    <div key={stat.label} className="rounded-2xl bg-snack-surface p-5">
-                      <p className="font-heading text-3xl font-bold text-snack-text">{stat.value}</p>
-                      <p className="mt-1 text-sm text-snack-muted">{stat.label}</p>
-                    </div>
-                  ))}
+      <section className="bg-snack-surface/50 py-6 md:py-10">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="card overflow-hidden p-0">
+            <div className="grid gap-0 md:grid-cols-[0.95fr_1.05fr]">
+              <div className="bg-gradient-to-br from-snack-primary to-snack-accent p-8 text-white">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/75">{dict.community.eyebrow}</p>
+                <h2 className="mt-3 font-heading text-3xl font-bold">
+                  {dict.community.title}
+                </h2>
+                <p className="mt-4 text-sm leading-6 text-white/85">
+                  {dict.community.body}
+                </p>
+                <p className="mt-4 text-sm font-semibold text-white/90">
+                  {dict.community.tagline}
+                </p>
+              </div>
+              <div className="p-8">
+                {stats.length > 0 ? (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {stats.map((stat) => (
+                      <div key={stat.label} className="rounded-2xl bg-snack-surface p-5">
+                        <p className="font-heading text-3xl font-bold text-snack-text">{stat.value}</p>
+                        <p className="mt-1 text-sm text-snack-muted">{stat.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl bg-snack-surface p-5">
+                    <p className="text-sm leading-6 text-snack-muted">
+                      We&apos;re early, which means the gems you add now are the ones everyone else
+                      discovers later. First spotters get the First Bite credit, forever.
+                    </p>
+                  </div>
+                )}
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  <Link href="/auth/register?ref=community" className="btn-primary text-sm">
+                    {dict.community.ctaAdd}
+                  </Link>
+                  <Link href="/nearby" className="btn-secondary text-sm">
+                    {dict.community.ctaExplore}
+                  </Link>
                 </div>
-              ) : (
-                <div className="rounded-2xl bg-snack-surface p-5">
-                  <p className="text-sm leading-6 text-snack-muted">
-                    We&apos;re early, which means the gems you add now are the ones everyone else
-                    discovers later. First spotters get the First Bite credit, forever.
-                  </p>
-                </div>
-              )}
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <Link href="/auth/register?ref=community" className="btn-primary text-sm">
-                  {dict.community.ctaAdd}
-                </Link>
-                <Link href="/nearby" className="btn-secondary text-sm">
-                  {dict.community.ctaExplore}
-                </Link>
               </div>
             </div>
           </div>
@@ -329,12 +333,12 @@ export default async function ProductPage() {
       </section>
 
       {/* ── FAQ ────────────────────────────────────────────────────────────── */}
-      <section id="faq" className="mx-auto max-w-4xl px-4 py-8 md:py-14">
-        <div className="mb-8">
+      <section id="faq" className="mx-auto max-w-4xl px-4 py-6 md:py-10">
+        <div className="mb-6">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">FAQ</p>
           <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">Fair questions</h2>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2">
           {dict.faqs.map((faq) => (
             <details key={faq.q} className="card group p-5">
               <summary className="cursor-pointer list-none font-heading text-base font-semibold text-snack-text">
@@ -350,7 +354,7 @@ export default async function ProductPage() {
       </section>
 
       {/* ── Slot CTA ───────────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-4 pb-16 pt-4 md:pb-24">
+      <section className="mx-auto max-w-6xl px-4 pb-12 pt-2 md:pb-20">
         <div className="rounded-[1.75rem] bg-gradient-to-r from-snack-primary to-snack-accent p-10 text-center text-white md:p-14">
           <h2 className="font-heading text-3xl font-bold md:text-5xl">Hungry? Good. Stay that way.</h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/85 md:text-base">
