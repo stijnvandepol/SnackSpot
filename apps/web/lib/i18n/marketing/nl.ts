@@ -108,6 +108,27 @@ export const nl: MarketingDict = {
     ctaAdd: 'Voeg je eerste parel toe',
     ctaExplore: 'Ontdek plekken in de buurt',
   },
+  sections: {
+    benefitsEyebrow: 'Waarom eetliefhebbers verslaafd raken',
+    benefitsTitle: 'Niet zomaar een sterrengemiddelde-machine. Dít is het verschil.',
+    stepsEyebrow: 'Hoe het werkt',
+    stepsTitle: 'Van hongerig naar behulpzaam in vier stappen',
+    midCtaText: 'Zestig seconden. Dat is één review.',
+    midCtaButton: 'Plaats mijn eerste review',
+    wallEyebrow: 'Geplaatst op SnackSpot',
+    wallTitle: 'Echte borden van echte mensen',
+    statsEmpty:
+      'We zijn net begonnen, dus de parels die jij nu toevoegt zijn de plekken die alle anderen later ontdekken. De eerste spotters krijgen voor altijd de First Bite-credit.',
+    statPlaces: 'Verborgen parels op de kaart',
+    statCities: 'Steden met minstens één parel',
+    statPhotos: "Foto's deze week gedeeld",
+    faqEyebrow: 'FAQ',
+    faqTitle: 'Eerlijke vragen',
+    finalCtaTitle: 'Honger? Mooi. Houden zo.',
+    finalCtaBody: 'Sluit je aan bij de eetliefhebbers die de beste kleine plekjes in kaart brengen, één foto tegelijk.',
+    finalCtaButton: 'Maak mijn gratis account',
+    finalCtaFinePrint: 'Kost 30 seconden. Werkt op elke telefoon.',
+  },
   nav: {
     problem: 'Probleem',
     features: 'Functies',
@@ -122,9 +143,17 @@ export const nl: MarketingDict = {
     title: 'SnackSpot Uitleg',
     intro:
       'Alles wat je nodig hebt om aan de slag te gaan met SnackSpot: van het aanmaken van een account en het plaatsen van je eerste review tot het beheren van je profiel en het toevoegen van nieuwe plekken.',
+    metaTitle: 'Uitleg – Zo gebruik je SnackSpot',
+    metaDescription:
+      'Stapsgewijze uitleg voor SnackSpot: een account aanmaken, een review plaatsen, een plek toevoegen, je wachtwoord beheren en meer.',
+    eyebrow: 'Hulp & Uitleg',
+    readGuide: 'Lees uitleg',
   },
   releasesChrome: {
     title: 'Releasenotes',
     intro: 'Wat we hebben uitgebracht: nieuwe functies, verbeteringen en fixes.',
+    metaTitle: 'Releasenotes | SnackSpot',
+    metaDescription: 'Wat er nieuw is in SnackSpot: functies, verbeteringen en fixes.',
+    eyebrow: 'Wijzigingen',
   },
 }

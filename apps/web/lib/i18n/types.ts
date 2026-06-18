@@ -9,8 +9,16 @@ export interface MarketingDict {
   steps: Array<{ step: string; title: string; body: string }>
   faqs: Array<{ q: string; a: string }>
   community: { eyebrow: string; title: string; body: string; tagline: string; ctaAdd: string; ctaExplore: string }
+  sections: {
+    benefitsEyebrow: string; benefitsTitle: string
+    stepsEyebrow: string; stepsTitle: string; midCtaText: string; midCtaButton: string
+    wallEyebrow: string; wallTitle: string
+    statsEmpty: string; statPlaces: string; statCities: string; statPhotos: string
+    faqEyebrow: string; faqTitle: string
+    finalCtaTitle: string; finalCtaBody: string; finalCtaButton: string; finalCtaFinePrint: string
+  }
   nav: { problem: string; features: string; why: string; guides: string; releases: string; login: string; createAccount: string }
   switcher: { label: string; en: string; nl: string }
-  guidesHub: { title: string; intro: string }
-  releasesChrome: { title: string; intro: string }
+  guidesHub: { title: string; intro: string; metaTitle: string; metaDescription: string; eyebrow: string; readGuide: string }
+  releasesChrome: { title: string; intro: string; metaTitle: string; metaDescription: string; eyebrow: string }
 }

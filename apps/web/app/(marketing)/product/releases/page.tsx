@@ -1,25 +1,30 @@
 import type { Metadata } from 'next'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 import { MarketingShell } from '@/components/marketing-shell'
-import { resolveLocale, getMarketingDict } from '@/lib/i18n/locale'
+import { resolveLocale, getMarketingDict, ogLocale } from '@/lib/i18n/locale'
 
-export const metadata: Metadata = {
-  title: { absolute: 'Release Notes | SnackSpot' },
-  description: "What's new in SnackSpot, features, improvements, and fixes.",
-  alternates: { canonical: '/product/releases' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    type: 'website',
-    title: 'Release Notes | SnackSpot',
-    description: "What's new in SnackSpot, features, improvements, and fixes.",
-    images: ['/opengraph-image'],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Release Notes | SnackSpot',
-    description: "What's new in SnackSpot, features, improvements, and fixes.",
-    images: ['/twitter-image'],
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await resolveLocale()
+  const t = getMarketingDict(locale).releasesChrome
+  return {
+    title: { absolute: t.metaTitle },
+    description: t.metaDescription,
+    alternates: { canonical: '/product/releases' },
+    robots: { index: true, follow: true },
+    openGraph: {
+      type: 'website',
+      title: t.metaTitle,
+      description: t.metaDescription,
+      locale: ogLocale(locale),
+      images: ['/opengraph-image'],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t.metaTitle,
+      description: t.metaDescription,
+      images: ['/twitter-image'],
+    },
+  }
 }
 
 type ChangeType = 'new' | 'improved' | 'fixed' | 'removed'
@@ -98,7 +103,7 @@ export default async function ReleasesPage() {
       <div className="mx-auto max-w-3xl px-4 py-16 md:py-24">
         <div className="mb-12">
           <p className="mb-4 inline-flex rounded-full border border-snack-primary/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-snack-primary">
-            Changelog
+            {dict.releasesChrome.eyebrow}
           </p>
           <h1 className="font-heading text-4xl font-bold leading-tight text-snack-text md:text-5xl">
             {dict.releasesChrome.title}

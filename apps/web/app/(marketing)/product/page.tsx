@@ -6,12 +6,13 @@ import { photoVariantUrl } from '@/lib/photo-url'
 import { safeJsonLd } from '@/lib/html'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 import { MarketingShell } from '@/components/marketing-shell'
-import { resolveLocale, getMarketingDict } from '@/lib/i18n/locale'
+import { resolveLocale, getMarketingDict, ogLocale } from '@/lib/i18n/locale'
 
 // Dynamically rendered: resolveLocale() reads the request cookie/Accept-Language. Live community data is fetched per request.
 
 export async function generateMetadata(): Promise<Metadata> {
-  const dict = getMarketingDict(await resolveLocale())
+  const locale = await resolveLocale()
+  const dict = getMarketingDict(locale)
   return {
     title: { absolute: dict.meta.productTitle },
     description: dict.meta.productDescription,
@@ -22,6 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: 'website',
       title: dict.meta.productSocialTitle,
       description: dict.meta.productSocialDescription,
+      locale: ogLocale(locale),
       images: ['/opengraph-image'],
     },
     twitter: {
@@ -110,9 +112,9 @@ export default async function ProductPage() {
 
   // A number only goes on the page when it impresses without context.
   const stats = [
-    placesCount >= 10 ? { value: placesCount, label: 'Hidden gems on the map' } : null,
-    citiesCount >= 2 ? { value: citiesCount, label: 'Cities with at least one gem' } : null,
-    photosThisWeek >= 25 ? { value: photosThisWeek, label: 'Photos shared this week' } : null,
+    placesCount >= 10 ? { value: placesCount, label: dict.sections.statPlaces } : null,
+    citiesCount >= 2 ? { value: citiesCount, label: dict.sections.statCities } : null,
+    photosThisWeek >= 25 ? { value: photosThisWeek, label: dict.sections.statPhotos } : null,
   ].filter((s): s is { value: number; label: string } => s !== null)
 
   // FAQ JSON-LD uses dict.faqs so it localizes with the rest.
@@ -200,10 +202,10 @@ export default async function ProductPage() {
       <section id="features" className="mx-auto max-w-6xl px-4 py-6 md:py-10">
         <div className="mb-6 max-w-2xl">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">
-            Why food people get hooked
+            {dict.sections.benefitsEyebrow}
           </p>
           <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
-            Not another star-average machine. Here&apos;s what&apos;s different.
+            {dict.sections.benefitsTitle}
           </h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
@@ -221,9 +223,9 @@ export default async function ProductPage() {
       <section className="bg-snack-surface/50 py-6 md:py-10">
         <div className="mx-auto max-w-6xl px-4">
           <div className="mb-6 max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">How it works</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">{dict.sections.stepsEyebrow}</p>
             <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
-              From hungry to helpful in four steps
+              {dict.sections.stepsTitle}
             </h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
@@ -239,10 +241,10 @@ export default async function ProductPage() {
           {/* Mid-page CTA */}
           <div className="mt-10 flex flex-col items-center justify-between gap-4 rounded-[1.5rem] border border-snack-border bg-snack-surface px-6 py-5 sm:flex-row">
             <p className="font-heading text-xl font-semibold text-snack-text">
-              Sixty seconds. That&apos;s one review.
+              {dict.sections.midCtaText}
             </p>
             <Link href="/auth/register?ref=midpage" className="btn-primary text-sm">
-              Post my first review
+              {dict.sections.midCtaButton}
             </Link>
           </div>
         </div>
@@ -253,10 +255,10 @@ export default async function ProductPage() {
         <section className="mx-auto max-w-6xl px-4 py-6 md:py-10">
           <div className="mb-6 max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">
-              Posted on SnackSpot
+              {dict.sections.wallEyebrow}
             </p>
             <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
-              Real plates from real people
+              {dict.sections.wallTitle}
             </h2>
           </div>
           <div className="grid grid-cols-3 gap-2 md:grid-cols-4">
@@ -312,8 +314,7 @@ export default async function ProductPage() {
                 ) : (
                   <div className="rounded-2xl bg-snack-surface p-5">
                     <p className="text-sm leading-6 text-snack-muted">
-                      We&apos;re early, which means the gems you add now are the ones everyone else
-                      discovers later. First spotters get the First Bite credit, forever.
+                      {dict.sections.statsEmpty}
                     </p>
                   </div>
                 )}
@@ -334,8 +335,8 @@ export default async function ProductPage() {
       {/* ── FAQ ────────────────────────────────────────────────────────────── */}
       <section id="faq" className="mx-auto max-w-4xl px-4 py-6 md:py-10">
         <div className="mb-6">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">FAQ</p>
-          <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">Fair questions</h2>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">{dict.sections.faqEyebrow}</p>
+          <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">{dict.sections.faqTitle}</h2>
         </div>
         <div className="space-y-2">
           {dict.faqs.map((faq) => (
@@ -355,17 +356,17 @@ export default async function ProductPage() {
       {/* ── Slot CTA ───────────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-4 pb-12 pt-2 md:pb-20">
         <div className="rounded-[1.75rem] bg-gradient-to-r from-snack-primary to-snack-accent p-10 text-center text-white md:p-14">
-          <h2 className="font-heading text-3xl font-bold md:text-5xl">Hungry? Good. Stay that way.</h2>
+          <h2 className="font-heading text-3xl font-bold md:text-5xl">{dict.sections.finalCtaTitle}</h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/85 md:text-base">
-            Join the food lovers mapping the best small spots around, one photo at a time.
+            {dict.sections.finalCtaBody}
           </p>
           <Link
             href="/auth/register?ref=footer"
             className="mt-7 inline-flex rounded-full bg-white px-6 py-3 text-sm font-semibold text-snack-primary shadow-lg transition hover:opacity-90"
           >
-            Create my free account
+            {dict.sections.finalCtaButton}
           </Link>
-          <p className="mt-3 text-xs text-white/70">Takes 30 seconds. Works on any phone.</p>
+          <p className="mt-3 text-xs text-white/70">{dict.sections.finalCtaFinePrint}</p>
         </div>
       </section>
     </MarketingShell>

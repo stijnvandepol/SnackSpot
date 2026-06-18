@@ -108,6 +108,27 @@ export const en: MarketingDict = {
     ctaAdd: 'Add your first gem',
     ctaExplore: 'Explore nearby places',
   },
+  sections: {
+    benefitsEyebrow: 'Why food people get hooked',
+    benefitsTitle: "Not another star-average machine. Here's what's different.",
+    stepsEyebrow: 'How it works',
+    stepsTitle: 'From hungry to helpful in four steps',
+    midCtaText: "Sixty seconds. That's one review.",
+    midCtaButton: 'Post my first review',
+    wallEyebrow: 'Posted on SnackSpot',
+    wallTitle: 'Real plates from real people',
+    statsEmpty:
+      "We're early, which means the gems you add now are the ones everyone else discovers later. First spotters get the First Bite credit, forever.",
+    statPlaces: 'Hidden gems on the map',
+    statCities: 'Cities with at least one gem',
+    statPhotos: 'Photos shared this week',
+    faqEyebrow: 'FAQ',
+    faqTitle: 'Fair questions',
+    finalCtaTitle: 'Hungry? Good. Stay that way.',
+    finalCtaBody: 'Join the food lovers mapping the best small spots around, one photo at a time.',
+    finalCtaButton: 'Create my free account',
+    finalCtaFinePrint: 'Takes 30 seconds. Works on any phone.',
+  },
   nav: {
     problem: 'Problem',
     features: 'Features',
@@ -122,9 +143,17 @@ export const en: MarketingDict = {
     title: 'SnackSpot Guides',
     intro:
       'Everything you need to get started with SnackSpot, from creating an account and posting your first review to managing your profile and adding new places.',
+    metaTitle: 'Guides – How to Use SnackSpot',
+    metaDescription:
+      'Step-by-step guides for using SnackSpot: create an account, post a review, add a place, manage your password, and more.',
+    eyebrow: 'Help & Guides',
+    readGuide: 'Read guide',
   },
   releasesChrome: {
     title: 'Release Notes',
     intro: "What we've shipped, new features, improvements, and fixes.",
+    metaTitle: 'Release Notes | SnackSpot',
+    metaDescription: "What's new in SnackSpot, features, improvements, and fixes.",
+    eyebrow: 'Changelog',
   },
 }
