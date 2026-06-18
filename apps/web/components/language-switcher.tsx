@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
-import { LOCALE_COOKIE, type Locale } from '@/lib/i18n/locale'
+import { LOCALE_COOKIE, type Locale } from '@/lib/i18n/config'
 
 const OPTIONS: { value: Locale; label: string }[] = [
   { value: 'en', label: 'EN' },
@@ -34,8 +34,8 @@ export function LanguageSwitcher({ current }: { current: Locale }) {
             aria-pressed={active}
             className={
               active
-                ? 'rounded-full bg-snack-primary px-2.5 py-1 font-semibold text-white'
-                : 'rounded-full px-2.5 py-1 text-snack-muted hover:text-snack-text'
+                ? 'rounded-full bg-snack-primary px-2 py-1 font-semibold text-white'
+                : 'rounded-full px-2 py-1 text-snack-muted hover:text-snack-text'
             }
           >
             {opt.label}

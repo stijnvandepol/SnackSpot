@@ -2,35 +2,16 @@ import { cookies, headers } from 'next/headers'
 import type { Locale, MarketingDict } from './types'
 import { en } from './marketing/en'
 import { nl } from './marketing/nl'
+import { LOCALE_COOKIE, pickLocale } from './config'
 
-export type { Locale }
-
-export const LOCALES = ['en', 'nl'] as const
-export const DEFAULT_LOCALE: Locale = 'en'
-export const LOCALE_COOKIE = 'NEXT_LOCALE'
+// Re-export the client-safe primitives so existing server-side imports from
+// '@/lib/i18n/locale' keep working. Client Components must import those from
+// './config' directly (this module pulls in next/headers).
+export * from './config'
 
 const DICTS: Record<Locale, MarketingDict> = { en, nl }
 
-export function isLocale(v: string | undefined | null): v is Locale {
-  return v === 'en' || v === 'nl'
-}
-
-// Pure: cookie wins, else first Accept-Language tag whose base matches a locale,
-// else the default. Kept pure so it is unit-testable without next/headers.
-export function pickLocale(
-  cookieValue: string | undefined,
-  acceptLanguage: string | undefined,
-): Locale {
-  if (isLocale(cookieValue)) return cookieValue
-  if (acceptLanguage) {
-    for (const part of acceptLanguage.split(',')) {
-      const base = part.trim().split(';')[0].toLowerCase().split('-')[0]
-      if (isLocale(base)) return base
-    }
-  }
-  return DEFAULT_LOCALE
-}
-
+// Server-only: reads the request cookie/headers to resolve the active locale.
 export async function resolveLocale(): Promise<Locale> {
   const [cookieStore, headerList] = await Promise.all([cookies(), headers()])
   return pickLocale(
