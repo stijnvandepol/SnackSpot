@@ -113,16 +113,9 @@ test.describe('Session expiry', () => {
 })
 
 // ─── Successful login flow ────────────────────────────────────────────────────
-// TODO: Fill in what a logged-in user should see after a successful login.
-//
-// The app:
-//   - Desktop TopNav shows the first letter of username + "Log out" button
-//   - Mobile BottomNav has the same 5 links (no user-specific change)
-//   - After router.push('/') the URL changes to "/"
-//   - The login form should no longer be visible
-//
-// Provide TEST_EMAIL and TEST_PASSWORD via environment variables, then
-// implement the assertions below.
+// Proves the happy path: a valid credential pair lands the user on the home feed
+// with the login UI gone. Requires real credentials, so it skips unless
+// TEST_EMAIL and TEST_PASSWORD are set (e.g. a seeded test account in CI).
 
 test.describe('Successful login flow', () => {
   test.skip(!process.env.TEST_EMAIL || !process.env.TEST_PASSWORD, 'Set TEST_EMAIL and TEST_PASSWORD to run this test')
@@ -133,14 +126,11 @@ test.describe('Successful login flow', () => {
     await page.getByLabel('Password').fill(process.env.TEST_PASSWORD!)
     await page.getByRole('button', { name: 'Log in' }).click()
 
-    // TODO: Write the assertions that prove the login succeeded.
-    //
-    // Ideas to consider:
-    //   - await expect(page).toHaveURL('/')                          ← redirect happened
-    //   - await expect(page.locator('header')).not.toContainText('Log in')   ← no more login link on desktop
-    //   - await expect(page.getByRole('link', { name: 'Open profile' })).toBeVisible()
-    //   - await expect(page.getByRole('button', { name: 'Log out' })).toBeVisible()
-    //
-    // What matters to YOU here? ↓
+    // The form calls router.push('/') on success, so the URL must change to home.
+    await expect(page).toHaveURL('/')
+
+    // The login form is gone: no Email field and no submit button remain.
+    await expect(page.getByLabel('Email')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Log in' })).toHaveCount(0)
   })
 })
