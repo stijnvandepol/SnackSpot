@@ -1,9 +1,15 @@
 import { test, expect } from '@playwright/test'
 
-test('old guides URL 301s to /product/guides', async ({ page }) => {
+test('guides live at /guides', async ({ page }) => {
   const res = await page.goto('/guides')
+  expect(res?.status()).toBe(200)
+  expect(page.url()).toMatch(/\/guides$/)
+})
+
+test('old /product/guides URL 301s to /guides', async ({ page }) => {
+  const res = await page.goto('/product/guides')
   expect(res?.status()).toBe(200) // after redirect
-  expect(page.url()).toContain('/product/guides')
+  expect(page.url()).toMatch(/\/guides$/)
 })
 
 test('product page switches to Dutch and persists', async ({ page }) => {

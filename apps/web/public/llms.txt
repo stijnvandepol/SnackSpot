@@ -14,7 +14,7 @@ SnackSpot is a free community-driven food discovery platform where users share p
 - `/place/{id}` - Individual place pages with address, ratings, and all community reviews
 - `/review/{id}` - Individual reviews with photos, dish names, multi-dimensional ratings, and comments
 - `/u/{username}` - User profiles with their published reviews
-- `/product/guides` - Step-by-step guides for using the platform
+- `/guides` - Step-by-step guides for using the platform
 - `/product/releases` - Release notes and changelog
 - `/product` - About SnackSpot and how it works
 

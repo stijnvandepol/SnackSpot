@@ -10,17 +10,14 @@ export const metadata: Metadata = {
 
 // ─── Operator identification ─────────────────────────────────────────────────
 // Dutch/EU law requires an online service to be identifiable: the trade name,
-// legal form, Chamber of Commerce (KvK) number and a contact channel.
+// Chamber of Commerce (KvK) number and a contact channel.
 // SnackSpot is operated by a sole trader (eenmanszaak) from a home address, so
 // the street address is withheld here for privacy — it is on file with the KvK
 // under the number below and disclosed to authorities on legitimate request.
 // A VAT (BTW) number is only shown if VAT-registered.
 const COMPANY = {
-  legalName: 'Stijn IT',
-  legalForm: 'Sole trader (eenmanszaak) — website & software development',
   tradeName: 'SnackSpot',
   kvk: '42015984',
-  establishment: '000065194454', // Vestigingsnummer
   vat: '', // optional: 'NL000000000B00' — leave empty if not VAT-registered
   country: 'The Netherlands',
   email: 'contact@snackspot.online',
@@ -50,10 +47,7 @@ export default function ImprintPage() {
       <div className="card p-5">
         <dl className="space-y-3">
           <Field label="Service" value={COMPANY.tradeName} />
-          <Field label="Operated by" value={COMPANY.legalName} />
-          <Field label="Legal form" value={COMPANY.legalForm} />
           <Field label="KvK number" value={COMPANY.kvk} />
-          <Field label="Establishment no." value={COMPANY.establishment} />
           {COMPANY.vat && <Field label="VAT number" value={COMPANY.vat} />}
           <Field label="Country" value={COMPANY.country} />
           <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-3">

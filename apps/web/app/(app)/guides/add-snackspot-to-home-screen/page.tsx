@@ -2,14 +2,12 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { safeJsonLd } from '@/lib/html'
 import { RelatedGuides } from '@/components/related-guides'
-import { GuidesShell } from '@/components/guides-shell'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
 const faqItems = [
   {
     question: 'Can I add SnackSpot to my home screen without installing from an app store?',
-    answer:
-      'Yes. Open SnackSpot in your browser and use Add to Home Screen to place it as an icon on your phone.',
+    answer: 'Yes. Open SnackSpot in your browser and use Add to Home Screen to place it as an icon on your phone.',
   },
   {
     question: 'Why do I not see “Add to Home Screen”?',
@@ -41,35 +39,41 @@ export const metadata: Metadata = {
   description:
     'Step-by-step guide to add SnackSpot to your mobile home screen on Android and iOS, including fixes for common issues.',
   alternates: {
-    canonical: '/product/guides/add-snackspot-to-home-screen',
+    canonical: '/guides/add-snackspot-to-home-screen',
   },
   openGraph: {
     type: 'article',
     title: 'Add SnackSpot to your home screen (Android & iPhone)',
-    description: 'Step-by-step guide to add SnackSpot to your mobile home screen on Android and iOS, including fixes for common issues.',
+    description:
+      'Step-by-step guide to add SnackSpot to your mobile home screen on Android and iOS, including fixes for common issues.',
     images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Add SnackSpot to your home screen (Android & iPhone)',
-    description: 'Step-by-step guide to add SnackSpot to your mobile home screen on Android and iOS, including fixes for common issues.',
+    description:
+      'Step-by-step guide to add SnackSpot to your mobile home screen on Android and iOS, including fixes for common issues.',
     images: ['/twitter-image'],
   },
 }
 
 export default function AddSnackSpotToHomescreenGuidePage() {
   return (
-    <GuidesShell>
-      <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
-        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/product/guides' }, { name: 'Add SnackSpot to Home Screen', path: '/product/guides/add-snackspot-to-home-screen' }]} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }} />
+    <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Guides', path: '/guides' },
+          { name: 'Add SnackSpot to Home Screen', path: '/guides/add-snackspot-to-home-screen' },
+        ]}
+      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }} />
 
-        <article className="guide-content guide-article prose prose-slate">
+      <article className="guide-content guide-article prose prose-slate">
         <h1>Add SnackSpot to your home screen (Android &amp; iPhone)</h1>
 
         <p>
-          You can use SnackSpot like an app experience without installing anything from an app store. By adding SnackSpot
-          to your home screen, you can open it instantly with one tap.
+          You can use SnackSpot like an app experience without installing anything from an app store. By adding
+          SnackSpot to your home screen, you can open it instantly with one tap.
         </p>
         <p>
           This guide gives you clear step-by-step instructions for Android and iOS, plus quick fixes for the most common
@@ -89,7 +93,8 @@ export default function AddSnackSpotToHomescreenGuidePage() {
         <h3>Better daily flow</h3>
         <p>
           It is ideal if you frequently want to <Link href="/nearby">find hidden gem restaurants near you</Link>,{' '}
-          <Link href="/">see real food reviews on SnackSpot</Link>, or quickly <Link href="/search">discover restaurants nearby</Link>.
+          <Link href="/">see real food reviews on SnackSpot</Link>, or quickly{' '}
+          <Link href="/search">discover restaurants nearby</Link>.
         </p>
 
         <h2>Android: add SnackSpot to home screen</h2>
@@ -98,9 +103,13 @@ export default function AddSnackSpotToHomescreenGuidePage() {
           <li>Open Chrome on your Android phone.</li>
           <li>Go to SnackSpot (for example the feed or nearby page).</li>
           <li>Tap the three-dot menu in the top-right corner.</li>
-          <li>Select <strong>Add to Home screen</strong>.</li>
+          <li>
+            Select <strong>Add to Home screen</strong>.
+          </li>
           <li>Optionally rename it to “SnackSpot”.</li>
-          <li>Tap <strong>Add</strong> and confirm placement.</li>
+          <li>
+            Tap <strong>Add</strong> and confirm placement.
+          </li>
         </ol>
 
         <h3>Method 2: Samsung Internet</h3>
@@ -108,30 +117,39 @@ export default function AddSnackSpotToHomescreenGuidePage() {
           <li>Open Samsung Internet.</li>
           <li>Go to SnackSpot.</li>
           <li>Open the browser menu.</li>
-          <li>Choose <strong>Add page to</strong> and then <strong>Home screen</strong>.</li>
+          <li>
+            Choose <strong>Add page to</strong> and then <strong>Home screen</strong>.
+          </li>
           <li>Confirm to place the icon.</li>
         </ol>
 
         <h3>After adding on Android</h3>
         <p>
-          Locate the SnackSpot icon on your home screen and tap it to launch. You can move it into your dock or any folder.
+          Locate the SnackSpot icon on your home screen and tap it to launch. You can move it into your dock or any
+          folder.
         </p>
 
         <h2>iPhone (iOS): add SnackSpot to home screen</h2>
         <h3>Important: use Safari</h3>
         <p>
-          On iPhone, Add to Home Screen works best from Safari. In-app browsers and some third-party browsers may hide this
-          option.
+          On iPhone, Add to Home Screen works best from Safari. In-app browsers and some third-party browsers may hide
+          this option.
         </p>
 
         <h3>Steps in Safari</h3>
         <ol>
           <li>Open Safari on your iPhone.</li>
           <li>Go to SnackSpot.</li>
-          <li>Tap the <strong>Share</strong> button (square with upward arrow).</li>
-          <li>Scroll and tap <strong>Add to Home Screen</strong>.</li>
+          <li>
+            Tap the <strong>Share</strong> button (square with upward arrow).
+          </li>
+          <li>
+            Scroll and tap <strong>Add to Home Screen</strong>.
+          </li>
           <li>Confirm the icon name (for example “SnackSpot”).</li>
-          <li>Tap <strong>Add</strong>.</li>
+          <li>
+            Tap <strong>Add</strong>.
+          </li>
         </ol>
 
         <h3>After adding on iPhone</h3>
@@ -164,9 +182,7 @@ export default function AddSnackSpotToHomescreenGuidePage() {
 
         <h2>Quick usage tips</h2>
         <h3>Pin SnackSpot in your dock</h3>
-        <p>
-          This gives one-tap access all day.
-        </p>
+        <p>This gives one-tap access all day.</p>
         <h3>Use a simple decision flow</h3>
         <p>
           Start in <Link href="/search">search</Link>, validate options in <Link href="/nearby">nearby</Link>, and check
@@ -180,8 +196,8 @@ export default function AddSnackSpotToHomescreenGuidePage() {
 
         <h2>Ready to use SnackSpot from your home screen?</h2>
         <p>
-          Once added, SnackSpot behaves like a lightweight app shortcut so you can quickly open nearby discovery and review
-          context whenever you need a better local food decision.
+          Once added, SnackSpot behaves like a lightweight app shortcut so you can quickly open nearby discovery and
+          review context whenever you need a better local food decision.
         </p>
 
         <h2>FAQ</h2>
@@ -201,10 +217,9 @@ export default function AddSnackSpotToHomescreenGuidePage() {
             <Link href="/auth/register">Create one here</Link>.
           </p>
         </section>
-        </article>
+      </article>
 
-        <RelatedGuides currentHref="/product/guides/add-snackspot-to-home-screen" />
-      </div>
-    </GuidesShell>
+      <RelatedGuides currentHref="/guides/add-snackspot-to-home-screen" />
+    </div>
   )
 }

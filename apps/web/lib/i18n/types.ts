@@ -19,6 +19,5 @@ export interface MarketingDict {
   }
   nav: { problem: string; features: string; why: string; guides: string; releases: string; login: string; createAccount: string }
   switcher: { label: string; en: string; nl: string }
-  guidesHub: { title: string; intro: string; metaTitle: string; metaDescription: string; eyebrow: string; readGuide: string }
   releasesChrome: { title: string; intro: string; metaTitle: string; metaDescription: string; eyebrow: string }
 }

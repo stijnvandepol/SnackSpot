@@ -34,8 +34,10 @@ const nextConfig = {
 
   async redirects() {
     return [
-      { source: '/guides', destination: '/product/guides', permanent: true },
-      { source: '/guides/:slug', destination: '/product/guides/:slug', permanent: true },
+      // Guides live at /guides (app side). These cover the brief window the PR
+      // nested them under /product before they were moved back.
+      { source: '/product/guides', destination: '/guides', permanent: true },
+      { source: '/product/guides/:slug', destination: '/guides/:slug', permanent: true },
       { source: '/releases', destination: '/product/releases', permanent: true },
     ]
   },
