@@ -5,6 +5,9 @@ export const en: MarketingDict = {
     productTitle: 'Discover Hidden Food Gems Near You | SnackSpot',
     productDescription:
       'SnackSpot is the free community app where your camera eats first: photo reviews of specific dishes at the small local spots big review sites overlook.',
+    productSocialTitle: 'Your camera eats first | SnackSpot',
+    productSocialDescription:
+      'Snap your food, rate the dish, and put the little places that deserve it on the map.',
   },
   hero: {
     eyebrow: '📍 Hidden gems only, chains need not apply',

@@ -8,8 +8,7 @@ import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 import { MarketingShell } from '@/components/marketing-shell'
 import { resolveLocale, getMarketingDict } from '@/lib/i18n/locale'
 
-// Marketing page with live community data — re-rendered every 5 minutes.
-export const revalidate = 300
+// Dynamically rendered: resolveLocale() reads the request cookie/Accept-Language. Live community data is fetched per request.
 
 export async function generateMetadata(): Promise<Metadata> {
   const dict = getMarketingDict(await resolveLocale())
@@ -21,14 +20,14 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     openGraph: {
       type: 'website',
-      title: dict.meta.productTitle,
-      description: dict.meta.productDescription,
+      title: dict.meta.productSocialTitle,
+      description: dict.meta.productSocialDescription,
       images: ['/opengraph-image'],
     },
     twitter: {
       card: 'summary_large_image',
-      title: dict.meta.productTitle,
-      description: dict.meta.productDescription,
+      title: dict.meta.productSocialTitle,
+      description: dict.meta.productSocialDescription,
       images: ['/twitter-image'],
     },
   }

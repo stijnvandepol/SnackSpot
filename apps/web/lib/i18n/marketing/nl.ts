@@ -5,6 +5,9 @@ export const nl: MarketingDict = {
     productTitle: 'Ontdek verborgen eetparels bij jou in de buurt | SnackSpot',
     productDescription:
       'SnackSpot is de gratis community-app waar je camera eerst eet: fotoreviews van specifieke gerechten bij de kleine lokale zaken die de grote reviewsites overslaan.',
+    productSocialTitle: 'Je camera eet eerst | SnackSpot',
+    productSocialDescription:
+      'Fotografeer je eten, beoordeel het gerecht, en zet de kleine zaakjes die het verdienen op de kaart.',
   },
   hero: {
     eyebrow: '📍 Alleen verborgen parels, ketens hoeven niet te solliciteren',
