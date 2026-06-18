@@ -7,11 +7,13 @@ export const nl: MarketingDict = {
       'SnackSpot is de gratis community-app waar je camera eerst eet: fotoreviews van specifieke gerechten bij de kleine lokale zaken die de grote reviewsites overslaan.',
   },
   hero: {
-    title: 'Je camera eet eerst',
+    eyebrow: '📍 Alleen verborgen parels, ketens hoeven niet te solliciteren',
+    title: 'Je camera eet eerst.',
     subtitle:
-      'Maak een foto van je eten, beoordeel het gerecht, en zet de kleine zaakjes die het verdienen op de kaart.',
-    ctaPrimary: 'Maak je gratis account',
-    ctaSecondary: 'Ontdek plekken in de buurt',
+      "Fotografeer je eten, beoordeel het gerecht, en zet de kleine zaakjes die het verdienen op de kaart. SnackSpot is de plek waar eetliefhebbers de plekken delen die Google nog niet heeft verpest.",
+    ctaPrimary: 'Begin met spotten, het is gratis',
+    ctaSecondary: 'Kijk eerst even in de feed',
+    finePrint: 'Geen app store, geen creditcard. Werkt gewoon in je browser.',
   },
   features: [
     {

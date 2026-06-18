@@ -7,11 +7,13 @@ export const en: MarketingDict = {
       'SnackSpot is the free community app where your camera eats first: photo reviews of specific dishes at the small local spots big review sites overlook.',
   },
   hero: {
-    title: 'Your camera eats first',
+    eyebrow: '📍 Hidden gems only, chains need not apply',
+    title: 'Your camera eats first.',
     subtitle:
-      'Snap your food, rate the dish, and put the little places that deserve it on the map.',
-    ctaPrimary: 'Create your free account',
-    ctaSecondary: 'Explore nearby places',
+      "Snap your food, rate the dish, and put the little places that deserve it on the map. SnackSpot is where food lovers share the spots Google hasn't ruined yet.",
+    ctaPrimary: "Start spotting, it's free",
+    ctaSecondary: 'Peek at the feed first',
+    finePrint: 'No app store, no credit card. Works right in your browser.',
   },
   features: [
     {

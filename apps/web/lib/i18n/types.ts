@@ -4,7 +4,7 @@ export type Locale = 'en' | 'nl'
 // this interface, so a missing translation key is a compile error.
 export interface MarketingDict {
   meta: { productTitle: string; productDescription: string }
-  hero: { title: string; subtitle: string; ctaPrimary: string; ctaSecondary: string }
+  hero: { eyebrow: string; title: string; subtitle: string; ctaPrimary: string; ctaSecondary: string; finePrint: string }
   features: Array<{ title: string; body: string; icon: string }>
   steps: Array<{ step: string; title: string; body: string }>
   faqs: Array<{ q: string; a: string }>
