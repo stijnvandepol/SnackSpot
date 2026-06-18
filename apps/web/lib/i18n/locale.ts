@@ -3,6 +3,8 @@ import type { Locale, MarketingDict } from './types'
 import { en } from './marketing/en'
 import { nl } from './marketing/nl'
 
+export type { Locale }
+
 export const LOCALES = ['en', 'nl'] as const
 export const DEFAULT_LOCALE: Locale = 'en'
 export const LOCALE_COOKIE = 'NEXT_LOCALE'
