@@ -8,18 +8,20 @@ export const metadata: Metadata = {
   alternates: { canonical: '/imprint' },
 }
 
-// ─── FILL THIS IN ────────────────────────────────────────────────────────────
-// Dutch/EU law requires an online service to be identifiable: the legal name of
-// the operator, Chamber of Commerce (KvK) number, a contact address and email.
-// Replace every value marked "TODO" with your real details before going live.
-// If you operate as a sole trader (eenmanszaak) under your own name, put that as
-// the legal name. A VAT (BTW) number is only required if you are VAT-registered.
+// ─── Operator identification ─────────────────────────────────────────────────
+// Dutch/EU law requires an online service to be identifiable: the trade name,
+// legal form, Chamber of Commerce (KvK) number and a contact channel.
+// SnackSpot is operated by a sole trader (eenmanszaak) from a home address, so
+// the street address is withheld here for privacy — it is on file with the KvK
+// under the number below and disclosed to authorities on legitimate request.
+// A VAT (BTW) number is only shown if VAT-registered.
 const COMPANY = {
-  legalName: 'TODO — your legal name or company name',
+  legalName: 'Stijn IT',
+  legalForm: 'Sole trader (eenmanszaak) — website & software development',
   tradeName: 'SnackSpot',
-  kvk: 'TODO — your KvK (Chamber of Commerce) number',
+  kvk: '42015984',
+  establishment: '000065194454', // Vestigingsnummer
   vat: '', // optional: 'NL000000000B00' — leave empty if not VAT-registered
-  address: 'TODO — street + number, postal code, city',
   country: 'The Netherlands',
   email: 'contact@snackspot.online',
 } as const
@@ -49,9 +51,10 @@ export default function ImprintPage() {
         <dl className="space-y-3">
           <Field label="Service" value={COMPANY.tradeName} />
           <Field label="Operated by" value={COMPANY.legalName} />
+          <Field label="Legal form" value={COMPANY.legalForm} />
           <Field label="KvK number" value={COMPANY.kvk} />
+          <Field label="Establishment no." value={COMPANY.establishment} />
           {COMPANY.vat && <Field label="VAT number" value={COMPANY.vat} />}
-          <Field label="Address" value={COMPANY.address} />
           <Field label="Country" value={COMPANY.country} />
           <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-3">
             <dt className="w-40 shrink-0 text-sm font-medium text-snack-text">Email</dt>
@@ -62,6 +65,12 @@ export default function ImprintPage() {
             </dd>
           </div>
         </dl>
+        <p className="mt-4 text-xs text-snack-muted">
+          SnackSpot is operated as a sole trader from a private residence. The registered address is
+          withheld here for privacy; it is held by the Dutch Chamber of Commerce (KvK) under the number
+          above and is disclosed to authorities and for legitimate legal requests. For any matter,
+          contact us at the email below.
+        </p>
       </div>
 
       <div className="card p-5 space-y-3">

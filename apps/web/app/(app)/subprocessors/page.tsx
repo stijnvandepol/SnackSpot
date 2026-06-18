@@ -17,6 +17,7 @@ type SubProcessor = {
   data: string
   region: string
   conditional?: string
+  link?: string // the provider's own privacy / data documentation
 }
 
 const SUBPROCESSORS: SubProcessor[] = [
@@ -25,6 +26,7 @@ const SUBPROCESSORS: SubProcessor[] = [
     purpose: 'Sending transactional and notification emails',
     data: 'Email address, username, and the contents of the message',
     region: 'United States',
+    link: 'https://resend.com/legal/privacy-policy',
   },
   {
     name: 'Cloudflare (Turnstile)',
@@ -32,6 +34,7 @@ const SUBPROCESSORS: SubProcessor[] = [
     data: 'IP address and a verification token',
     region: 'United States',
     conditional: 'Only when the CAPTCHA challenge is enabled.',
+    link: 'https://www.cloudflare.com/privacypolicy/',
   },
   {
     name: 'Google (Sign-in with Google)',
@@ -39,6 +42,7 @@ const SUBPROCESSORS: SubProcessor[] = [
     data: 'Your email address and name from your Google account, only if you choose this option',
     region: 'United States',
     conditional: 'Only if you sign in with Google.',
+    link: 'https://policies.google.com/privacy',
   },
   {
     name: 'Browser push services (Google, Mozilla, Apple)',
@@ -52,6 +56,7 @@ const SUBPROCESSORS: SubProcessor[] = [
     purpose: 'Serving the background map tiles',
     data: 'Your IP address and the map area you view (sent by your browser when a map loads)',
     region: 'European Union / global',
+    link: 'https://carto.com/privacy/',
   },
 ]
 
@@ -66,15 +71,17 @@ export default function SubprocessorsPage() {
       <div className="card p-5 space-y-3">
         <p className="text-sm text-snack-muted">
           SnackSpot runs on its own infrastructure (database, object storage and caching), but relies
-          on a small number of external providers for specific features. The providers below may process
-          limited personal data on our behalf under a data-processing agreement. Some only apply if you
-          use the related feature. For the full picture of what we store and why, see our{' '}
+          on a small number of external providers for specific features. These are third-party systems
+          that may store limited personal data on their own infrastructure when you use the related
+          feature. We do not sell your data. To see exactly what each provider collects, follow the
+          &ldquo;What they collect&rdquo; link in each entry below. For the full picture of what{' '}
+          <em>we</em> store and why, see our{' '}
           <Link href="/privacy" className="text-snack-primary hover:underline">Privacy Policy</Link>.
         </p>
         <p className="text-sm text-snack-muted">
-          Where a provider is based outside the European Economic Area, transfers are covered by an
-          appropriate safeguard (such as the EU&ndash;US Data Privacy Framework or Standard Contractual
-          Clauses).
+          Where a provider is based outside the European Economic Area, the transfer relies on that
+          provider&rsquo;s own safeguards (such as the EU&ndash;US Data Privacy Framework or Standard
+          Contractual Clauses set out in their privacy documentation).
         </p>
       </div>
 
@@ -96,6 +103,16 @@ export default function SubprocessorsPage() {
           </dl>
           {sp.conditional && (
             <p className="text-xs italic text-snack-muted">{sp.conditional}</p>
+          )}
+          {sp.link && (
+            <a
+              href={sp.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex text-xs font-medium text-snack-primary hover:underline"
+            >
+              What they collect →
+            </a>
           )}
         </div>
       ))}
