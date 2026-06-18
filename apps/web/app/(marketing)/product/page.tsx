@@ -221,7 +221,7 @@ export default async function ProductPage() {
       {/* ── How it works ───────────────────────────────────────────────────── */}
       <section className="bg-snack-surface/50 py-6 md:py-10">
         <div className="mx-auto max-w-6xl px-4">
-          <div className="mb-8 max-w-2xl">
+          <div className="mb-6 max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">How it works</p>
             <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
               From hungry to helpful in four steps
