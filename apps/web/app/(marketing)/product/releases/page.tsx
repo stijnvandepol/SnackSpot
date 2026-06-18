@@ -1,24 +1,30 @@
 import type { Metadata } from 'next'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 import { MarketingShell } from '@/components/marketing-shell'
+import { resolveLocale, getMarketingDict, ogLocale } from '@/lib/i18n/locale'
 
-export const metadata: Metadata = {
-  title: { absolute: 'Release Notes | SnackSpot' },
-  description: "What's new in SnackSpot, features, improvements, and fixes.",
-  alternates: { canonical: '/releases' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    type: 'website',
-    title: 'Release Notes | SnackSpot',
-    description: "What's new in SnackSpot, features, improvements, and fixes.",
-    images: ['/opengraph-image'],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Release Notes | SnackSpot',
-    description: "What's new in SnackSpot, features, improvements, and fixes.",
-    images: ['/twitter-image'],
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await resolveLocale()
+  const t = getMarketingDict(locale).releasesChrome
+  return {
+    title: { absolute: t.metaTitle },
+    description: t.metaDescription,
+    alternates: { canonical: '/product/releases' },
+    robots: { index: true, follow: true },
+    openGraph: {
+      type: 'website',
+      title: t.metaTitle,
+      description: t.metaDescription,
+      locale: ogLocale(locale),
+      images: ['/opengraph-image'],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t.metaTitle,
+      description: t.metaDescription,
+      images: ['/twitter-image'],
+    },
+  }
 }
 
 type ChangeType = 'new' | 'improved' | 'fixed' | 'removed'
@@ -44,6 +50,18 @@ const CHANGE_TYPE_CONFIG: Record<ChangeType, { label: string; className: string 
 
 // Add new releases at the top of this array.
 const releases: Release[] = [
+  {
+    version: '2.0.0',
+    date: '18 June 2026',
+    summary: 'A bilingual product site, legal & privacy pages, and a tidier structure.',
+    changes: [
+      { type: 'new',      text: 'The product site is now bilingual, it automatically shows in English or Dutch based on your browser, with a language switcher in the top-right corner.' },
+      { type: 'new',      text: 'Legal and privacy pages added: Terms of Service, Privacy Policy, a Sub-processors transparency list, and Company information.' },
+      { type: 'new',      text: 'Age confirmation added at sign-up, you now confirm you meet the minimum age when creating an account.' },
+      { type: 'improved', text: 'Guides and release notes now live under the product section (/product/guides and /product/releases). Old links redirect automatically, so existing bookmarks keep working.' },
+      { type: 'improved', text: 'Place pages now credit OpenStreetMap for venue and map data.' },
+    ],
+  },
   {
     version: '1.4.0',
     date: '2 April 2026',
@@ -86,21 +104,24 @@ const releases: Release[] = [
   },
 ]
 
-export default function ReleasesPage() {
+export default async function ReleasesPage() {
+  const locale = await resolveLocale()
+  const dict = getMarketingDict(locale)
+
   return (
-    <MarketingShell>
-      <BreadcrumbJsonLd items={[{ name: 'Release Notes', path: '/releases' }]} />
+    <MarketingShell locale={locale} dict={dict}>
+      <BreadcrumbJsonLd items={[{ name: 'Release Notes', path: '/product/releases' }]} />
 
       <div className="mx-auto max-w-3xl px-4 py-16 md:py-24">
         <div className="mb-12">
           <p className="mb-4 inline-flex rounded-full border border-snack-primary/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-snack-primary">
-            Changelog
+            {dict.releasesChrome.eyebrow}
           </p>
           <h1 className="font-heading text-4xl font-bold leading-tight text-snack-text md:text-5xl">
-            Release Notes
+            {dict.releasesChrome.title}
           </h1>
           <p className="mt-4 text-base leading-7 text-snack-muted">
-            What we&apos;ve shipped, new features, improvements, and fixes.
+            {dict.releasesChrome.intro}
           </p>
         </div>
 

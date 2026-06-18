@@ -12,15 +12,19 @@ export const revalidate = 3600
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const appUrl = getSiteUrl()
   // Use a stable date for static pages; bump this when static content changes.
-  const staticLastMod = new Date('2026-03-24')
+  const staticLastMod = new Date('2026-06-18')
 
   const staticEntries: MetadataRoute.Sitemap = [
     { url: appUrl, lastModified: new Date() },
     { url: `${appUrl}/product`, lastModified: staticLastMod },
-    { url: `${appUrl}/guides`, lastModified: staticLastMod },
-    { url: `${appUrl}/releases`, lastModified: staticLastMod },
+    { url: `${appUrl}/product/guides`, lastModified: staticLastMod },
+    { url: `${appUrl}/product/releases`, lastModified: staticLastMod },
     { url: `${appUrl}/search`, lastModified: staticLastMod },
     { url: `${appUrl}/nearby`, lastModified: staticLastMod },
+    { url: `${appUrl}/terms`, lastModified: staticLastMod },
+    { url: `${appUrl}/privacy`, lastModified: staticLastMod },
+    { url: `${appUrl}/subprocessors`, lastModified: staticLastMod },
+    { url: `${appUrl}/imprint`, lastModified: staticLastMod },
     ...PILLAR_GUIDES.map((guide) => ({
       url: `${appUrl}${guide.href}`,
       lastModified: staticLastMod,

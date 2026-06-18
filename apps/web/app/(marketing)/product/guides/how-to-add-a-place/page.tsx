@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   description:
     'Add a new place or restaurant on SnackSpot during the posting flow when the location is not listed yet.',
   alternates: {
-    canonical: '/guides/how-to-add-a-place',
+    canonical: '/product/guides/how-to-add-a-place',
   },
   openGraph: {
     type: 'article',
@@ -58,7 +58,7 @@ export default function HowToAddAPlacePage() {
   return (
     <GuidesShell>
       <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
-        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/guides' }, { name: 'How to Add a Place', path: '/guides/how-to-add-a-place' }]} />
+        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/product/guides' }, { name: 'How to Add a Place', path: '/product/guides/how-to-add-a-place' }]} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }} />
 
         <article className="guide-content guide-article prose prose-slate">
@@ -102,7 +102,7 @@ export default function HowToAddAPlacePage() {
             and future users can select the same place when they post.
           </p>
           <p>
-            If you have not posted before, read <Link href="/guides/how-to-post-a-review">how to post a review</Link> for
+            If you have not posted before, read <Link href="/product/guides/how-to-post-a-review">how to post a review</Link> for
             the full step-by-step flow.
           </p>
 
@@ -115,7 +115,7 @@ export default function HowToAddAPlacePage() {
           ))}
         </article>
 
-        <RelatedGuides currentHref="/guides/how-to-add-a-place" />
+        <RelatedGuides currentHref="/product/guides/how-to-add-a-place" />
       </div>
     </GuidesShell>
   )

@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   description:
     'Step-by-step guide to add SnackSpot to your mobile home screen on Android and iOS, including fixes for common issues.',
   alternates: {
-    canonical: '/guides/add-snackspot-to-home-screen',
+    canonical: '/product/guides/add-snackspot-to-home-screen',
   },
   openGraph: {
     type: 'article',
@@ -61,7 +61,7 @@ export default function AddSnackSpotToHomescreenGuidePage() {
   return (
     <GuidesShell>
       <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
-        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/guides' }, { name: 'Add SnackSpot to Home Screen', path: '/guides/add-snackspot-to-home-screen' }]} />
+        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/product/guides' }, { name: 'Add SnackSpot to Home Screen', path: '/product/guides/add-snackspot-to-home-screen' }]} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }} />
 
         <article className="guide-content guide-article prose prose-slate">
@@ -203,7 +203,7 @@ export default function AddSnackSpotToHomescreenGuidePage() {
         </section>
         </article>
 
-        <RelatedGuides currentHref="/guides/add-snackspot-to-home-screen" />
+        <RelatedGuides currentHref="/product/guides/add-snackspot-to-home-screen" />
       </div>
     </GuidesShell>
   )

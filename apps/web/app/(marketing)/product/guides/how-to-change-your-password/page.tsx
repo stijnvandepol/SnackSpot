@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   description:
     'Reset or update your SnackSpot password using the forgot-password flow. Step-by-step instructions and common fixes.',
   alternates: {
-    canonical: '/guides/how-to-change-your-password',
+    canonical: '/product/guides/how-to-change-your-password',
   },
   openGraph: {
     type: 'article',
@@ -57,7 +57,7 @@ export default function HowToChangeYourPasswordPage() {
   return (
     <GuidesShell>
       <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
-        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/guides' }, { name: 'How to Change Your Password', path: '/guides/how-to-change-your-password' }]} />
+        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/product/guides' }, { name: 'How to Change Your Password', path: '/product/guides/how-to-change-your-password' }]} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }} />
 
         <article className="guide-content guide-article prose prose-slate">
@@ -96,7 +96,7 @@ export default function HowToChangeYourPasswordPage() {
           ))}
         </article>
 
-        <RelatedGuides currentHref="/guides/how-to-change-your-password" />
+        <RelatedGuides currentHref="/product/guides/how-to-change-your-password" />
       </div>
     </GuidesShell>
   )

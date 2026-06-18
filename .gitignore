@@ -47,6 +47,11 @@ marketing/posters/snackspot-poster-01.png
 marketing/posters/snackspot-poster-02.png
 /.playwright-mcp
 
+# Test artifacts (Playwright reports/results, Vitest coverage)
+playwright-report/
+test-results/
+coverage/
+
 # macOS/iCloud sync duplicate artifacts ("name 2.ext")
 * 2.*
 * 2/

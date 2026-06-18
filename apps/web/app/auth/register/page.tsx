@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const { register } = useAuth()
   const router = useRouter()
   const [form, setForm] = useState({ email: '', username: '', password: '' })
+  const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -19,6 +20,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    if (!agreed) { setError('Please confirm you are 16 or older and agree to the terms'); return }
     setLoading(true)
     const result = await register(form)
     setLoading(false)
@@ -65,7 +67,23 @@ export default function RegisterPage() {
               autoComplete="new-password" />
           </div>
 
-          <button type="submit" className="btn-primary w-full" disabled={loading}>
+          <label className="flex items-start gap-2.5 text-sm text-snack-muted">
+            <input
+              type="checkbox"
+              className="mt-0.5 size-4 shrink-0 accent-snack-primary"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              required
+            />
+            <span>
+              I confirm I am 16 or older and agree to the{' '}
+              <Link href="/terms" target="_blank" className="text-snack-primary hover:underline">Terms of Service</Link>{' '}
+              and{' '}
+              <Link href="/privacy" target="_blank" className="text-snack-primary hover:underline">Privacy Policy</Link>.
+            </span>
+          </label>
+
+          <button type="submit" className="btn-primary w-full" disabled={loading || !agreed}>
             {loading ? 'Creating account…' : 'Create account'}
           </button>
         </form>

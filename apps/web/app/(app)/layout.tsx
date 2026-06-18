@@ -32,9 +32,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <footer className="hidden md:block border-t" style={{ borderColor: 'var(--snack-border-soft)', backgroundColor: 'var(--snack-footer-bg)' }}>
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-center gap-3 px-4 py-4 text-sm">
-          <Link href="/guides" className="btn-secondary text-sm">
+          <Link href="/product/guides" className="btn-secondary text-sm">
             Guides
           </Link>
+          <nav aria-label="Legal" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-snack-muted">
+            <Link href="/terms" className="hover:text-snack-text">Terms</Link>
+            <Link href="/privacy" className="hover:text-snack-text">Privacy</Link>
+            <Link href="/subprocessors" className="hover:text-snack-text">Sub-processors</Link>
+            <Link href="/imprint" className="hover:text-snack-text">Company info</Link>
+          </nav>
           <p className="text-xs text-snack-muted">
             &copy; {new Date().getFullYear()} SnackSpot
           </p>

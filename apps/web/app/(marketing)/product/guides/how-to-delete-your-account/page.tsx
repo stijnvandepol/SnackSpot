@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   description:
     'Permanently delete your SnackSpot account and all associated data from your profile settings.',
   alternates: {
-    canonical: '/guides/how-to-delete-your-account',
+    canonical: '/product/guides/how-to-delete-your-account',
   },
   openGraph: {
     type: 'article',
@@ -56,7 +56,7 @@ export default function HowToDeleteYourAccountPage() {
   return (
     <GuidesShell>
       <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
-        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/guides' }, { name: 'How to Delete Your Account', path: '/guides/how-to-delete-your-account' }]} />
+        <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/product/guides' }, { name: 'How to Delete Your Account', path: '/product/guides/how-to-delete-your-account' }]} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }} />
 
         <article className="guide-content guide-article prose prose-slate">
@@ -97,7 +97,7 @@ export default function HowToDeleteYourAccountPage() {
           ))}
         </article>
 
-        <RelatedGuides currentHref="/guides/how-to-delete-your-account" />
+        <RelatedGuides currentHref="/product/guides/how-to-delete-your-account" />
       </div>
     </GuidesShell>
   )
