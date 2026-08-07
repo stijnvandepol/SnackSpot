@@ -44,6 +44,21 @@ const nextConfig = {
 
   async headers() {
     const isProd = process.env.NODE_ENV === 'production'
+    const DAY = 86400
+
+    // Crawler-facing files must stay reachable even when the origin is unhealthy.
+    //
+    // Google treats an unfetchable robots.txt as a signal to pause crawling the whole
+    // host, so a few minutes of origin downtime costs sitewide crawl coverage — GSC
+    // reported robots.txt unavailable for 1.32% of requests in Aug 2026. Both files were
+    // being served with `max-age=0, must-revalidate`, which left robots.txt uncached
+    // (EXPIRED) and sitemap.xml never cached at all (DYNAMIC), so every crawler hit
+    // reached the origin and each sitemap fetch ran a full places+reviews+users scan.
+    //
+    // `stale-if-error` is the directive that fixes it: on a 5xx the edge keeps serving
+    // the last good copy. `stale-while-revalidate` keeps refreshes off the critical path.
+    const crawlerCache = (sMaxAge) =>
+      `public, max-age=0, s-maxage=${sMaxAge}, stale-while-revalidate=${DAY}, stale-if-error=${7 * DAY}`
     const minioEndpoint = process.env.MINIO_ENDPOINT ?? 'minio'
     const minioPort = process.env.MINIO_PORT ?? '9000'
     const minioInternalOrigin = `http://${minioEndpoint}:${minioPort}`
@@ -85,6 +100,19 @@ const nextConfig = {
             ? [{ key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' }]
             : []),
         ],
+      },
+      // robots.txt is effectively static — a day at the edge costs nothing and a week of
+      // stale-if-error means an outage can never pause crawling of the host.
+      {
+        source: '/robots.txt',
+        headers: [{ key: 'Cache-Control', value: crawlerCache(DAY) }],
+      },
+      // sitemap.xml trades discovery latency for origin load: an hour matches the
+      // `revalidate = 3600` already declared in app/sitemap.ts, so new places and reviews
+      // surface within the hour while the DB scan runs at most once per hour per edge PoP.
+      {
+        source: '/sitemap.xml',
+        headers: [{ key: 'Cache-Control', value: crawlerCache(3600) }],
       },
     ]
   },
