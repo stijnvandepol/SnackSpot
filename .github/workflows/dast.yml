@@ -35,11 +35,11 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: ZAP Baseline Scan
         if: inputs.scan_type != 'full'
-        uses: zaproxy/action-baseline@v0.14.0
+        uses: zaproxy/action-baseline@7c4deb10e6261301961c86d65d54a516394f9aed # v0.14.0
         with:
           target: ${{ inputs.target || 'https://snackspot.online' }}
           rules_file_name: '.zap/rules.tsv'
@@ -48,7 +48,7 @@ jobs:
 
       - name: ZAP Full Scan
         if: inputs.scan_type == 'full'
-        uses: zaproxy/action-full-scan@v0.12.0
+        uses: zaproxy/action-full-scan@75ee1686750ab1511a73b26b77a2aedd295053ed # v0.12.0
         with:
           target: ${{ inputs.target || 'https://snackspot.online' }}
           rules_file_name: '.zap/rules.tsv'

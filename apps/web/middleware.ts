@@ -69,6 +69,21 @@ export function middleware(req: NextRequest) {
   return res
 }
 
+// Everything except static assets and crawler-facing files.
+//
+// Running middleware on a path makes Next.js attach RSC routing headers to the response
+// (`vary: rsc, next-router-state-tree, …`). Cloudflare cannot normalise those and refuses
+// to cache the response — which left /sitemap.xml at cf-cache-status DYNAMIC and
+// /robots.txt at EXPIRED, sending every crawler fetch to the origin. That made robots.txt
+// unfetchable during origin incidents, and Google responds by pausing crawling of the
+// whole host (1.32% of requests in the Aug 2026 crawl stats).
+//
+// Dropping these paths is safe: none of them render host-derived content. lib/site-url.ts
+// resolves URLs from NEXT_PUBLIC_APP_URL only — never from the Host header — so skipping
+// the ALLOWED_HOSTS guard here cannot enable host-header injection. Auth and API routes,
+// where that guard does matter, remain covered.
 export const config = {
-  matcher: ['/:path*'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|icons/|opengraph-image|twitter-image|apple-icon).*)',
+  ],
 }

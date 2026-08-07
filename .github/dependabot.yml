@@ -7,14 +7,21 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 10
+    # Wait a week before proposing a newly published version. Compromised releases are
+    # typically caught and yanked within days, so a cooldown keeps the worst of them from
+    # ever reaching a PR. Security advisories bypass this and are still raised immediately.
+    cooldown:
+      default-days: 7
     groups:
       minor-and-patch:
         update-types:
           - minor
           - patch
 
-  # Keep GitHub Actions pinned versions current (also a supply-chain surface).
+  # Workflows pin actions to commit SHAs; Dependabot updates the SHA and its version comment.
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 7

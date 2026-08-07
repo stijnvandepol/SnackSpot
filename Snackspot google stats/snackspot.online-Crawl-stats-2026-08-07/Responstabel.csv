@@ -1,0 +1,10 @@
+Reactie,Totaal aantal verzoeken
+OK (200),0.9084
+Definitief verplaatst (301),0.0315
+Serverfout (5XX),0.0295
+robots.txt niet beschikbaar,0.0132
+Niet gewijzigd (304),0.0122
+Verplaatst (anders),0.0020
+DNS reageert niet,0.0010
+Niet gevonden (404),0.0010
+DNS-fout,0.0010
