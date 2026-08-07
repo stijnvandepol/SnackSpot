@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next'
 import { prisma } from '@/lib/db'
 import { getSiteUrl } from '@/lib/site-url'
 import { PILLAR_GUIDES } from '@/lib/guides'
+import { getQualifyingCities } from '@/lib/city-index'
 import { logger } from '@/lib/logger'
 
 // Cached for an hour via ISR so crawlers don't trigger a full places+reviews+users
@@ -18,6 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: appUrl, lastModified: new Date() },
     { url: `${appUrl}/product`, lastModified: staticLastMod },
     { url: `${appUrl}/guides`, lastModified: staticLastMod },
+    { url: `${appUrl}/snackbars`, lastModified: staticLastMod },
     { url: `${appUrl}/product/releases`, lastModified: staticLastMod },
     { url: `${appUrl}/search`, lastModified: staticLastMod },
     { url: `${appUrl}/nearby`, lastModified: staticLastMod },
@@ -32,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   try {
-    const [places, reviews, users] = await Promise.all([
+    const [places, reviews, users, cities] = await Promise.all([
       // Only include places that have at least one published review — avoids thin content pages
       prisma.place.findMany({
         where: { reviews: { some: { status: 'PUBLISHED' } } },
@@ -49,6 +51,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         select: { username: true, updatedAt: true },
         orderBy: { updatedAt: 'desc' },
       }),
+      // Same source as the pages themselves, so the sitemap can never advertise a city URL
+      // that would 404 — a city below the quality gate has no page at all.
+      getQualifyingCities(),
     ])
 
     const placeEntries: MetadataRoute.Sitemap = places.map((place) => ({
@@ -66,7 +71,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: user.updatedAt,
     }))
 
-    return [...staticEntries, ...placeEntries, ...reviewEntries, ...userEntries]
+    const cityEntries: MetadataRoute.Sitemap = cities.map((city) => ({
+      url: `${appUrl}/snackbars/${city.slug}`,
+      lastModified: new Date(),
+    }))
+
+    return [...staticEntries, ...cityEntries, ...placeEntries, ...reviewEntries, ...userEntries]
   } catch (error) {
     logger.error({ err: error }, 'Failed to build dynamic sitemap; returning static entries only')
     return staticEntries
