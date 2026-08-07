@@ -3,7 +3,16 @@ import Link from 'next/link'
 import { getQualifyingCities } from '@/lib/city-index'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
-export const revalidate = 3600
+// Rendered per request rather than prerendered at build time.
+//
+// This is a static route, so Next.js would prerender it during `next build` — but the build
+// has no database: CI and both Dockerfiles supply a placeholder DATABASE_URL. Catching the
+// error and prerendering the empty state instead (the approach app/sitemap.ts takes, where
+// a file must exist either way) would leave this hub advertising "no city complete enough"
+// for up to a revalidate window after every deploy, exactly when a crawler might read it.
+//
+// The cost is one indexed GROUP BY per request, which is the cheaper side of that trade.
+export const dynamic = 'force-dynamic'
 
 const TITLE = 'Snackbars per stad'
 const DESCRIPTION =

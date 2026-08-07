@@ -11,11 +11,10 @@ vi.mock('next/navigation', () => ({
 }))
 
 import { notFound } from 'next/navigation'
-import { getCityDetail, getQualifyingCities, type CityDetail } from '@/lib/city-index'
-import CityPage, { generateMetadata, generateStaticParams } from './page'
+import { getCityDetail, type CityDetail } from '@/lib/city-index'
+import CityPage, { generateMetadata } from './page'
 
 const cityDetail = vi.mocked(getCityDetail)
-const qualifying = vi.mocked(getQualifyingCities)
 
 beforeEach(() => vi.clearAllMocks())
 
@@ -61,12 +60,14 @@ describe('city page gating', () => {
     expect(notFound).not.toHaveBeenCalled()
   })
 
-  it('only pre-builds cities that clear the gate', async () => {
-    qualifying.mockResolvedValue([
-      { slug: 'eindhoven', name: 'Eindhoven', placeCount: 3, reviewCount: 15 },
-    ])
+  it('never touches the database at build time', async () => {
+    // generateStaticParams would run during `next build`, where DATABASE_URL is a
+    // placeholder in CI and in both Dockerfiles. Exporting it broke the build; the route
+    // renders on demand instead, like every other database-backed route here.
+    const pageModule = await import('./page')
 
-    expect(await generateStaticParams()).toEqual([{ stad: 'eindhoven' }])
+    expect(pageModule).not.toHaveProperty('generateStaticParams')
+    expect(pageModule.revalidate).toBe(3600)
   })
 })
 

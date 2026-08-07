@@ -2,21 +2,23 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { cuisineLabel } from '@snackspot/shared'
-import { getCityDetail, getQualifyingCities, type CityDetail } from '@/lib/city-index'
+import { getCityDetail, type CityDetail } from '@/lib/city-index'
 import { getSiteUrl } from '@/lib/site-url'
 import { safeJsonLd } from '@/lib/html'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
-// Matches app/sitemap.ts so the page and the sitemap age at the same rate.
+// Rendered on demand and then cached for an hour, matching app/sitemap.ts so the page and
+// the sitemap age at the same rate.
+//
+// Deliberately no generateStaticParams: it would query the database during `next build`,
+// and no build in this project has one — CI and both Dockerfiles supply a placeholder
+// DATABASE_URL. Every other database-backed route here (/place/[id], /review/[id],
+// /u/[username]) renders on demand for the same reason.
+//
+// Cities below the quality gate fall through to notFound() below — deliberately a 404
+// rather than a noindex page, because a noindex page still costs crawl budget on a site
+// where Google already spends only ~10% of crawls on discovery.
 export const revalidate = 3600
-
-// Only cities past the quality gate get built. Anything else falls through to notFound()
-// below — deliberately a 404 rather than a noindex page, because a noindex page still costs
-// crawl budget on a site where Google already spends only ~10% of crawls on discovery.
-export async function generateStaticParams() {
-  const cities = await getQualifyingCities()
-  return cities.map((city) => ({ stad: city.slug }))
-}
 
 function describe(city: CityDetail): string {
   const dishes = city.topDishes.slice(0, 2).map((dish) => dish.name)
