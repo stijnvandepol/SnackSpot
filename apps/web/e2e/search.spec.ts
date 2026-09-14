@@ -1,30 +1,30 @@
 import { test, expect } from '@playwright/test'
 
-test.describe('Search / Explore page', () => {
+test.describe('Search / Ontdek page', () => {
   test('loads with HTTP 200', async ({ page }) => {
     const res = await page.goto('/search')
     expect(res?.status()).toBe(200)
   })
 
-  test('renders the Explore heading', async ({ page }) => {
+  test('renders the Ontdek heading', async ({ page }) => {
     await page.goto('/search')
-    await expect(page.getByRole('heading', { level: 1, name: 'Explore' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: /Ontdek snackbars/i })).toBeVisible()
   })
 
   test('has a search input', async ({ page }) => {
     await page.goto('/search')
-    await expect(page.getByRole('searchbox', { name: 'Search places or dishes' })).toBeVisible()
+    await expect(page.getByRole('searchbox', { name: 'Zoek op zaak of gerecht' })).toBeVisible()
   })
 
   test('Search button is disabled when the input is empty', async ({ page }) => {
     await page.goto('/search')
-    await expect(page.getByRole('button', { name: 'Search' })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Zoek', exact: true })).toBeDisabled()
   })
 
   test('Search button is enabled after typing a query', async ({ page }) => {
     await page.goto('/search')
-    await page.getByRole('searchbox', { name: 'Search places or dishes' }).fill('pizza')
-    await expect(page.getByRole('button', { name: 'Search' })).toBeEnabled()
+    await page.getByRole('searchbox', { name: 'Zoek op zaak of gerecht' }).fill('pizza')
+    await expect(page.getByRole('button', { name: 'Zoek', exact: true })).toBeEnabled()
   })
 
   test('shows all tag filter buttons', async ({ page }) => {
@@ -58,13 +58,13 @@ test.describe('Search / Explore page', () => {
 
   test('Reset button appears after typing a query', async ({ page }) => {
     await page.goto('/search')
-    await page.getByRole('searchbox', { name: 'Search places or dishes' }).fill('fries')
+    await page.getByRole('searchbox', { name: 'Zoek op zaak of gerecht' }).fill('fries')
     await expect(page.getByRole('button', { name: 'Reset' })).toBeVisible()
   })
 
   test('Reset button clears the search input', async ({ page }) => {
     await page.goto('/search')
-    const input = page.getByRole('searchbox', { name: 'Search places or dishes' })
+    const input = page.getByRole('searchbox', { name: 'Zoek op zaak of gerecht' })
     await input.fill('fries')
     await page.getByRole('button', { name: 'Reset' }).click()
     await expect(input).toHaveValue('')
@@ -78,7 +78,7 @@ test.describe('Search page — mobile (390 px)', () => {
 
   test('search input is visible and takes full available width', async ({ page }) => {
     await page.goto('/search')
-    const input = page.getByRole('searchbox', { name: 'Search places or dishes' })
+    const input = page.getByRole('searchbox', { name: 'Zoek op zaak of gerecht' })
     await expect(input).toBeVisible()
     const box = await input.boundingBox()
     expect(box?.width).toBeGreaterThan(280)
@@ -112,13 +112,13 @@ test.describe('Search page — desktop (1280 px)', () => {
     // Click somewhere neutral first to ensure the input is not focused
     await page.locator('h1').click()
     await page.keyboard.press('/')
-    const input = page.getByRole('searchbox', { name: 'Search places or dishes' })
+    const input = page.getByRole('searchbox', { name: 'Zoek op zaak of gerecht' })
     await expect(input).toBeFocused()
   })
 
   test('pressing Escape while search is focused clears and blurs it', async ({ page }) => {
     await page.goto('/search')
-    const input = page.getByRole('searchbox', { name: 'Search places or dishes' })
+    const input = page.getByRole('searchbox', { name: 'Zoek op zaak of gerecht' })
     await input.fill('something')
     await input.press('Escape')
     await expect(input).toHaveValue('')

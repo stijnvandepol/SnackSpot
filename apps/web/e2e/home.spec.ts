@@ -13,7 +13,7 @@ test.describe('Home page', () => {
 
   test('renders the feed heading', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { level: 1, name: /Latest Food Reviews/i })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: /beoordeeld per gerecht/i })).toBeVisible()
   })
 
   test('has a <main> landmark with id="main-content"', async ({ page }) => {

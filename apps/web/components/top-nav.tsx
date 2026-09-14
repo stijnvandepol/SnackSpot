@@ -8,7 +8,7 @@ import { avatarUrl } from '@/lib/avatar'
 import { NotificationBell } from './notification-bell'
 import { SnackSpotLogo } from './snack-spot-logo'
 import { CreateOptions } from '@/components/create-options'
-import { SHARED_NAV_LINKS } from '@/lib/nav-links'
+import { TOP_NAV_LINKS } from '@/lib/nav-links'
 
 /** Desktop "Post" button → popover with the same Review/Bite chooser as mobile. */
 function CreatePopover() {
@@ -62,7 +62,7 @@ export function TopNav() {
   const pathname = usePathname()
   const router = useRouter()
 
-  const navLinks = SHARED_NAV_LINKS
+  const navLinks = TOP_NAV_LINKS
 
   return (
     <header className="hidden md:block sticky top-0 z-30 backdrop-blur border-b" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>

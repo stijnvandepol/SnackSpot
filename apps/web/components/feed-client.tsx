@@ -23,13 +23,28 @@ interface Review {
   reviewPhotos: Array<{ photo: { id: string; variants: Record<string, string> } }>
 }
 
-export function FeedClient({ scope = 'discover' }: { scope?: 'discover' | 'following' }) {
+export interface FeedSeed {
+  reviews: Review[]
+  nextCursor: string | null
+  hasMore: boolean
+}
+
+export function FeedClient({
+  scope = 'discover',
+  seed,
+}: {
+  scope?: 'discover' | 'following'
+  /** Server-rendered first page. Anonymous, so `likedByMe` is false on every card. */
+  seed?: FeedSeed
+}) {
   const { accessToken, loading: authLoading } = useAuth()
-  const [reviews, setReviews] = useState<Review[]>([])
-  const [cursor, setCursor] = useState<string | null>(null)
-  const [hasMore, setHasMore] = useState(true)
+  // Seeding the state rather than fetching on mount is what makes the feed exist in the
+  // HTML: without it a crawler saw an empty <div> where the reviews should be.
+  const [reviews, setReviews] = useState<Review[]>(seed?.reviews ?? [])
+  const [cursor, setCursor] = useState<string | null>(seed?.nextCursor ?? null)
+  const [hasMore, setHasMore] = useState(seed?.hasMore ?? true)
   const [loading, setLoading] = useState(false)
-  const [initial, setInitial] = useState(true)
+  const [initial, setInitial] = useState(!seed)
   const [error, setError] = useState<string | null>(null)
   const sentinel = useRef<HTMLDivElement>(null)
   // Two refs prevent duplicate fetches:
@@ -69,7 +84,7 @@ export function FeedClient({ scope = 'discover' }: { scope?: 'discover' | 'follo
     } catch (err) {
       requestedCursorsRef.current.delete(cursorKey)
       if (process.env.NODE_ENV !== 'production') console.error(err)
-      setError('Could not load feed. Check your connection and try again.')
+      setError('Kon de feed niet laden. Controleer je verbinding en probeer het opnieuw.')
     } finally {
       inFlightRef.current = false
       setLoading(false)
@@ -96,16 +111,33 @@ export function FeedClient({ scope = 'discover' }: { scope?: 'discover' | 'follo
       setHasMore(json.data.pagination.hasMore)
       requestedCursorsRef.current.add('__initial__')
     } catch {
-      setError('Could not refresh feed. Check your connection and try again.')
+      setError('Kon de feed niet verversen. Controleer je verbinding en probeer het opnieuw.')
     }
   }, [accessToken, scope])
 
   // Initial load: wait for auth to finish restoring so likedByMe is accurate.
   // If we load before the token is ready, the feed returns likedByMe: false for
   // every card and never refreshes — likes appear gone after reopening the app.
+  //
+  // With a server seed there is already content on screen. It was rendered anonymously,
+  // so a signed-in viewer still needs one refresh to get their own like state; an
+  // anonymous viewer (and every crawler) needs no request at all.
   useEffect(() => {
-    if (!authLoading) loadMore()
-  }, [authLoading]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (authLoading) return
+
+    if (!seed) {
+      loadMore()
+      return
+    }
+
+    if (accessToken) {
+      void refresh()
+    } else {
+      // Mark the first page as already fetched so the scroll observer resumes at the
+      // seeded cursor instead of re-requesting page one.
+      requestedCursorsRef.current.add('__initial__')
+    }
+  }, [authLoading, accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Infinite scroll via IntersectionObserver
   useEffect(() => {
@@ -130,16 +162,16 @@ export function FeedClient({ scope = 'discover' }: { scope?: 'discover' | 'follo
 
       {!initial && reviews.length === 0 && scope === 'discover' && (
         <div className="text-center py-20">
-          <p className="text-snack-muted">No posts available yet.</p>
-          <Link href="/add-review" className="btn-primary mt-4 inline-block">Create first post</Link>
+          <p className="text-snack-muted">Er staan nog geen reviews.</p>
+          <Link href="/add-review" className="btn-primary mt-4 inline-block">Plaats de eerste</Link>
         </div>
       )}
 
       {!initial && reviews.length === 0 && scope === 'following' && (
         <div className="text-center py-20">
-          <p className="font-medium text-snack-text">Your feed is still quiet.</p>
-          <p className="mt-1 text-sm text-snack-muted">Follow spotters to see their posts here.</p>
-          <Link href="/search" className="btn-primary mt-4 inline-block">Find people &amp; places</Link>
+          <p className="font-medium text-snack-text">Het is hier nog stil.</p>
+          <p className="mt-1 text-sm text-snack-muted">Volg andere spotters om hun reviews hier te zien.</p>
+          <Link href="/search" className="btn-primary mt-4 inline-block">Vind mensen &amp; zaken</Link>
         </div>
       )}
 
@@ -147,7 +179,7 @@ export function FeedClient({ scope = 'discover' }: { scope?: 'discover' | 'follo
         <div className="card p-4 mb-4 border-red-200 bg-red-50/50 dark:border-red-900 dark:bg-red-950/30" role="status" aria-live="polite">
           <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
           <button type="button" className="btn-secondary mt-3 text-sm" onClick={() => { void loadMore() }}>
-            Try again
+            Opnieuw proberen
           </button>
         </div>
       )}
@@ -174,7 +206,7 @@ export function FeedClient({ scope = 'discover' }: { scope?: 'discover' | 'follo
       )}
 
       {!hasMore && reviews.length > 0 && (
-        <p className="text-center text-sm text-snack-muted py-6">No more snacks to scroll. Time to grab one.</p>
+        <p className="text-center text-sm text-snack-muted py-6">Meer is er niet. Tijd om er zelf een te halen.</p>
       )}
     </PullToRefresh>
   )

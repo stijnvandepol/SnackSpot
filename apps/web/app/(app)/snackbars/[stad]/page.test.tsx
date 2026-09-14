@@ -37,6 +37,7 @@ function detail(overrides: Partial<CityDetail> = {}): CityDetail {
       },
     ],
     topDishes: [{ name: 'Kapsalon', count: 7, avgRating: 4.5 }],
+    dishPages: [],
     ...overrides,
   }
 }

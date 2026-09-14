@@ -32,18 +32,18 @@ describe('BottomNav — link structure', () => {
   it('renders 4 navigation links and the create button', () => {
     render(<BottomNav />)
     expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Explore' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ontdek' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create a review or bite' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Nearby' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Profile' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Dichtbij' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Profiel' })).toBeInTheDocument()
   })
 
   it('each link points to the correct href', () => {
     render(<BottomNav />)
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/')
-    expect(screen.getByRole('link', { name: 'Explore' })).toHaveAttribute('href', '/search')
-    expect(screen.getByRole('link', { name: 'Nearby' })).toHaveAttribute('href', '/nearby')
-    expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('href', '/profile')
+    expect(screen.getByRole('link', { name: 'Ontdek' })).toHaveAttribute('href', '/search')
+    expect(screen.getByRole('link', { name: 'Dichtbij' })).toHaveAttribute('href', '/nearby')
+    expect(screen.getByRole('link', { name: 'Profiel' })).toHaveAttribute('href', '/profile')
   })
 })
 
@@ -83,35 +83,35 @@ describe('BottomNav — active state (aria-current)', () => {
   it('does not mark other links as current on "/"', () => {
     mockUsePathname.mockReturnValue('/')
     render(<BottomNav />)
-    expect(screen.getByRole('link', { name: 'Explore' })).not.toHaveAttribute('aria-current')
-    expect(screen.getByRole('link', { name: 'Nearby' })).not.toHaveAttribute('aria-current')
-    expect(screen.getByRole('link', { name: 'Profile' })).not.toHaveAttribute('aria-current')
+    expect(screen.getByRole('link', { name: 'Ontdek' })).not.toHaveAttribute('aria-current')
+    expect(screen.getByRole('link', { name: 'Dichtbij' })).not.toHaveAttribute('aria-current')
+    expect(screen.getByRole('link', { name: 'Profiel' })).not.toHaveAttribute('aria-current')
   })
 
   it('marks Explore as current on "/search"', () => {
     mockUsePathname.mockReturnValue('/search')
     render(<BottomNav />)
-    expect(screen.getByRole('link', { name: 'Explore' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Ontdek' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current')
   })
 
   it('marks Nearby as current on "/nearby"', () => {
     mockUsePathname.mockReturnValue('/nearby')
     render(<BottomNav />)
-    expect(screen.getByRole('link', { name: 'Nearby' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Dichtbij' })).toHaveAttribute('aria-current', 'page')
   })
 
   it('marks Profile as current on "/profile"', () => {
     mockUsePathname.mockReturnValue('/profile')
     render(<BottomNav />)
-    expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Profiel' })).toHaveAttribute('aria-current', 'page')
   })
 
   it('marks Explore as current on a deep /search subpath', () => {
     // startsWith('/search') should match /search/something
     mockUsePathname.mockReturnValue('/search/deep')
     render(<BottomNav />)
-    expect(screen.getByRole('link', { name: 'Explore' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Ontdek' })).toHaveAttribute('aria-current', 'page')
   })
 
   it('does NOT mark Home as current on "/search" (exact match)', () => {

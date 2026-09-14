@@ -108,8 +108,8 @@ export async function generateMetadata({
   const rating = Number(review.ratingOverall).toFixed(1)
   const city = extractCity(review.place.address)
   const title = review.dishName
-    ? `${review.dishName} at ${review.place.name}${city ? `, ${city}` : ''} — ${rating}★`
-    : `${review.place.name}${city ? `, ${city}` : ''} — ${rating}★ review`
+    ? `${review.dishName} bij ${review.place.name}${city ? `, ${city}` : ''} — ${rating}★`
+    : `${review.place.name}${city ? `, ${city}` : ''} — review met ${rating}★`
   const description =
     review.text.length > 155 ? `${review.text.slice(0, 152).trimEnd()}…` : review.text
 
@@ -125,7 +125,7 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical: `/review/${review.id}` },
-    openGraph: { type: 'article', title, description, ...(ogImage ? { images: [ogImage] } : {}) },
+    openGraph: { type: 'article', title, description, locale: 'nl_NL', ...(ogImage ? { images: [ogImage] } : {}) },
     twitter: { card: 'summary_large_image', title, description, ...(ogImage ? { images: [ogImage] } : {}) },
   }
 }

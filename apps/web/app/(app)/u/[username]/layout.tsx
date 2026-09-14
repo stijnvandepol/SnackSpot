@@ -59,8 +59,12 @@ export async function generateMetadata(
       title: `@${user.username} | SnackSpot`,
       description,
     },
+    // Canonical comes from the stored username, never the URL parameter. The lookup
+    // above is case-insensitive, so /u/Snackspert and /u/snackspert both return 200;
+    // echoing the parameter back gave each spelling its own self-canonical and let the
+    // same profile be indexed several times over.
     alternates: {
-      canonical: `/u/${encodeURIComponent(username)}`,
+      canonical: `/u/${encodeURIComponent(user.username)}`,
     },
   }
 }
