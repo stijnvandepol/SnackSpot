@@ -38,12 +38,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         fixed BottomNav cannot cover the last row.
       */}
       <footer className="border-t pb-nav md:pb-0" style={{ borderColor: 'var(--snack-border-soft)', backgroundColor: 'var(--snack-footer-bg)' }}>
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-center gap-3 px-4 py-6 text-sm">
-          <nav aria-label="Ontdekken" className="flex flex-wrap items-center justify-center gap-2">
-            <Link href="/snackbars" className="btn-secondary text-sm">
+        {/*
+          Compact on phones: this sits under an infinite feed, so it is chrome, not a
+          destination. Buttons became plain links and the vertical rhythm tightens —
+          the desktop footer keeps its original breathing room.
+        */}
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-center gap-2 px-4 py-4 text-sm md:gap-3 md:py-6">
+          <nav aria-label="Ontdekken" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm font-medium">
+            <Link href="/snackbars" className="text-snack-primary hover:underline">
               Snackbars per stad
             </Link>
-            <Link href="/guides" className="btn-secondary text-sm">
+            <Link href="/guides" className="text-snack-primary hover:underline">
               Uitleg
             </Link>
           </nav>

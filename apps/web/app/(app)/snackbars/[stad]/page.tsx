@@ -159,7 +159,7 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
               <li key={dish.slug}>
                 <Link
                   href={`/snackbars/${city.slug}/${dish.slug}`}
-                  className="flex items-baseline justify-between gap-3 rounded-xl border border-snack-border bg-white px-4 py-3 transition hover:border-snack-primary/40"
+                  className="flex items-baseline justify-between gap-3 rounded-xl border border-snack-border bg-snack-background px-4 py-3 transition hover:border-snack-primary/40"
                 >
                   <span className="min-w-0">
                     <span className="block truncate font-semibold text-snack-text">
@@ -188,7 +188,7 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
             <li key={place.id}>
               <Link
                 href={`/place/${place.id}`}
-                className="flex gap-4 rounded-2xl border border-snack-border bg-white p-4 shadow-sm transition hover:border-snack-primary/40"
+                className="flex gap-4 rounded-2xl border border-snack-border bg-snack-background p-4 shadow-sm transition hover:border-snack-primary/40"
               >
                 {place.photoUrl ? (
                   <img

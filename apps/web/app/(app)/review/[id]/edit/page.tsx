@@ -75,7 +75,7 @@ function Stars({ value, onChange }: { value: number; onChange: (v: number) => vo
           />
           <span
             className={`pointer-events-none text-4xl ${
-              value >= s ? 'text-snack-rating' : value === s - 0.5 ? 'text-snack-rating/60' : 'text-[#dfdfdf]'
+              value >= s ? 'text-snack-rating' : value === s - 0.5 ? 'text-snack-rating/60' : 'text-snack-border'
             }`}
           >
             ★
@@ -103,7 +103,7 @@ function StepIndicators({ step }: { step: Step }) {
           }`}>
             {i + 1}
           </div>
-          {i < steps.length - 1 && <div className="flex-1 h-0.5 bg-[#e6e6e6] w-8" />}
+          {i < steps.length - 1 && <div className="flex-1 h-0.5 bg-snack-border w-8" />}
         </div>
       ))}
     </div>
@@ -513,7 +513,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
                     className={`rounded-full border px-3 py-2 text-xs font-medium transition ${
                       isActive
                         ? 'border-snack-primary bg-snack-primary text-white'
-                        : 'border-snack-border bg-white text-snack-muted hover:border-snack-primary hover:text-snack-primary'
+                        : 'border-snack-border bg-snack-background text-snack-muted hover:border-snack-primary hover:text-snack-primary'
                     }`}
                     title={option.hint}
                     aria-pressed={isActive}

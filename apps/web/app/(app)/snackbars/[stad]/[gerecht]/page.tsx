@@ -141,7 +141,7 @@ export default async function CityDishPage({
             <li key={place.id}>
               <Link
                 href={`/place/${place.id}`}
-                className="flex gap-4 rounded-2xl border border-snack-border bg-white p-4 shadow-sm transition hover:border-snack-primary/40"
+                className="flex gap-4 rounded-2xl border border-snack-border bg-snack-background p-4 shadow-sm transition hover:border-snack-primary/40"
               >
                 {place.photoUrl ? (
                   <img

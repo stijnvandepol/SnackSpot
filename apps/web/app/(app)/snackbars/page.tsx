@@ -49,7 +49,7 @@ export default async function SnackbarsIndexPage() {
             <li key={city.slug}>
               <Link
                 href={`/snackbars/${city.slug}`}
-                className="block rounded-2xl border border-snack-border bg-white p-6 shadow-sm transition hover:border-snack-primary/40"
+                className="block rounded-2xl border border-snack-border bg-snack-background p-6 shadow-sm transition hover:border-snack-primary/40"
               >
                 <h2 className="font-heading text-xl font-semibold text-snack-text">{city.name}</h2>
                 <p className="mt-1 text-sm text-snack-muted">
