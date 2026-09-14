@@ -4,6 +4,7 @@ import type { Prisma } from '@prisma/client'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { parseQuery, parseBody, serverError, isResponse } from '@/lib/api-helpers'
+import { extractCity } from '@snackspot/shared'
 
 const ListPlacesQuery = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -98,13 +99,20 @@ export async function POST(req: NextRequest) {
   const { name, address, lat, lng } = body
 
   try {
+    // `city` groups the public /snackbars landing pages and gates whether a city page
+    // exists at all. Leaving it NULL here made an admin-created place invisible to its
+    // own city page until someone edited it by hand. Same parser as the web app and as
+    // migration 038's backfill, so the three cannot produce different spellings.
+    const city = extractCity(address)
+
     // Create place with PostGIS geography point
     const [inserted] = await db.$queryRaw<Array<{ id: string }>>`
-      INSERT INTO places (id, name, address, location, created_at, updated_at)
+      INSERT INTO places (id, name, address, city, location, created_at, updated_at)
       VALUES (
         gen_random_uuid()::text,
         ${name},
         ${address},
+        ${city},
         ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
         NOW(),
         NOW()

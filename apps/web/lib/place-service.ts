@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { placesProvider, type ProviderPlace } from '@/lib/places-provider'
+import { extractCity } from '@/lib/utils'
 
 // Two manual places with the same normalized name within this radius are
 // treated as the same venue (dedup guard for the legacy/manual path).
@@ -59,12 +60,17 @@ export async function resolveProviderPlace(
     return { error: 'Incomplete place data.' }
   }
 
+  // Nominatim usually supplies a city, but the unverified branch above takes it
+  // from client input, where it may be absent. Fall back to parsing the address
+  // so a place never lands with a NULL city that only an admin can repair.
+  const city = venue.city ?? extractCity(venue.address)
+
   // Insert keyed by provider id; on a concurrent race the unique index makes
   // the second insert a no-op and we re-read the winner.
   const inserted = await prisma.$queryRaw<Array<{ id: string }>>`
     INSERT INTO places (name, address, city, provider, provider_place_id, location)
     VALUES (
-      ${venue.name}, ${venue.address}, ${venue.city},
+      ${venue.name}, ${venue.address}, ${city},
       ${venue.provider}, ${venue.providerPlaceId},
       ST_SetSRID(ST_MakePoint(${venue.lng}, ${venue.lat}), 4326)::geography
     )
@@ -112,10 +118,19 @@ export async function resolveManualPlace(input: {
     const match = nearby.find((p) => normalizeName(p.name) === normalized)
     if (match) return { id: match.id, deduped: true }
 
+    // `city` is what the /snackbars landing pages group on (lib/city-index.ts).
+    // This path used to leave it NULL, so every place a user added by hand was
+    // invisible to its own city page — permanently, unless an admin edited it —
+    // and never counted toward CITY_PAGE_MIN_PLACES. The provider path already
+    // stores the city it gets back from Nominatim; here we derive it from the
+    // address with the same parser the place page uses for its title. A null
+    // result is fine and keeps the old behaviour: better absent than wrong.
+    const city = extractCity(input.address)
+
     const [created] = await tx.$queryRaw<Array<{ id: string }>>`
-      INSERT INTO places (name, address, provider, location)
+      INSERT INTO places (name, address, city, provider, location)
       VALUES (
-        ${input.name}, ${input.address}, 'manual',
+        ${input.name}, ${input.address}, ${city}, 'manual',
         ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography
       )
       RETURNING id
