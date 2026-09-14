@@ -75,7 +75,7 @@ function Stars({ value, onChange }: { value: number; onChange: (v: number) => vo
           />
           <span
             className={`pointer-events-none text-4xl ${
-              value >= s ? 'text-snack-rating' : value === s - 0.5 ? 'text-snack-rating/60' : 'text-[#dfdfdf]'
+              value >= s ? 'text-snack-rating' : value === s - 0.5 ? 'text-snack-rating/60' : 'text-snack-border'
             }`}
           >
             ★
@@ -103,7 +103,7 @@ function StepIndicators({ step }: { step: Step }) {
           }`}>
             {i + 1}
           </div>
-          {i < steps.length - 1 && <div className="flex-1 h-0.5 bg-[#e6e6e6] w-8" />}
+          {i < steps.length - 1 && <div className="flex-1 h-0.5 bg-snack-border w-8" />}
         </div>
       ))}
     </div>

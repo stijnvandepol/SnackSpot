@@ -56,7 +56,7 @@ function Stars({ value, onChange }: { value: number; onChange: (v: number) => vo
           />
           <span
             className={`pointer-events-none text-4xl ${
-              value >= s ? 'text-snack-rating' : value === s - 0.5 ? 'text-snack-rating/60' : 'text-[#dfdfdf]'
+              value >= s ? 'text-snack-rating' : value === s - 0.5 ? 'text-snack-rating/60' : 'text-snack-border'
             }`}
           >
             ★
