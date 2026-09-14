@@ -233,7 +233,7 @@ export function SearchClient() {
               </button>
             )}
           </div>
-          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {REVIEW_TAG_OPTIONS.map((option) => {
               const isActive = activeTag === option.value
 

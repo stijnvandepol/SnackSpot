@@ -7,6 +7,8 @@ import { safeJsonLd } from '@/lib/html'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 import { MarketingShell } from '@/components/marketing-shell'
 import { resolveLocale, getMarketingDict, ogLocale } from '@/lib/i18n/locale'
+import { getQualifyingCities, type CitySummary } from '@/lib/city-index'
+import { logger } from '@/lib/logger'
 
 // Dynamically rendered: resolveLocale() reads the request cookie/Accept-Language. Live community data is fetched per request.
 
@@ -49,6 +51,16 @@ const EMPTY_COMMUNITY_DATA = {
   placesCount: 0,
   citiesCount: 0,
   photosThisWeek: 0,
+}
+
+/** Cities are a nice-to-have on the marketing page: never let them break it. */
+async function getMarketingCities(): Promise<CitySummary[]> {
+  try {
+    return await getQualifyingCities()
+  } catch (error) {
+    logger.error({ err: error }, 'Failed to load cities for /product')
+    return []
+  }
 }
 
 async function getCommunityData() {
@@ -104,9 +116,10 @@ async function getCommunityData() {
 }
 
 export default async function ProductPage() {
-  const [{ wall, placesCount, citiesCount, photosThisWeek }, locale] = await Promise.all([
+  const [{ wall, placesCount, citiesCount, photosThisWeek }, locale, cities] = await Promise.all([
     getCommunityData(),
     resolveLocale(),
+    getMarketingCities(),
   ])
   const dict = getMarketingDict(locale)
 
@@ -331,6 +344,48 @@ export default async function ProductPage() {
           </div>
         </div>
       </section>
+
+      {/*
+        ── Cities ───────────────────────────────────────────────────────────
+        /product sits at position 4.94 with 139 impressions — the best-placed page on
+        the site after the homepage — and passed none of that on: nothing here linked to
+        /snackbars, the pages meant to earn non-brand traffic. This section is also the
+        only place on the marketing site that shows the product's actual output.
+      */}
+      {cities.length > 0 && (
+        <section className="mx-auto max-w-6xl px-4 py-6 md:py-10">
+          <div className="mb-6 max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">
+              {dict.sections.citiesEyebrow}
+            </p>
+            <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
+              {dict.sections.citiesTitle}
+            </h2>
+            <p className="mt-3 text-base leading-7 text-snack-muted">{dict.sections.citiesBody}</p>
+          </div>
+          <ul className="flex flex-wrap gap-2">
+            {cities.map((city) => (
+              <li key={city.slug}>
+                <Link
+                  href={`/snackbars/${city.slug}`}
+                  className="inline-flex items-baseline gap-2 rounded-full border border-snack-border bg-white px-4 py-2 text-sm transition hover:border-snack-primary"
+                >
+                  <span className="font-semibold text-snack-text">{city.name}</span>
+                  <span className="text-xs text-snack-muted">{city.placeCount}</span>
+                </Link>
+              </li>
+            ))}
+            <li>
+              <Link
+                href="/snackbars"
+                className="inline-flex items-center rounded-full border border-dashed border-snack-border px-4 py-2 text-sm font-semibold text-snack-primary transition hover:border-snack-primary"
+              >
+                {dict.sections.citiesAll}
+              </Link>
+            </li>
+          </ul>
+        </section>
+      )}
 
       {/* ── FAQ ────────────────────────────────────────────────────────────── */}
       <section id="faq" className="mx-auto max-w-4xl px-4 py-6 md:py-10">

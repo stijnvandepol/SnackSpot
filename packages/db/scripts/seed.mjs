@@ -37,13 +37,13 @@ async function main() {
     `, [DEMO_PASSWORD_HASH])
 
     await client.query(`
-      INSERT INTO places (id, name, address, location)
+      INSERT INTO places (id, name, address, city, location)
       VALUES
-        ('place_01', 'Stroopwafel Street',  'Stroopwafelstraat 1, Amsterdam',
+        ('place_01', 'Stroopwafel Street',  'Stroopwafelstraat 1, Amsterdam', 'Amsterdam',
          ST_SetSRID(ST_MakePoint(4.9041, 52.3676), 4326)::geography),
-        ('place_02', 'Herring Harbor',      'Haringkade 10, Amsterdam',
+        ('place_02', 'Herring Harbor',      'Haringkade 10, Amsterdam', 'Amsterdam',
          ST_SetSRID(ST_MakePoint(4.9102, 52.3720), 4326)::geography),
-        ('place_03', 'Bitterballen Bros',   'Bitterballenplein 5, Amsterdam',
+        ('place_03', 'Bitterballen Bros',   'Bitterballenplein 5, Amsterdam', 'Amsterdam',
          ST_SetSRID(ST_MakePoint(4.8985, 52.3640), 4326)::geography)
       ON CONFLICT (id) DO NOTHING
     `)

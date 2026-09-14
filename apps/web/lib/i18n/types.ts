@@ -14,10 +14,11 @@ export interface MarketingDict {
     stepsEyebrow: string; stepsTitle: string; midCtaText: string; midCtaButton: string
     wallEyebrow: string; wallTitle: string
     statsEmpty: string; statPlaces: string; statCities: string; statPhotos: string
+    citiesEyebrow: string; citiesTitle: string; citiesBody: string; citiesAll: string
     faqEyebrow: string; faqTitle: string
     finalCtaTitle: string; finalCtaBody: string; finalCtaButton: string; finalCtaFinePrint: string
   }
-  nav: { problem: string; features: string; why: string; guides: string; releases: string; login: string; createAccount: string }
+  nav: { problem: string; features: string; why: string; snackbars: string; guides: string; releases: string; login: string; createAccount: string }
   switcher: { label: string; en: string; nl: string }
   releasesChrome: { title: string; intro: string; metaTitle: string; metaDescription: string; eyebrow: string }
 }
