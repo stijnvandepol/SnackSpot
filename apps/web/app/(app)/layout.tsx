@@ -26,20 +26,32 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <main id="main-content" className="flex-1 pb-nav md:pb-0">
+      <main id="main-content" className="flex-1">
         {children}
       </main>
 
-      <footer className="hidden md:block border-t" style={{ borderColor: 'var(--snack-border-soft)', backgroundColor: 'var(--snack-footer-bg)' }}>
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-center gap-3 px-4 py-4 text-sm">
-          <Link href="/guides" className="btn-secondary text-sm">
-            Guides
-          </Link>
-          <nav aria-label="Legal" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-snack-muted">
-            <Link href="/terms" className="hover:text-snack-text">Terms</Link>
+      {/*
+        Visible on mobile too. It used to be `hidden md:block`, which meant the only
+        internal links to /snackbars, /guides and the legal pages did not exist on the
+        surface where ~72% of impressions land — and /snackbars, the main commercial
+        surface, had no internal links at all. `pb-nav` moves from <main> to here so the
+        fixed BottomNav cannot cover the last row.
+      */}
+      <footer className="border-t pb-nav md:pb-0" style={{ borderColor: 'var(--snack-border-soft)', backgroundColor: 'var(--snack-footer-bg)' }}>
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-center gap-3 px-4 py-6 text-sm">
+          <nav aria-label="Ontdekken" className="flex flex-wrap items-center justify-center gap-2">
+            <Link href="/snackbars" className="btn-secondary text-sm">
+              Snackbars per stad
+            </Link>
+            <Link href="/guides" className="btn-secondary text-sm">
+              Uitleg
+            </Link>
+          </nav>
+          <nav aria-label="Juridisch" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-snack-muted">
+            <Link href="/terms" className="hover:text-snack-text">Voorwaarden</Link>
             <Link href="/privacy" className="hover:text-snack-text">Privacy</Link>
-            <Link href="/subprocessors" className="hover:text-snack-text">Sub-processors</Link>
-            <Link href="/imprint" className="hover:text-snack-text">Company info</Link>
+            <Link href="/subprocessors" className="hover:text-snack-text">Subverwerkers</Link>
+            <Link href="/imprint" className="hover:text-snack-text">Bedrijfsgegevens</Link>
           </nav>
           <p className="text-xs text-snack-muted">
             &copy; {new Date().getFullYear()} SnackSpot

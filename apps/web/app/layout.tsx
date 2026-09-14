@@ -11,8 +11,12 @@ import './globals.css'
 
 const metadataBase = getSiteOrigin()
 const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim()
+// The indexable surface of this site is Dutch, and the commercial target is the Dutch
+// snackbar niche — 60 of 90 clicks in the Aug 2026 GSC export came from the Netherlands
+// at position 3.48, against 10 clicks from the US at 10.19. The description, og:locale
+// and <html lang> below all follow from that.
 const appDescription =
-  'Discover under-the-radar food spots with SnackSpot. Share reviews of smaller local places, surface hidden gems, and help others find great food they would otherwise miss.'
+  'Ontdek snackbars, cafetaria’s en kleine eettentjes via fotoreviews van bezoekers. Zie per zaak wat mensen er echt aten, zodat je weet wat je moet bestellen voordat je gaat zitten.'
 
 function buildJsonLd(appUrl: string) {
   const organization = {
@@ -28,6 +32,7 @@ function buildJsonLd(appUrl: string) {
     '@type': 'WebSite',
     name: 'SnackSpot',
     url: appUrl,
+    inLanguage: 'nl-NL',
     description: appDescription,
     // Enables Google's sitelinks search box: searches resolve to /search?q=…
     potentialAction: {
@@ -47,10 +52,11 @@ function buildJsonLd(appUrl: string) {
     description: appDescription,
     applicationCategory: 'LifestyleApplication',
     operatingSystem: 'All',
+    inLanguage: 'nl-NL',
     offers: {
       '@type': 'Offer',
       price: 0,
-      priceCurrency: 'USD',
+      priceCurrency: 'EUR',
       availability: 'https://schema.org/InStock',
     },
   }
@@ -102,7 +108,7 @@ export const metadata: Metadata = {
     title: 'SnackSpot',
     description: appDescription,
     siteName: 'SnackSpot',
-    locale: 'en_US',
+    locale: 'nl_NL',
     images: ['/opengraph-image'],
   },
   twitter: {
@@ -117,7 +123,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const appUrl = getSiteUrl()
   const { organization, website, webApp } = buildJsonLd(appUrl)
   return (
-    <html lang="en" className="h-full" suppressHydrationWarning>
+    <html lang="nl" className="h-full" suppressHydrationWarning>
       <head>
         {/* Runs synchronously before React hydrates to prevent a flash of the wrong theme
             (FOUC). Must stay inline — an external script would load async and fire too late. */}

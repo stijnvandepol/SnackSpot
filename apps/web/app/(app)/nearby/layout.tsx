@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
 
-const title = 'Nearby Food Spots'
+const title = 'Snackbars in de buurt'
 const description =
-  'Find food spots near your location on SnackSpot. Use GPS or enter an address to discover local snack bars, cafés, and hidden gems on the map.'
+  'Vind snackbars en eettentjes bij jou in de buurt. Gebruik je locatie of vul een adres in en zie op de kaart waar mensen recent gegeten hebben — of begin bij een stad.'
 
 export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: '/nearby' },
-  openGraph: { title: `${title} | SnackSpot`, description },
+  openGraph: { title: `${title} | SnackSpot`, description, locale: 'nl_NL' },
   twitter: { title: `${title} | SnackSpot`, description },
 }
 

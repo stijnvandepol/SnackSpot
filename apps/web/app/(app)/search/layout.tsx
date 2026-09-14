@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
 
-const title = 'Explore Food Spots'
+const title = 'Ontdek snackbars en eettentjes'
 const description =
-  'Search and explore local food spots on SnackSpot. Browse places with recent reviews, filter by tags, and find hidden gems in your area.'
+  'Zoek en blader door snackbars, cafetaria’s en kleine eettentjes op SnackSpot. Bekijk zaken met recente fotoreviews, filter op label en vind verborgen parels bij jou in de buurt.'
 
 export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: '/search' },
-  openGraph: { title: `${title} | SnackSpot`, description },
+  openGraph: { title: `${title} | SnackSpot`, description, locale: 'nl_NL' },
   twitter: { title: `${title} | SnackSpot`, description },
 }
 

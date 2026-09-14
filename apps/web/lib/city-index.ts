@@ -9,10 +9,10 @@ import { photoVariantUrl } from '@/lib/photo-url'
  * the admin UI. Deriving the city from `address` was rejected: it cannot use the index, and
  * a wrong value would need a heuristic change rather than an admin edit.
  *
- * Note `places.city` is only written by migration 030's backfill and by admin edits — nothing
- * populates it on place creation, so new places are invisible here until an admin sets it.
- * Rows with a null or blank city are excluded, so the failure mode is a place missing from a
- * city page, never a wrong or empty page.
+ * Both insert paths in lib/place-service.ts now write `city` — the provider path from the
+ * Nominatim response, the manual path via extractCity() — and migration 038 backfilled the
+ * rows created before that. Rows with a null or blank city are still excluded, so the
+ * failure mode remains a place missing from a city page, never a wrong or empty page.
  */
 
 // The quality gate. GSC data from Aug 2026 showed 32 places spread over 22 cities, 19 of them
@@ -24,6 +24,13 @@ export const CITY_PAGE_MIN_REVIEWS = 8
 
 /** How many dishes the "wat bestellen ze hier" section shows. */
 const CITY_TOP_DISH_LIMIT = 6
+
+// The gate for /snackbars/[stad]/[gerecht]. Deliberately stricter per page than the city
+// gate: a dish ranking is only worth reading when several places can be compared on the
+// same dish, which is the whole point of the page. Expect zero qualifying dishes until the
+// corpus grows — a dish below this has no page, exactly like a city below the city gate.
+export const CITY_DISH_PAGE_MIN_PLACES = 3
+export const CITY_DISH_PAGE_MIN_REVIEWS = 5
 
 export interface CitySummary {
   slug: string
@@ -52,6 +59,36 @@ export interface CityDish {
 export interface CityDetail extends CitySummary {
   places: CityPlace[]
   topDishes: CityDish[]
+  /** Dishes in this city that clear the dish gate and therefore have their own page. */
+  dishPages: CityDishSummary[]
+}
+
+export interface CityDishSummary {
+  /** URL segment, derived from the display name. */
+  slug: string
+  /** Display name, e.g. "Frikandel speciaal". */
+  name: string
+  /** Lowercased, trimmed grouping key — how the dish is matched in SQL. */
+  key: string
+  placeCount: number
+  reviewCount: number
+  avgRating: number
+}
+
+export interface CityDishPlace {
+  id: string
+  name: string
+  address: string
+  avgRating: number
+  reviewCount: number
+  photoUrl: string | null
+  /** A short excerpt from the most recent review of this dish here. */
+  quote: string | null
+}
+
+export interface CityDishDetail extends CityDishSummary {
+  city: CitySummary
+  places: CityDishPlace[]
 }
 
 /**
@@ -93,6 +130,23 @@ interface PlaceDishRow {
   dish: string
 }
 
+interface CityDishAggregateRow {
+  dish: string
+  dish_key: string
+  place_count: number
+  review_count: number
+  avg_rating: number
+}
+
+interface CityDishPlaceRow {
+  id: string
+  name: string
+  address: string
+  avg_rating: number
+  review_count: number
+  quote: string | null
+}
+
 /**
  * Cities that clear the quality gate, best-stocked first.
  *
@@ -124,6 +178,19 @@ export async function getQualifyingCities(): Promise<CitySummary[]> {
       placeCount: row.place_count,
       reviewCount: row.review_count,
     }))
+}
+
+/**
+ * Slug of the city landing page a place belongs to, or null when that city has no page.
+ *
+ * Checked against the same gate the pages use, so a place page can only ever link to a
+ * /snackbars/[stad] URL that exists — a city below the gate 404s by design.
+ */
+export async function getCityPageSlug(city: string | null | undefined): Promise<string | null> {
+  if (!city || city.trim() === '') return null
+  const slug = citySlug(city)
+  const cities = await getQualifyingCities()
+  return cities.some((candidate) => candidate.slug === slug) ? slug : null
 }
 
 /** Full page data, or null when the slug is unknown or the city is below the gate. */
@@ -187,11 +254,15 @@ export async function getCityDetail(slug: string): Promise<CityDetail | null> {
     `,
   ])
 
-  const photoByPlace = await getPhotoByPlace(placeRows.map((row) => row.id))
+  const [photoByPlace, dishPages] = await Promise.all([
+    getPhotoByPlace(placeRows.map((row) => row.id)),
+    getQualifyingCityDishes(city),
+  ])
   const dishByPlace = new Map(placeDishRows.map((row) => [row.place_id, row.dish]))
 
   return {
     ...summary,
+    dishPages,
     places: placeRows.map((row) => ({
       id: row.id,
       name: row.name,
@@ -211,10 +282,135 @@ export async function getCityDetail(slug: string): Promise<CityDetail | null> {
 }
 
 /**
+ * Dishes in a city that clear the dish gate, most-reviewed first.
+ *
+ * Grouping on LOWER(TRIM(dish_name)) folds "Frikandel speciaal" and "frikandel speciaal"
+ * into one dish; MIN() picks a stable display spelling from the group. As with the city
+ * gate the threshold is applied in TypeScript rather than a HAVING clause, so it stays
+ * unit-testable and the two gates read the same way.
+ *
+ * Takes a city *name*, not a slug — callers already hold the resolved CitySummary.
+ */
+export async function getQualifyingCityDishes(city: string): Promise<CityDishSummary[]> {
+  const rows = await prisma.$queryRaw<CityDishAggregateRow[]>`
+    SELECT
+      MIN(TRIM(r.dish_name))                          AS dish,
+      LOWER(TRIM(r.dish_name))                        AS dish_key,
+      COUNT(DISTINCT r.place_id)::int                 AS place_count,
+      COUNT(*)::int                                   AS review_count,
+      ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating
+    FROM reviews r
+    JOIN places p ON p.id = r.place_id
+    WHERE p.city = ${city}
+      AND r.status = 'PUBLISHED'
+      AND r.dish_name IS NOT NULL
+      AND LENGTH(TRIM(r.dish_name)) > 0
+    GROUP BY LOWER(TRIM(r.dish_name))
+    ORDER BY COUNT(*) DESC, AVG(r.rating_overall) DESC
+  `
+
+  return rows
+    .filter(
+      (row) =>
+        row.place_count >= CITY_DISH_PAGE_MIN_PLACES &&
+        row.review_count >= CITY_DISH_PAGE_MIN_REVIEWS,
+    )
+    .map((row) => ({
+      // citySlug() is a general "text → URL segment" helper despite the name; reusing it
+      // keeps city and dish segments normalised the same way.
+      slug: citySlug(row.dish),
+      name: row.dish,
+      key: row.dish_key,
+      placeCount: row.place_count,
+      reviewCount: row.review_count,
+      avgRating: row.avg_rating,
+    }))
+    // A slug collision would make one of the two pages unreachable; keeping the first
+    // (most-reviewed) is deterministic and matches what the city page links to.
+    .filter((dish, index, all) => all.findIndex((d) => d.slug === dish.slug) === index)
+}
+
+/**
+ * One dish in one city: every place that serves it, ranked on that dish alone.
+ *
+ * This is the page Google Maps and the friet-only directories cannot produce — the ranking
+ * is per dish, not per venue, which is what `reviews.dish_name` makes possible.
+ *
+ * Returns null when the city is below the city gate, the slug is unknown, or the dish is
+ * below the dish gate. All three are a 404 for the same reason: there is nothing to read.
+ */
+export async function getCityDishDetail(
+  slug: string,
+  dishSlug: string,
+): Promise<CityDishDetail | null> {
+  const city = (await getQualifyingCities()).find((candidate) => candidate.slug === slug)
+  if (!city) return null
+
+  const dish = (await getQualifyingCityDishes(city.name)).find(
+    (candidate) => candidate.slug === dishSlug,
+  )
+  if (!dish) return null
+
+  const placeRows = await prisma.$queryRaw<CityDishPlaceRow[]>`
+    SELECT
+      p.id,
+      p.name,
+      p.address,
+      ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
+      COUNT(*)::int                                   AS review_count,
+      -- Newest review text for this dish here, as a short pull quote.
+      (ARRAY_AGG(r.text ORDER BY r.created_at DESC))[1] AS quote
+    FROM reviews r
+    JOIN places p ON p.id = r.place_id
+    WHERE p.city = ${city.name}
+      AND r.status = 'PUBLISHED'
+      AND LOWER(TRIM(r.dish_name)) = ${dish.key}
+    GROUP BY p.id, p.name, p.address
+    ORDER BY avg_rating DESC NULLS LAST, review_count DESC, p.name ASC
+  `
+
+  const photoByPlace = await getPhotoByPlace(
+    placeRows.map((row) => row.id),
+    dish.key,
+  )
+
+  return {
+    ...dish,
+    city,
+    places: placeRows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      address: row.address,
+      avgRating: row.avg_rating,
+      reviewCount: row.review_count,
+      photoUrl: photoByPlace.get(row.id) ?? null,
+      quote: truncate(row.quote, 180),
+    })),
+  }
+}
+
+/** Trims review text to a readable pull quote without cutting mid-word. */
+function truncate(text: string | null, maxLength: number): string | null {
+  if (!text) return null
+  const normalized = text.replace(/\s+/g, ' ').trim()
+  if (normalized.length === 0) return null
+  if (normalized.length <= maxLength) return normalized
+  const cut = normalized.slice(0, maxLength)
+  const lastSpace = cut.lastIndexOf(' ')
+  return `${(lastSpace > maxLength * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`
+}
+
+/**
  * Newest published photo per place, in one query. Ordering by createdAt desc means the first
  * row seen for a place is its most recent photo, which avoids a per-place query.
+ *
+ * Pass `dishKey` to restrict the photo to reviews of that dish, so a dish page shows the
+ * dish rather than whatever was posted there most recently.
  */
-async function getPhotoByPlace(placeIds: string[]): Promise<Map<string, string>> {
+async function getPhotoByPlace(
+  placeIds: string[],
+  dishKey?: string,
+): Promise<Map<string, string>> {
   if (placeIds.length === 0) return new Map()
 
   const reviews = await prisma.review.findMany({
@@ -222,6 +418,7 @@ async function getPhotoByPlace(placeIds: string[]): Promise<Map<string, string>>
       placeId: { in: placeIds },
       status: ReviewStatus.PUBLISHED,
       reviewPhotos: { some: {} },
+      ...(dishKey ? { dishName: { equals: dishKey, mode: 'insensitive' as const } } : {}),
     },
     orderBy: { createdAt: 'desc' },
     select: {

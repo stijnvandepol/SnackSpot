@@ -141,6 +141,44 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
         </section>
       )}
 
+      {/*
+        Only dishes that cleared the dish gate appear here, so every link resolves — and
+        these are the pages that answer "beste kapsalon in X", the query shape this site
+        can answer better than a venue directory can.
+      */}
+      {city.dishPages.length > 0 && (
+        <nav className="mt-10" aria-labelledby="per-gerecht">
+          <h2 id="per-gerecht" className="font-heading text-xl font-semibold text-snack-text">
+            Ranglijst per gerecht
+          </h2>
+          <p className="mt-1 text-sm text-snack-muted">
+            Genoeg reviews om deze gerechten onderling te vergelijken in {city.name}.
+          </p>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+            {city.dishPages.map((dish) => (
+              <li key={dish.slug}>
+                <Link
+                  href={`/snackbars/${city.slug}/${dish.slug}`}
+                  className="flex items-baseline justify-between gap-3 rounded-xl border border-snack-border bg-white px-4 py-3 transition hover:border-snack-primary/40"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate font-semibold text-snack-text">
+                      De beste {dish.name.toLowerCase()}
+                    </span>
+                    <span className="block text-xs text-snack-muted">
+                      {dish.placeCount} adressen · {dish.reviewCount} reviews
+                    </span>
+                  </span>
+                  <span className="flex-shrink-0 text-sm font-semibold text-snack-text">
+                    ★ {dish.avgRating.toFixed(1)}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+
       <section className="mt-10" aria-labelledby="alle-zaken">
         <h2 id="alle-zaken" className="font-heading text-xl font-semibold text-snack-text">
           Alle {city.placeCount} zaken in {city.name}
@@ -155,7 +193,11 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
                 {place.photoUrl ? (
                   <img
                     src={place.photoUrl}
-                    alt=""
+                    alt={
+                      place.topDish
+                        ? `${place.topDish} bij ${place.name} in ${city.name}`
+                        : `Eten bij ${place.name} in ${city.name}`
+                    }
                     loading="lazy"
                     className="h-24 w-24 flex-shrink-0 rounded-xl object-cover"
                   />

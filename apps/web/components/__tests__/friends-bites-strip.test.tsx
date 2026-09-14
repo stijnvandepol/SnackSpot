@@ -55,7 +55,7 @@ describe('FriendsBitesStrip', () => {
 
   it('opens the lightbox with poster info when a thumbnail is clicked, and closes on Escape', async () => {
     render(<FriendsBitesStrip />)
-    const thumb = await screen.findByRole('button', { name: "View foodie_nl's bite photo" })
+    const thumb = await screen.findByRole('button', { name: 'Bekijk de bite van foodie_nl' })
     fireEvent.click(thumb)
     const dialog = screen.getByRole('dialog')
     expect(within(dialog).getByRole('link', { name: '@foodie_nl' })).toHaveAttribute(

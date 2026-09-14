@@ -12,27 +12,27 @@ test.describe('Nearby page — desktop (1280 px)', () => {
     expect(res?.status()).toBe(200)
   })
 
-  test('renders the "Nearby Food Spots" heading', async ({ page }) => {
+  test('renders the "Snackbars bij jou in de buurt" heading', async ({ page }) => {
     await page.goto('/nearby')
-    await expect(page.getByRole('heading', { level: 1, name: /Nearby Food Spots/i })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: /Snackbars bij jou in de buurt/i })).toBeVisible()
   })
 
   test('shows an address input on desktop', async ({ page }) => {
     await page.goto('/nearby')
-    const input = page.getByPlaceholder('Enter city or address…')
+    const input = page.getByPlaceholder('Plaats of adres…')
     await expect(input).toBeVisible()
   })
 
   test('Search button is disabled when address input is empty', async ({ page }) => {
     await page.goto('/nearby')
-    const btn = page.getByRole('button', { name: 'Search' })
+    const btn = page.getByRole('button', { name: 'Zoek', exact: true })
     await expect(btn).toBeDisabled()
   })
 
   test('Search button is enabled after typing an address', async ({ page }) => {
     await page.goto('/nearby')
-    await page.getByPlaceholder('Enter city or address…').fill('Amsterdam')
-    await expect(page.getByRole('button', { name: 'Search' })).toBeEnabled()
+    await page.getByPlaceholder('Plaats of adres…').fill('Amsterdam')
+    await expect(page.getByRole('button', { name: 'Zoek', exact: true })).toBeEnabled()
   })
 
   test('shows four radius preset buttons', async ({ page }) => {
@@ -58,7 +58,7 @@ test.describe('Nearby page — desktop (1280 px)', () => {
 
   test('pressing Enter in the address input triggers search', async ({ page }) => {
     await page.goto('/nearby')
-    const input = page.getByPlaceholder('Enter city or address…')
+    const input = page.getByPlaceholder('Plaats of adres…')
     await input.fill('Amsterdam')
     // Intercept the Nominatim network request to avoid a real geocoding call
     await page.route('**/nominatim.openstreetmap.org/**', async (route) => {
@@ -90,12 +90,12 @@ test.describe('Nearby page — mobile (390 px)', () => {
 
   test('shows a "Use current location" button on mobile instead of address input', async ({ page }) => {
     await page.goto('/nearby')
-    await expect(page.getByRole('button', { name: 'Use current location' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Gebruik mijn locatie' })).toBeVisible()
   })
 
   test('address input is NOT shown on mobile', async ({ page }) => {
     await page.goto('/nearby')
-    await expect(page.getByPlaceholder('Enter city or address…')).toBeHidden()
+    await expect(page.getByPlaceholder('Plaats of adres…')).toBeHidden()
   })
 
   test('radius slider is visible on mobile', async ({ page }) => {

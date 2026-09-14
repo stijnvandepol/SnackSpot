@@ -8,26 +8,28 @@ import type { Locale } from './types'
 export type { Locale }
 
 export const LOCALES = ['en', 'nl'] as const
-export const DEFAULT_LOCALE: Locale = 'en'
+export const DEFAULT_LOCALE: Locale = 'nl'
 export const LOCALE_COOKIE = 'NEXT_LOCALE'
 
 export function isLocale(v: string | undefined | null): v is Locale {
   return v === 'en' || v === 'nl'
 }
 
-// Pure: cookie wins, else first Accept-Language tag whose base matches a locale,
-// else the default. Kept pure so it is unit-testable without next/headers.
-export function pickLocale(
-  cookieValue: string | undefined,
-  acceptLanguage: string | undefined,
-): Locale {
+/**
+ * Pure: an explicit cookie wins, otherwise the default locale.
+ *
+ * Accept-Language is deliberately NOT consulted. /product and /product/releases serve both
+ * languages from one URL, so negotiating on a request header meant the same URL returned
+ * Dutch or English depending on who asked — with no per-locale URL and no hreflang to
+ * explain it. Googlebot crawls with an en-US Accept-Language, so it only ever saw the
+ * English copy and the Dutch marketing page was effectively unindexable.
+ *
+ * Keying on the cookie alone fixes that without splitting the routes: a crawler carries no
+ * cookies, so it consistently gets DEFAULT_LOCALE, while a visitor who picks a language in
+ * the switcher (components/language-switcher.tsx) keeps their choice.
+ */
+export function pickLocale(cookieValue: string | undefined): Locale {
   if (isLocale(cookieValue)) return cookieValue
-  if (acceptLanguage) {
-    for (const part of acceptLanguage.split(',')) {
-      const base = part.trim().split(';')[0].toLowerCase().split('-')[0]
-      if (isLocale(base)) return base
-    }
-  }
   return DEFAULT_LOCALE
 }
 

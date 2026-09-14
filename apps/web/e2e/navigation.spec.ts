@@ -12,12 +12,13 @@ test.describe('Desktop navigation (1280 px)', () => {
     await expect(page.locator('header')).toBeVisible()
   })
 
-  test('top nav contains Home, Explore, Nearby and Post links', async ({ page }) => {
+  test('top nav contains Home, Ontdek, Dichtbij, Snackbars and Post links', async ({ page }) => {
     await page.goto('/')
     const header = page.locator('header')
     await expect(header.getByRole('link', { name: 'Home' })).toBeVisible()
-    await expect(header.getByRole('link', { name: 'Explore' })).toBeVisible()
-    await expect(header.getByRole('link', { name: 'Nearby' })).toBeVisible()
+    await expect(header.getByRole('link', { name: 'Ontdek' })).toBeVisible()
+    await expect(header.getByRole('link', { name: 'Snackbars' })).toBeVisible()
+    await expect(header.getByRole('link', { name: 'Dichtbij' })).toBeVisible()
     await expect(header.getByRole('link', { name: 'Post' })).toBeVisible()
   })
 
@@ -34,16 +35,16 @@ test.describe('Desktop navigation (1280 px)', () => {
     await expect(header.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page')
   })
 
-  test('Explore link has aria-current="page" on /search', async ({ page }) => {
+  test('Ontdek link has aria-current="page" on /search', async ({ page }) => {
     await page.goto('/search')
     const header = page.locator('header')
-    await expect(header.getByRole('link', { name: 'Explore' })).toHaveAttribute('aria-current', 'page')
+    await expect(header.getByRole('link', { name: 'Ontdek' })).toHaveAttribute('aria-current', 'page')
   })
 
   test('Nearby link has aria-current="page" on /nearby', async ({ page }) => {
     await page.goto('/nearby')
     const header = page.locator('header')
-    await expect(header.getByRole('link', { name: 'Nearby' })).toHaveAttribute('aria-current', 'page')
+    await expect(header.getByRole('link', { name: 'Dichtbij' })).toHaveAttribute('aria-current', 'page')
   })
 
   test('shows Log in and Sign up links when not authenticated', async ({ page }) => {
@@ -69,10 +70,10 @@ test.describe('Mobile navigation (390 px)', () => {
     await page.goto('/')
     const bottomNav = page.locator('nav').filter({ hasText: 'Create new post' })
     await expect(bottomNav.getByRole('link', { name: 'Home' })).toBeVisible()
-    await expect(bottomNav.getByRole('link', { name: 'Explore' })).toBeVisible()
+    await expect(bottomNav.getByRole('link', { name: 'Ontdek' })).toBeVisible()
     await expect(bottomNav.getByRole('link', { name: 'Create new post' })).toBeVisible()
-    await expect(bottomNav.getByRole('link', { name: 'Nearby' })).toBeVisible()
-    await expect(bottomNav.getByRole('link', { name: 'Profile' })).toBeVisible()
+    await expect(bottomNav.getByRole('link', { name: 'Dichtbij' })).toBeVisible()
+    await expect(bottomNav.getByRole('link', { name: 'Profiel' })).toBeVisible()
   })
 
   test('desktop top header is not visible on mobile', async ({ page }) => {
@@ -92,16 +93,16 @@ test.describe('Mobile navigation (390 px)', () => {
     await expect(bottomNav.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page')
   })
 
-  test('Explore link in bottom nav has aria-current="page" on /search', async ({ page }) => {
+  test('Ontdek link in bottom nav has aria-current="page" on /search', async ({ page }) => {
     await page.goto('/search')
     const bottomNav = page.locator('nav').filter({ hasText: 'Create new post' })
-    await expect(bottomNav.getByRole('link', { name: 'Explore' })).toHaveAttribute('aria-current', 'page')
+    await expect(bottomNav.getByRole('link', { name: 'Ontdek' })).toHaveAttribute('aria-current', 'page')
   })
 
   test('clicking a bottom nav link navigates to the correct page', async ({ page }) => {
     await page.goto('/')
     const bottomNav = page.locator('nav').filter({ hasText: 'Create new post' })
-    await bottomNav.getByRole('link', { name: 'Explore' }).click()
+    await bottomNav.getByRole('link', { name: 'Ontdek' }).click()
     await expect(page).toHaveURL('/search')
   })
 })

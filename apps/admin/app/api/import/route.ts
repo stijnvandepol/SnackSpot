@@ -10,6 +10,7 @@ import { pipeline } from 'node:stream/promises'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { logger } from '@/lib/logger'
+import { extractCity } from '@snackspot/shared'
 import { minioClient, BUCKET } from '@/lib/minio'
 import {
   type ImportSummary,
@@ -219,11 +220,14 @@ export async function POST(req: NextRequest) {
           continue
         }
         // CRITICAL: ST_MakePoint takes (longitude, latitude) — lng before lat
+        // `city` is derived rather than imported: an export may predate the column, and a
+        // place without it never appears on its own /snackbars/[stad] page.
         const [created] = await tx.$queryRaw<Array<{ id: string }>>`
-          INSERT INTO places (name, address, location, created_at, updated_at)
+          INSERT INTO places (name, address, city, location, created_at, updated_at)
           VALUES (
             ${r.name},
             ${r.address},
+            ${extractCity(r.address)},
             ST_SetSRID(ST_MakePoint(${r.location.lng}, ${r.location.lat}), 4326)::geography,
             ${new Date(r.createdAt)},
             ${new Date(r.updatedAt)}

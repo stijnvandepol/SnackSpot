@@ -9,6 +9,7 @@ import { getSiteUrl } from '@/lib/site-url'
 import { safeJsonLd } from '@/lib/html'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { extractCity } from '@/lib/utils'
+import { getCityPageSlug } from '@/lib/city-index'
 import { reviewListSelect, serializeReview } from '@/lib/review-helpers'
 import { PlaceReviewsSection, type PlaceReviewListItem } from '@/components/place-reviews-section'
 import { Breadcrumb } from '@/components/breadcrumb'
@@ -18,6 +19,7 @@ interface PlaceRow {
   id: string
   name: string
   address: string
+  city: string | null
   cuisine: string | null
   lat: number
   lng: number
@@ -32,6 +34,7 @@ const getPlace = cache(async (id: string): Promise<PlaceRow | null> => {
       p.id,
       p.name,
       p.address,
+      p.city,
       p.cuisine,
       ST_Y(p.location::geometry) AS lat,
       ST_X(p.location::geometry) AS lng,
@@ -40,7 +43,7 @@ const getPlace = cache(async (id: string): Promise<PlaceRow | null> => {
     FROM places p
     LEFT JOIN reviews r ON r.place_id = p.id AND r.status = 'PUBLISHED'
     WHERE p.id = ${id}
-    GROUP BY p.id, p.name, p.address, p.cuisine, p.location
+    GROUP BY p.id, p.name, p.address, p.city, p.cuisine, p.location
   `
   return place ?? null
 })
@@ -76,8 +79,8 @@ export async function generateMetadata({
   const title = city ? `${place.name} — ${city}` : place.name
   const description =
     place.avg_rating !== null && place.review_count > 0
-      ? `${place.name} is rated ${place.avg_rating.toFixed(1)}★ from ${place.review_count} photo review${place.review_count === 1 ? '' : 's'} on SnackSpot. See real dishes and know what to order before you go.`
-      : `Discover ${place.name} on SnackSpot, photo reviews from real people, so you know what to order before you go.`
+      ? `${place.name} staat op ${place.avg_rating.toFixed(1)}★ uit ${place.review_count} fotoreview${place.review_count === 1 ? '' : 's'} op SnackSpot. Zie wat mensen er echt aten en weet wat je moet bestellen.`
+      : `${place.name} op SnackSpot: fotoreviews van bezoekers, zodat je weet wat je moet bestellen voordat je gaat zitten.`
 
   const ogImage = await getPlacePhoto(id)
 
@@ -92,10 +95,10 @@ export async function generateMetadata({
 
 function buildPlaceBreadcrumb(from: string | undefined, placeName: string): Array<{ label: string; href?: string }> {
   const crumbs: Array<{ label: string; href?: string }> = []
-  if (from === 'search' || !from) crumbs.push({ label: 'Explore', href: '/search' })
-  else if (from === 'nearby') crumbs.push({ label: 'Nearby', href: '/nearby' })
+  if (from === 'search' || !from) crumbs.push({ label: 'Ontdek', href: '/search' })
+  else if (from === 'nearby') crumbs.push({ label: 'Dichtbij', href: '/nearby' })
   else if (from === 'feed') crumbs.push({ label: 'Feed', href: '/' })
-  else if (from === 'profile') crumbs.push({ label: 'Profile', href: '/profile' })
+  else if (from === 'profile') crumbs.push({ label: 'Profiel', href: '/profile' })
   else if (from.startsWith('user:')) {
     const username = from.slice('user:'.length)
     crumbs.push({ label: `@${username}`, href: `/u/${encodeURIComponent(username)}` })
@@ -171,7 +174,11 @@ export default async function PlacePage({
   const appUrl = getSiteUrl()
   const photoUrl = await getPlacePhoto(id)
   const cuisine = cuisineLabel(place.cuisine)
-  const city = extractCity(place.address)
+  // places.city is the column the city landing pages group on; extractCity() covers rows
+  // written before that column was populated on every insert path.
+  const city = place.city?.trim() || extractCity(place.address)
+  // Only links to a city that actually has a page — a city below the quality gate 404s.
+  const cityPageSlug = await getCityPageSlug(city)
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Restaurant',
@@ -202,12 +209,22 @@ export default async function PlacePage({
       : {}),
   }
 
+  // Mirrors the on-page trail. When the city has a landing page it becomes the parent,
+  // which is also the relationship the internal link below expresses.
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'SnackSpot', item: appUrl },
-      { '@type': 'ListItem', position: 2, name: place.name, item: `${appUrl}/place/${place.id}` },
+      ...(cityPageSlug && city
+        ? [{ '@type': 'ListItem', position: 2, name: `Snackbars in ${city}`, item: `${appUrl}/snackbars/${cityPageSlug}` }]
+        : []),
+      {
+        '@type': 'ListItem',
+        position: cityPageSlug && city ? 3 : 2,
+        name: place.name,
+        item: `${appUrl}/place/${place.id}`,
+      },
     ],
   }
 
@@ -217,9 +234,9 @@ export default async function PlacePage({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }} />
       <Breadcrumb items={buildPlaceBreadcrumb(from, place.name)} />
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <Link href={backHref} className="btn-secondary text-sm">Back</Link>
+        <Link href={backHref} className="btn-secondary text-sm">Terug</Link>
         <Link href={`/add-review?placeId=${place.id}`} className="btn-primary text-sm">
-          Write review
+          Schrijf een review
         </Link>
       </div>
 
@@ -229,6 +246,16 @@ export default async function PlacePage({
           <div className="card p-5">
             <h1 className="text-2xl font-heading font-bold text-snack-text break-words">{place.name}</h1>
             <p className="mt-1 text-sm text-snack-muted">{place.address}</p>
+            {cityPageSlug && city && (
+              <p className="mt-2 text-sm">
+                <Link
+                  href={`/snackbars/${cityPageSlug}`}
+                  className="font-semibold text-snack-primary hover:underline"
+                >
+                  Alle snackbars in {city}
+                </Link>
+              </p>
+            )}
             {cuisineLabel(place.cuisine) && (
               <span className="mt-2 inline-block rounded-full bg-snack-surface px-2.5 py-1 text-xs font-medium text-snack-primary">
                 {cuisineLabel(place.cuisine)}
@@ -237,7 +264,7 @@ export default async function PlacePage({
 
             <div className="mt-4 flex items-center gap-4 rounded-xl bg-snack-surface px-4 py-3">
               <div>
-                <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Rating</p>
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Cijfer</p>
                 <div className="mt-1 flex items-center gap-1.5">
                   <span className="text-snack-rating text-sm">{place.avg_rating !== null ? '★'.repeat(Math.max(1, Math.round(place.avg_rating ?? 0))) : '-'}</span>
                   <span className="font-semibold text-snack-text">{place.avg_rating?.toFixed(1) ?? '-'}</span>
@@ -246,7 +273,7 @@ export default async function PlacePage({
               <div className="h-8 w-px bg-snack-border" />
               <div>
                 <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Reviews</p>
-                <p className="mt-1 font-semibold text-snack-text">{place.review_count} {place.review_count === 1 ? 'post' : 'posts'}</p>
+                <p className="mt-1 font-semibold text-snack-text">{place.review_count}</p>
               </div>
             </div>
             <a
@@ -254,7 +281,7 @@ export default async function PlacePage({
               target="_blank"
               rel="noopener noreferrer"
               className="mt-3 flex items-center gap-2 rounded-xl border border-snack-border px-4 py-3 text-sm font-semibold text-snack-primary transition hover:bg-snack-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2"
-              aria-label={`Open ${place.name} in maps`}
+              aria-label={`Open ${place.name} in Maps`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               Open in Maps
@@ -263,7 +290,7 @@ export default async function PlacePage({
           {topDishes.length > 0 && (
             <div className="card p-5">
               <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">
-                Order this
+                Dit moet je bestellen
               </p>
               <ul className="mt-3 space-y-2.5">
                 {topDishes.map((d, i) => (
@@ -274,7 +301,7 @@ export default async function PlacePage({
                         {d.dish}
                       </p>
                       <p className="text-xs text-snack-muted">
-                        {d.pct}% of dish reviews here
+                        {d.pct}% van de gerechtreviews hier
                         {d.review_count > 1 ? ` · ${d.review_count} reviews` : ''}
                       </p>
                     </div>
@@ -293,7 +320,7 @@ export default async function PlacePage({
               className="h-48 rounded-xl overflow-hidden"
             />
             <p className="mt-1.5 text-xs text-snack-muted">
-              Place &amp; map data &copy;{' '}
+              Locatie- en kaartgegevens &copy;{' '}
               <a
                 href="https://www.openstreetmap.org/copyright"
                 target="_blank"

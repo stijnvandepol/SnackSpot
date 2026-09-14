@@ -1,4 +1,4 @@
-import { cookies, headers } from 'next/headers'
+import { cookies } from 'next/headers'
 import type { Locale, MarketingDict } from './types'
 import { en } from './marketing/en'
 import { nl } from './marketing/nl'
@@ -11,13 +11,12 @@ export * from './config'
 
 const DICTS: Record<Locale, MarketingDict> = { en, nl }
 
-// Server-only: reads the request cookie/headers to resolve the active locale.
+// Server-only: reads the language cookie to resolve the active locale. See pickLocale
+// for why Accept-Language is not part of this — in short, it made the indexable
+// rendering of /product depend on who was asking.
 export async function resolveLocale(): Promise<Locale> {
-  const [cookieStore, headerList] = await Promise.all([cookies(), headers()])
-  return pickLocale(
-    cookieStore.get(LOCALE_COOKIE)?.value,
-    headerList.get('accept-language') ?? undefined,
-  )
+  const cookieStore = await cookies()
+  return pickLocale(cookieStore.get(LOCALE_COOKIE)?.value)
 }
 
 export function getMarketingDict(locale: Locale): MarketingDict {

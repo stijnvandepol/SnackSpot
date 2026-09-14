@@ -1,21 +1,31 @@
 import { describe, it, expect } from 'vitest'
-import { pickLocale } from './locale'
+import { pickLocale, DEFAULT_LOCALE } from './locale'
 
 describe('pickLocale', () => {
-  it('prefers a valid cookie over the header', () => {
-    expect(pickLocale('nl', 'en-US,en;q=0.9')).toBe('nl')
+  it('uses a valid cookie', () => {
+    expect(pickLocale('nl')).toBe('nl')
+    expect(pickLocale('en')).toBe('en')
   })
-  it('ignores an invalid cookie and uses the header', () => {
-    expect(pickLocale('de', 'nl-NL,nl;q=0.9,en;q=0.8')).toBe('nl')
+
+  it('ignores an invalid cookie', () => {
+    expect(pickLocale('de')).toBe(DEFAULT_LOCALE)
   })
-  it('parses the first matching Accept-Language tag', () => {
-    expect(pickLocale(undefined, 'fr-FR,fr;q=0.9,en;q=0.8')).toBe('en')
+
+  it('falls back to the default when no cookie is set', () => {
+    expect(pickLocale(undefined)).toBe(DEFAULT_LOCALE)
   })
-  it('matches the base of a regional tag', () => {
-    expect(pickLocale(undefined, 'nl-BE')).toBe('nl')
+
+  it('defaults to Dutch', () => {
+    // The commercial target is the Dutch snackbar niche, and /product serves both
+    // languages from one URL. A crawler carries no cookie, so this default decides
+    // which language Google indexes for that URL — it must not depend on the request.
+    expect(DEFAULT_LOCALE).toBe('nl')
   })
-  it('falls back to en when nothing matches', () => {
-    expect(pickLocale(undefined, 'de-DE,fr;q=0.9')).toBe('en')
-    expect(pickLocale(undefined, undefined)).toBe('en')
+
+  it('does not negotiate on Accept-Language', () => {
+    // Regression guard. Resolving the locale from the request header meant Googlebot
+    // (en-US) only ever saw the English copy of the Dutch marketing page, while a
+    // Dutch visitor saw something else at the same URL, with no hreflang to explain it.
+    expect(pickLocale.length).toBe(1)
   })
 })

@@ -13,7 +13,7 @@ const links = [
   { href: SHARED_NAV_LINKS[0].href, icon: 'home'   as IconName, label: SHARED_NAV_LINKS[0].label },
   { href: SHARED_NAV_LINKS[1].href, icon: 'search' as IconName, label: SHARED_NAV_LINKS[1].label },
   { href: SHARED_NAV_LINKS[2].href, icon: 'map'    as IconName, label: SHARED_NAV_LINKS[2].label },
-  { href: '/profile',               icon: 'user'   as IconName, label: 'Profile' },
+  { href: '/profile',               icon: 'user'   as IconName, label: 'Profiel' },
 ]
 
 function NavIcon({ name, className }: { name: IconName; className?: string }) {

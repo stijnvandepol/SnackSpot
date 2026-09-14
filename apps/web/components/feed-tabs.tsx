@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { FeedClient } from '@/components/feed-client'
+import { FeedClient, type FeedSeed } from '@/components/feed-client'
 import { useAuth } from '@/components/auth-provider'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { mealEmoji } from '@/lib/meal'
@@ -42,7 +42,7 @@ export function FriendsBitesStrip() {
   return (
     <div className="mb-4">
       <p className="mb-2 text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">
-        Bites from your circle, last 24h
+        Bites uit je kring, afgelopen 24 uur
       </p>
       <div className="flex gap-3 overflow-x-auto pb-1">
         {bites.map((b) => {
@@ -54,7 +54,7 @@ export function FriendsBitesStrip() {
                   type="button"
                   onClick={() => setSelected(b)}
                   className="relative mx-auto block h-20 w-20 cursor-zoom-in overflow-hidden rounded-2xl bg-snack-surface focus:outline-none focus:ring-2 focus:ring-snack-primary"
-                  aria-label={`View ${b.user.username}'s bite photo`}
+                  aria-label={`Bekijk de bite van ${b.user.username}`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={src} alt="" className="h-full w-full object-cover" loading="lazy" />
@@ -85,19 +85,19 @@ export function FriendsBitesStrip() {
   )
 }
 
-export function FeedTabs() {
+export function FeedTabs({ seed }: { seed?: FeedSeed }) {
   const { user } = useAuth()
   const [scope, setScope] = useState<Scope>('discover')
 
   // Anonymous visitors only have the public discover feed.
-  if (!user) return <FeedClient scope="discover" />
+  if (!user) return <FeedClient scope="discover" seed={seed} />
 
   return (
     <>
       <div className="mb-4 flex gap-1 rounded-xl bg-snack-surface p-1" role="tablist" aria-label="Feed scope">
         {([
-          ['following', 'Following'],
-          ['discover', 'Discover'],
+          ['following', 'Volgend'],
+          ['discover', 'Ontdek'],
         ] as const).map(([value, label]) => (
           <button
             key={value}
@@ -116,8 +116,9 @@ export function FeedTabs() {
 
       {scope === 'following' && <FriendsBitesStrip />}
 
-      {/* key resets pagination state when switching tabs */}
-      <FeedClient key={scope} scope={scope} />
+      {/* key resets pagination state when switching tabs. The server seed is the public
+          discover page, so it only applies to that tab. */}
+      <FeedClient key={scope} scope={scope} seed={scope === 'discover' ? seed : undefined} />
     </>
   )
 }

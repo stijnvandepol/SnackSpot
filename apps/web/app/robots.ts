@@ -14,7 +14,18 @@ export default function robots(): MetadataRoute.Robots {
         // fetchable `image`, and both the Restaurant JSON-LD and og:image point here.
         // Longest-match-wins means this Allow overrides /api/ without exposing the rest.
         allow: ['/', '/api/v1/photos/'],
-        disallow: ['/api/', '/auth/', '/admin/', '/profile', '/add-review', '/review/*/edit'],
+        disallow: [
+          '/api/',
+          '/auth/',
+          '/admin/',
+          '/profile',
+          '/add-review',
+          '/add-bite',
+          // Signed-in only and not in the sitemap, but it answered 200 to anyone who
+          // guessed the URL — cheaper to state the rule than to rely on obscurity.
+          '/bites',
+          '/review/*/edit',
+        ],
       },
       // Allow AI search crawlers explicitly
       { userAgent: 'GPTBot', allow: '/' },
