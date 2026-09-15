@@ -118,7 +118,7 @@ export async function resolveManualPlace(input: {
     const match = nearby.find((p) => normalizeName(p.name) === normalized)
     if (match) return { id: match.id, deduped: true }
 
-    // `city` is what the /snackbars landing pages group on (lib/city-index.ts).
+    // `city` is what the /eettentjes landing pages group on (lib/city-index.ts).
     // This path used to leave it NULL, so every place a user added by hand was
     // invisible to its own city page — permanently, unless an admin edited it —
     // and never counted toward CITY_PAGE_MIN_PLACES. The provider path already

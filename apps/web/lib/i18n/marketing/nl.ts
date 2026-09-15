@@ -26,7 +26,7 @@ export const nl: MarketingDict = {
     },
     {
       title: 'Verborgen parels, geen toeristische valstrikken',
-      body: 'SnackSpot is gebouwd voor de bakkerij om de hoek en de snackbar met de legendarische kapsalon. De grote ketens hebben al genoeg reviews.',
+      body: 'SnackSpot is gebouwd voor de bakkerij om de hoek en het eettentje met de legendarische kapsalon. De grote ketens hebben al genoeg reviews.',
       icon: '📍',
     },
     {
@@ -139,7 +139,7 @@ export const nl: MarketingDict = {
     features: 'Functies',
     why: 'Waarom SnackSpot',
     guides: 'Uitleg',
-    snackbars: 'Snackbars per stad',
+    eettentjes: 'Eettentjes per stad',
     releases: 'Releasenotes',
     login: 'Inloggen',
     createAccount: 'Account maken',

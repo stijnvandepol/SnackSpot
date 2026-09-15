@@ -1,6 +1,6 @@
 -- Backfill places.city for rows that never got one.
 --
--- Why: /snackbars and /snackbars/[stad] group on places.city (apps/web/lib/city-index.ts),
+-- Why: /eettentjes and /eettentjes/[stad] group on places.city (apps/web/lib/city-index.ts),
 -- and a place with a NULL city is excluded from its own city page and from the
 -- CITY_PAGE_MIN_PLACES / CITY_PAGE_MIN_REVIEWS gate that decides whether the page exists
 -- at all. Until now only migration 030's backfill and admin edits ever wrote the column:

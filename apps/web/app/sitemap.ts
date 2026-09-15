@@ -22,7 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: appUrl, lastModified: new Date() },
     { url: `${appUrl}/product`, lastModified: staticLastMod },
     { url: `${appUrl}/guides`, lastModified: staticLastMod },
-    { url: `${appUrl}/snackbars`, lastModified: staticLastMod },
+    { url: `${appUrl}/eettentjes`, lastModified: staticLastMod },
     { url: `${appUrl}/product/releases`, lastModified: staticLastMod },
     { url: `${appUrl}/search`, lastModified: staticLastMod },
     { url: `${appUrl}/nearby`, lastModified: staticLastMod },
@@ -93,19 +93,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }))
 
     const cityEntries: MetadataRoute.Sitemap = cities.map((city) => ({
-      url: `${appUrl}/snackbars/${city.slug}`,
+      url: `${appUrl}/eettentjes/${city.slug}`,
       lastModified: new Date(),
     }))
 
     // Dish pages come from the same gate the pages themselves use, so the sitemap can
-    // never advertise a /snackbars/[stad]/[gerecht] URL that would 404. One query per
+    // never advertise a /eettentjes/[stad]/[gerecht] URL that would 404. One query per
     // qualifying city, and the set of qualifying cities is small by construction.
     const dishesPerCity = await Promise.all(
       cities.map(async (city) => ({ city, dishes: await getQualifyingCityDishes(city.name) })),
     )
     const dishEntries: MetadataRoute.Sitemap = dishesPerCity.flatMap(({ city, dishes }) =>
       dishes.map((dish) => ({
-        url: `${appUrl}/snackbars/${city.slug}/${dish.slug}`,
+        url: `${appUrl}/eettentjes/${city.slug}/${dish.slug}`,
         lastModified: new Date(),
       })),
     )

@@ -32,8 +32,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/*
         Visible on mobile too. It used to be `hidden md:block`, which meant the only
-        internal links to /snackbars, /guides and the legal pages did not exist on the
-        surface where ~72% of impressions land — and /snackbars, the main commercial
+        internal links to /eettentjes, /guides and the legal pages did not exist on the
+        surface where ~72% of impressions land — and /eettentjes, the main commercial
         surface, had no internal links at all. `pb-nav` moves from <main> to here so the
         fixed BottomNav cannot cover the last row.
       */}
@@ -45,8 +45,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         */}
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-center gap-2 px-4 py-4 text-sm md:gap-3 md:py-6">
           <nav aria-label="Ontdekken" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm font-medium">
-            <Link href="/snackbars" className="text-snack-primary hover:underline">
-              Snackbars per stad
+            <Link href="/eettentjes" className="text-snack-primary hover:underline">
+              Eettentjes per stad
             </Link>
             <Link href="/guides" className="text-snack-primary hover:underline">
               Uitleg

@@ -6,7 +6,7 @@ import { getSiteUrl } from '@/lib/site-url'
 import { safeJsonLd } from '@/lib/html'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
-// Cached for an hour on demand, matching /snackbars/[stad] and app/sitemap.ts so the
+// Cached for an hour on demand, matching /eettentjes/[stad] and app/sitemap.ts so the
 // page, its parent and the sitemap all age at the same rate. No generateStaticParams for
 // the same reason as every other database-backed route here: `next build` has no database.
 //
@@ -38,7 +38,7 @@ export async function generateMetadata({
   return {
     title: { absolute: `${title} — SnackSpot` },
     description,
-    alternates: { canonical: `/snackbars/${detail.city.slug}/${detail.slug}` },
+    alternates: { canonical: `/eettentjes/${detail.city.slug}/${detail.slug}` },
     openGraph: {
       type: 'website',
       title,
@@ -105,18 +105,18 @@ export default async function CityDishPage({
       />
       <BreadcrumbJsonLd
         items={[
-          { name: 'Snackbars', path: '/snackbars' },
-          { name: detail.city.name, path: `/snackbars/${detail.city.slug}` },
-          { name: detail.name, path: `/snackbars/${detail.city.slug}/${detail.slug}` },
+          { name: 'Eettentjes', path: '/eettentjes' },
+          { name: detail.city.name, path: `/eettentjes/${detail.city.slug}` },
+          { name: detail.name, path: `/eettentjes/${detail.city.slug}/${detail.slug}` },
         ]}
       />
 
       <header className="max-w-3xl">
         <Link
-          href={`/snackbars/${detail.city.slug}`}
+          href={`/eettentjes/${detail.city.slug}`}
           className="text-sm font-semibold text-snack-primary hover:underline"
         >
-          ← Alle snackbars in {detail.city.name}
+          ← Alle eettentjes in {detail.city.name}
         </Link>
         <h1 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-5xl">
           De beste {dishLabel} in {detail.city.name}

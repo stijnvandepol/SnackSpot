@@ -12,11 +12,11 @@ import './globals.css'
 const metadataBase = getSiteOrigin()
 const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim()
 // The indexable surface of this site is Dutch, and the commercial target is the Dutch
-// snackbar niche — 60 of 90 clicks in the Aug 2026 GSC export came from the Netherlands
+// small-eatery niche — 60 of 90 clicks in the Aug 2026 GSC export came from the Netherlands
 // at position 3.48, against 10 clicks from the US at 10.19. The description, og:locale
 // and <html lang> below all follow from that.
 const appDescription =
-  'Ontdek snackbars, cafetaria’s en kleine eettentjes via fotoreviews van bezoekers. Zie per zaak wat mensen er echt aten, zodat je weet wat je moet bestellen voordat je gaat zitten.'
+  'Ontdek kleine eettentjes via fotoreviews van bezoekers — van snackbar en cafetaria tot broodjeszaak. Zie per zaak wat mensen er echt aten, zodat je weet wat je moet bestellen voordat je gaat zitten.'
 
 function buildJsonLd(appUrl: string) {
   const organization = {

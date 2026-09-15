@@ -22,7 +22,11 @@ export const revalidate = 3600
 
 function describe(city: CityDetail): string {
   const dishes = city.topDishes.slice(0, 2).map((dish) => dish.name)
-  const opener = `${city.placeCount} snackbars in ${city.name}, beoordeeld in ${city.reviewCount} fotoreviews door mensen die er echt gegeten hebben.`
+  const places =
+    city.placeCount === 1 ? '1 eettentje' : `${city.placeCount} eettentjes`
+  const reviews =
+    city.reviewCount === 1 ? '1 fotoreview' : `${city.reviewCount} fotoreviews`
+  const opener = `${places} in ${city.name}, beoordeeld in ${reviews} door mensen die er echt gegeten hebben.`
   return dishes.length > 0
     ? `${opener} Ontdek wat ze hier het vaakst bestellen, van ${dishes.join(' tot ')}.`
     : `${opener} Zie per zaak de cijfers, de foto's en wat je het beste kunt bestellen.`
@@ -37,14 +41,19 @@ export async function generateMetadata({
   const city = await getCityDetail(stad)
   if (!city) return { title: 'Niet gevonden' }
 
-  const title = `De beste snackbars in ${city.name}`
+  // With a single address "de beste" would be an empty superlative, so the heading states
+  // what the page actually is instead.
+  const title =
+    city.placeCount === 1
+      ? `Eettentjes in ${city.name}`
+      : `De beste eettentjes in ${city.name}`
   const description = describe(city)
   const image = city.places.find((place) => place.photoUrl)?.photoUrl
 
   return {
     title: { absolute: `${title} — SnackSpot` },
     description,
-    alternates: { canonical: `/snackbars/${city.slug}` },
+    alternates: { canonical: `/eettentjes/${city.slug}` },
     openGraph: {
       type: 'website',
       title,
@@ -71,7 +80,10 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: `De beste snackbars in ${city.name}`,
+    name:
+      city.placeCount === 1
+        ? `Eettentjes in ${city.name}`
+        : `De beste eettentjes in ${city.name}`,
     numberOfItems: city.places.length,
     itemListElement: city.places.map((place, index) => ({
       '@type': 'ListItem',
@@ -105,17 +117,19 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListJsonLd) }} />
       <BreadcrumbJsonLd
         items={[
-          { name: 'Snackbars', path: '/snackbars' },
-          { name: city.name, path: `/snackbars/${city.slug}` },
+          { name: 'Eettentjes', path: '/eettentjes' },
+          { name: city.name, path: `/eettentjes/${city.slug}` },
         ]}
       />
 
       <header className="max-w-3xl">
-        <Link href="/snackbars" className="text-sm font-semibold text-snack-primary hover:underline">
+        <Link href="/eettentjes" className="text-sm font-semibold text-snack-primary hover:underline">
           ← Alle steden
         </Link>
         <h1 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-5xl">
-          De beste snackbars in {city.name}
+          {city.placeCount === 1
+            ? `Eettentjes in ${city.name}`
+            : `De beste eettentjes in ${city.name}`}
         </h1>
         <p className="mt-4 text-base leading-7 text-snack-muted md:text-lg">{describe(city)}</p>
       </header>
@@ -158,7 +172,7 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
             {city.dishPages.map((dish) => (
               <li key={dish.slug}>
                 <Link
-                  href={`/snackbars/${city.slug}/${dish.slug}`}
+                  href={`/eettentjes/${city.slug}/${dish.slug}`}
                   className="flex items-baseline justify-between gap-3 rounded-xl border border-snack-border bg-snack-background px-4 py-3 transition hover:border-snack-primary/40"
                 >
                   <span className="min-w-0">
@@ -181,7 +195,9 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
 
       <section className="mt-10" aria-labelledby="alle-zaken">
         <h2 id="alle-zaken" className="font-heading text-xl font-semibold text-snack-text">
-          Alle {city.placeCount} zaken in {city.name}
+          {city.placeCount === 1
+            ? `De zaak in ${city.name}`
+            : `Alle ${city.placeCount} zaken in ${city.name}`}
         </h2>
         <ol className="mt-4 space-y-4">
           {city.places.map((place, index) => (
@@ -208,9 +224,12 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
                 )}
 
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">
-                    #{index + 1}
-                  </p>
+                  {/* A rank marker only means something against other entries. */}
+                  {city.places.length > 1 && (
+                    <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">
+                      #{index + 1}
+                    </p>
+                  )}
                   <h3 className="mt-0.5 font-heading text-lg font-semibold text-snack-text">
                     {place.name}
                   </h3>
@@ -245,7 +264,7 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
 
       <section className="mt-12 rounded-2xl border border-snack-border bg-snack-surface p-6">
         <h2 className="font-heading text-lg font-semibold text-snack-text">
-          Ken jij een betere snackbar in {city.name}?
+          Ken jij een beter eettentje in {city.name}?
         </h2>
         <p className="mt-2 text-sm leading-6 text-snack-muted">
           Deze lijst komt volledig uit reviews van bezoekers. Mis je een zaak, of ben je het niet

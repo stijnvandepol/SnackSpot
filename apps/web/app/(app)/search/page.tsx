@@ -11,7 +11,7 @@ import { logger } from '@/lib/logger'
 // renders one in its default state, and a second list of the same venues sorted slightly
 // differently read as a duplicate — and on a phone it pushed the page to roughly twice
 // its useful length. The crawlable value of this page is the city links, which lead to
-// /snackbars/[stad]; being a venue directory is the job of those pages, not this one.
+// /eettentjes/[stad]; being a venue directory is the job of those pages, not this one.
 export const dynamic = 'force-dynamic'
 
 async function getCities(): Promise<CitySummary[]> {
@@ -29,7 +29,7 @@ export default async function SearchPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="font-heading text-xl font-bold leading-snug text-snack-text sm:text-2xl">
-        Ontdek snackbars en eettentjes
+        Ontdek eettentjes
       </h1>
       <p className="mt-1 text-sm text-snack-muted">
         Zoek op naam, gerecht of label — of begin bij een stad.

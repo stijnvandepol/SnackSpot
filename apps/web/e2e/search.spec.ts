@@ -8,7 +8,7 @@ test.describe('Search / Ontdek page', () => {
 
   test('renders the Ontdek heading', async ({ page }) => {
     await page.goto('/search')
-    await expect(page.getByRole('heading', { level: 1, name: /Ontdek snackbars/i })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: /Ontdek eettentjes/i })).toBeVisible()
   })
 
   test('has a search input', async ({ page }) => {

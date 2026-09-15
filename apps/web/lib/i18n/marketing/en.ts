@@ -26,7 +26,7 @@ export const en: MarketingDict = {
     },
     {
       title: 'Hidden gems, zero tourist traps',
-      body: 'SnackSpot is built for the hole-in-the-wall bakery and the snackbar with the legendary kapsalon. The big chains already have enough reviews.',
+      body: 'SnackSpot is built for the hole-in-the-wall bakery and the snack bar with the legendary kapsalon. The big chains already have enough reviews.',
       icon: '📍',
     },
     {
@@ -139,7 +139,7 @@ export const en: MarketingDict = {
     features: 'Features',
     why: 'Why SnackSpot',
     guides: 'Guides',
-    snackbars: 'Snack bars by city',
+    eettentjes: 'Places by city',
     releases: 'Release Notes',
     login: 'Log in',
     createAccount: 'Create account',

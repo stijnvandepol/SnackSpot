@@ -221,7 +221,7 @@ export async function POST(req: NextRequest) {
         }
         // CRITICAL: ST_MakePoint takes (longitude, latitude) — lng before lat
         // `city` is derived rather than imported: an export may predate the column, and a
-        // place without it never appears on its own /snackbars/[stad] page.
+        // place without it never appears on its own /eettentjes/[stad] page.
         const [created] = await tx.$queryRaw<Array<{ id: string }>>`
           INSERT INTO places (name, address, city, location, created_at, updated_at)
           VALUES (

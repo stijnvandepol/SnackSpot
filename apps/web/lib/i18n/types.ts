@@ -18,7 +18,7 @@ export interface MarketingDict {
     faqEyebrow: string; faqTitle: string
     finalCtaTitle: string; finalCtaBody: string; finalCtaButton: string; finalCtaFinePrint: string
   }
-  nav: { problem: string; features: string; why: string; snackbars: string; guides: string; releases: string; login: string; createAccount: string }
+  nav: { problem: string; features: string; why: string; eettentjes: string; guides: string; releases: string; login: string; createAccount: string }
   switcher: { label: string; en: string; nl: string }
   releasesChrome: { title: string; intro: string; metaTitle: string; metaDescription: string; eyebrow: string }
 }

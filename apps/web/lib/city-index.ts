@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db'
 import { photoVariantUrl } from '@/lib/photo-url'
 
 /**
- * City aggregation for the /snackbars landing pages.
+ * City aggregation for the /eettentjes landing pages.
  *
  * Source of truth is `places.city` (migration 030), which is indexed and correctable from
  * the admin UI. Deriving the city from `address` was rejected: it cannot use the index, and
@@ -15,22 +15,30 @@ import { photoVariantUrl } from '@/lib/photo-url'
  * failure mode remains a place missing from a city page, never a wrong or empty page.
  */
 
-// The quality gate. GSC data from Aug 2026 showed 32 places spread over 22 cities, 19 of them
-// holding a single place — publishing a page each would have been 19 thin pages on a site
-// already carrying 67% thin URLs. Deliberately strict: at the time of writing only Eindhoven
-// (3 places, 15 reviews) clears it. Tune here as the corpus grows.
-export const CITY_PAGE_MIN_PLACES = 3
-export const CITY_PAGE_MIN_REVIEWS = 8
+// Every city with something to show gets a page, automatically.
+//
+// This gate used to require 3 places and 8 reviews, on the reasoning that 19 cities holding
+// a single place each would be 19 thin pages. That traded away the thing these pages are
+// for: somebody searching "eettentje Uden" wants the one good address, and a page naming it
+// answers that better than no page at all. Thin-content penalties target near-duplicate
+// mass-generated pages; these differ by venue, address, dish and photo, which is real
+// content however short.
+//
+// What stays is the one case with genuinely nothing to render: a city whose places have no
+// published review. The floor is therefore 1, not 0 — that is the difference between a
+// short page and an empty one.
+export const CITY_PAGE_MIN_PLACES = 1
+export const CITY_PAGE_MIN_REVIEWS = 1
 
 /** How many dishes the "wat bestellen ze hier" section shows. */
 const CITY_TOP_DISH_LIMIT = 6
 
-// The gate for /snackbars/[stad]/[gerecht]. Deliberately stricter per page than the city
-// gate: a dish ranking is only worth reading when several places can be compared on the
-// same dish, which is the whole point of the page. Expect zero qualifying dishes until the
-// corpus grows — a dish below this has no page, exactly like a city below the city gate.
-export const CITY_DISH_PAGE_MIN_PLACES = 3
-export const CITY_DISH_PAGE_MIN_REVIEWS = 5
+// The gate for /eettentjes/[stad]/[gerecht] stays above the city gate, for a reason that is
+// about the page rather than about volume: this page claims to rank places against each
+// other on one dish. With a single address there is nothing to rank, and the heading would
+// be a lie. Two is the smallest number that makes a comparison, so that is the floor.
+export const CITY_DISH_PAGE_MIN_PLACES = 2
+export const CITY_DISH_PAGE_MIN_REVIEWS = 3
 
 export interface CitySummary {
   slug: string
@@ -184,7 +192,7 @@ export async function getQualifyingCities(): Promise<CitySummary[]> {
  * Slug of the city landing page a place belongs to, or null when that city has no page.
  *
  * Checked against the same gate the pages use, so a place page can only ever link to a
- * /snackbars/[stad] URL that exists — a city below the gate 404s by design.
+ * /eettentjes/[stad] URL that exists — a city below the gate 404s by design.
  */
 export async function getCityPageSlug(city: string | null | undefined): Promise<string | null> {
   if (!city || city.trim() === '') return null
