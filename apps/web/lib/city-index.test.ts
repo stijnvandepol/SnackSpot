@@ -60,33 +60,32 @@ describe('citySlug', () => {
 })
 
 describe('getQualifyingCities', () => {
-  it('keeps a city that meets both thresholds exactly', async () => {
+  it('gives a city with a single reviewed place its own page', async () => {
+    // The point of lowering the gate: somebody searching "eettentje Uden" wants that one
+    // address, and a page naming it beats no page at all.
     queryRaw.mockResolvedValue([
-      row('Eindhoven', CITY_PAGE_MIN_PLACES, CITY_PAGE_MIN_REVIEWS),
+      row('Uden', CITY_PAGE_MIN_PLACES, CITY_PAGE_MIN_REVIEWS),
     ] as never)
 
-    const cities = await getQualifyingCities()
-
-    expect(cities).toEqual([
-      { slug: 'eindhoven', name: 'Eindhoven', placeCount: 3, reviewCount: 8 },
+    expect(await getQualifyingCities()).toEqual([
+      { slug: 'uden', name: 'Uden', placeCount: 1, reviewCount: 1 },
     ])
   })
 
-  it('rejects a city with enough reviews but too few places', async () => {
-    // Two places carrying twenty reviews is not an answer to "beste snackbar <stad>".
-    queryRaw.mockResolvedValue([row('Amsterdam', CITY_PAGE_MIN_PLACES - 1, 20)] as never)
+  it('rejects a city whose places have no published review', async () => {
+    // The one case with genuinely nothing to render. This is the difference between a
+    // short page and an empty one, and it is the only reason the floor is 1 and not 0.
+    queryRaw.mockResolvedValue([row('Amsterdam', 4, 0)] as never)
 
     expect(await getQualifyingCities()).toEqual([])
   })
 
-  it('rejects a city with enough places but too few reviews', async () => {
-    // The real shape of this data: Keulen had 5 places and only 5 reviews.
-    queryRaw.mockResolvedValue([
-      row('Keulen', 5, CITY_PAGE_MIN_REVIEWS - 1),
-      row('Uden', 3, 4),
-    ] as never)
+  it('keeps larger cities too', async () => {
+    queryRaw.mockResolvedValue([row('Eindhoven', 3, 15)] as never)
 
-    expect(await getQualifyingCities()).toEqual([])
+    expect(await getQualifyingCities()).toEqual([
+      { slug: 'eindhoven', name: 'Eindhoven', placeCount: 3, reviewCount: 15 },
+    ])
   })
 
   it('preserves the order the query returned', async () => {
@@ -110,13 +109,13 @@ describe('getCityDetail', () => {
   })
 
   it('returns null for a real city that is below the gate', async () => {
-    queryRaw.mockResolvedValue([row('Uden', 3, 4)] as never)
+    queryRaw.mockResolvedValue([row('Uden', 3, 0)] as never)
 
     expect(await getCityDetail('uden')).toBeNull()
   })
 
   it('does not query place detail when the city is below the gate', async () => {
-    queryRaw.mockResolvedValue([row('Uden', 3, 4)] as never)
+    queryRaw.mockResolvedValue([row('Uden', 3, 0)] as never)
 
     await getCityDetail('uden')
 
@@ -169,7 +168,7 @@ describe('getCityDetail', () => {
       .mockResolvedValueOnce([
         {
           id: 'p2',
-          name: 'Snackbar Zonder Naam',
+          name: 'Eettentje Zonder Naam',
           address: 'Dorpsstraat 2, Eindhoven',
           cuisine: null,
           avg_rating: null,
@@ -282,9 +281,7 @@ describe('getCityDishDetail', () => {
 
   it('returns null when the dish is below the dish gate', async () => {
     queryRaw
-      .mockResolvedValueOnce([
-        row('Eindhoven', CITY_PAGE_MIN_PLACES, CITY_PAGE_MIN_REVIEWS),
-      ] as never)
+      .mockResolvedValueOnce([row('Eindhoven', 3, 15)] as never)
       .mockResolvedValueOnce([dishRow('Kapsalon', 1, 1)] as never)
 
     expect(await getCityDishDetail('eindhoven', 'kapsalon')).toBeNull()
@@ -292,9 +289,7 @@ describe('getCityDishDetail', () => {
 
   it('returns null for a dish slug that does not exist in this city', async () => {
     queryRaw
-      .mockResolvedValueOnce([
-        row('Eindhoven', CITY_PAGE_MIN_PLACES, CITY_PAGE_MIN_REVIEWS),
-      ] as never)
+      .mockResolvedValueOnce([row('Eindhoven', 3, 15)] as never)
       .mockResolvedValueOnce([dishRow('Kapsalon', 3, 9)] as never)
 
     expect(await getCityDishDetail('eindhoven', 'patatje-oorlog')).toBeNull()
@@ -302,9 +297,7 @@ describe('getCityDishDetail', () => {
 
   it('ranks places on their rating for that dish alone', async () => {
     queryRaw
-      .mockResolvedValueOnce([
-        row('Eindhoven', CITY_PAGE_MIN_PLACES, CITY_PAGE_MIN_REVIEWS),
-      ] as never)
+      .mockResolvedValueOnce([row('Eindhoven', 3, 15)] as never)
       .mockResolvedValueOnce([dishRow('Kapsalon', 3, 9, 4.3)] as never)
       .mockResolvedValueOnce([
         { id: 'p1', name: 'De Hoek', address: 'Kerkstraat 1', avg_rating: 4.8, review_count: 4, quote: 'Ruim en goed gekruid.' },

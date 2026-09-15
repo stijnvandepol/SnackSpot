@@ -84,8 +84,8 @@ describe('sitemap thin-content filtering', () => {
 })
 
 describe('sitemap city entries', () => {
-  it('always lists the /snackbars index', async () => {
-    expect(await urls()).toContain('https://snackspot.online/snackbars')
+  it('always lists the /eettentjes index', async () => {
+    expect(await urls()).toContain('https://snackspot.online/eettentjes')
   })
 
   it('lists a URL for every qualifying city', async () => {
@@ -96,15 +96,15 @@ describe('sitemap city entries', () => {
 
     const result = await urls()
 
-    expect(result).toContain('https://snackspot.online/snackbars/eindhoven')
-    expect(result).toContain('https://snackspot.online/snackbars/someren-eind')
+    expect(result).toContain('https://snackspot.online/eettentjes/eindhoven')
+    expect(result).toContain('https://snackspot.online/eettentjes/someren-eind')
   })
 
   it('lists no city URLs when no city qualifies', async () => {
     getCities.mockResolvedValue([])
 
     // A city below the gate has no page, so advertising one would send Google to a 404.
-    expect((await urls()).filter((url) => url.includes('/snackbars/'))).toEqual([])
+    expect((await urls()).filter((url) => url.includes('/eettentjes/'))).toEqual([])
   })
 
   it('lists a URL for every dish that earned its own page', async () => {
@@ -115,7 +115,7 @@ describe('sitemap city entries', () => {
       { slug: 'kapsalon', name: 'Kapsalon', key: 'kapsalon', placeCount: 3, reviewCount: 9, avgRating: 4.4 },
     ])
 
-    expect(await urls()).toContain('https://snackspot.online/snackbars/eindhoven/kapsalon')
+    expect(await urls()).toContain('https://snackspot.online/eettentjes/eindhoven/kapsalon')
   })
 
   it('lists no dish URLs when no dish clears the dish gate', async () => {
@@ -140,9 +140,9 @@ describe('sitemap city entries', () => {
 
     const result = await urls()
 
-    expect(result).toContain('https://snackspot.online/snackbars')
+    expect(result).toContain('https://snackspot.online/eettentjes')
     // getSiteUrl() strips the trailing slash, so the homepage entry is the bare origin.
     expect(result).toContain('https://snackspot.online')
-    expect(result.filter((url) => url.includes('/snackbars/'))).toEqual([])
+    expect(result.filter((url) => url.includes('/eettentjes/'))).toEqual([])
   })
 })

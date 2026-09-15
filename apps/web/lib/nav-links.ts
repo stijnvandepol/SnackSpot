@@ -17,10 +17,10 @@ export const SHARED_NAV_LINKS = [
 /**
  * Desktop navigation. Carries the city index as well, which has no room in the
  * five-slot mobile bar — on mobile it is reached from the homepage city strip
- * and the footer instead. /snackbars is the site's main commercial surface, so
+ * and the footer instead. /eettentjes is the site's main commercial surface, so
  * it must be reachable by internal links from every page, not just the sitemap.
  */
 export const TOP_NAV_LINKS = [
   ...SHARED_NAV_LINKS,
-  { href: '/snackbars', label: 'Snackbars' },
+  { href: '/eettentjes', label: 'Eettentjes' },
 ] as const satisfies ReadonlyArray<{ href: string; label: string }>

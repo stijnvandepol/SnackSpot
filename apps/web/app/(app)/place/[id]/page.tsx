@@ -217,7 +217,7 @@ export default async function PlacePage({
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'SnackSpot', item: appUrl },
       ...(cityPageSlug && city
-        ? [{ '@type': 'ListItem', position: 2, name: `Snackbars in ${city}`, item: `${appUrl}/snackbars/${cityPageSlug}` }]
+        ? [{ '@type': 'ListItem', position: 2, name: `Eettentjes in ${city}`, item: `${appUrl}/eettentjes/${cityPageSlug}` }]
         : []),
       {
         '@type': 'ListItem',
@@ -249,10 +249,10 @@ export default async function PlacePage({
             {cityPageSlug && city && (
               <p className="mt-2 text-sm">
                 <Link
-                  href={`/snackbars/${cityPageSlug}`}
+                  href={`/eettentjes/${cityPageSlug}`}
                   className="font-semibold text-snack-primary hover:underline"
                 >
-                  Alle snackbars in {city}
+                  Alle eettentjes in {city}
                 </Link>
               </p>
             )}

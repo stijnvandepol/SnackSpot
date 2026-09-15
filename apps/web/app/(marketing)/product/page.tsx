@@ -349,7 +349,7 @@ export default async function ProductPage() {
         ── Cities ───────────────────────────────────────────────────────────
         /product sits at position 4.94 with 139 impressions — the best-placed page on
         the site after the homepage — and passed none of that on: nothing here linked to
-        /snackbars, the pages meant to earn non-brand traffic. This section is also the
+        /eettentjes, the pages meant to earn non-brand traffic. This section is also the
         only place on the marketing site that shows the product's actual output.
       */}
       {cities.length > 0 && (
@@ -367,7 +367,7 @@ export default async function ProductPage() {
             {cities.map((city) => (
               <li key={city.slug}>
                 <Link
-                  href={`/snackbars/${city.slug}`}
+                  href={`/eettentjes/${city.slug}`}
                   className="inline-flex items-baseline gap-2 rounded-full border border-snack-border bg-white px-4 py-2 text-sm transition hover:border-snack-primary"
                 >
                   <span className="font-semibold text-snack-text">{city.name}</span>
@@ -377,7 +377,7 @@ export default async function ProductPage() {
             ))}
             <li>
               <Link
-                href="/snackbars"
+                href="/eettentjes"
                 className="inline-flex items-center rounded-full border border-dashed border-snack-border px-4 py-2 text-sm font-semibold text-snack-primary transition hover:border-snack-primary"
               >
                 {dict.sections.citiesAll}

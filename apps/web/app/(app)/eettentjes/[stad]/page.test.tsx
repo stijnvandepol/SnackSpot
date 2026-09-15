@@ -78,9 +78,9 @@ describe('city page metadata', () => {
 
     const meta = await generateMetadata({ params: Promise.resolve({ stad: 'eindhoven' }) })
 
-    expect(meta.title).toEqual({ absolute: 'De beste snackbars in Eindhoven — SnackSpot' })
-    expect(meta.alternates?.canonical).toBe('/snackbars/eindhoven')
-    expect(meta.description).toContain('3 snackbars in Eindhoven')
+    expect(meta.title).toEqual({ absolute: 'De beste eettentjes in Eindhoven — SnackSpot' })
+    expect(meta.alternates?.canonical).toBe('/eettentjes/eindhoven')
+    expect(meta.description).toContain('3 eettentjes in Eindhoven')
     expect(meta.description).toContain('15 fotoreviews')
   })
 
