@@ -4,13 +4,22 @@ import { ReviewStatus } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { safeJsonLd } from '@/lib/html'
+import { extractCity } from '@/lib/utils'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 import { MarketingShell } from '@/components/marketing-shell'
 import { resolveLocale, getMarketingDict, ogLocale } from '@/lib/i18n/locale'
-import { getQualifyingCities, type CitySummary } from '@/lib/city-index'
+import { fillTemplate, type MarketingDict } from '@/lib/i18n/types'
+import {
+  getCityDishDetail,
+  getQualifyingCities,
+  getQualifyingCityDishes,
+  type CityDishDetail,
+  type CitySummary,
+} from '@/lib/city-index'
 import { logger } from '@/lib/logger'
 
-// Dynamically rendered: resolveLocale() reads the request cookie/Accept-Language. Live community data is fetched per request.
+// Rendered per request: resolveLocale() reads the locale cookie, and the page is built
+// from live community data (the newest photos, the counts, the best-stocked dish ranking).
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await resolveLocale()
@@ -18,9 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: { absolute: dict.meta.productTitle },
     description: dict.meta.productDescription,
-    alternates: {
-      canonical: '/product',
-    },
+    alternates: { canonical: '/product' },
     openGraph: {
       type: 'website',
       title: dict.meta.productSocialTitle,
@@ -37,45 +44,38 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-// ─── Live community data (honest social proof, thresholds per CRO doc) ───────
+// ─── Live community data ─────────────────────────────────────────────────────
 
-interface WallPhoto {
+interface StripPhoto {
   id: string
   src: string
   dishName: string | null
+  placeName: string
+  city: string | null
   rating: number
 }
 
-const EMPTY_COMMUNITY_DATA = {
-  wall: [] as WallPhoto[],
-  placesCount: 0,
-  citiesCount: 0,
-  photosThisWeek: 0,
+interface CommunityData {
+  strip: StripPhoto[]
+  placesCount: number
+  reviewsCount: number
+  citiesCount: number
 }
 
-/** Cities are a nice-to-have on the marketing page: never let them break it. */
-async function getMarketingCities(): Promise<CitySummary[]> {
-  try {
-    return await getQualifyingCities()
-  } catch (error) {
-    logger.error({ err: error }, 'Failed to load cities for /product')
-    return []
-  }
-}
+const EMPTY_COMMUNITY_DATA: CommunityData = { strip: [], placesCount: 0, reviewsCount: 0, citiesCount: 0 }
 
-async function getCommunityData() {
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-
+async function getCommunityData(): Promise<CommunityData> {
   try {
-    const [recentReviews, placesCount, citiesRows, photosThisWeek] = await Promise.all([
+    const [recent, placesCount, reviewsCount, citiesRows] = await Promise.all([
       prisma.review.findMany({
         where: { status: ReviewStatus.PUBLISHED, reviewPhotos: { some: {} } },
         orderBy: { createdAt: 'desc' },
-        take: 16,
+        take: 14,
         select: {
           id: true,
           dishName: true,
           ratingOverall: true,
+          place: { select: { name: true, address: true, city: true } },
           reviewPhotos: {
             orderBy: { sortOrder: 'asc' },
             take: 1,
@@ -84,344 +84,390 @@ async function getCommunityData() {
         },
       }),
       prisma.place.count(),
+      prisma.review.count({ where: { status: ReviewStatus.PUBLISHED } }),
       prisma.$queryRaw<Array<{ count: number }>>`
         SELECT COUNT(DISTINCT city)::int AS count FROM places WHERE city IS NOT NULL
       `,
-      prisma.photo.count({ where: { createdAt: { gte: weekAgo }, moderationStatus: 'APPROVED' } }),
     ])
 
-    const wall: WallPhoto[] = recentReviews
-      .map((r) => {
+    const strip = recent
+      .map((r): StripPhoto | null => {
         const src = photoVariantUrl(
           r.reviewPhotos[0]?.photo.variants as Record<string, string> | undefined,
-          ['medium', 'thumb', 'large'],
+          ['medium', 'large', 'thumb'],
         )
         if (!src) return null
-        return { id: r.id, src, dishName: r.dishName, rating: Number(r.ratingOverall) }
+        return {
+          id: r.id,
+          src,
+          dishName: r.dishName,
+          placeName: r.place.name,
+          city: r.place.city?.trim() || extractCity(r.place.address),
+          rating: Number(r.ratingOverall),
+        }
       })
-      .filter((p): p is WallPhoto => p !== null)
+      .filter((p): p is StripPhoto => p !== null)
       .slice(0, 12)
 
-    return {
-      wall,
-      placesCount,
-      citiesCount: citiesRows[0]?.count ?? 0,
-      photosThisWeek,
-    }
-  } catch {
-    // No database at build-time prerender (Docker image build) — render the
-    // static shell with fallbacks; ISR fills in live data at runtime.
+    return { strip, placesCount, reviewsCount, citiesCount: citiesRows[0]?.count ?? 0 }
+  } catch (error) {
+    // No database at build-time prerender (Docker image build): render the static
+    // shell without the community sections rather than fail the page.
+    logger.error({ err: error }, 'Failed to load community data for /product')
     return EMPTY_COMMUNITY_DATA
   }
 }
 
+/** Cities never block the page. */
+async function getCities(): Promise<CitySummary[]> {
+  try {
+    return await getQualifyingCities()
+  } catch (error) {
+    logger.error({ err: error }, 'Failed to load cities for /product')
+    return []
+  }
+}
+
+/**
+ * The best-stocked dish ranking on the site — the one output SnackSpot has that a venue
+ * directory does not. Cities come best-stocked first, so the first city with a dish page
+ * is the strongest example we can show.
+ */
+async function getShowcaseRanking(cities: CitySummary[]): Promise<CityDishDetail | null> {
+  try {
+    for (const city of cities.slice(0, 6)) {
+      const dishes = await getQualifyingCityDishes(city.name)
+      const dish = dishes[0]
+      if (!dish) continue
+      const detail = await getCityDishDetail(city.slug, dish.slug)
+      if (detail && detail.places.length >= 2) return detail
+    }
+  } catch (error) {
+    logger.error({ err: error }, 'Failed to load the showcase ranking for /product')
+  }
+  return null
+}
+
+// ─── Presentation helpers ────────────────────────────────────────────────────
+
+function formatRating(rating: number, locale: 'nl' | 'en'): string {
+  const rounded = Math.round(rating * 10) / 10
+  const text = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
+  return locale === 'nl' ? text.replace('.', ',') : text
+}
+
+function Stars({ rating }: { rating: number }) {
+  const full = Math.round(rating)
+  return (
+    <span aria-hidden="true" className="text-snack-rating">
+      {'★'.repeat(full)}
+      <span className="text-snack-border">{'★'.repeat(Math.max(0, 5 - full))}</span>
+    </span>
+  )
+}
+
+function pluralize(n: number, one: string, many: string): string {
+  return n === 1 ? one : fillTemplate(many, { n })
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+
 export default async function ProductPage() {
-  const [{ wall, placesCount, citiesCount, photosThisWeek }, locale, cities] = await Promise.all([
-    getCommunityData(),
-    resolveLocale(),
-    getMarketingCities(),
-  ])
+  const [community, locale, cities] = await Promise.all([getCommunityData(), resolveLocale(), getCities()])
+  const ranking = await getShowcaseRanking(cities)
   const dict = getMarketingDict(locale)
+  const t: MarketingDict['product'] = dict.product
 
-  // A number only goes on the page when it impresses without context.
-  const stats = [
-    placesCount >= 10 ? { value: placesCount, label: dict.sections.statPlaces } : null,
-    citiesCount >= 2 ? { value: citiesCount, label: dict.sections.statCities } : null,
-    photosThisWeek >= 25 ? { value: photosThisWeek, label: dict.sections.statPhotos } : null,
-  ].filter((s): s is { value: number; label: string } => s !== null)
-
-  // FAQ JSON-LD uses dict.faqs so it localizes with the rest.
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: dict.faqs.map((f) => ({
+    mainEntity: t.faqs.map((f) => ({
       '@type': 'Question',
       name: f.q,
       acceptedAnswer: { '@type': 'Answer', text: f.a },
     })),
   }
 
-  const heroWall = wall.slice(0, 5)
+  // A count only goes on the page once it says something. Below this it reads as an apology.
+  const showCounts = community.reviewsCount >= 50 && community.placesCount >= 20 && community.citiesCount >= 5
 
   return (
     <MarketingShell locale={locale} dict={dict}>
-      <BreadcrumbJsonLd items={[{ name: 'About SnackSpot', path: '/product' }]} />
+      <BreadcrumbJsonLd items={[{ name: 'SnackSpot', path: '/product' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }} />
 
-      {/* ── Hero ───────────────────────────────────────────────────────────── */}
-      <section className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-[1.1fr_0.9fr] md:items-center md:py-20">
-        <div>
-          <p className="mb-4 inline-flex rounded-full border border-snack-primary/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-snack-primary">
-            {dict.hero.eyebrow}
-          </p>
-          <h1 className="max-w-3xl font-heading text-5xl font-bold leading-tight text-snack-text md:text-7xl">
-            {dict.hero.title}
-          </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-snack-muted md:text-lg">
-            {dict.hero.subtitle}
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link href="/auth/register?ref=hero" className="btn-primary text-sm">
-              {dict.hero.ctaPrimary}
-            </Link>
-            <Link href="/" className="btn-secondary text-sm">
-              {dict.hero.ctaSecondary}
+      {/* ── Hero: the promise, in one sentence ─────────────────────────────── */}
+      <section className="mx-auto max-w-6xl px-4 pb-10 pt-14 md:pb-14 md:pt-24">
+        <h1 className="max-w-4xl font-heading text-[2.75rem] font-bold leading-[1.02] tracking-[-0.035em] text-snack-text sm:text-6xl md:text-7xl lg:text-[5.5rem]">
+          {t.heroTitle}
+        </h1>
+        <p className="mt-6 max-w-2xl text-lg leading-8 text-snack-muted md:mt-8 md:text-xl md:leading-9">
+          {t.heroLead}
+        </p>
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center md:mt-10">
+          <Link href="/auth/register?ref=hero" className="btn-primary px-6 text-base">
+            {t.ctaPrimary}
+          </Link>
+          <Link href="/" className="btn-secondary px-6 text-base">
+            {t.ctaSecondary}
+          </Link>
+        </div>
+        <p className="mt-4 text-sm text-snack-muted">
+          {t.heroFinePrint}
+          {showCounts && (
+            <>
+              {' '}
+              {fillTemplate(t.counts, {
+                reviews: community.reviewsCount,
+                places: community.placesCount,
+                cities: community.citiesCount,
+              })}
+            </>
+          )}
+        </p>
+      </section>
+
+      {/* ── Strip: the feed made physical, running off both edges ──────────── */}
+      {community.strip.length >= 4 && (
+        <section aria-labelledby="strip-title" className="pb-6 md:pb-10">
+          <div className="mx-auto flex max-w-6xl items-baseline justify-between px-4">
+            <h2 id="strip-title" className="font-heading text-xl font-semibold text-snack-text md:text-2xl">
+              {t.stripTitle}
+            </h2>
+            <Link href="/" className="text-sm font-semibold text-snack-primary hover:underline">
+              {t.stripAll}
             </Link>
           </div>
-          <p className="mt-3 text-xs text-snack-muted">
-            {dict.hero.finePrint}
-          </p>
-        </div>
-
-        {/* Real community photos beat any mockup; emoji tiles cover the cold start. */}
-        <div className="grid grid-cols-3 gap-3">
-          {heroWall.length >= 3
-            ? heroWall.map((photo, i) => (
-                <div
-                  key={photo.id}
-                  className={`relative overflow-hidden rounded-2xl bg-snack-surface shadow-sm ${
-                    i === 0 ? 'col-span-2 row-span-2' : ''
-                  } aspect-square`}
+          {/*
+            Horizontal scroll with the first card aligned to the container's left edge:
+            the padding-left is max(16px, (viewport − container) / 2). Cards keep the feed's
+            portrait ratio so the photos read as plates, not as a banner.
+          */}
+          <ul
+            className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 pr-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:gap-4"
+            style={{ paddingLeft: 'max(1rem, calc((100vw - 72rem) / 2 + 1rem))' }}
+          >
+            {community.strip.map((photo, i) => (
+              <li key={photo.id} className="w-[13.5rem] flex-shrink-0 snap-start sm:w-60 md:w-64">
+                <Link
+                  href={`/review/${photo.id}`}
+                  className="group relative block aspect-[4/5] overflow-hidden rounded-2xl bg-snack-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={photo.src}
-                    alt={photo.dishName ?? 'Food photo shared on SnackSpot'}
+                    alt={photo.dishName ? `${photo.dishName}, ${photo.placeName}` : photo.placeName}
                     className="h-full w-full object-cover"
-                    loading={i === 0 ? 'eager' : 'lazy'}
+                    loading={i < 4 ? 'eager' : 'lazy'}
+                    decoding="async"
                   />
-                  {i === 0 && photo.dishName && (
-                    <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2.5 py-1 text-xs font-semibold text-white">
-                      ★ {photo.rating.toFixed(1)}, {photo.dishName}
-                    </span>
-                  )}
-                </div>
-              ))
-            : ['🍜', '🍕', '🥐', '🌮', '🍤'].map((emoji, i) => (
-                <div
-                  key={emoji}
-                  className={`flex items-center justify-center rounded-2xl bg-gradient-to-br from-snack-primary/15 to-snack-accent/15 ${
-                    i === 0 ? 'col-span-2 row-span-2 text-8xl' : 'text-5xl'
-                  } aspect-square`}
-                  aria-hidden="true"
-                >
-                  {emoji}
-                </div>
-              ))}
-        </div>
-      </section>
-
-      {/* ── Benefits ───────────────────────────────────────────────────────── */}
-      <section id="features" className="mx-auto max-w-6xl px-4 py-6 md:py-10">
-        <div className="mb-6 max-w-2xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">
-            {dict.sections.benefitsEyebrow}
-          </p>
-          <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
-            {dict.sections.benefitsTitle}
-          </h2>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          {dict.features.map((feature) => (
-            <article key={feature.title} className="card p-6">
-              <span className="text-3xl" aria-hidden="true">{feature.icon}</span>
-              <h3 className="mt-3 font-heading text-xl font-semibold text-snack-text">{feature.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-snack-muted">{feature.body}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* ── How it works ───────────────────────────────────────────────────── */}
-      <section className="bg-snack-surface/50 py-6 md:py-10">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="mb-6 max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">{dict.sections.stepsEyebrow}</p>
-            <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
-              {dict.sections.stepsTitle}
-            </h2>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-            {dict.steps.map((item) => (
-              <article key={item.step} className="rounded-[1.5rem] border border-snack-border bg-white p-6 shadow-sm">
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-snack-primary">{item.step}</p>
-                <h3 className="mt-4 font-heading text-2xl font-semibold text-snack-text">{item.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-snack-muted">{item.body}</p>
-              </article>
-            ))}
-          </div>
-
-          {/* Mid-page CTA */}
-          <div className="mt-10 flex flex-col items-center justify-between gap-4 rounded-[1.5rem] border border-snack-border bg-snack-surface px-6 py-5 sm:flex-row">
-            <p className="font-heading text-xl font-semibold text-snack-text">
-              {dict.sections.midCtaText}
-            </p>
-            <Link href="/auth/register?ref=midpage" className="btn-primary text-sm">
-              {dict.sections.midCtaButton}
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Photo wall: activity is the social proof ───────────────────────── */}
-      {wall.length >= 6 && (
-        <section className="mx-auto max-w-6xl px-4 py-6 md:py-10">
-          <div className="mb-6 max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">
-              {dict.sections.wallEyebrow}
-            </p>
-            <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
-              {dict.sections.wallTitle}
-            </h2>
-          </div>
-          <div className="grid grid-cols-3 gap-2 md:grid-cols-4">
-            {wall.map((photo) => (
-              <Link
-                key={photo.id}
-                href={`/review/${photo.id}`}
-                className="group relative aspect-square overflow-hidden rounded-2xl bg-snack-surface"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={photo.src}
-                  alt={photo.dishName ?? 'Food photo shared on SnackSpot'}
-                  className="h-full w-full object-cover transition group-hover:scale-105"
-                  loading="lazy"
-                />
-                <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">
-                  ★ {photo.rating.toFixed(1)}{photo.dishName ? ` ${photo.dishName}` : ''}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ── Community & honest numbers ─────────────────────────────────────── */}
-      <section className="bg-snack-surface/50 py-6 md:py-10">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="card overflow-hidden p-0">
-            <div className="grid gap-0 md:grid-cols-[0.95fr_1.05fr]">
-              <div className="bg-gradient-to-br from-snack-primary to-snack-accent p-8 text-white">
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/75">{dict.community.eyebrow}</p>
-                <h2 className="mt-3 font-heading text-3xl font-bold">
-                  {dict.community.title}
-                </h2>
-                <p className="mt-4 text-sm leading-6 text-white/85">
-                  {dict.community.body}
-                </p>
-                <p className="mt-4 text-sm font-semibold text-white/90">
-                  {dict.community.tagline}
-                </p>
-              </div>
-              <div className="p-8">
-                {stats.length > 0 ? (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {stats.map((stat) => (
-                      <div key={stat.label} className="rounded-2xl bg-snack-surface p-5">
-                        <p className="font-heading text-3xl font-bold text-snack-text">{stat.value}</p>
-                        <p className="mt-1 text-sm text-snack-muted">{stat.label}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-2xl bg-snack-surface p-5">
-                    <p className="text-sm leading-6 text-snack-muted">
-                      {dict.sections.statsEmpty}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent p-3 pt-10 text-white">
+                    <p className="truncate font-heading text-base font-semibold leading-tight">
+                      {photo.dishName ?? photo.placeName}
+                    </p>
+                    <p className="mt-0.5 flex items-center justify-between gap-2 text-xs text-white/85">
+                      <span className="truncate">
+                        {photo.dishName ? photo.placeName : photo.city ?? ''}
+                        {photo.dishName && photo.city ? `, ${photo.city}` : ''}
+                      </span>
+                      <span className="flex-shrink-0 font-semibold text-white">
+                        ★ {formatRating(photo.rating, locale)}
+                      </span>
                     </p>
                   </div>
-                )}
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                  <Link href="/auth/register?ref=community" className="btn-primary text-sm">
-                    {dict.community.ctaAdd}
-                  </Link>
-                  <Link href="/nearby" className="btn-secondary text-sm">
-                    {dict.community.ctaExplore}
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/*
-        ── Cities ───────────────────────────────────────────────────────────
-        /product sits at position 4.94 with 139 impressions — the best-placed page on
-        the site after the homepage — and passed none of that on: nothing here linked to
-        /eettentjes, the pages meant to earn non-brand traffic. This section is also the
-        only place on the marketing site that shows the product's actual output.
-      */}
-      {cities.length > 0 && (
-        <section className="mx-auto max-w-6xl px-4 py-6 md:py-10">
-          <div className="mb-6 max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">
-              {dict.sections.citiesEyebrow}
-            </p>
-            <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">
-              {dict.sections.citiesTitle}
-            </h2>
-            <p className="mt-3 text-base leading-7 text-snack-muted">{dict.sections.citiesBody}</p>
-          </div>
-          <ul className="flex flex-wrap gap-2">
-            {cities.map((city) => (
-              <li key={city.slug}>
-                <Link
-                  href={`/eettentjes/${city.slug}`}
-                  className="inline-flex items-baseline gap-2 rounded-full border border-snack-border bg-white px-4 py-2 text-sm transition hover:border-snack-primary"
-                >
-                  <span className="font-semibold text-snack-text">{city.name}</span>
-                  <span className="text-xs text-snack-muted">{city.placeCount}</span>
                 </Link>
               </li>
             ))}
-            <li>
-              <Link
-                href="/eettentjes"
-                className="inline-flex items-center rounded-full border border-dashed border-snack-border px-4 py-2 text-sm font-semibold text-snack-primary transition hover:border-snack-primary"
-              >
-                {dict.sections.citiesAll}
-              </Link>
-            </li>
           </ul>
         </section>
       )}
 
-      {/* ── FAQ ────────────────────────────────────────────────────────────── */}
-      <section id="faq" className="mx-auto max-w-4xl px-4 py-6 md:py-10">
-        <div className="mb-6">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-snack-primary">{dict.sections.faqEyebrow}</p>
-          <h2 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-4xl">{dict.sections.faqTitle}</h2>
+      {/* ── Ranking: the product's actual output, with real data ───────────── */}
+      <section className="mx-auto max-w-6xl px-4 py-14 md:py-24">
+        <div className="grid gap-10 md:grid-cols-[1fr_1.1fr] md:items-center md:gap-16">
+          <div>
+            <h2 className="font-heading text-3xl font-bold leading-[1.08] tracking-[-0.025em] text-snack-text md:text-5xl">
+              {t.rankingTitle}
+            </h2>
+            <p className="mt-5 max-w-xl text-base leading-7 text-snack-muted md:text-lg md:leading-8">
+              {t.rankingBody}
+            </p>
+            {ranking && (
+              <Link
+                href={`/eettentjes/${ranking.city.slug}/${ranking.slug}`}
+                className="mt-6 inline-flex text-base font-semibold text-snack-primary hover:underline"
+              >
+                {t.rankingLink}
+              </Link>
+            )}
+          </div>
+
+          {ranking ? (
+            <div className="rounded-3xl bg-snack-surface p-5 md:p-7">
+              <div className="flex items-baseline justify-between gap-3">
+                <h3 className="font-heading text-xl font-bold text-snack-text md:text-2xl">
+                  {fillTemplate(t.rankingCaption, { dish: ranking.name.toLowerCase(), city: ranking.city.name })}
+                </h3>
+                <span className="text-sm text-snack-muted">
+                  {pluralize(ranking.reviewCount, t.reviewsOne, t.reviewsMany)}
+                </span>
+              </div>
+              <ol className="mt-4 divide-y divide-snack-border">
+                {ranking.places.slice(0, 4).map((place, index) => (
+                  <li key={place.id}>
+                    <Link
+                      href={`/place/${place.id}`}
+                      className="flex items-center gap-4 py-3.5 transition-colors hover:text-snack-primary"
+                    >
+                      <span className="w-7 flex-shrink-0 font-heading text-2xl font-bold tabular-nums text-snack-text/40">
+                        {index + 1}
+                      </span>
+                      {place.photoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={place.photoUrl}
+                          alt=""
+                          className="h-14 w-14 flex-shrink-0 rounded-xl object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span className="h-14 w-14 flex-shrink-0 rounded-xl bg-snack-border" aria-hidden="true" />
+                      )}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-heading font-semibold text-snack-text">{place.name}</span>
+                        <span className="block truncate text-sm text-snack-muted">{place.address}</span>
+                      </span>
+                      <span className="flex-shrink-0 text-right">
+                        <span className="block font-heading text-lg font-bold text-snack-text">
+                          {formatRating(place.avgRating, locale)}
+                        </span>
+                        <Stars rating={place.avgRating} />
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ) : (
+            // Before any city clears the dish gate there is no ranking to show; the
+            // strip above already carries the photos, so this column simply stays empty.
+            <div aria-hidden="true" className="hidden md:block" />
+          )}
         </div>
-        <div className="space-y-2">
-          {dict.faqs.map((faq) => (
-            <details key={faq.q} className="card group p-5">
-              <summary className="cursor-pointer list-none font-heading text-base font-semibold text-snack-text">
-                <span className="flex items-center justify-between gap-3">
-                  {faq.q}
-                  <span className="text-snack-muted transition group-open:rotate-45" aria-hidden="true">+</span>
+      </section>
+
+      {/* ── Three claims, set as type ──────────────────────────────────────── */}
+      <section className="border-y" style={{ borderColor: 'var(--snack-border-soft)' }}>
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-3 md:gap-12 md:py-20">
+          {t.claims.map((claim) => (
+            <div key={claim.title}>
+              <h2 className="font-heading text-2xl font-bold leading-tight tracking-[-0.02em] text-snack-text md:text-3xl">
+                {claim.title}
+              </h2>
+              <p className="mt-3 text-base leading-7 text-snack-muted">{claim.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── How it works: a real sequence, so numbers are earned ───────────── */}
+      <section id="hoe-het-werkt" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-14 md:py-24">
+        <h2 className="font-heading text-3xl font-bold tracking-[-0.025em] text-snack-text md:text-5xl">
+          {t.stepsTitle}
+        </h2>
+        <ol className="mt-10 grid gap-8 sm:grid-cols-3 md:mt-14 md:gap-10">
+          {t.steps.map((step, index) => (
+            <li key={step.title} className="flex gap-4">
+              <span
+                aria-hidden="true"
+                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full font-heading text-lg font-bold text-white"
+                style={{ backgroundColor: 'var(--snack-primary)' }}
+              >
+                {index + 1}
+              </span>
+              <div>
+                <h3 className="font-heading text-xl font-semibold leading-snug text-snack-text">{step.title}</h3>
+                <p className="mt-2 text-base leading-7 text-snack-muted">{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* ── Cities: the bold block. Giant names, each a real landing page ──── */}
+      {cities.length > 0 && (
+        <section className="text-white" style={{ backgroundColor: '#0F172A' }}>
+          <div className="mx-auto max-w-6xl px-4 py-16 md:py-24">
+            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <h2 className="font-heading text-3xl font-bold tracking-[-0.025em] md:text-5xl">{t.citiesTitle}</h2>
+              <p className="max-w-md text-base leading-7 text-white/70">{t.citiesBody}</p>
+            </div>
+            <ul className="mt-10 flex flex-wrap gap-x-8 gap-y-4 md:mt-14 md:gap-x-12 md:gap-y-6">
+              {cities.map((city) => (
+                <li key={city.slug}>
+                  <Link
+                    href={`/eettentjes/${city.slug}`}
+                    className="group inline-flex items-baseline gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[#0F172A]"
+                  >
+                    <span className="font-heading text-3xl font-bold leading-none tracking-[-0.03em] transition-colors group-hover:text-snack-primary sm:text-4xl md:text-6xl">
+                      {city.name}
+                    </span>
+                    <span className="text-sm text-white/55 md:text-base">
+                      {pluralize(city.placeCount, t.placesOne, t.placesMany)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/eettentjes"
+              className="mt-12 inline-flex min-h-[44px] items-center rounded-xl border border-white/25 px-5 text-sm font-semibold transition-colors hover:border-white hover:bg-white hover:text-snack-text"
+            >
+              {t.citiesAll}
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* ── FAQ ────────────────────────────────────────────────────────────── */}
+      <section id="faq" className="mx-auto max-w-3xl px-4 py-14 md:py-24">
+        <h2 className="font-heading text-3xl font-bold tracking-[-0.025em] text-snack-text md:text-4xl">{t.faqTitle}</h2>
+        <div className="mt-8 divide-y divide-snack-border border-y border-snack-border">
+          {t.faqs.map((faq) => (
+            <details key={faq.q} className="group py-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-heading text-lg font-semibold text-snack-text [&::-webkit-details-marker]:hidden">
+                {faq.q}
+                <span
+                  aria-hidden="true"
+                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-snack-surface text-xl leading-none text-snack-muted transition-transform group-open:rotate-45"
+                >
+                  +
                 </span>
               </summary>
-              <p className="mt-3 text-sm leading-6 text-snack-muted">{faq.a}</p>
+              <p className="mt-3 max-w-2xl text-base leading-7 text-snack-muted">{faq.a}</p>
             </details>
           ))}
         </div>
       </section>
 
-      {/* ── Slot CTA ───────────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-4 pb-12 pt-2 md:pb-20">
-        <div className="rounded-[1.75rem] bg-gradient-to-r from-snack-primary to-snack-accent p-10 text-center text-white md:p-14">
-          <h2 className="font-heading text-3xl font-bold md:text-5xl">{dict.sections.finalCtaTitle}</h2>
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/85 md:text-base">
-            {dict.sections.finalCtaBody}
-          </p>
-          <Link
-            href="/auth/register?ref=footer"
-            className="mt-7 inline-flex rounded-full bg-white px-6 py-3 text-sm font-semibold text-snack-primary shadow-lg transition hover:opacity-90"
-          >
-            {dict.sections.finalCtaButton}
-          </Link>
-          <p className="mt-3 text-xs text-white/70">{dict.sections.finalCtaFinePrint}</p>
+      {/* ── Final call ─────────────────────────────────────────────────────── */}
+      <section className="mx-auto max-w-6xl px-4 pb-16 md:pb-24">
+        <div className="rounded-3xl px-6 py-12 text-white md:px-14 md:py-16" style={{ backgroundColor: 'var(--snack-primary)' }}>
+          <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-2xl">
+              <h2 className="font-heading text-4xl font-bold leading-[1.02] tracking-[-0.03em] md:text-6xl">{t.finalTitle}</h2>
+              <p className="mt-5 text-base leading-7 text-white/90 md:text-lg">{t.finalBody}</p>
+            </div>
+            <div className="flex-shrink-0">
+              <Link
+                href="/auth/register?ref=footer"
+                className="inline-flex min-h-[52px] items-center justify-center rounded-xl bg-white px-7 text-base font-semibold text-snack-text shadow-sm transition hover:bg-snack-surface"
+              >
+                {t.finalButton}
+              </Link>
+              <p className="mt-3 text-sm text-white/80">{t.finalFinePrint}</p>
+            </div>
+          </div>
         </div>
       </section>
     </MarketingShell>
