@@ -325,7 +325,8 @@ function AddReviewForm() {
       })
       const json = await res.json()
       if (!res.ok) { setError(json.error ?? 'Failed to submit review'); return }
-      router.push(`/review/${json.data.id}`)
+      // `posted=1` makes the review page open with the share prompt (see review/[id]/page.tsx).
+      router.push(`/review/${json.data.id}?posted=1`)
     } catch (err) {
       setError('Something went wrong. Please try again.')
     } finally {
