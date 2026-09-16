@@ -13,6 +13,14 @@ import { ReviewInteractions } from '@/components/review-interactions'
 import { MentionText } from '@/components/mention-text'
 import { ImageLightbox } from '@/components/image-lightbox'
 import { Breadcrumb } from '@/components/breadcrumb'
+import { ShareButton } from '@/components/share-button'
+import {
+  buildReviewShareText,
+  buildReviewShareTitle,
+  reviewShareCardPath,
+  reviewSharePath,
+} from '@/lib/share'
+import { SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH } from '@/lib/share-card'
 
 function resolveBackHref(from: string | undefined, parsedPlaceContext: { placeId: string; origin: string } | null): string {
   if (!from) return '/'
@@ -113,20 +121,24 @@ export async function generateMetadata({
   const description =
     review.text.length > 155 ? `${review.text.slice(0, 152).trimEnd()}…` : review.text
 
-  // Use the review's own food photo as the social-share image; falls back to the
-  // site-wide OG image (root layout) when the review has no photo. Relative URLs are
-  // resolved against metadataBase by Next.js.
-  const firstPhoto = review.reviewPhotos[0]?.photo.variants
-  const ogImage = firstPhoto
-    ? photoVariantUrl(firstPhoto as Record<string, string>, ['large', 'medium', 'thumb'])
-    : null
+  // The share card (photo + dish + rating + place, 1200×630 JPEG) rather than the raw
+  // photo variant: WhatsApp drops to a tiny thumbnail — or nothing — above ~300 KB, and the
+  // `large` WebP was 700 KB. Width/height/type are declared so scrapers can lay the preview
+  // out before fetching the image. Relative URLs resolve against metadataBase.
+  const ogImage = {
+    url: reviewShareCardPath(review.id),
+    width: SHARE_CARD_WIDTH,
+    height: SHARE_CARD_HEIGHT,
+    type: 'image/jpeg',
+    alt: title,
+  }
 
   return {
     title,
     description,
     alternates: { canonical: `/review/${review.id}` },
-    openGraph: { type: 'article', title, description, locale: 'nl_NL', ...(ogImage ? { images: [ogImage] } : {}) },
-    twitter: { card: 'summary_large_image', title, description, ...(ogImage ? { images: [ogImage] } : {}) },
+    openGraph: { type: 'article', title, description, locale: 'nl_NL', images: [ogImage] },
+    twitter: { card: 'summary_large_image', title, description, images: [ogImage] },
   }
 }
 
@@ -135,10 +147,14 @@ export default async function ReviewPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ from?: string }>
+  searchParams: Promise<{ from?: string; posted?: string }>
 }) {
   const { id } = await params
-  const { from } = await searchParams
+  // `posted=1` is set by the add-review flow right after publishing: the one moment the
+  // author is proud enough to send the review to friends, so the page opens with the share
+  // prompt instead of burying it in the footer.
+  const { from, posted } = await searchParams
+  const justPosted = posted === '1'
 
   const review = await getReview(id)
 
@@ -164,6 +180,18 @@ export default async function ReviewPage({
       return { src, thumbnail: thumbnail ?? src, alt: review.dishName ?? 'Review photo', priority: rp.sortOrder === 0 }
     })
     .filter((img): img is NonNullable<typeof img> => img !== null)
+
+  const shareInput = {
+    dishName: review.dishName,
+    placeName: review.place.name,
+    city: extractCity(review.place.address),
+    rating: overallRating,
+  }
+  const shareProps = {
+    url: reviewSharePath(review.id),
+    title: buildReviewShareTitle(shareInput),
+    text: buildReviewShareText(shareInput),
+  }
 
   const appUrl = getSiteUrl()
   const breadcrumbJsonLd = {
@@ -208,11 +236,28 @@ export default async function ReviewPage({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(reviewJsonLd) }} />
       <Breadcrumb items={buildReviewBreadcrumb(from, review.place.name, review.place.id, parsedPlaceContext)} />
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2">
         <Link href={backHref} className="btn-secondary text-sm">
           Back
         </Link>
+        <ShareButton {...shareProps} variant="button" />
       </div>
+
+      {justPosted && (
+        <section
+          className="card flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"
+          style={{ borderColor: 'var(--snack-primary)' }}
+          aria-live="polite"
+        >
+          <div>
+            <p className="font-heading font-semibold text-snack-text">Je review staat online 🎉</p>
+            <p className="mt-0.5 text-sm text-snack-muted">
+              Stuur hem door via WhatsApp, dan weet je groep meteen wat ze hier moeten bestellen.
+            </p>
+          </div>
+          <ShareButton {...shareProps} variant="primary" label="Deel je review" className="sm:flex-shrink-0" />
+        </section>
+      )}
 
       {/* Photo gallery */}
       {galleryImages.length > 0 && (

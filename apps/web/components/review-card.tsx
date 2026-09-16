@@ -3,6 +3,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { ReviewLikeButton } from '@/components/review-like-button'
+import { ShareButton } from '@/components/share-button'
+import { buildReviewShareText, buildReviewShareTitle, reviewSharePath } from '@/lib/share'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { MentionText } from '@/components/mention-text'
 import { getReviewTagLabel } from '@/lib/review-tags'
@@ -64,6 +66,17 @@ export const ReviewCard = memo(function ReviewCard({
   // Compute once instead of twice per card across a long feed.
   const createdAt = new Date(review.createdAt)
   const city = showPlace && review.place ? extractCity(review.place.address) : null
+
+  // Share text needs the place even when the card hides it (a place page lists its own
+  // reviews without repeating the name), so it does not go through `city` above.
+  const shareInput = review.place
+    ? {
+        dishName: review.dishName,
+        placeName: review.place.name,
+        city: extractCity(review.place.address),
+        rating: review.overallRating ?? review.rating,
+      }
+    : null
 
   return (
     <article className="card isolate overflow-hidden transition hover:shadow-md">
@@ -148,11 +161,20 @@ export const ReviewCard = memo(function ReviewCard({
         <span className="text-xs text-snack-muted">
           {review.commentCount ?? 0} {(review.commentCount ?? 0) === 1 ? 'comment' : 'comments'}
         </span>
-        <ReviewLikeButton
-          reviewId={review.id}
-          initialLikeCount={review.likeCount ?? 0}
-          initialLikedByMe={Boolean(review.likedByMe)}
-        />
+        <div className="flex items-center gap-4">
+          {shareInput && (
+            <ShareButton
+              url={reviewSharePath(review.id)}
+              title={buildReviewShareTitle(shareInput)}
+              text={buildReviewShareText(shareInput)}
+            />
+          )}
+          <ReviewLikeButton
+            reviewId={review.id}
+            initialLikeCount={review.likeCount ?? 0}
+            initialLikedByMe={Boolean(review.likedByMe)}
+          />
+        </div>
       </div>
     </article>
   )
