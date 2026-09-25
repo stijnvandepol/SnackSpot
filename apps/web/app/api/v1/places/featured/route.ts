@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   try {
     const ip = getClientIP(req)
     const rl = await rateLimitIP(ip, 'places_featured', 120, 60)
-    if (!rl.allowed) return err('Too many requests - try again later', 429)
+    if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
     const cacheKey = buildCacheKey('places-featured', stableSearchParams(req.nextUrl.searchParams))
     const cached = await getCachedJson<{ data: FeaturedPlaceRow[] }>(cacheKey)

@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
         .delete({ where: { tokenHash: hashRefreshToken(rawToken) } })
         .catch(() => undefined) // Token may already be gone – that's fine
     }
-    const res = withNoStore(ok({ message: 'Logged out' }))
+    const res = withNoStore(ok({ message: 'Je bent uitgelogd.' }))
     res.headers.set('Set-Cookie', buildClearCookie())
     return res
   } catch (e) {

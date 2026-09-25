@@ -38,7 +38,7 @@ export async function GET(
       where: { id },
       select: { id: true, status: true, userId: true },
     })
-    if (!review || review.status === ReviewStatus.DELETED) return err('Review not found', 404)
+    if (!review || review.status === ReviewStatus.DELETED) return err('Review niet gevonden.', 404)
 
     const auth = getAuthPayload(req)
     const state = await getLikeState(id, auth?.sub)
@@ -61,13 +61,13 @@ export async function POST(
     // Each like fans out to notification + badge recalc + XP — without a cap
     // a like-spam loop turns into a backend DoS on those side effects.
     const rl = await rateLimitUser(auth.sub, 'review_like', 120, 3600)
-    if (!rl.allowed) return err('Too many requests', 429)
+    if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
     const review = await prisma.review.findUnique({
       where: { id },
       select: { id: true, status: true, userId: true },
     })
-    if (!review || review.status !== ReviewStatus.PUBLISHED) return err('Review not found', 404)
+    if (!review || review.status !== ReviewStatus.PUBLISHED) return err('Review niet gevonden.', 404)
 
     const likeResult = await prisma.reviewLike.createMany({
       data: [{ userId: auth.sub, reviewId: id }],
@@ -109,13 +109,13 @@ export async function DELETE(
     // Same bucket as POST: a like/unlike flip-flop loop is the abuse pattern,
     // so both directions draw from one budget.
     const rl = await rateLimitUser(auth.sub, 'review_like', 120, 3600)
-    if (!rl.allowed) return err('Too many requests', 429)
+    if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
     const review = await prisma.review.findUnique({
       where: { id },
       select: { userId: true },
     })
-    if (!review) return err('Review not found', 404)
+    if (!review) return err('Review niet gevonden.', 404)
 
     await prisma.reviewLike.deleteMany({
       where: { userId: auth.sub, reviewId: id },

@@ -41,7 +41,7 @@ export function err(message: string, status: number, details?: unknown): Respons
 }
 
 export function validationError(details: unknown): Response {
-  return err('Validation error', 422, details)
+  return err('Controleer de ingevulde gegevens.', 422, details)
 }
 
 // ─── Auth extraction helpers ─────────────────────────────────────────────────
@@ -61,7 +61,7 @@ export function requireAuth(
   req: NextRequest,
 ): AccessTokenPayload | Response {
   const payload = getAuthPayload(req)
-  if (!payload) return err('Unauthorized', 401)
+  if (!payload) return err('Log in om verder te gaan.', 401)
   return payload
 }
 
@@ -71,11 +71,11 @@ export function requireRole(
   minRole: Role,
 ): AccessTokenPayload | Response {
   const payload = getAuthPayload(req)
-  if (!payload) return err('Unauthorized', 401)
+  if (!payload) return err('Log in om verder te gaan.', 401)
 
   const hierarchy: Record<Role, number> = { USER: 0, MODERATOR: 1, ADMIN: 2 }
   if (hierarchy[payload.role] < hierarchy[minRole]) {
-    return err('Forbidden', 403)
+    return err('Je hebt hier geen toegang toe.', 403)
   }
   return payload
 }
@@ -91,17 +91,17 @@ export async function parseBody<T>(
     if (contentLengthRaw) {
       const contentLength = Number.parseInt(contentLengthRaw, 10)
       if (Number.isFinite(contentLength) && contentLength > env.MAX_JSON_BODY_BYTES) {
-        return err(`Request body too large - max ${env.MAX_JSON_BODY_BYTES} bytes`, 413)
+        return err(`Dit verzoek is te groot. Maximaal ${env.MAX_JSON_BODY_BYTES} bytes.`, 413)
       }
     }
 
     const text = await req.text()
     if (text.length > env.MAX_JSON_BODY_BYTES) {
-      return err(`Request body too large - max ${env.MAX_JSON_BODY_BYTES} bytes`, 413)
+      return err(`Dit verzoek is te groot. Maximaal ${env.MAX_JSON_BODY_BYTES} bytes.`, 413)
     }
     raw = JSON.parse(text)
   } catch {
-    return err('Invalid JSON body', 400)
+    return err('Dit verzoek kon niet worden gelezen. Probeer het opnieuw.', 400)
   }
 
   const result = schema.safeParse(raw)
@@ -127,7 +127,7 @@ export function parseQuery<T>(
 /** Log and return internal server error */
 export function serverError(context: string, error: unknown): Response {
   logger.error({ err: error, context }, 'Internal server error')
-  return err('Internal server error', 500)
+  return err('Er ging iets mis aan onze kant. Probeer het later opnieuw.', 500)
 }
 
 export function requireSameOrigin(req: NextRequest): Response | null {
@@ -138,16 +138,16 @@ export function requireSameOrigin(req: NextRequest): Response | null {
   try {
     originUrl = new URL(origin)
   } catch {
-    return err('Invalid Origin header', 400)
+    return err('Ongeldig verzoek. Vernieuw de pagina en probeer het opnieuw.', 400)
   }
 
   // Only trust x-forwarded-host when running behind a known proxy (TRUST_PROXY=true).
   // Unconditionally trusting it lets an attacker spoof the header to bypass this check.
   const host = (env.TRUST_PROXY ? req.headers.get('x-forwarded-host') : null) ?? req.headers.get('host')
-  if (!host) return err('Missing host header', 400)
+  if (!host) return err('Ongeldig verzoek. Vernieuw de pagina en probeer het opnieuw.', 400)
 
   const allowed = originUrl.host === host
-  if (!allowed) return err('Cross-site request blocked', 403)
+  if (!allowed) return err('Dit verzoek is geblokkeerd. Vernieuw de pagina en probeer het opnieuw.', 403)
   return null
 }
 

@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   const ip = getClientIP(req)
   const rl = await rateLimitIP(ip, 'login', 10, 900)
   if (!rl.allowed) {
-    return err('Too many login attempts – try again later', 429)
+    return err('Te veel pogingen. Probeer het over een paar minuten opnieuw.', 429)
   }
 
   const body = await parseBody(req, LoginSchema)
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   // Rate limit: 5 login attempts per 10 min per account (catches proxy-rotating attackers)
   const accountRl = await rateLimit(`rl:account:login:${body.email.toLowerCase()}`, 5, 600)
   if (!accountRl.allowed) {
-    return err('Too many login attempts – try again later', 429)
+    return err('Te veel pogingen. Probeer het over een paar minuten opnieuw.', 429)
   }
 
   // CAPTCHA: required once either the IP or the account reaches 3 failures.
@@ -73,11 +73,11 @@ export async function POST(req: NextRequest) {
 
     if (!user || !passwordOk) {
       await incrementLoginFailures(ip, body.email)
-      return err('Invalid email or password', 401)
+      return err('E-mailadres of wachtwoord klopt niet.', 401)
     }
 
     if (user.bannedAt) {
-      return err('Account banned', 403)
+      return err('Dit account is geblokkeerd. Neem contact op als je denkt dat dit een vergissing is.', 403)
     }
 
     await resetLoginFailures(ip, body.email)

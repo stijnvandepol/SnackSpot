@@ -85,7 +85,7 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
               strokeLinecap="round"
               strokeLinejoin="round"
               role="status"
-              aria-label={refreshing ? 'Refreshing' : 'Pull to refresh'}
+              aria-label={refreshing ? 'Verversen…' : 'Trek omlaag om te verversen'}
             >
               <path d="M21 12a9 9 0 1 1-6.22-8.56" />
               <path d="M21 3v9h-9" />

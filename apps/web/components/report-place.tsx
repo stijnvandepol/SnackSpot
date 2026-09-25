@@ -5,9 +5,9 @@ import { useAuth } from '@/components/auth-provider'
 import { authHref } from '@/lib/next-path'
 
 const REASONS = [
-  { value: 'closed', label: 'Deze zaak is gesloten' },
+  { value: 'closed', label: 'Deze snackplek is gesloten' },
   { value: 'address', label: 'Adres of locatie klopt niet' },
-  { value: 'duplicate', label: 'Deze zaak staat er dubbel in' },
+  { value: 'duplicate', label: 'Deze snackplek staat er dubbel in' },
   { value: 'name', label: 'De naam klopt niet' },
   { value: 'other', label: 'Iets anders' },
 ] as const
@@ -50,7 +50,7 @@ export function ReportPlace({ placeId, placeName }: { placeId: string; placeName
   if (state === 'sent') {
     return (
       <p role="status" className="text-xs text-green-700 dark:text-green-400">
-        Bedankt! We kijken ernaar en passen het zo nodig aan.
+        Bedankt. We kijken ernaar en passen het zo nodig aan.
       </p>
     )
   }
@@ -58,7 +58,7 @@ export function ReportPlace({ placeId, placeName }: { placeId: string; placeName
   return (
     <details className="text-sm">
       <summary className="cursor-pointer text-xs font-medium text-snack-muted hover:text-snack-text">
-        Klopt er iets niet aan deze zaak?
+        Klopt er iets niet aan deze snackplek?
       </summary>
       {!user ? (
         <p className="mt-2 text-xs text-snack-muted">
@@ -92,7 +92,7 @@ export function ReportPlace({ placeId, placeName }: { placeId: string; placeName
               maxLength={400}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Bijvoorbeeld het juiste adres, of welke zaak het origineel is."
+              placeholder="Bijvoorbeeld het juiste adres, of welke vermelding de juiste is."
             />
           </label>
           <button type="submit" className="btn-secondary text-sm py-2" disabled={!reason || state === 'sending'}>

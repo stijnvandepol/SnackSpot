@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     // outsiders from using this as a free dependency-probing endpoint while
     // leaving plenty of headroom for orchestrator healthchecks (every 15s).
     const rl = await rateLimitIP(getClientIP(req), 'health_ready', 30, 60)
-    if (!rl.allowed) return err('Too many requests', 429)
+    if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
     await Promise.all([
       prisma.$queryRaw`SELECT 1`,

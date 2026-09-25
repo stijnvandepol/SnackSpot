@@ -19,7 +19,7 @@ export async function DELETE(
   if (isResponse(auth)) return auth
 
   const rl = await rateLimitUser(auth.sub, 'delete_photo', 30, 3600)
-  if (!rl.allowed) return err('Too many requests', 429)
+  if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
   const { id } = await params
 
@@ -34,7 +34,7 @@ export async function DELETE(
       },
     })
     // 404, not 403, for photos of other users: don't leak that the id exists
-    if (!photo || photo.uploaderId !== auth.sub) return err('Photo not found', 404)
+    if (!photo || photo.uploaderId !== auth.sub) return err('Foto niet gevonden.', 404)
 
     // Deleting the photo cascades the ReviewPhoto link and the bite built on
     // it; when a bite goes, its denormalised counter must follow (same

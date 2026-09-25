@@ -63,12 +63,12 @@ function FitBounds({ position, places }: { position: { lat: number; lng: number 
 
 function formatDistance(meters: number): string {
   if (meters < 1000) return `${Math.round(meters)} m`
-  return `${(meters / 1000).toFixed(1)} km`
+  return `${(meters / 1000).toFixed(1).replace('.', ',')} km`
 }
 
 function formatRating(rating: number | null): string {
-  if (rating === null || rating === undefined) return 'No rating'
-  return `${rating.toFixed(1)} ★`
+  if (rating === null || rating === undefined) return 'Nog geen beoordeling'
+  return `${rating.toFixed(1).replace('.', ',')} ★`
 }
 
 export function PlaceMap({ position, places, radius }: PlaceMapProps) {
@@ -93,9 +93,9 @@ export function PlaceMap({ position, places, radius }: PlaceMapProps) {
             </div>
           </MarkerContent>
           <MarkerPopup closeButton>
-            <p className="font-semibold text-sm">Your location</p>
+            <p className="font-semibold text-sm">Je locatie</p>
             <p className="text-xs text-snack-muted mt-0.5">
-              Search radius: {radius >= 1000 ? `${radius / 1000} km` : `${radius} m`}
+              Zoekstraal: {radius >= 1000 ? `${radius / 1000} km` : `${radius} m`}
             </p>
           </MarkerPopup>
         </MapMarker>
@@ -115,11 +115,11 @@ export function PlaceMap({ position, places, radius }: PlaceMapProps) {
                 <p className="text-xs text-snack-muted mt-0.5">{place.address}</p>
                 <div className="mt-2 pt-2 border-t border-snack-border space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-snack-muted">Distance</span>
+                    <span className="text-snack-muted">Afstand</span>
                     <span className="font-medium text-snack-primary">{formatDistance(place.distance_m)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-snack-muted">Rating</span>
+                    <span className="text-snack-muted">Beoordeling</span>
                     <span className="font-medium">{formatRating(place.avg_rating)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
@@ -132,7 +132,7 @@ export function PlaceMap({ position, places, radius }: PlaceMapProps) {
                   className="mt-2 block text-center text-xs text-white rounded px-2 py-1 hover:opacity-90 transition"
                   style={{ backgroundColor: 'var(--snack-primary)' }}
                 >
-                  View details
+                  Bekijk snackplek
                 </Link>
               </div>
             </MarkerPopup>

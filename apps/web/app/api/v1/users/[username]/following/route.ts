@@ -29,7 +29,7 @@ export async function GET(
 
   try {
     const target = await resolveUser(username)
-    if (!target) return err('User not found', 404)
+    if (!target) return err('Gebruiker niet gevonden.', 404)
 
     const rows = await prisma.follow.findMany({
       where: { followerId: target.id },

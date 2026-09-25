@@ -14,16 +14,16 @@ export async function POST(req: NextRequest) {
 
   // Rate limit: 30 uploads per hour per user
   const rl = await rateLimitUser(auth.sub, 'photo_upload', 30, 3600)
-  if (!rl.allowed) return err('Upload rate limit exceeded', 429)
+  if (!rl.allowed) return err("Je uploadt te veel foto's achter elkaar. Probeer het zo opnieuw.", 429)
 
   const body = await parseBody(req, InitiateUploadSchema)
   if (isResponse(body)) return body
 
   if (!ALLOWED_IMAGE_MIMES.has(body.contentType)) {
-    return err('File type not allowed', 415)
+    return err('Dit bestandstype wordt niet ondersteund. Kies een foto.', 415)
   }
   if (body.size > env.MAX_FILE_SIZE_BYTES) {
-    return err(`File too large – max ${env.MAX_FILE_SIZE_BYTES / 1024 / 1024} MB`, 413)
+    return err(`Dit bestand is te groot. Maximaal ${env.MAX_FILE_SIZE_BYTES / 1024 / 1024} MB.`, 413)
   }
 
   try {

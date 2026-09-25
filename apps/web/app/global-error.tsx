@@ -18,7 +18,7 @@ export default function GlobalError({
   }, [error])
 
   return (
-    <html lang="en">
+    <html lang="nl">
       <body
         style={{
           margin: 0,
@@ -35,9 +35,9 @@ export default function GlobalError({
           backgroundColor: '#ffffff',
         }}
       >
-        <h1 style={{ fontSize: '2rem', fontWeight: 700, margin: 0 }}>Something went wrong</h1>
+        <h1 style={{ fontSize: '2rem', fontWeight: 700, margin: 0 }}>Er ging iets mis</h1>
         <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>
-          An unexpected error occurred. Please try again.
+          SnackSpot kon niet worden geladen. Probeer het opnieuw.
         </p>
         <button
           onClick={reset}
@@ -53,7 +53,7 @@ export default function GlobalError({
             cursor: 'pointer',
           }}
         >
-          Try again
+          Opnieuw proberen
         </button>
       </body>
     </html>

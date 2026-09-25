@@ -45,7 +45,7 @@ test.describe('Nearby page — desktop (1280 px)', () => {
 
   test('radius slider has an accessible label', async ({ page }) => {
     await page.goto('/nearby')
-    await expect(page.getByRole('slider', { name: 'Search radius' })).toBeVisible()
+    await expect(page.getByRole('slider', { name: 'Zoekstraal' })).toBeVisible()
   })
 
   test('clicking a radius preset activates it', async ({ page }) => {
@@ -100,18 +100,18 @@ test.describe('Nearby page — mobile (390 px)', () => {
 
   test('radius slider is visible on mobile', async ({ page }) => {
     await page.goto('/nearby')
-    await expect(page.getByRole('slider', { name: 'Search radius' })).toBeVisible()
+    await expect(page.getByRole('slider', { name: 'Zoekstraal' })).toBeVisible()
   })
 
   test('bottom nav is visible on mobile nearby page', async ({ page }) => {
     await page.goto('/nearby')
-    const nav = page.locator('nav').filter({ hasText: 'Create new post' })
+    const nav = page.getByRole('navigation', { name: 'Hoofdmenu' })
     await expect(nav).toBeVisible()
   })
 
   test('Nearby link in bottom nav is marked as current', async ({ page }) => {
     await page.goto('/nearby')
-    const nav = page.locator('nav').filter({ hasText: 'Create new post' })
-    await expect(nav.getByRole('link', { name: 'Nearby' })).toHaveAttribute('aria-current', 'page')
+    const nav = page.getByRole('navigation', { name: 'Hoofdmenu' })
+    await expect(nav.getByRole('link', { name: 'Dichtbij' })).toHaveAttribute('aria-current', 'page')
   })
 })

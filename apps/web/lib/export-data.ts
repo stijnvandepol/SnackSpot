@@ -86,8 +86,8 @@ export function buildExportFiles(input: ExportInput, exportedAt: Date): Record<s
       exportedAt: exportedAt.toISOString(),
       application: 'SnackSpot',
       description:
-        'Export of all personal data SnackSpot stores about your account (GDPR Art. 15/20). ' +
-        'Photos you uploaded are included under photos/.',
+        'Export van alle persoonsgegevens die SnackSpot over je account bewaart (AVG art. 15 en 20). ' +
+        "Foto's die je hebt geüpload staan in de map photos/.",
     },
     'profile.json': {
       id: user.id,

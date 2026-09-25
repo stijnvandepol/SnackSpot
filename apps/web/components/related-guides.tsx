@@ -13,9 +13,9 @@ export function RelatedGuides({ currentHref, maxItems = 4 }: RelatedGuidesProps)
 
   return (
     <aside className="mt-10 rounded-2xl border border-snack-border bg-snack-background p-6">
-      <h2 className="font-heading text-xl font-semibold text-snack-text">Related Guides</h2>
+      <h2 className="font-heading text-xl font-semibold text-snack-text">Meer uitleg</h2>
       <p className="mt-1 text-sm text-snack-muted">
-        Continue learning with practical playbooks for finding better local food.
+        Andere handleidingen die van pas kunnen komen.
       </p>
       <ul className="mt-4 space-y-3">
         {guides.map((guide) => (

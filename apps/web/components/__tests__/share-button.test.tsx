@@ -7,7 +7,7 @@ import { ShareButton } from '../share-button'
 const props = {
   url: '/review/abc123',
   title: 'Kapsalon bij De Smickel',
-  text: 'Kapsalon bij De Smickel in Uden — 4,5★ op SnackSpot',
+  text: 'Kapsalon bij De Smickel in Uden: 4,5 ★ op SnackSpot',
 }
 
 describe('ShareButton', () => {

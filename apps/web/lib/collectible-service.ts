@@ -112,8 +112,8 @@ export async function recalculateCollectibles(userId: string): Promise<EarnedCol
 /** Display titles per set, in passport order. */
 export const COLLECTIBLE_SETS: ReadonlyArray<{ key: string; title: string }> = [
   { key: 'dutch-classics', title: 'De Hollandse Vijf' },
-  { key: 'world-tour', title: 'World tour' },
-  { key: 'taste-tourist', title: 'Taste tourist' },
-  { key: 'spot-milestones', title: 'Spot milestones' },
-  { key: 'city-explorer', title: 'City explorer' },
+  { key: 'world-tour', title: 'Wereldreis' },
+  { key: 'taste-tourist', title: 'Smaaktoerist' },
+  { key: 'spot-milestones', title: 'Mijlpalen' },
+  { key: 'city-explorer', title: 'Stedenverkenner' },
 ]

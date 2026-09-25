@@ -68,9 +68,9 @@ export function ReviewLikeButton({
       onClick={toggleLike}
       disabled={loading || !accessToken}
       className={`inline-flex items-center gap-1.5 text-sm transition-colors ${likedByMe ? 'text-rose-500' : 'text-snack-muted'} ${!accessToken ? 'opacity-60 cursor-not-allowed' : 'hover:text-rose-400'} ${className ?? ''}`}
-      aria-label={likedByMe ? 'Unlike post' : 'Like post'}
+      aria-label={likedByMe ? 'Vind ik niet meer leuk' : 'Vind ik leuk'}
       aria-pressed={likedByMe}
-      title={accessToken ? (likedByMe ? 'Unlike' : 'Like') : 'Log in to like'}
+      title={accessToken ? (likedByMe ? 'Vind ik niet meer leuk' : 'Vind ik leuk') : 'Log in om reviews leuk te vinden'}
     >
       <span
         aria-hidden="true"

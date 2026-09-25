@@ -14,7 +14,7 @@ export async function GET(
       where: { username: { equals: username, mode: 'insensitive' } },
       select: { id: true, username: true, bio: true, avatarKey: true, role: true, isVerified: true, createdAt: true },
     })
-    if (!user) return err('User not found', 404)
+    if (!user) return err('Gebruiker niet gevonden.', 404)
 
     const [reviewCount, favoritesCount, likesReceivedCount] = await Promise.all([
       prisma.review.count({ where: { userId: user.id, status: ReviewStatus.PUBLISHED } }),

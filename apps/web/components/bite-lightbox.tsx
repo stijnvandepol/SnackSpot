@@ -100,7 +100,7 @@ export function BiteLightbox({ bite, onClose }: BiteLightboxProps) {
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label={`${label} bite photo viewer`}
+        aria-label={`Foto van bite: ${label}`}
         tabIndex={-1}
         className="max-h-full max-w-full outline-none"
       >
@@ -108,14 +108,14 @@ export function BiteLightbox({ bite, onClose }: BiteLightboxProps) {
           type="button"
           onClick={onClose}
           className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-2xl text-white transition hover:bg-white/10"
-          aria-label="Close photo viewer"
+          aria-label="Foto sluiten"
         >
           ×
         </button>
         {/* eslint-disable-next-line @next/next/no-img-element -- user photo via variant URL */}
         <img
           src={src}
-          alt={bite.note ?? `${label} bite`}
+          alt={bite.note ?? `Bite: ${label}`}
           className="max-h-[75vh] max-w-full rounded-2xl object-contain"
         />
         <div className="mt-3 max-w-[90vw] text-sm text-white">

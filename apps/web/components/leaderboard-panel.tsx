@@ -34,14 +34,14 @@ export function LeaderboardPanel() {
   return (
     <div className="card p-4 mb-6">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-heading font-semibold text-snack-text">This week</h2>
-        <span className="text-xs text-snack-muted">XP · resets Monday</span>
+        <h2 className="font-heading font-semibold text-snack-text">Deze week</h2>
+        <span className="text-xs text-snack-muted">XP · maandag begint een nieuwe week</span>
       </div>
       {rows.length === 1 ? (
         <p className="text-sm text-snack-muted">
-          Follow other spotters to turn this into a friendly race.{' '}
+          Volg andere snackfans om je XP met die van hen te vergelijken.{' '}
           <Link href="/search" className="font-medium text-snack-primary hover:underline">
-            Find people
+            Zoek mensen
           </Link>
         </p>
       ) : (
@@ -55,7 +55,7 @@ export function LeaderboardPanel() {
             >
               <span className="w-5 text-sm font-bold text-snack-muted">{row.rank}</span>
               {row.isMe ? (
-                <span className="flex-1 truncate text-sm font-semibold text-snack-text">You</span>
+                <span className="flex-1 truncate text-sm font-semibold text-snack-text">Jij</span>
               ) : (
                 <Link
                   href={`/u/${encodeURIComponent(row.username)}`}

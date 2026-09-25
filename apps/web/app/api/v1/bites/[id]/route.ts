@@ -14,7 +14,7 @@ export async function DELETE(
 
   try {
     const bite = await prisma.bite.findUnique({ where: { id }, select: { userId: true } })
-    if (!bite || bite.userId !== auth.sub) return err('Bite not found', 404)
+    if (!bite || bite.userId !== auth.sub) return err('Bite niet gevonden.', 404)
 
     await prisma.$transaction([
       prisma.bite.delete({ where: { id } }),

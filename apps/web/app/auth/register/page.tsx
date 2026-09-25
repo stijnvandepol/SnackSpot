@@ -60,7 +60,7 @@ function RegisterContent() {
           </Link>
           <h1 className="text-2xl font-heading font-bold text-snack-text">Maak je gratis account</h1>
           <p className="text-sm text-snack-muted mt-1">
-            Deel wat je at, bewaar zaken voor later en help anderen kiezen wat ze bestellen.
+            Deel wat je at, bewaar snackplekken voor later en help anderen kiezen wat ze bestellen.
           </p>
         </div>
 

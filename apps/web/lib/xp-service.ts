@@ -57,12 +57,12 @@ export function levelForXp(xp: number): number {
 
 const LEVEL_TITLES: ReadonlyArray<readonly [number, string]> = [
   [1, 'Snacker'],
-  [3, 'Taster'],
-  [5, 'Foodie'],
-  [8, 'Local Explorer'],
-  [12, 'Connoisseur'],
-  [16, 'Gem Hunter'],
-  [20, 'Food Legend'],
+  [3, 'Proever'],
+  [5, 'Snackfan'],
+  [8, 'Ontdekker'],
+  [12, 'Kenner'],
+  [16, 'Snackjager'],
+  [20, 'Snacklegende'],
 ]
 
 export function levelTitle(level: number): string {

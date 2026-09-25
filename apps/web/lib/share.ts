@@ -33,8 +33,8 @@ export function formatShareRating(rating: number): string {
  * preview (photo, title, description) underneath it, so the text only needs to say what
  * the reader is about to open and give them a reason to tap.
  *
- *   "Kapsalon bij Cafetaria De Smickel in Uden — 4,5★ op SnackSpot"
- *   "Cafetaria De Smickel in Uden — 4,5★ op SnackSpot"
+ *   "Kapsalon bij Cafetaria De Smickel in Uden: 4,5 ★ op SnackSpot"
+ *   "Cafetaria De Smickel in Uden: 4,5 ★ op SnackSpot"
  */
 export function buildReviewShareText(input: ReviewShareInput): string {
   const dish = input.dishName?.trim()
@@ -42,7 +42,7 @@ export function buildReviewShareText(input: ReviewShareInput): string {
   const city = input.city?.trim()
   const where = city ? `${place} in ${city}` : place
   const subject = dish ? `${dish} bij ${where}` : where
-  return `${subject} — ${formatShareRating(input.rating)}★ op SnackSpot`
+  return `${subject}: ${formatShareRating(input.rating)} ★ op SnackSpot`
 }
 
 /** Title for the native share sheet (shown as the sheet header on iOS/Android). */

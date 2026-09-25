@@ -37,16 +37,16 @@ export async function POST(req: NextRequest) {
   if (isResponse(auth)) return auth
 
   const rl = await rateLimitUser(auth.sub, 'avatar_upload', 20, 3600)
-  if (!rl.allowed) return err('Avatar upload rate limit exceeded', 429)
+  if (!rl.allowed) return err("Je uploadt te veel foto's achter elkaar. Probeer het zo opnieuw.", 429)
 
   const contentType = req.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase() ?? ''
-  if (!ALLOWED_MIMES.has(contentType)) return err('File type not allowed', 415)
+  if (!ALLOWED_MIMES.has(contentType)) return err('Dit bestandstype wordt niet ondersteund. Kies een foto.', 415)
 
   try {
     const buffer = Buffer.from(await req.arrayBuffer())
-    if (buffer.length === 0) return err('Empty upload body', 400)
+    if (buffer.length === 0) return err('Het bestand is leeg. Kies een andere foto.', 400)
     if (buffer.length > env.MAX_FILE_SIZE_BYTES) {
-      return err(`File too large - max ${env.MAX_FILE_SIZE_BYTES / 1024 / 1024} MB`, 413)
+      return err(`Dit bestand is te groot. Maximaal ${env.MAX_FILE_SIZE_BYTES / 1024 / 1024} MB.`, 413)
     }
 
     const ext = MIME_EXT[contentType] ?? 'bin'

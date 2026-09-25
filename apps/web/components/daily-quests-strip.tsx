@@ -67,7 +67,7 @@ export function DailyQuestsStrip() {
         aria-expanded={!collapsed}
       >
         <p className="font-heading font-semibold text-snack-text">
-          {allDone ? 'All quests done today 🎉' : "Today's quests"}
+          {allDone ? 'Alle opdrachten van vandaag gedaan' : 'Opdrachten van vandaag'}
         </p>
         <span className="text-xs font-medium text-snack-muted">
           {doneCount}/{quests.length} {collapsed ? '▸' : '▾'}

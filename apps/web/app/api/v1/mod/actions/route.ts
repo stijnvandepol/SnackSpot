@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
   // Rate limit: 200 moderation actions per hour per moderator
   const rl = await rateLimitUser(auth.sub, 'mod_action', 200, 3600)
-  if (!rl.allowed) return err('Too many requests', 429)
+  if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
   const body = await parseBody(req, ModerationActionSchema)
   if (isResponse(body)) return body
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
       case 'BAN_USER':
         // Admins only may ban users
-        if (auth.role !== 'ADMIN') return err('Only admins can ban users', 403)
+        if (auth.role !== 'ADMIN') return err('Alleen beheerders kunnen gebruikers blokkeren.', 403)
         mutation = prisma.user.update({
           where: { id: body.targetId },
           data: { bannedAt: new Date() },
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
         break
 
       case 'UNBAN_USER':
-        if (auth.role !== 'ADMIN') return err('Only admins can unban users', 403)
+        if (auth.role !== 'ADMIN') return err('Alleen beheerders kunnen gebruikers deblokkeren.', 403)
         mutation = prisma.user.update({
           where: { id: body.targetId },
           data: { bannedAt: null },
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
         break
 
       case 'DISMISS_REPORT':
-        if (!body.reportId) return err('reportId required to dismiss a report', 422)
+        if (!body.reportId) return err('Geef aan welke melding je wilt afwijzen.', 422)
         mutation = prisma.report.update({
           where: { id: body.reportId },
           data: { status: ReportStatus.DISMISSED },
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
         break
 
       default:
-        return err('Unknown action', 400)
+        return err('Onbekende actie.', 400)
     }
 
     // The mutation and its audit-log entry commit atomically: a moderation

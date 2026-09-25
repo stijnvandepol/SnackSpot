@@ -8,12 +8,12 @@ import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 // is cached in Redis (lib/dish-index.ts), so this costs one cache read.
 export const dynamic = 'force-dynamic'
 
-const TITLE = 'Snacks en gerechten, beoordeeld per adres'
+const TITLE = 'Gerechten, beoordeeld per snackplek'
 const DESCRIPTION =
-  'Van frikandel speciaal tot kapsalon: per gerecht zie je waar het volgens bezoekers het lekkerst is, op basis van fotoreviews van mensen die het er echt aten.'
+  'Van frikandel speciaal tot kapsalon: bekijk per gerecht welke snackplekken bezoekers het hoogst beoordeelden, met cijfers en foto\'s uit hun reviews.'
 
 export const metadata: Metadata = {
-  title: { absolute: `${TITLE} — SnackSpot` },
+  title: { absolute: `${TITLE} | SnackSpot` },
   description: DESCRIPTION,
   alternates: { canonical: '/gerechten' },
   openGraph: { type: 'website', title: TITLE, description: DESCRIPTION, locale: 'nl_NL' },
@@ -28,11 +28,11 @@ export default async function GerechtenIndexPage() {
       <BreadcrumbJsonLd items={[{ name: 'Gerechten', path: '/gerechten' }]} />
 
       <header className="max-w-3xl">
-        <h1 className="font-heading text-3xl font-bold text-snack-text md:text-5xl">Waar eet je de beste…?</h1>
+        <h1 className="font-heading text-3xl font-bold text-snack-text md:text-5xl">Reviews per gerecht</h1>
         <p className="mt-4 text-base leading-7 text-snack-muted md:text-lg">
-          Hier rangschikken we zaken niet op hun algemene cijfer, maar per gerecht. Een snackbar kan middelmatig scoren
-          en toch de beste kapsalon van de stad maken. Alles komt uit fotoreviews van bezoekers, zonder gesponsorde
-          plekken.
+          Hier staan snackplekken per gerecht gerangschikt, op het cijfer voor dat gerecht en niet op het totaalcijfer.
+          Een snackbar met een gemiddeld totaalcijfer kan zo toch bovenaan staan voor kapsalon. De volgorde komt alleen
+          uit reviews van bezoekers.
         </p>
       </header>
 
@@ -46,7 +46,7 @@ export default async function GerechtenIndexPage() {
               >
                 <h2 className="font-heading text-lg font-semibold text-snack-text">{dish.name}</h2>
                 <p className="mt-1 text-sm text-snack-muted">
-                  ★ {dish.avgRating.toFixed(1)} gemiddeld · {dish.placeCount} adressen · {dish.reviewCount} reviews
+                  ★ {dish.avgRating.toFixed(1).replace('.', ',')} gemiddeld · {dish.placeCount} snackplekken · {dish.reviewCount} reviews
                 </p>
               </Link>
             </li>
@@ -56,8 +56,8 @@ export default async function GerechtenIndexPage() {
         <section className="mt-8 rounded-2xl border border-snack-border bg-snack-surface p-6">
           <h2 className="font-heading text-lg font-semibold text-snack-text">Nog geen gerecht met genoeg reviews</h2>
           <p className="mt-2 text-sm leading-6 text-snack-muted">
-            Een gerecht krijgt een eigen ranglijst zodra het bij minstens twee zaken is beoordeeld. Vul bij je review in
-            wat je bestelde, dan telt het mee.
+            Een gerecht krijgt een eigen ranglijst zodra het bij minstens twee snackplekken is beoordeeld. Vul bij je
+            review in wat je bestelde, dan telt het mee.
           </p>
           <Link href="/add-review" className="btn-primary mt-4 inline-flex text-sm">
             Schrijf een review

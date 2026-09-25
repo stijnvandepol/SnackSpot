@@ -16,10 +16,10 @@ export const dynamic = 'force-dynamic'
 
 const TITLE = 'Snackplekken per stad'
 const DESCRIPTION =
-  'Ontdek per stad de best beoordeelde snackplekken, cafetaria’s en frituren — gerangschikt op fotoreviews van mensen die er echt gegeten hebben.'
+  'Per stad de snackbars, cafetaria\'s en frituren op SnackSpot, gerangschikt op reviews van bezoekers. Met cijfers, foto\'s en de gerechten die ze bestelden.'
 
 export const metadata: Metadata = {
-  title: { absolute: `${TITLE} — SnackSpot` },
+  title: { absolute: `${TITLE} | SnackSpot` },
   description: DESCRIPTION,
   alternates: { canonical: '/snackplekken' },
   openGraph: { type: 'website', title: TITLE, description: DESCRIPTION, locale: 'nl_NL' },
@@ -38,8 +38,8 @@ export default async function SnackplekkenIndexPage() {
           Snackplekken per stad
         </h1>
         <p className="mt-4 text-base leading-7 text-snack-muted md:text-lg">
-          Per stad de best beoordeelde zaken, gerangschikt op fotoreviews van bezoekers. Geen
-          advertenties, geen gesponsorde plekken — alleen wat mensen er daadwerkelijk aten.
+          Per stad de snackplekken met reviews, gerangschikt op het cijfer dat bezoekers gaven.
+          De volgorde komt alleen uit reviews.
         </p>
       </header>
 
@@ -53,7 +53,7 @@ export default async function SnackplekkenIndexPage() {
               >
                 <h2 className="font-heading text-xl font-semibold text-snack-text">{city.name}</h2>
                 <p className="mt-1 text-sm text-snack-muted">
-                  {city.placeCount === 1 ? '1 zaak' : `${city.placeCount} zaken`} ·{' '}
+                  {city.placeCount === 1 ? '1 snackplek' : `${city.placeCount} snackplekken`} ·{' '}
                   {city.reviewCount === 1 ? '1 review' : `${city.reviewCount} reviews`}
                 </p>
               </Link>
@@ -66,11 +66,11 @@ export default async function SnackplekkenIndexPage() {
         // than shipping an empty grid.
         <section className="mt-8 rounded-2xl border border-snack-border bg-snack-surface p-6">
           <h2 className="font-heading text-lg font-semibold text-snack-text">
-            Nog geen stad compleet genoeg
+            Nog geen steden met genoeg reviews
           </h2>
           <p className="mt-2 text-sm leading-6 text-snack-muted">
-            Een stad krijgt pas een eigen pagina zodra er genoeg zaken en reviews zijn om een
-            eerlijke ranglijst te maken. Help mee: plaats een fotoreview van je vaste snackplek.
+            Een stad krijgt een eigen pagina zodra er genoeg snackplekken en reviews zijn voor een
+            eerlijke ranglijst. Schrijf een review van een snackplek die je kent.
           </p>
           <Link href="/add-review" className="btn-primary mt-4 inline-flex text-sm">
             Schrijf een review

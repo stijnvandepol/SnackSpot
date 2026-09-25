@@ -10,14 +10,14 @@ export async function POST(req: NextRequest) {
   if (isResponse(auth)) return auth
 
   const rl = await rateLimitUser(auth.sub, 'report_create', 10, 3600)
-  if (!rl.allowed) return err('Report rate limit exceeded', 429)
+  if (!rl.allowed) return err('Je hebt veel meldingen achter elkaar gedaan. Probeer het later opnieuw.', 429)
 
   const body = await parseBody(req, CreateReportSchema)
   if (isResponse(body)) return body
 
-  if (body.targetType === 'REVIEW' && !body.reviewId) return err('reviewId required for REVIEW reports', 422)
-  if (body.targetType === 'PHOTO' && !body.photoId) return err('photoId required for PHOTO reports', 422)
-  if (body.targetType === 'PLACE' && !body.placeId) return err('placeId required for PLACE reports', 422)
+  if (body.targetType === 'REVIEW' && !body.reviewId) return err('Geef aan welke review je wilt melden.', 422)
+  if (body.targetType === 'PHOTO' && !body.photoId) return err('Geef aan welke foto je wilt melden.', 422)
+  if (body.targetType === 'PLACE' && !body.placeId) return err('Geef aan welke snackplek je wilt melden.', 422)
 
   // Only the id that matches the target type is stored, so a report can never point at
   // two things at once.
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         : body.targetType === 'PHOTO'
           ? await prisma.photo.count({ where: { id: target.photoId } })
           : await prisma.place.count({ where: { id: target.placeId } })
-    if (exists === 0) return err('Report target not found', 404)
+    if (exists === 0) return err('Wat je wilt melden, is niet gevonden.', 404)
 
     // One open report per person per target: repeat clicks should not inflate the queue.
     const duplicate = await prisma.report.findFirst({

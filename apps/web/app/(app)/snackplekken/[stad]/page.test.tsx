@@ -78,10 +78,10 @@ describe('city page metadata', () => {
 
     const meta = await generateMetadata({ params: Promise.resolve({ stad: 'eindhoven' }) })
 
-    expect(meta.title).toEqual({ absolute: 'De beste snackplekken in Eindhoven — SnackSpot' })
+    expect(meta.title).toEqual({ absolute: 'Snackplekken in Eindhoven, gerangschikt op reviews | SnackSpot' })
     expect(meta.alternates?.canonical).toBe('/snackplekken/eindhoven')
     expect(meta.description).toContain('3 snackplekken in Eindhoven')
-    expect(meta.description).toContain('15 fotoreviews')
+    expect(meta.description).toContain('15 reviews')
   })
 
   it('names the top dishes in the description when there are any', async () => {
@@ -97,7 +97,7 @@ describe('city page metadata', () => {
 
     const meta = await generateMetadata({ params: Promise.resolve({ stad: 'eindhoven' }) })
 
-    expect(meta.description).toContain('wat je het beste kunt bestellen')
+    expect(meta.description).toContain('wat bezoekers bestelden')
   })
 
   it('uses the first available place photo as the social image', async () => {

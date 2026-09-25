@@ -9,11 +9,11 @@ const MEAL_EMOJI: Record<string, string> = {
 }
 
 const MEAL_LABEL: Record<string, string> = {
-  BREAKFAST: 'Breakfast',
+  BREAKFAST: 'Ontbijt',
   LUNCH: 'Lunch',
-  DINNER: 'Dinner',
+  DINNER: 'Diner',
   SNACK: 'Snack',
-  DRINK: 'Drink',
+  DRINK: 'Drankje',
 }
 
 export type MealSlot = MealSlotValue
@@ -27,5 +27,5 @@ export function mealEmoji(slot: string): string {
 }
 
 export function mealLabel(slot: string): string {
-  return MEAL_LABEL[slot] ?? 'Meal'
+  return MEAL_LABEL[slot] ?? 'Maaltijd'
 }

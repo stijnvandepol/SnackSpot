@@ -18,7 +18,7 @@ test.describe('Login page', () => {
 
   test('shows a link to the registration page', async ({ page }) => {
     await page.goto('/auth/login')
-    const link = page.getByRole('link', { name: 'Maak er gratis een' })
+    const link = page.getByRole('link', { name: 'Account maken' })
     await expect(link).toBeVisible()
     await expect(link).toHaveAttribute('href', '/auth/register')
   })

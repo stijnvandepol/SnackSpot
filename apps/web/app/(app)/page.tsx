@@ -19,9 +19,9 @@ import { logger } from '@/lib/logger'
 // database sees at most one feed query per minute regardless of traffic.
 export const dynamic = 'force-dynamic'
 
-const title = 'SnackSpot — snackplekken beoordeeld per gerecht'
+const title = 'SnackSpot: snackplekken beoordeeld per gerecht'
 const description =
-  'Ontdek kleine snackplekken via fotoreviews van bezoekers — van snackbar en cafetaria tot broodjeszaak. Zie per zaak wat mensen er echt aten, zodat je weet wat je moet bestellen.'
+  'Bekijk fotoreviews per gerecht van snackbars, cafetaria\'s en andere kleine snackplekken. Zie per zaak wat bezoekers bestelden en wat ze ervan vonden.'
 
 export const metadata: Metadata = {
   title: { absolute: title },

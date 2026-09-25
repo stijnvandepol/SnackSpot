@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    if (!user) return err('User not found', 404)
+    if (!user) return err('Gebruiker niet gevonden.', 404)
 
     const nextChange = nextUsernameChangeAt(user.usernameChangedAt)
 
@@ -60,7 +60,7 @@ export async function PATCH(req: NextRequest) {
     rateLimitUser(auth.sub, 'profile-patch', 10, 60),
     rateLimitIP(ip, 'profile-patch', 20, 60),
   ])
-  if (!userRl.allowed || !ipRl.allowed) return err('Too many requests', 429)
+  if (!userRl.allowed || !ipRl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
   const body = await parseBody<UpdateMeProfileInput>(req, UpdateMeProfileSchema)
   if (isResponse(body)) return body
@@ -71,20 +71,20 @@ export async function PATCH(req: NextRequest) {
       select: { id: true, username: true, usernameChangedAt: true },
     })
 
-    if (!current) return err('User not found', 404)
+    if (!current) return err('Gebruiker niet gevonden.', 404)
 
     let usernameChangeRequested = false
     if (body.username !== undefined) {
       const nextUsername = body.username.trim()
       if (nextUsername.length === 0) {
-        return err('Username cannot be empty', 422)
+        return err('Vul een gebruikersnaam in.', 422)
       }
       if (nextUsername !== current.username) {
         usernameChangeRequested = true
         if (current.usernameChangedAt) {
           const nextAllowedAt = new Date(current.usernameChangedAt.getTime() + USERNAME_CHANGE_COOLDOWN_MS)
           if (nextAllowedAt > new Date()) {
-            return err(`Username can only be changed once every ${USERNAME_CHANGE_COOLDOWN_DAYS} days`, 429)
+            return err(`Je kunt je gebruikersnaam maar één keer per ${USERNAME_CHANGE_COOLDOWN_DAYS} dagen wijzigen.`, 429)
           }
         }
       }
@@ -126,7 +126,7 @@ export async function PATCH(req: NextRequest) {
         : null
 
     if (code === 'P2002') {
-      return err('Username is already taken', 409)
+      return err('Deze gebruikersnaam is al in gebruik. Kies een andere.', 409)
     }
 
     return serverError('me/profile PATCH', e)

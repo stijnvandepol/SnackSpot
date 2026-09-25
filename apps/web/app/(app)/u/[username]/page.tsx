@@ -11,8 +11,8 @@ import { UserReviewsList } from '@/components/user-reviews-list'
 import { VerifiedBadge } from '@/components/verified-badge'
 import { Breadcrumb } from '@/components/breadcrumb'
 
-const dateFormatter = new Intl.DateTimeFormat('en-GB', {
-  dateStyle: 'medium',
+const dateFormatter = new Intl.DateTimeFormat('nl-NL', {
+  dateStyle: 'long',
   timeZone: 'UTC',
 })
 
@@ -45,13 +45,13 @@ export async function generateMetadata({
   const { username } = await params
   const user = await getProfileUser(username)
 
-  if (!user) return { title: 'User not found', robots: { index: false } }
+  if (!user) return { title: 'Gebruiker niet gevonden', robots: { index: false } }
 
   const reviewCount = user._count.reviews
-  const title = `${user.username} (@${user.username}) on SnackSpot`
+  const title = `${user.username} (@${user.username})`
   const description = user.bio?.trim()
     ? user.bio.trim()
-    : `${user.username} has shared ${reviewCount} food ${reviewCount === 1 ? 'review' : 'reviews'} on SnackSpot.`
+    : `${user.username} plaatste ${reviewCount} ${reviewCount === 1 ? 'review' : 'reviews'} op SnackSpot. Bekijk welke snackplekken en gerechten ${user.username} beoordeelde.`
   const canonical = `/u/${encodeURIComponent(user.username)}`
 
   return {
@@ -91,9 +91,9 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(profileJsonLd) }} />
-      <Breadcrumb items={[{ label: 'Feed', href: '/' }, { label: `@${user.username}` }]} />
+      <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: `@${user.username}` }]} />
       <div className="md:hidden mb-4">
-        <Link href="/" className="btn-secondary text-sm">← Back</Link>
+        <Link href="/" className="btn-secondary text-sm">← Terug</Link>
       </div>
       <div className="card p-6 mb-6">
         <div className="flex items-center gap-4">
@@ -108,8 +108,8 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
               {user.isVerified && <VerifiedBadge className="w-5 h-5 shrink-0" />}
             </h1>
             <p className="text-sm text-snack-muted truncate">@{user.username}</p>
-            <p className="text-xs text-snack-muted mt-1">{user.bio?.trim() || 'SnackSpot member'}</p>
-            <p className="text-xs text-snack-muted mt-1">Joined {formatDate(user.createdAt)}</p>
+            <p className="text-xs text-snack-muted mt-1">{user.bio?.trim() || 'Lid van SnackSpot'}</p>
+            <p className="text-xs text-snack-muted mt-1">Lid sinds {formatDate(user.createdAt)}</p>
           </div>
         </div>
         <div className="mt-4 border-t border-snack-border pt-4">
@@ -120,11 +120,11 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="card p-3 text-center">
           <p className="text-lg font-bold text-snack-text">{user._count.reviews}</p>
-          <p className="text-xs text-snack-muted">Posts</p>
+          <p className="text-xs text-snack-muted">Reviews</p>
         </div>
         <div className="card p-3 text-center">
           <p className="text-lg font-bold text-snack-text">{total_likes}</p>
-          <p className="text-xs text-snack-muted">Likes received</p>
+          <p className="text-xs text-snack-muted">Likes ontvangen</p>
         </div>
       </div>
 
@@ -132,7 +132,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
       <UserReviewsList username={user.username} />
 
       <div className="mt-6 text-center">
-        <Link href="/" className="btn-secondary text-sm">Back to Feed</Link>
+        <Link href="/" className="btn-secondary text-sm">Terug naar de feed</Link>
       </div>
     </div>
   )

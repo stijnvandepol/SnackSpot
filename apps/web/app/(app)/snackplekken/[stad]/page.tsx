@@ -26,11 +26,11 @@ function describe(city: CityDetail): string {
   const places =
     city.placeCount === 1 ? '1 snackplek' : `${city.placeCount} snackplekken`
   const reviews =
-    city.reviewCount === 1 ? '1 fotoreview' : `${city.reviewCount} fotoreviews`
-  const opener = `${places} in ${city.name}, beoordeeld in ${reviews} door mensen die er echt gegeten hebben.`
+    city.reviewCount === 1 ? '1 review' : `${city.reviewCount} reviews`
+  const opener = `${places} in ${city.name}, beoordeeld in ${reviews} van bezoekers.`
   return dishes.length > 0
-    ? `${opener} Ontdek wat ze hier het vaakst bestellen, van ${dishes.join(' tot ')}.`
-    : `${opener} Zie per zaak de cijfers, de foto's en wat je het beste kunt bestellen.`
+    ? `${opener} Vaakst beoordeeld: ${dishes.join(' en ')}. Bekijk per snackplek het cijfer en de foto's.`
+    : `${opener} Bekijk per snackplek het cijfer, de foto's en wat bezoekers bestelden.`
 }
 
 export async function generateMetadata({
@@ -42,17 +42,17 @@ export async function generateMetadata({
   const city = await getCityDetail(stad)
   if (!city) return { title: 'Niet gevonden' }
 
-  // With a single address "de beste" would be an empty superlative, so the heading states
-  // what the page actually is instead.
+  // With a single address a ranking means nothing, so the heading states what the page
+  // actually is instead.
   const title =
     city.placeCount === 1
       ? `Snackplekken in ${city.name}`
-      : `De beste snackplekken in ${city.name}`
+      : `Snackplekken in ${city.name}, gerangschikt op reviews`
   const description = describe(city)
   const image = city.places.find((place) => place.photoUrl)?.photoUrl
 
   return {
-    title: { absolute: `${title} — SnackSpot` },
+    title: { absolute: `${title} | SnackSpot` },
     description,
     alternates: { canonical: `/snackplekken/${city.slug}` },
     openGraph: {
@@ -84,7 +84,7 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
     name:
       city.placeCount === 1
         ? `Snackplekken in ${city.name}`
-        : `De beste snackplekken in ${city.name}`,
+        : `Snackplekken in ${city.name}, gerangschikt op reviews`,
     numberOfItems: city.places.length,
     itemListElement: city.places.map((place, index) => ({
       '@type': 'ListItem',
@@ -131,7 +131,7 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
         <h1 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-5xl">
           {city.placeCount === 1
             ? `Snackplekken in ${city.name}`
-            : `De beste snackplekken in ${city.name}`}
+            : `Snackplekken in ${city.name}, gerangschikt op reviews`}
         </h1>
         <p className="mt-4 text-base leading-7 text-snack-muted md:text-lg">{describe(city)}</p>
       </header>
@@ -139,7 +139,7 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
       {city.topDishes.length > 0 && (
         <section className="mt-10" aria-labelledby="wat-bestellen-ze">
           <h2 id="wat-bestellen-ze" className="font-heading text-xl font-semibold text-snack-text">
-            Wat bestellen ze in {city.name}?
+            Wat bestellen bezoekers in {city.name}?
           </h2>
           <ul className="mt-4 flex flex-wrap gap-2">
             {city.topDishes.map((dish) => (
@@ -149,7 +149,7 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
               >
                 <span className="font-semibold text-snack-text">{dish.name}</span>
                 <span className="ml-2 text-snack-muted">
-                  {dish.count}× · ★ {dish.avgRating.toFixed(1)}
+                  {dish.count}× · ★ {dish.avgRating.toFixed(1).replace('.', ',')}
                 </span>
               </li>
             ))}
@@ -168,7 +168,7 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
             Ranglijst per gerecht
           </h2>
           <p className="mt-1 text-sm text-snack-muted">
-            Genoeg reviews om deze gerechten onderling te vergelijken in {city.name}.
+            Voor deze gerechten zijn er in {city.name} genoeg reviews om snackplekken te vergelijken.
           </p>
           <ul className="mt-4 grid gap-3 sm:grid-cols-2">
             {city.dishPages.map((dish) => (
@@ -179,14 +179,14 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
                 >
                   <span className="min-w-0">
                     <span className="block truncate font-semibold text-snack-text">
-                      De beste {dish.name.toLowerCase()}
+                      {dish.name} in {city.name}
                     </span>
                     <span className="block text-xs text-snack-muted">
                       {dish.placeCount} adressen · {dish.reviewCount} reviews
                     </span>
                   </span>
                   <span className="flex-shrink-0 text-sm font-semibold text-snack-text">
-                    ★ {dish.avgRating.toFixed(1)}
+                    ★ {dish.avgRating.toFixed(1).replace('.', ',')}
                   </span>
                 </Link>
               </li>
@@ -198,8 +198,8 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
       <section className="mt-10" aria-labelledby="alle-zaken">
         <h2 id="alle-zaken" className="font-heading text-xl font-semibold text-snack-text">
           {city.placeCount === 1
-            ? `De zaak in ${city.name}`
-            : `Alle ${city.placeCount} zaken in ${city.name}`}
+            ? `De snackplek in ${city.name}`
+            : `Alle ${city.placeCount} snackplekken in ${city.name}`}
         </h2>
         <ol className="mt-4 space-y-4">
           {city.places.map((place, index) => (
@@ -240,7 +240,7 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
                   <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                     {place.avgRating !== null && (
                       <span className="font-semibold text-snack-text">
-                        ★ {place.avgRating.toFixed(1)}
+                        ★ {place.avgRating.toFixed(1).replace('.', ',')}
                       </span>
                     )}
                     <span className="text-snack-muted">
@@ -253,7 +253,7 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
 
                   {place.topDish && (
                     <p className="mt-2 text-sm text-snack-text">
-                      <span className="text-snack-muted">Meest besteld:</span>{' '}
+                      <span className="text-snack-muted">Vaakst beoordeeld:</span>{' '}
                       <span className="font-semibold">{place.topDish}</span>
                     </p>
                   )}
@@ -266,11 +266,11 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
 
       <section className="mt-12 rounded-2xl border border-snack-border bg-snack-surface p-6">
         <h2 className="font-heading text-lg font-semibold text-snack-text">
-          Ken jij een betere snackplek in {city.name}?
+          Mis je een snackplek in {city.name}?
         </h2>
         <p className="mt-2 text-sm leading-6 text-snack-muted">
-          Deze lijst komt volledig uit reviews van bezoekers. Mis je een zaak, of ben je het niet
-          eens met de volgorde? Plaats je eigen fotoreview en de ranglijst past zich aan.
+          De volgorde komt uit reviews van bezoekers. Staat een zaak er niet bij, of ben je het
+          oneens met de volgorde? Schrijf een review, dan telt jouw cijfer mee.
         </p>
         <Link href="/add-review" className="btn-primary mt-4 inline-flex text-sm">
           Schrijf een review

@@ -115,7 +115,7 @@ export function NotificationBell() {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-snack-text hover:text-snack-primary transition"
-        aria-label="Notifications"
+        aria-label="Meldingen"
       >
         <svg
           className="w-6 h-6"
@@ -146,7 +146,7 @@ export function NotificationBell() {
           <div className="absolute right-0 mt-2 w-96 bg-snack-background rounded-xl shadow-xl border border-snack-border z-50 max-h-[600px] flex flex-col">
             <div className="p-4 border-b border-snack-border flex items-center justify-between">
               <h3 className="font-heading font-semibold text-snack-text">
-                Notifications
+                Meldingen
               </h3>
               {unreadCount > 0 && (
                 <button
@@ -154,7 +154,7 @@ export function NotificationBell() {
                   onClick={markAllAsRead}
                   className="text-xs text-snack-primary hover:underline"
                 >
-                  Mark all as read
+                  Alles als gelezen markeren
                 </button>
               )}
             </div>
@@ -162,11 +162,11 @@ export function NotificationBell() {
             <div className="overflow-y-auto flex-1">
               {loading && notifications.length === 0 ? (
                 <div className="p-8 text-center text-snack-muted text-sm">
-                  Loading...
+                  Laden…
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="p-8 text-center text-snack-muted text-sm">
-                  No notifications yet
+                  Nog geen meldingen
                 </div>
               ) : (
                 <div className="divide-y divide-snack-border">
@@ -209,7 +209,7 @@ export function NotificationBell() {
                 onClick={() => setIsOpen(false)}
                 className="text-sm text-snack-primary hover:underline text-center block"
               >
-                View all notifications
+                Alle meldingen bekijken
               </Link>
             </div>
           </div>

@@ -49,7 +49,7 @@ export default function MyBitesPage() {
         const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } })
         const json = await res.json().catch(() => ({}))
         if (!res.ok) {
-          setLoadError('Could not load your bites. Please try again.')
+          setLoadError('Je bites konden niet worden geladen. Probeer het opnieuw.')
           requestedRef.current.delete(key)
           return
         }
@@ -57,7 +57,7 @@ export default function MyBitesPage() {
         setCursor(json.data?.pagination?.nextCursor ?? null)
         setHasMore(Boolean(json.data?.pagination?.hasMore))
       } catch {
-        setLoadError('Could not load your bites. Please try again.')
+        setLoadError('Je bites konden niet worden geladen. Probeer het opnieuw.')
         requestedRef.current.delete(key)
       } finally {
         setLoading(false)
@@ -97,15 +97,15 @@ export default function MyBitesPage() {
         headers: { Authorization: `Bearer ${accessToken}` },
       })
       if (!res.ok) {
-        setDeleteError('Could not delete this bite. Please try again.')
+        setDeleteError('Verwijderen is niet gelukt. Probeer het opnieuw.')
         return
       }
       setBites((prev) => prev.filter((b) => b.id !== id))
       setToDelete(null)
-      setFeedback('Bite deleted.')
+      setFeedback('Bite verwijderd.')
       setTimeout(() => setFeedback(null), 3000)
     } catch {
-      setDeleteError('Could not delete this bite. Please try again.')
+      setDeleteError('Verwijderen is niet gelukt. Probeer het opnieuw.')
     } finally {
       setDeleteBusy(false)
     }
@@ -126,8 +126,8 @@ export default function MyBitesPage() {
   return (
     <div className="mx-auto max-w-lg px-4 py-6">
       <div className="mb-4 flex items-center justify-between gap-2">
-        <h1 className="font-heading font-bold text-xl text-snack-text">My Bites</h1>
-        <Link href="/add-bite" className="btn-primary text-sm">Log a bite</Link>
+        <h1 className="font-heading font-bold text-xl text-snack-text">Mijn bites</h1>
+        <Link href="/add-bite" className="btn-primary text-sm">Bite loggen</Link>
       </div>
 
       {feedback && (
@@ -146,8 +146,8 @@ export default function MyBitesPage() {
       ) : bites.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-snack-border px-4 py-12 text-center">
           <p className="text-3xl" aria-hidden="true">🍟</p>
-          <p className="mt-2 text-sm text-snack-muted">You haven&apos;t logged any bites yet.</p>
-          <Link href="/add-bite" className="btn-primary mt-4 inline-block text-sm">Log your first bite</Link>
+          <p className="mt-2 text-sm text-snack-muted">Je hebt nog geen bites gelogd.</p>
+          <Link href="/add-bite" className="btn-primary mt-4 inline-block text-sm">Log je eerste bite</Link>
         </div>
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -163,10 +163,10 @@ export default function MyBitesPage() {
                       type="button"
                       onClick={() => setZoomBite(bite)}
                       className="block h-full w-full cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-inset focus:ring-snack-primary"
-                      aria-label={`View ${label} bite photo from ${dateLabel}`}
+                      aria-label={`Bekijk bite: ${label}, ${dateLabel}`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element -- user photo via variant URL */}
-                      <img src={src} alt={bite.note ?? `${label} bite`} className="h-full w-full object-cover" loading="lazy" />
+                      <img src={src} alt={bite.note ?? `Bite: ${label}`} className="h-full w-full object-cover" loading="lazy" />
                     </button>
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-3xl">
@@ -177,7 +177,7 @@ export default function MyBitesPage() {
                 <button
                   type="button"
                   onClick={() => { setToDelete(bite); setDeleteError(null) }}
-                  aria-label={`Delete ${label} bite from ${dateLabel}`}
+                  aria-label={`Verwijder bite: ${label}, ${dateLabel}`}
                   className="absolute right-1.5 top-1.5 rounded-full bg-black/55 p-1.5 text-white opacity-100 transition hover:bg-red-600 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -200,7 +200,7 @@ export default function MyBitesPage() {
 
       {hasMore && bites.length > 0 && (
         <div ref={sentinelRef} className="py-6 text-center text-xs text-snack-muted">
-          {loading ? 'Loading more…' : ''}
+          {loading ? 'Meer laden…' : ''}
         </div>
       )}
 
@@ -209,15 +209,15 @@ export default function MyBitesPage() {
       <Modal
         open={toDelete !== null}
         onClose={() => { if (!deleteBusy) setToDelete(null) }}
-        title="Delete this bite?"
+        title="Bite verwijderen?"
       >
         <p className="text-sm text-snack-muted mb-4">
-          This removes the bite from your log. This cannot be undone.
+          De bite verdwijnt uit je overzicht. Dit kun je niet ongedaan maken.
         </p>
         {deleteError && <p className="text-xs text-red-500 mb-3" role="status" aria-live="polite">{deleteError}</p>}
         <div className="flex gap-2">
           <button type="button" className="btn-secondary flex-1 text-sm" onClick={() => setToDelete(null)} disabled={deleteBusy}>
-            Cancel
+            Annuleren
           </button>
           <button
             type="button"
@@ -225,7 +225,7 @@ export default function MyBitesPage() {
             onClick={() => { if (toDelete) void deleteBite(toDelete.id) }}
             disabled={deleteBusy}
           >
-            {deleteBusy ? 'Deleting…' : 'Delete bite'}
+            {deleteBusy ? 'Verwijderen…' : 'Bite verwijderen'}
           </button>
         </div>
       </Modal>

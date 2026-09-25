@@ -56,7 +56,7 @@ export default async function UserOpenGraphImage({ params }: { params: Promise<{
 
         {/* Review count */}
         <span style={{ fontSize: 28, fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>
-          {reviewLabel} · Food Reviews
+          {reviewLabel} op SnackSpot
         </span>
       </div>
     ),

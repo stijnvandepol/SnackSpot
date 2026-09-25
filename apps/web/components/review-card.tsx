@@ -84,13 +84,13 @@ export const ReviewCard = memo(function ReviewCard({
         <Link
           href={reviewHref}
           className="absolute inset-0 z-10 rounded-xl focus-visible:z-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2"
-          aria-label={`Open review by ${review.user.username}`}
+          aria-label={`Bekijk review van ${review.user.username}`}
         />
         {thumb && (
           <div className="relative h-64 w-full bg-snack-surface md:h-72">
             <Image
               src={thumb}
-              alt={review.dishName ?? 'Review photo'}
+              alt={review.dishName ?? 'Reviewfoto'}
               fill
               unoptimized
               className="object-cover"
@@ -115,12 +115,12 @@ export const ReviewCard = memo(function ReviewCard({
             </div>
             {showPlace ? (
               <div className="text-right">
-                <p className="text-sm font-semibold text-snack-text">{(review.overallRating ?? review.rating).toFixed(1)}</p>
+                <p className="text-sm font-semibold text-snack-text">{(review.overallRating ?? review.rating).toFixed(1).replace('.', ',')}</p>
                 <Stars rating={Math.round(review.overallRating ?? review.rating)} />
               </div>
             ) : (
               <div className="flex items-center gap-1 flex-shrink-0">
-                <span className="text-sm font-semibold text-snack-text">{(review.overallRating ?? review.rating).toFixed(1)}</span>
+                <span className="text-sm font-semibold text-snack-text">{(review.overallRating ?? review.rating).toFixed(1).replace('.', ',')}</span>
                 <Stars rating={Math.round(review.overallRating ?? review.rating)} />
               </div>
             )}
@@ -159,7 +159,7 @@ export const ReviewCard = memo(function ReviewCard({
       </div>
       <div className="relative z-10 -mt-1 flex items-center justify-between gap-3 px-4 pb-4">
         <span className="text-xs text-snack-muted">
-          {review.commentCount ?? 0} {(review.commentCount ?? 0) === 1 ? 'comment' : 'comments'}
+          {review.commentCount ?? 0} {(review.commentCount ?? 0) === 1 ? 'reactie' : 'reacties'}
         </span>
         <div className="flex items-center gap-4">
           {shareInput && (

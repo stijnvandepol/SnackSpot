@@ -37,20 +37,20 @@ describe('getReviewTagLabel', () => {
     expect(getReviewTagLabel('unknown-tag')).toBe('unknown-tag')
   })
 
-  it('maps "budget-spot" to "Budget spot"', () => {
-    expect(getReviewTagLabel('budget-spot')).toBe('Budget spot')
+  it('maps "budget-spot" to "Voordelig"', () => {
+    expect(getReviewTagLabel('budget-spot')).toBe('Voordelig')
   })
 
-  it('maps "street-food" to "Street food"', () => {
-    expect(getReviewTagLabel('street-food')).toBe('Street food')
+  it('maps "street-food" to "Streetfood"', () => {
+    expect(getReviewTagLabel('street-food')).toBe('Streetfood')
   })
 
-  it('maps "late-night" to "Late night"', () => {
-    expect(getReviewTagLabel('late-night')).toBe('Late night')
+  it('maps "late-night" to "Late trek"', () => {
+    expect(getReviewTagLabel('late-night')).toBe('Late trek')
   })
 
-  it('maps "worth-the-detour" to "Worth the detour"', () => {
-    expect(getReviewTagLabel('worth-the-detour')).toBe('Worth the detour')
+  it('maps "worth-the-detour" to "Omrijden waard"', () => {
+    expect(getReviewTagLabel('worth-the-detour')).toBe('Omrijden waard')
   })
 })
 

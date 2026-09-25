@@ -64,11 +64,11 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
 
       const json = await res.json()
       if (res.ok) {
-        setMessage('Settings saved successfully')
+        setMessage('Instellingen opgeslagen.')
         setMessageTone('success')
         setTimeout(() => setMessage(null), 3000)
       } else {
-        setMessage(json.error ?? 'Failed to save settings')
+        setMessage(json.error ?? 'Opslaan is mislukt. Probeer het opnieuw.')
         setMessageTone('error')
       }
     } finally {
@@ -79,7 +79,7 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
   if (loading) {
     return (
       <div className={embedded ? 'rounded-xl border border-snack-border bg-snack-background p-4' : 'card p-4'}>
-        <p className="text-sm text-snack-muted">Loading settings...</p>
+        <p className="text-sm text-snack-muted">Instellingen laden…</p>
       </div>
     )
   }
@@ -87,7 +87,7 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
   if (!preferences) {
     return (
       <div className={embedded ? 'rounded-xl border border-snack-border bg-snack-background p-4' : 'card p-4'}>
-        <p className="text-sm text-snack-muted">Could not load notification settings</p>
+        <p className="text-sm text-snack-muted">Je meldingsinstellingen konden niet worden geladen.</p>
       </div>
     )
   }
@@ -97,21 +97,21 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
       <div>
         {!embedded && (
           <h2 className="mb-2 text-lg font-heading font-semibold text-snack-text">
-            Notification Settings
+            Meldingen
           </h2>
         )}
         <p className="text-sm text-snack-muted">
-          Choose which alerts SnackSpot sends you by email.
+          Kies waarover SnackSpot je een e-mail stuurt.
         </p>
       </div>
 
       <div className="space-y-4">
-        <h3 className="font-medium text-snack-text">Email Notifications</h3>
+        <h3 className="font-medium text-snack-text">E-mailmeldingen</h3>
 
         <label className="flex items-center justify-between gap-3 rounded-xl p-3 transition hover:bg-snack-surface cursor-pointer">
           <div>
             <p className="text-sm font-medium text-snack-text">Likes</p>
-            <p className="text-xs text-snack-muted">Email me when someone likes my review</p>
+            <p className="text-xs text-snack-muted">Als iemand je review liket</p>
           </div>
           <input
             type="checkbox"
@@ -125,8 +125,8 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
 
         <label className="flex items-center justify-between gap-3 rounded-xl p-3 transition hover:bg-snack-surface cursor-pointer">
           <div>
-            <p className="text-sm font-medium text-snack-text">Comments</p>
-            <p className="text-xs text-snack-muted">Email me when someone comments on my review</p>
+            <p className="text-sm font-medium text-snack-text">Reacties</p>
+            <p className="text-xs text-snack-muted">Als iemand reageert op je review</p>
           </div>
           <input
             type="checkbox"
@@ -140,8 +140,8 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
 
         <label className="flex items-center justify-between gap-3 rounded-xl p-3 transition hover:bg-snack-surface cursor-pointer">
           <div>
-            <p className="text-sm font-medium text-snack-text">Mentions</p>
-            <p className="text-xs text-snack-muted">Email me when someone mentions me in a post or comment</p>
+            <p className="text-sm font-medium text-snack-text">Vermeldingen</p>
+            <p className="text-xs text-snack-muted">Als iemand je noemt in een review of reactie</p>
           </div>
           <input
             type="checkbox"
@@ -155,8 +155,8 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
 
         <label className="flex items-center justify-between gap-3 rounded-xl p-3 transition hover:bg-snack-surface cursor-pointer">
           <div>
-            <p className="text-sm font-medium text-snack-text">Achievements</p>
-            <p className="text-xs text-snack-muted">Email me when I unlock a new badge</p>
+            <p className="text-sm font-medium text-snack-text">Badges</p>
+            <p className="text-xs text-snack-muted">Als je een nieuwe badge verdient</p>
           </div>
           <input
             type="checkbox"
@@ -170,8 +170,8 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
 
         <label className="flex items-center justify-between gap-3 rounded-xl p-3 transition hover:bg-snack-surface cursor-pointer">
           <div>
-            <p className="text-sm font-medium text-snack-text">New followers</p>
-            <p className="text-xs text-snack-muted">Email me when someone starts following me</p>
+            <p className="text-sm font-medium text-snack-text">Nieuwe volgers</p>
+            <p className="text-xs text-snack-muted">Als iemand je gaat volgen</p>
           </div>
           <input
             type="checkbox"
@@ -218,7 +218,7 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
         disabled={saving}
         className="btn-primary w-full"
       >
-        {saving ? 'Saving...' : 'Save Settings'}
+        {saving ? 'Opslaan…' : 'Instellingen opslaan'}
       </button>
     </div>
   )

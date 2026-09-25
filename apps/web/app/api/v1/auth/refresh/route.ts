@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   if (sameOrigin) return sameOrigin
 
   const rawToken = getRefreshToken(req)
-  if (!rawToken) return err('No refresh token', 401)
+  if (!rawToken) return err('Je sessie is verlopen. Log opnieuw in.', 401)
 
   try {
     const tokenHash = hashRefreshToken(rawToken)
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     if (!stored) {
       // Can happen during refresh-token rotation races (multi-tab / concurrent requests).
       // Avoid clearing cookie here to prevent accidental logout when a newer cookie exists.
-      return err('Refresh token invalid', 401)
+      return err('Je sessie is verlopen. Log opnieuw in.', 401)
     }
 
     // Theft detection: token was already rotated but is being presented again.
@@ -52,23 +52,23 @@ export async function POST(req: NextRequest) {
         await prisma.refreshToken.deleteMany({
           where: { family: stored.family },
         })
-        const res = err('Session invalidated – please log in again', 401)
+        const res = err('Je bent uitgelogd om je account te beschermen. Log opnieuw in.', 401)
         res.headers.set('Set-Cookie', buildClearCookie())
         return res
       }
       // Used very recently — likely a concurrent retry, not theft.
-      return err('Refresh token already used', 401)
+      return err('Je sessie is verlopen. Log opnieuw in.', 401)
     }
 
     if (stored.expiresAt < new Date()) {
-      const res = err('Refresh token expired', 401)
+      const res = err('Je sessie is verlopen. Log opnieuw in.', 401)
       res.headers.set('Set-Cookie', buildClearCookie())
       return res
     }
 
     if (stored.user.bannedAt) {
       await prisma.refreshToken.deleteMany({ where: { family: stored.family } })
-      const res = err('Account banned', 403)
+      const res = err('Dit account is geblokkeerd. Neem contact op als je denkt dat dit een vergissing is.', 403)
       res.headers.set('Set-Cookie', buildClearCookie())
       return res
     }

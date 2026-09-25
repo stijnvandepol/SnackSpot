@@ -35,7 +35,7 @@ export function UserReviewsList({ username }: UserReviewsListProps) {
     })
       .then((r) => r.json())
       .then((json) => setReviews(json.data?.data ?? []))
-      .catch(() => setError('Could not load reviews.'))
+      .catch(() => setError('Kon de reviews niet laden. Probeer het later opnieuw.'))
       .finally(() => setLoading(false))
   }, [username, accessToken, authLoading])
 
@@ -54,7 +54,7 @@ export function UserReviewsList({ username }: UserReviewsListProps) {
   if (reviews.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-snack-muted text-sm">No reviews yet.</p>
+        <p className="text-snack-muted text-sm">Nog geen reviews geplaatst.</p>
       </div>
     )
   }

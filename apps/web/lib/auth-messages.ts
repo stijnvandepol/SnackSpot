@@ -1,24 +1,28 @@
 /**
  * Dutch copy for the errors the auth API returns.
  *
- * The API keeps its English messages (they are part of the contract other clients and tests
- * rely on); the auth forms translate the ones a person can act on. Anything unknown gets a
- * friendly generic line rather than leaking an English string into a Dutch form.
+ * The API returns Dutch messages itself; the auth forms map the ones a person can act on to
+ * form-specific copy. The English patterns stay as a safety net for client-side errors
+ * (e.g. "Network error") and the `captcha_required` code. Anything unknown gets the caller's
+ * friendly fallback.
  */
 const AUTH_ERROR_NL: Array<[RegExp, string]> = [
   [
-    /too many (registration|login) attempts/i,
+    /te veel pogingen|too many (registration|login) attempts/i,
     'Te veel pogingen achter elkaar. Probeer het over een paar minuten opnieuw.',
   ],
   [
-    /email or username already taken/i,
+    /al in gebruik|email or username already taken/i,
     'Dit e-mailadres of deze gebruikersnaam is al in gebruik. Log in, of kies een andere gebruikersnaam.',
   ],
-  [/invalid email or password/i, 'E-mailadres of wachtwoord klopt niet.'],
-  [/account banned/i, 'Dit account is geblokkeerd. Neem contact op als je denkt dat dit een vergissing is.'],
-  [/captcha|security check/i, 'Rond eerst de beveiligingscheck hieronder af.'],
-  [/validation/i, 'Controleer de velden hieronder: er klopt nog iets niet.'],
-  [/network/i, 'Geen verbinding. Controleer je internet en probeer het opnieuw.'],
+  [/wachtwoord klopt niet|invalid email or password/i, 'E-mailadres of wachtwoord klopt niet.'],
+  [
+    /account is geblokkeerd|account banned/i,
+    'Dit account is geblokkeerd. Neem contact op als je denkt dat dit een vergissing is.',
+  ],
+  [/captcha|beveiligingscheck|security check/i, 'Rond eerst de beveiligingscheck hieronder af.'],
+  [/controleer de ingevulde gegevens|validation/i, 'Controleer de velden hieronder: er klopt nog iets niet.'],
+  [/geen verbinding|network/i, 'Geen verbinding. Controleer je internet en probeer het opnieuw.'],
 ]
 
 export function authErrorNl(message: string | null | undefined, fallback: string): string {

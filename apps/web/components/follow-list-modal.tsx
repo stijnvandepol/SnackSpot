@@ -24,13 +24,13 @@ interface FollowListModalProps {
 }
 
 const TITLES: Record<FollowListType, string> = {
-  followers: 'Followers',
-  following: 'Following',
+  followers: 'Volgers',
+  following: 'Volgend',
 }
 
 const EMPTY: Record<FollowListType, string> = {
-  followers: 'No followers yet.',
-  following: 'Not following anyone yet.',
+  followers: 'Nog geen volgers.',
+  following: 'Volgt nog niemand.',
 }
 
 /**
@@ -121,14 +121,14 @@ export function FollowListModal({ username, type, onClose }: FollowListModalProp
 
         {error && (
           <div className="p-6 text-center">
-            <p className="text-sm text-snack-muted">Could not load this list.</p>
+            <p className="text-sm text-snack-muted">Kon deze lijst niet laden.</p>
             <button type="button" onClick={() => load(cursor)} className="btn-secondary mt-3 text-sm">
-              Try again
+              Opnieuw proberen
             </button>
           </div>
         )}
 
-        {loading && <p className="p-6 text-center text-sm text-snack-muted">Loading...</p>}
+        {loading && <p className="p-6 text-center text-sm text-snack-muted">Laden…</p>}
 
         {!loading && hasMore && (
           <button
@@ -136,7 +136,7 @@ export function FollowListModal({ username, type, onClose }: FollowListModalProp
             onClick={() => load(cursor)}
             className="btn-secondary mx-auto my-2 block text-sm"
           >
-            Load more
+            Meer laden
           </button>
         )}
       </div>

@@ -31,27 +31,27 @@ export async function POST(req: NextRequest) {
       select: { id: true, storageKey: true, uploaderId: true, moderationStatus: true, metadata: true },
     })
 
-    if (!photo) return err('Photo not found', 404)
-    if (photo.uploaderId !== auth.sub) return err('Forbidden', 403)
-    if (photo.moderationStatus !== 'PENDING') return err('Photo already confirmed', 409)
+    if (!photo) return err('Foto niet gevonden.', 404)
+    if (photo.uploaderId !== auth.sub) return err('Je hebt hier geen toegang toe.', 403)
+    if (photo.moderationStatus !== 'PENDING') return err('Deze foto is al geüpload.', 409)
 
     // Verify object existence and enforce server-side constraints.
     const objectInfo = await getObjectInfo(photo.storageKey)
-    if (!objectInfo) return err('Upload not found - please upload the file first', 400)
+    if (!objectInfo) return err('De foto is nog niet geüpload. Probeer het opnieuw.', 400)
     if (objectInfo.size > env.MAX_FILE_SIZE_BYTES) {
-      return err(`File too large - max ${env.MAX_FILE_SIZE_BYTES / 1024 / 1024} MB`, 413)
+      return err(`Dit bestand is te groot. Maximaal ${env.MAX_FILE_SIZE_BYTES / 1024 / 1024} MB.`, 413)
     }
     const rawContentType = objectInfo.contentType ?? contentTypeFromMetadata(photo.metadata)
     const contentType = rawContentType?.split(';')[0]?.trim().toLowerCase() ?? null
     if (!contentType || !ALLOWED_IMAGE_MIMES.has(contentType)) {
-      return err('File type not allowed', 415)
+      return err('Dit bestandstype wordt niet ondersteund. Kies een foto.', 415)
     }
 
     // Verify magic bytes so an attacker cannot upload an executable with a
     // spoofed Content-Type header via the presigned PUT URL.
     const headerBytes = await getObjectHeaderBytes(photo.storageKey, 12)
     if (!headerBytes || !matchesMagicBytes(contentType, headerBytes)) {
-      return err('File contents do not match declared type', 415)
+      return err('Dit bestand is geen geldige foto. Kies een andere foto.', 415)
     }
 
     // Atomic transition prevents duplicate queueing.
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       where: { id: photo.id, uploaderId: auth.sub, moderationStatus: 'PENDING' },
       data: { moderationStatus: 'PROCESSING' },
     })
-    if (transitioned.count === 0) return err('Photo already confirmed', 409)
+    if (transitioned.count === 0) return err('Deze foto is al geüpload.', 409)
 
     // Enqueue processing job.
     const queue = getPhotoQueue()

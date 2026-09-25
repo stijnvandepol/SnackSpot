@@ -29,7 +29,7 @@ test.describe('Search / Ontdek page', () => {
 
   test('shows all tag filter buttons', async ({ page }) => {
     await page.goto('/search')
-    const tags = ['Budget spot', 'Street food', 'Late night', 'Local favorite', 'Worth the detour']
+    const tags = ['Voordelig', 'Street food', 'Late night', 'Local favorite', 'Worth the detour']
     for (const tag of tags) {
       await expect(page.getByRole('button', { name: tag })).toBeVisible()
     }
@@ -37,19 +37,19 @@ test.describe('Search / Ontdek page', () => {
 
   test('tag buttons start with aria-pressed="false"', async ({ page }) => {
     await page.goto('/search')
-    await expect(page.getByRole('button', { name: 'Budget spot' })).toHaveAttribute('aria-pressed', 'false')
+    await expect(page.getByRole('button', { name: 'Voordelig' })).toHaveAttribute('aria-pressed', 'false')
   })
 
   test('clicking a tag sets aria-pressed="true"', async ({ page }) => {
     await page.goto('/search')
-    const tagBtn = page.getByRole('button', { name: 'Budget spot' })
+    const tagBtn = page.getByRole('button', { name: 'Voordelig' })
     await tagBtn.click()
     await expect(tagBtn).toHaveAttribute('aria-pressed', 'true')
   })
 
   test('clicking an active tag deactivates it', async ({ page }) => {
     await page.goto('/search')
-    const tagBtn = page.getByRole('button', { name: 'Budget spot' })
+    const tagBtn = page.getByRole('button', { name: 'Voordelig' })
     await tagBtn.click()
     await expect(tagBtn).toHaveAttribute('aria-pressed', 'true')
     await tagBtn.click()
@@ -93,7 +93,7 @@ test.describe('Search page — mobile (390 px)', () => {
 
   test('keyboard shortcut tip is not shown on mobile', async ({ page }) => {
     await page.goto('/search')
-    await expect(page.getByText('Tip: press / to focus search.')).toBeHidden()
+    await expect(page.getByText('Tip: druk op / om te zoeken.')).toBeHidden()
   })
 })
 
@@ -104,7 +104,7 @@ test.describe('Search page — desktop (1280 px)', () => {
 
   test('keyboard shortcut tip is shown on desktop', async ({ page }) => {
     await page.goto('/search')
-    await expect(page.getByText('Tip: press / to focus search.')).toBeVisible()
+    await expect(page.getByText('Tip: druk op / om te zoeken.')).toBeVisible()
   })
 
   test('pressing / focuses the search input', async ({ page }) => {

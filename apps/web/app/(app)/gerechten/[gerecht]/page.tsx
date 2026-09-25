@@ -20,11 +20,11 @@ function describe(detail: DishDetail): string {
   const best = detail.places[0]
   const spread =
     detail.cityCount > 1
-      ? `${plural(detail.placeCount, 'adres', 'adressen')} in ${detail.cityCount} steden`
-      : plural(detail.placeCount, 'adres', 'adressen')
-  const opener = `${detail.name} scoort gemiddeld ${detail.avgRating.toFixed(1)}★ over ${spread}, op basis van ${plural(detail.reviewCount, 'fotoreview', 'fotoreviews')}.`
+      ? `${plural(detail.placeCount, 'snackplek', 'snackplekken')} in ${detail.cityCount} steden`
+      : plural(detail.placeCount, 'snackplek', 'snackplekken')
+  const opener = `${detail.name} scoort gemiddeld ${detail.avgRating.toFixed(1).replace('.', ',')} ★ bij ${spread}, in ${plural(detail.reviewCount, 'review', 'reviews')}.`
   return best
-    ? `${opener} ${best.name}${best.city ? ` in ${best.city}` : ''} staat bovenaan met ${best.avgRating.toFixed(1)}★.`
+    ? `${opener} ${best.name}${best.city ? ` in ${best.city}` : ''} scoort het hoogst met ${best.avgRating.toFixed(1).replace('.', ',')} ★.`
     : opener
 }
 
@@ -35,12 +35,12 @@ export async function generateMetadata({ params }: { params: Promise<{ gerecht: 
 
   // Written for "<gerecht> review" and "beste <gerecht>" searches, which is how people
   // look for a dish before they know which city or place to pick.
-  const title = `${detail.name} review: waar is hij het lekkerst?`
+  const title = `${detail.name}: reviews per snackplek`
   const description = describe(detail)
   const image = detail.places.find((place) => place.photoUrl)?.photoUrl
 
   return {
-    title: { absolute: `${title} — SnackSpot` },
+    title: { absolute: `${title} | SnackSpot` },
     description,
     alternates: { canonical: `/gerechten/${detail.slug}` },
     openGraph: { type: 'website', title, description, locale: 'nl_NL', ...(image ? { images: [image] } : {}) },
@@ -59,7 +59,7 @@ export default async function DishPage({ params }: { params: Promise<{ gerecht: 
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: `Waar eet je de beste ${dishLabel}?`,
+    name: `${detail.name}: reviews per snackplek`,
     numberOfItems: detail.places.length,
     itemListElement: detail.places.map((place, index) => ({
       '@type': 'ListItem',
@@ -102,7 +102,7 @@ export default async function DishPage({ params }: { params: Promise<{ gerecht: 
           ← Alle gerechten
         </Link>
         <h1 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-5xl">
-          Waar eet je de beste {dishLabel}?
+          {detail.name}: reviews per snackplek
         </h1>
         <p className="mt-4 text-base leading-7 text-snack-muted md:text-lg">{describe(detail)}</p>
       </header>
@@ -130,7 +130,7 @@ export default async function DishPage({ params }: { params: Promise<{ gerecht: 
           De ranglijst voor {dishLabel}
         </h2>
         <p className="mt-1 text-sm text-snack-muted">
-          Gerangschikt op het cijfer voor dit gerecht alleen, niet op het cijfer van de zaak.
+          Gerangschikt op het cijfer voor dit gerecht, niet op het totaalcijfer van de snackplek.
         </p>
 
         <ol className="mt-5 space-y-4">
@@ -164,7 +164,7 @@ export default async function DishPage({ params }: { params: Promise<{ gerecht: 
                   <h3 className="mt-0.5 font-heading text-lg font-semibold text-snack-text">{place.name}</h3>
                   <p className="truncate text-sm text-snack-muted">{place.address}</p>
                   <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                    <span className="font-semibold text-snack-text">★ {place.avgRating.toFixed(1)}</span>
+                    <span className="font-semibold text-snack-text">★ {place.avgRating.toFixed(1).replace('.', ',')}</span>
                     <span className="text-snack-muted">
                       {plural(place.reviewCount, 'review', 'reviews')} van dit gerecht
                     </span>
@@ -178,10 +178,10 @@ export default async function DishPage({ params }: { params: Promise<{ gerecht: 
       </section>
 
       <section className="mt-12 rounded-2xl border border-snack-border bg-snack-surface p-6">
-        <h2 className="font-heading text-lg font-semibold text-snack-text">Weet jij een betere {dishLabel}?</h2>
+        <h2 className="font-heading text-lg font-semibold text-snack-text">Zelf {dishLabel} gegeten?</h2>
         <p className="mt-2 text-sm leading-6 text-snack-muted">
-          Deze lijst komt volledig uit reviews van bezoekers. Plaats een fotoreview, vul &quot;{detail.name}&quot; in
-          als gerecht, en je stem telt mee.
+          De volgorde komt uit reviews van bezoekers. Schrijf een review, vul &quot;{detail.name}&quot; in als gerecht
+          en je cijfer telt mee.
         </p>
         <Link href="/add-review" className="btn-primary mt-4 inline-flex text-sm">
           Schrijf een review

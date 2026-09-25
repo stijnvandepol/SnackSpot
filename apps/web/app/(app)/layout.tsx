@@ -20,7 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile brand bar */}
       <div className="md:hidden sticky top-0 z-40 backdrop-blur border-b" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>
         <div className="h-14 px-4 flex items-center">
-          <Link href="/" aria-label="SnackSpot home">
+          <Link href="/" aria-label="Naar de SnackSpot-homepage">
             <SnackSpotLogo className="text-xl" />
           </Link>
         </div>
@@ -51,7 +51,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               Snackplekken per stad
             </Link>
             <Link href="/gerechten" className="text-snack-primary hover:underline">
-              Beste per gerecht
+              Beoordeeld per gerecht
             </Link>
             <Link href="/guides" className="text-snack-primary hover:underline">
               Uitleg

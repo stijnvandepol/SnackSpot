@@ -8,7 +8,7 @@ export function VerifiedBadge({ className = 'w-4 h-4' }: VerifiedBadgeProps) {
       className={`inline-block text-[#1d9bf0] flex-shrink-0 ${className}`}
       viewBox="0 0 22 22"
       fill="none"
-      aria-label="Verified"
+      aria-label="Geverifieerd"
       role="img"
     >
       <circle cx="11" cy="11" r="11" fill="currentColor" />

@@ -13,7 +13,7 @@ export async function GET(
   try {
     const ip = getClientIP(_req)
     const rl = await rateLimitIP(ip, 'place_detail', 180, 60)
-    if (!rl.allowed) return err('Too many requests - try again later', 429)
+    if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
     const cacheKey = buildCacheKey('place-detail', id)
     const cached = await getCachedJson<{
@@ -57,7 +57,7 @@ export async function GET(
       GROUP BY p.id, p.name, p.address, p.location, p.created_at
     `
 
-    if (!place) return err('Place not found', 404)
+    if (!place) return err('Snackplek niet gevonden.', 404)
 
     await setCachedJson(cacheKey, place, 30)
     return await withPublicCache(ok(place), 30, 120)

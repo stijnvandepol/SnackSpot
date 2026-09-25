@@ -51,30 +51,30 @@ export async function sendNotificationLikeEmail(
   dishName: string | null,
   reviewUrl: string,
 ): Promise<void> {
-  const dish = dishName ? ` of ${safeSubjectPart(dishName)}` : ''
-  const subject = `${safeSubjectPart(actorUsername)} liked your review${dish}`
+  const dish = dishName ? ` over ${safeSubjectPart(dishName)}` : ''
+  const subject = `${safeSubjectPart(actorUsername)} vindt je review${dish} leuk`
   await sendEmailWithFallback({
     to,
     subject,
     html: renderBrandedEmail({
       previewText: subject,
-      eyebrow: 'New like',
-      title: 'Someone liked your review',
+      eyebrow: 'Nieuwe like',
+      title: 'Iemand vindt je review leuk',
       intro: html(
-        `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(recipientUsername)}</strong>, <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(actorUsername)}</strong> liked your review${escapeHtml(dish)} on SnackSpot.`,
+        `Hoi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(recipientUsername)}</strong>, <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(actorUsername)}</strong> vindt je review${escapeHtml(dish)} op SnackSpot leuk.`,
       ),
-      action: { label: 'View review', href: reviewUrl },
-      calloutTitle: 'Keep sharing',
-      calloutBody: html('Every review you write helps others discover great food spots. Thank you for contributing!'),
+      action: { label: 'Bekijk review', href: reviewUrl },
+      calloutTitle: 'Blijf delen',
+      calloutBody: html('Met elke review help je anderen een goede snackplek te vinden. Bedankt daarvoor.'),
     }),
     fallbackHtml: renderFallbackEmail({
-      title: 'Someone liked your review',
-      body: `Hi ${escapeHtml(recipientUsername)}, ${escapeHtml(actorUsername)} liked your review${escapeHtml(dish)} on SnackSpot.`,
-      linkLabel: 'View review',
+      title: 'Iemand vindt je review leuk',
+      body: `Hoi ${escapeHtml(recipientUsername)}, ${escapeHtml(actorUsername)} vindt je review${escapeHtml(dish)} op SnackSpot leuk.`,
+      linkLabel: 'Bekijk review',
       linkHref: reviewUrl,
-      footer: 'You can manage notification preferences in your profile settings.',
+      footer: 'Je e-mailmeldingen beheer je in je profielinstellingen.',
     }),
-    text: `${safeSubjectPart(actorUsername)} liked your review${dish} on SnackSpot.\n\nView it here: ${reviewUrl}\n\nManage notifications in your profile settings.`,
+    text: `${safeSubjectPart(actorUsername)} vindt je review${dish} op SnackSpot leuk.\n\nBekijk je review: ${reviewUrl}\n\nJe e-mailmeldingen beheer je in je profielinstellingen.`,
     category: 'notification-like',
   })
 }
@@ -86,30 +86,30 @@ export async function sendNotificationCommentEmail(
   dishName: string | null,
   reviewUrl: string,
 ): Promise<void> {
-  const dish = dishName ? ` of ${safeSubjectPart(dishName)}` : ''
-  const subject = `${safeSubjectPart(actorUsername)} commented on your review${dish}`
+  const dish = dishName ? ` over ${safeSubjectPart(dishName)}` : ''
+  const subject = `${safeSubjectPart(actorUsername)} reageerde op je review${dish}`
   await sendEmailWithFallback({
     to,
     subject,
     html: renderBrandedEmail({
       previewText: subject,
-      eyebrow: 'New comment',
-      title: 'Someone commented on your review',
+      eyebrow: 'Nieuwe reactie',
+      title: 'Iemand reageerde op je review',
       intro: html(
-        `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(recipientUsername)}</strong>, <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(actorUsername)}</strong> left a comment on your review${escapeHtml(dish)} on SnackSpot.`,
+        `Hoi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(recipientUsername)}</strong>, <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(actorUsername)}</strong> reageerde op je review${escapeHtml(dish)} op SnackSpot.`,
       ),
-      action: { label: 'View comment', href: reviewUrl },
-      calloutTitle: 'Join the conversation',
-      calloutBody: html('Reply to keep the discussion going and help others find great food!'),
+      action: { label: 'Bekijk reactie', href: reviewUrl },
+      calloutTitle: 'Praat mee',
+      calloutBody: html('Reageer terug als je iets wilt aanvullen of een vraag wilt beantwoorden.'),
     }),
     fallbackHtml: renderFallbackEmail({
-      title: 'New comment on your review',
-      body: `Hi ${escapeHtml(recipientUsername)}, ${escapeHtml(actorUsername)} commented on your review${escapeHtml(dish)} on SnackSpot.`,
-      linkLabel: 'View comment',
+      title: 'Nieuwe reactie op je review',
+      body: `Hoi ${escapeHtml(recipientUsername)}, ${escapeHtml(actorUsername)} reageerde op je review${escapeHtml(dish)} op SnackSpot.`,
+      linkLabel: 'Bekijk reactie',
       linkHref: reviewUrl,
-      footer: 'You can manage notification preferences in your profile settings.',
+      footer: 'Je e-mailmeldingen beheer je in je profielinstellingen.',
     }),
-    text: `${safeSubjectPart(actorUsername)} commented on your review${dish} on SnackSpot.\n\nView it here: ${reviewUrl}\n\nManage notifications in your profile settings.`,
+    text: `${safeSubjectPart(actorUsername)} reageerde op je review${dish} op SnackSpot.\n\nBekijk de reactie: ${reviewUrl}\n\nJe e-mailmeldingen beheer je in je profielinstellingen.`,
     category: 'notification-comment',
   })
 }
@@ -121,30 +121,30 @@ export async function sendNotificationMentionEmail(
   placeName: string | null,
   reviewUrl: string,
 ): Promise<void> {
-  const place = placeName ? ` at ${safeSubjectPart(placeName)}` : ''
-  const subject = `${safeSubjectPart(actorUsername)} mentioned you in a review${place}`
+  const place = placeName ? ` over ${safeSubjectPart(placeName)}` : ''
+  const subject = `${safeSubjectPart(actorUsername)} noemde je in een review${place}`
   await sendEmailWithFallback({
     to,
     subject,
     html: renderBrandedEmail({
       previewText: subject,
-      eyebrow: 'You were mentioned',
-      title: 'Someone mentioned you',
+      eyebrow: 'Vermelding',
+      title: 'Iemand noemde je in een review',
       intro: html(
-        `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(recipientUsername)}</strong>, <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(actorUsername)}</strong> mentioned you in a review${escapeHtml(place)} on SnackSpot.`,
+        `Hoi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(recipientUsername)}</strong>, <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(actorUsername)}</strong> noemde je in een review${escapeHtml(place)} op SnackSpot.`,
       ),
-      action: { label: 'View review', href: reviewUrl },
-      calloutTitle: 'Your community',
-      calloutBody: html('SnackSpot members are talking about you. Click the button above to see what they said.'),
+      action: { label: 'Bekijk review', href: reviewUrl },
+      calloutTitle: 'Wat is er gezegd?',
+      calloutBody: html('Via de knop hierboven lees je de review waarin je genoemd wordt.'),
     }),
     fallbackHtml: renderFallbackEmail({
-      title: 'You were mentioned',
-      body: `Hi ${escapeHtml(recipientUsername)}, ${escapeHtml(actorUsername)} mentioned you in a review${escapeHtml(place)} on SnackSpot.`,
-      linkLabel: 'View review',
+      title: 'Iemand noemde je in een review',
+      body: `Hoi ${escapeHtml(recipientUsername)}, ${escapeHtml(actorUsername)} noemde je in een review${escapeHtml(place)} op SnackSpot.`,
+      linkLabel: 'Bekijk review',
       linkHref: reviewUrl,
-      footer: 'You can manage notification preferences in your profile settings.',
+      footer: 'Je e-mailmeldingen beheer je in je profielinstellingen.',
     }),
-    text: `${safeSubjectPart(actorUsername)} mentioned you in a review${place} on SnackSpot.\n\nView it here: ${reviewUrl}\n\nManage notifications in your profile settings.`,
+    text: `${safeSubjectPart(actorUsername)} noemde je in een review${place} op SnackSpot.\n\nBekijk de review: ${reviewUrl}\n\nJe e-mailmeldingen beheer je in je profielinstellingen.`,
     category: 'notification-mention',
   })
 }
@@ -155,29 +155,29 @@ export async function sendNotificationBadgeEmail(
   badgeName: string,
   profileUrl: string,
 ): Promise<void> {
-  const subject = `You unlocked "${safeSubjectPart(badgeName)}" on SnackSpot!`
+  const subject = `Je hebt de badge "${safeSubjectPart(badgeName)}" verdiend`
   await sendEmailWithFallback({
     to,
     subject,
     html: renderBrandedEmail({
       previewText: subject,
-      eyebrow: 'Achievement unlocked',
-      title: 'New badge earned!',
+      eyebrow: 'Nieuwe badge',
+      title: 'Je hebt een nieuwe badge',
       intro: html(
-        `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(recipientUsername)}</strong>, you just unlocked the <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(badgeName)}</strong> badge on SnackSpot. Keep exploring and reviewing food spots to earn more!`,
+        `Hoi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(recipientUsername)}</strong>, je hebt op SnackSpot de badge <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(badgeName)}</strong> verdiend.`,
       ),
-      action: { label: 'View your profile', href: profileUrl },
-      calloutTitle: 'Keep going',
-      calloutBody: html('Every review you write and place you discover brings you closer to new achievements.'),
+      action: { label: 'Bekijk je profiel', href: profileUrl },
+      calloutTitle: 'Volgende badge',
+      calloutBody: html('Met elke review en elke nieuwe snackplek kom je dichter bij je volgende badge.'),
     }),
     fallbackHtml: renderFallbackEmail({
-      title: 'Achievement unlocked!',
-      body: `Hi ${escapeHtml(recipientUsername)}, you just unlocked the "${escapeHtml(badgeName)}" badge on SnackSpot!`,
-      linkLabel: 'View your profile',
+      title: 'Je hebt een nieuwe badge',
+      body: `Hoi ${escapeHtml(recipientUsername)}, je hebt op SnackSpot de badge "${escapeHtml(badgeName)}" verdiend.`,
+      linkLabel: 'Bekijk je profiel',
       linkHref: profileUrl,
-      footer: 'You can manage notification preferences in your profile settings.',
+      footer: 'Je e-mailmeldingen beheer je in je profielinstellingen.',
     }),
-    text: `You unlocked "${safeSubjectPart(badgeName)}" on SnackSpot!\n\nView your profile: ${profileUrl}\n\nManage notifications in your profile settings.`,
+    text: `Je hebt op SnackSpot de badge "${safeSubjectPart(badgeName)}" verdiend.\n\nBekijk je profiel: ${profileUrl}\n\nJe e-mailmeldingen beheer je in je profielinstellingen.`,
     category: 'notification-badge',
   })
 }
@@ -188,29 +188,29 @@ export async function sendNotificationFollowEmail(
   actorUsername: string,
   followerProfileUrl: string,
 ): Promise<void> {
-  const subject = `${safeSubjectPart(actorUsername)} started following you on SnackSpot`
+  const subject = `${safeSubjectPart(actorUsername)} volgt je nu op SnackSpot`
   await sendEmailWithFallback({
     to,
     subject,
     html: renderBrandedEmail({
       previewText: subject,
-      eyebrow: 'New follower',
-      title: 'You have a new follower',
+      eyebrow: 'Nieuwe volger',
+      title: 'Je hebt een nieuwe volger',
       intro: html(
-        `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(recipientUsername)}</strong>, <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(actorUsername)}</strong> just started following you on SnackSpot.`,
+        `Hoi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(recipientUsername)}</strong>, <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(actorUsername)}</strong> volgt je nu op SnackSpot.`,
       ),
-      action: { label: 'View their profile', href: followerProfileUrl },
-      calloutTitle: 'Grow your community',
-      calloutBody: html('Keep sharing reviews to reach more food lovers who follow your taste.'),
+      action: { label: 'Bekijk profiel', href: followerProfileUrl },
+      calloutTitle: 'Je volgers',
+      calloutBody: html('Je volgers zien je nieuwe reviews in hun feed.'),
     }),
     fallbackHtml: renderFallbackEmail({
-      title: 'You have a new follower',
-      body: `Hi ${escapeHtml(recipientUsername)}, ${escapeHtml(actorUsername)} just started following you on SnackSpot.`,
-      linkLabel: 'View their profile',
+      title: 'Je hebt een nieuwe volger',
+      body: `Hoi ${escapeHtml(recipientUsername)}, ${escapeHtml(actorUsername)} volgt je nu op SnackSpot.`,
+      linkLabel: 'Bekijk profiel',
       linkHref: followerProfileUrl,
-      footer: 'You can manage notification preferences in your profile settings.',
+      footer: 'Je e-mailmeldingen beheer je in je profielinstellingen.',
     }),
-    text: `${safeSubjectPart(actorUsername)} started following you on SnackSpot.\n\nView their profile: ${followerProfileUrl}\n\nManage notifications in your profile settings.`,
+    text: `${safeSubjectPart(actorUsername)} volgt je nu op SnackSpot.\n\nBekijk profiel: ${followerProfileUrl}\n\nJe e-mailmeldingen beheer je in je profielinstellingen.`,
     category: 'notification-follow',
   })
 }
@@ -231,7 +231,7 @@ export async function sendMarketingEmail(
   // Every marketing mail says why it arrived and how to stop it (Telecommunicatiewet 11.7:
   // each message must offer a free, easy way to opt out).
   const settingsUrl = `${getSiteUrl()}/profile?tab=settings`
-  const unsubscribeText = `Je krijgt deze mail omdat je "Nieuws van SnackSpot" hebt aangezet. Afmelden kan met één klik in je instellingen: ${settingsUrl}`
+  const unsubscribeText = `Je krijgt deze mail omdat "Nieuws van SnackSpot" aanstaat in je instellingen. Afmelden: zet het daar uit via ${settingsUrl}`
   await sendEmailWithFallback({
     to,
     subject: safeSubject,
@@ -245,7 +245,7 @@ export async function sendMarketingEmail(
       calloutBody: html(escapeHtml(calloutText).replace(/\n/g, '<br />')),
       secondaryBlockTitle: 'Afmelden',
       secondaryBlockBody: html(
-        `${escapeHtml('Je krijgt deze mail omdat je "Nieuws van SnackSpot" hebt aangezet.')} <a href="${escapeHtml(settingsUrl)}">Afmelden in je instellingen</a>.`,
+        `${escapeHtml('Je krijgt deze mail omdat "Nieuws van SnackSpot" aanstaat in je instellingen.')} <a href="${escapeHtml(settingsUrl)}">Afmelden kan daar met één klik</a>.`,
       ),
     }),
     fallbackHtml: renderFallbackEmail({
@@ -264,7 +264,7 @@ export async function sendMarketingEmail(
 export async function sendWelcomeEmail(to: string, username: string): Promise<void> {
   await sendEmailWithFallback({
     to,
-    subject: 'Welcome to SnackSpot!',
+    subject: 'Welkom bij SnackSpot',
     html: welcomeEmailHtml(username),
     fallbackHtml: welcomeEmailFallbackHtml(username),
     text: welcomeEmailText(username),
@@ -277,7 +277,7 @@ export async function sendWelcomeEmail(to: string, username: string): Promise<vo
 export async function sendPasswordResetEmail(to: string, resetUrl: string): Promise<void> {
   await sendEmailWithFallback({
     to,
-    subject: 'Reset your SnackSpot password',
+    subject: 'Stel een nieuw SnackSpot-wachtwoord in',
     html: passwordResetHtml(resetUrl),
     fallbackHtml: passwordResetFallbackHtml(resetUrl),
     text: passwordResetText(resetUrl),
@@ -290,7 +290,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string): Prom
 export async function sendPasswordChangedEmail(to: string, username: string): Promise<void> {
   await sendEmailWithFallback({
     to,
-    subject: 'Your SnackSpot password has been changed',
+    subject: 'Je SnackSpot-wachtwoord is gewijzigd',
     html: passwordChangedHtml(username),
     fallbackHtml: passwordChangedFallbackHtml(username),
     text: passwordChangedText(username),
@@ -302,98 +302,98 @@ export async function sendPasswordChangedEmail(to: string, username: string): Pr
 
 function welcomeEmailHtml(username: string): string {
   return renderBrandedEmail({
-    previewText: 'Welcome to SnackSpot!',
-    eyebrow: 'Welcome',
-    title: 'Welcome to SnackSpot!',
+    previewText: 'Welkom bij SnackSpot',
+    eyebrow: 'Welkom',
+    title: 'Welkom bij SnackSpot',
     intro: html(
-      `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(username)}</strong>, thanks for joining SnackSpot! We're excited to have you. Start exploring hidden food spots near you right now.`,
+      `Hoi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(username)}</strong>, leuk dat je er bent. Zoek een snackbar bij jou in de buurt of schrijf je eerste review.`,
     ),
-    calloutTitle: 'What is SnackSpot?',
+    calloutTitle: 'Wat is SnackSpot?',
     calloutBody: html(
-      'SnackSpot helps you discover and share hidden food gems in your city. Browse spots shared by the community, leave reviews, and add your own favorites.',
+      'Op SnackSpot lees en schrijf je reviews van snackbars, cafetaria&#39;s en friettenten, per gerecht en met foto&#39;s. Bewaar je favoriete snackplekken en volg andere snackfans.',
     ),
   })
 }
 
 function welcomeEmailText(username: string): string {
-  return `Welcome to SnackSpot!
+  return `Welkom bij SnackSpot
 
-Hi ${username}, thanks for joining SnackSpot!
+Hoi ${username}, leuk dat je er bent.
 
-We're excited to have you. Start exploring hidden food spots near you right now.
+Zoek een snackbar bij jou in de buurt of schrijf je eerste review.
 
-If you did not create a SnackSpot account, you can safely ignore this email.`
+Heb je geen SnackSpot-account aangemaakt? Dan kun je deze mail negeren.`
 }
 
 function welcomeEmailFallbackHtml(username: string): string {
   return renderFallbackEmail({
-    title: 'Welcome to SnackSpot!',
-    body: `Hi <strong style="color:${EMAIL_TEXT};">${escapeHtml(username)}</strong>, thanks for joining SnackSpot! We're excited to have you on board.`,
-    footer: 'If you did not create a SnackSpot account, you can safely ignore this email.',
+    title: 'Welkom bij SnackSpot',
+    body: `Hoi <strong style="color:${EMAIL_TEXT};">${escapeHtml(username)}</strong>, leuk dat je er bent. Zoek een snackbar bij jou in de buurt of schrijf je eerste review.`,
+    footer: 'Heb je geen SnackSpot-account aangemaakt? Dan kun je deze mail negeren.',
   })
 }
 
 function passwordResetHtml(resetUrl: string): string {
   return renderBrandedEmail({
-    previewText: 'Reset your SnackSpot password',
-    eyebrow: 'Account security',
-    title: 'Reset your password',
+    previewText: 'Stel een nieuw SnackSpot-wachtwoord in',
+    eyebrow: 'Accountbeveiliging',
+    title: 'Nieuw wachtwoord instellen',
     intro: html(
-      'We received a request to reset the password for your SnackSpot account. Use the button below to choose a new password. This link stays valid for 15 minutes.',
+      'We kregen een verzoek om het wachtwoord van je SnackSpot-account opnieuw in te stellen. Kies met de knop hieronder een nieuw wachtwoord. De link is 15 minuten geldig.',
     ),
     action: {
-      label: 'Reset password',
+      label: 'Nieuw wachtwoord instellen',
       href: resetUrl,
     },
-    calloutTitle: 'Why you are seeing this',
+    calloutTitle: 'Waarom krijg je deze mail?',
     calloutBody: html(
-      'Someone entered your email address in the SnackSpot reset flow. If that was you, continue below. If not, no action is needed and your password stays unchanged.',
+      'Iemand heeft je e-mailadres ingevuld bij &#39;Wachtwoord vergeten&#39; op SnackSpot. Was jij dat niet? Dan hoef je niets te doen. Je wachtwoord blijft hetzelfde.',
     ),
-    secondaryBlockTitle: 'Manual link',
+    secondaryBlockTitle: 'Werkt de knop niet?',
     secondaryBlockBody: html(
-      `Button not working? Copy and paste this link into your browser:<br /><span style="word-break:break-all;color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(resetUrl)}</span>`,
+      `Kopieer deze link en plak hem in je browser:<br /><span style="word-break:break-all;color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(resetUrl)}</span>`,
     ),
   })
 }
 
 function passwordResetText(resetUrl: string): string {
-  return `Reset your SnackSpot password
+  return `Nieuw SnackSpot-wachtwoord instellen
 
-We received a request to reset the password for your SnackSpot account.
+We kregen een verzoek om het wachtwoord van je SnackSpot-account opnieuw in te stellen.
 
-Click the link below to choose a new password. This link is valid for 15 minutes:
+Kies via deze link een nieuw wachtwoord. De link is 15 minuten geldig:
 
 ${resetUrl}
 
-If you did not request a password reset, you can safely ignore this email.
-Your password will not be changed.`
+Heb je dit niet aangevraagd? Dan kun je deze mail negeren.
+Je wachtwoord blijft hetzelfde.`
 }
 
 function passwordResetFallbackHtml(resetUrl: string): string {
   return renderFallbackEmail({
-    title: 'Reset your password',
-    body: 'We received a request to reset your SnackSpot password. Use the link below within 15 minutes.',
-    linkLabel: 'Reset password',
+    title: 'Nieuw wachtwoord instellen',
+    body: 'We kregen een verzoek om je SnackSpot-wachtwoord opnieuw in te stellen. Gebruik de link hieronder binnen 15 minuten.',
+    linkLabel: 'Nieuw wachtwoord instellen',
     linkHref: resetUrl,
-    footer: 'If you did not request this, you can ignore this email.',
+    footer: 'Heb je dit niet aangevraagd? Dan kun je deze mail negeren.',
   })
 }
 
 function passwordChangedHtml(username: string): string {
   return renderBrandedEmail({
-    previewText: 'Your SnackSpot password was changed',
-    eyebrow: 'Account security',
-    title: 'Password changed',
+    previewText: 'Je SnackSpot-wachtwoord is gewijzigd',
+    eyebrow: 'Accountbeveiliging',
+    title: 'Wachtwoord gewijzigd',
     intro: html(
-      `Hi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(username)}</strong>, the password for your SnackSpot account has been updated successfully. All active sessions have been signed out.`,
+      `Hoi <strong style="color:${EMAIL_TEXT};font-weight:600;">${escapeHtml(username)}</strong>, het wachtwoord van je SnackSpot-account is gewijzigd. Je bent op alle apparaten uitgelogd.`,
     ),
-    calloutTitle: 'Confirmation',
+    calloutTitle: 'Bevestiging',
     calloutBody: html(
-      'This change is already complete. You can log in again with your new password on any device.',
+      'De wijziging is doorgevoerd. Log opnieuw in met je nieuwe wachtwoord.',
     ),
-    secondaryBlockTitle: 'Did not do this?',
+    secondaryBlockTitle: 'Was jij dit niet?',
     secondaryBlockBody: html(
-      'Reply to this email immediately so the SnackSpot team can help secure your account.',
+      'Beantwoord deze mail dan meteen, zodat we je account kunnen beveiligen.',
     ),
   })
 }
@@ -428,7 +428,7 @@ function renderBrandedEmail({
   secondaryBlockBody,
 }: BrandedEmailOptions): string {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -448,7 +448,7 @@ function renderBrandedEmail({
                 ${renderWordmark()}
               </div>
               <p style="margin:0;font-size:13px;line-height:1.6;color:${EMAIL_MUTED};">
-                Find your next hidden food gem in minutes.
+                Reviews van snackbars en snackplekken, per gerecht.
               </p>
             </td>
           </tr>
@@ -497,7 +497,7 @@ function renderBrandedEmail({
           <tr>
             <td style="padding:16px 8px 0;text-align:center;">
               <p style="margin:0;font-size:12px;line-height:1.7;color:#94A3B8;">
-                &copy; ${new Date().getFullYear()} SnackSpot &mdash; Built for discovering hidden food spots near you.
+                &copy; ${new Date().getFullYear()} SnackSpot. Snackbars bij jou in de buurt, beoordeeld door snackfans.
               </p>
             </td>
           </tr>
@@ -514,19 +514,19 @@ function renderWordmark(): string {
 }
 
 function passwordChangedText(username: string): string {
-  return `Password changed
+  return `Wachtwoord gewijzigd
 
-Hi ${username}, the password for your SnackSpot account has been successfully changed.
-All active sessions have been signed out.
+Hoi ${username}, het wachtwoord van je SnackSpot-account is gewijzigd.
+Je bent op alle apparaten uitgelogd.
 
-If you did not make this change, please contact us immediately.`
+Was jij dit niet? Beantwoord deze mail dan meteen.`
 }
 
 function passwordChangedFallbackHtml(username: string): string {
   return renderFallbackEmail({
-    title: 'Password changed',
-    body: `Hi <strong style="color:${EMAIL_TEXT};">${escapeHtml(username)}</strong>, your SnackSpot password has been changed successfully and active sessions were signed out.`,
-    footer: 'If you did not make this change, reply to this email immediately.',
+    title: 'Wachtwoord gewijzigd',
+    body: `Hoi <strong style="color:${EMAIL_TEXT};">${escapeHtml(username)}</strong>, je SnackSpot-wachtwoord is gewijzigd en je bent op alle apparaten uitgelogd.`,
+    footer: 'Was jij dit niet? Beantwoord deze mail dan meteen.',
   })
 }
 
@@ -540,7 +540,7 @@ type FallbackEmailOptions = {
 
 function renderFallbackEmail({ title, body, linkLabel, linkHref, footer }: FallbackEmailOptions): string {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />

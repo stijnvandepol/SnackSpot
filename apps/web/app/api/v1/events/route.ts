@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
   // Generous for a real visitor (a busy session sends a few dozen), tight for a script.
   const rl = await rateLimitIP(getClientIP(req), 'analytics_event', 120, 60)
-  if (!rl.allowed) return err('Too many events', 429)
+  if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
   const body = await parseBody(req, TrackEventSchema)
   if (isResponse(body)) return body

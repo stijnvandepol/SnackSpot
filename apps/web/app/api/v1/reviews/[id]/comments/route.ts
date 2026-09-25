@@ -44,7 +44,7 @@ export async function GET(
       select: { id: true, status: true, userId: true },
     })
 
-    if (!review) return err('Review not found', 404)
+    if (!review) return err('Review niet gevonden.', 404)
     const visibilityError = checkReviewVisibility(review, auth)
     if (visibilityError) return visibilityError
 
@@ -84,13 +84,13 @@ export async function POST(
   if (isResponse(auth)) return auth
 
   const rl = await rateLimitUser(auth.sub, 'comment_create', 40, 3600)
-  if (!rl.allowed) return err('Comment rate limit exceeded', 429)
+  if (!rl.allowed) return err('Je plaatst te snel reacties. Probeer het zo opnieuw.', 429)
 
   const body = await parseBody<{ text: string }>(req, CreateCommentSchema)
   if (isResponse(body)) return body
 
   const rawText = body.text.trim()
-  if (!rawText) return err('Comment text is required', 422)
+  if (!rawText) return err('Schrijf eerst een reactie.', 422)
   const { regexes } = await getBlockedWordsCache()
   const text = filterText(rawText, regexes)
 
@@ -100,7 +100,7 @@ export async function POST(
       select: { status: true, userId: true },
     })
     if (!review || review.status !== ReviewStatus.PUBLISHED) {
-      return err('Review not found', 404)
+      return err('Review niet gevonden.', 404)
     }
 
     const comment = await prisma.comment.create({

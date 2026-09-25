@@ -28,24 +28,24 @@ describe('buildReviewShareText', () => {
   it('names the dish, the place and the city', () => {
     expect(
       buildReviewShareText({ dishName: 'Kapsalon', placeName: 'Cafetaria De Smickel', city: 'Uden', rating: 4.5 }),
-    ).toBe('Kapsalon bij Cafetaria De Smickel in Uden — 4,5★ op SnackSpot')
+    ).toBe('Kapsalon bij Cafetaria De Smickel in Uden: 4,5 ★ op SnackSpot')
   })
 
   it('falls back to the place alone when there is no dish', () => {
     expect(buildReviewShareText({ placeName: 'Cafetaria De Smickel', city: 'Uden', rating: 4 })).toBe(
-      'Cafetaria De Smickel in Uden — 4★ op SnackSpot',
+      'Cafetaria De Smickel in Uden: 4 ★ op SnackSpot',
     )
   })
 
   it('omits the city when it is unknown', () => {
     expect(buildReviewShareText({ dishName: 'Friet', placeName: 'Frituur Jan', city: null, rating: 3.5 })).toBe(
-      'Friet bij Frituur Jan — 3,5★ op SnackSpot',
+      'Friet bij Frituur Jan: 3,5 ★ op SnackSpot',
     )
   })
 
   it('treats a blank dish name as absent', () => {
     expect(buildReviewShareText({ dishName: '   ', placeName: 'Frituur Jan', rating: 5 })).toBe(
-      'Frituur Jan — 5★ op SnackSpot',
+      'Frituur Jan: 5 ★ op SnackSpot',
     )
   })
 })
@@ -78,9 +78,9 @@ describe('paths', () => {
 
 describe('whatsappShareHref', () => {
   it('prefills text and URL on separate lines', () => {
-    const href = whatsappShareHref('Kapsalon — 4,5★', 'https://snackspot.online/review/abc')
+    const href = whatsappShareHref('Kapsalon: 4,5 ★', 'https://snackspot.online/review/abc')
     expect(href.startsWith('https://wa.me/?text=')).toBe(true)
     const text = decodeURIComponent(href.slice('https://wa.me/?text='.length))
-    expect(text).toBe('Kapsalon — 4,5★\nhttps://snackspot.online/review/abc')
+    expect(text).toBe('Kapsalon: 4,5 ★\nhttps://snackspot.online/review/abc')
   })
 })

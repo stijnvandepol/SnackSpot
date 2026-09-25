@@ -6,22 +6,22 @@ import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
 const faqItems = [
   {
-    question: 'Do I need an account to post a review?',
-    answer: 'Yes. You need a SnackSpot account to post. Creating one is free and takes under a minute.',
+    question: 'Heb ik een account nodig om een review te plaatsen?',
+    answer: 'Ja. Een account is gratis en snel gemaakt.',
   },
   {
-    question: 'Can I edit or delete a review after posting?',
+    question: 'Kan ik een review aanpassen of verwijderen?',
     answer:
-      'Yes. Open the review from your profile, tap the edit button, make your changes, and save. To delete, open the review and select the delete option.',
+      'Ja. Open de review vanaf je profiel. Daar kun je hem bewerken of verwijderen. Een verwijderde review kun je 30 dagen lang terugzetten via je instellingen.',
   },
   {
-    question: 'How many photos can I add to a review?',
-    answer: 'You can add up to 5 photos per review.',
+    question: 'Hoeveel foto’s kan ik toevoegen?',
+    answer: 'Maximaal 5 foto’s per review.',
   },
   {
-    question: 'What if the place I want to review is not on SnackSpot?',
+    question: 'Wat als de snackplek nog niet op SnackSpot staat?',
     answer:
-      'You can add the place yourself during the review flow. See the guide on how to add a place for step-by-step instructions.',
+      'Dan voeg je hem toe terwijl je de review plaatst. In de handleiding over een snackplek toevoegen lees je hoe.',
   },
 ]
 
@@ -35,25 +35,26 @@ const faqSchema = {
   })),
 }
 
+const TITLE = 'Een review plaatsen op SnackSpot'
+const DESCRIPTION =
+  'Zo plaats je een review met foto’s op SnackSpot: foto’s toevoegen, sterren geven voor smaak, prijs en portie, en de snackplek kiezen.'
+
 export const metadata: Metadata = {
-  title: { absolute: 'How to post a review on SnackSpot' },
-  description:
-    'Share a photo review of a local food spot on SnackSpot. Step-by-step instructions for posting your first review.',
+  title: { absolute: TITLE },
+  description: DESCRIPTION,
   alternates: {
     canonical: '/guides/how-to-post-a-review',
   },
   openGraph: {
     type: 'article',
-    title: 'How to post a review on SnackSpot',
-    description:
-      'Share a photo review of a local food spot on SnackSpot. Step-by-step instructions for posting your first review.',
+    title: TITLE,
+    description: DESCRIPTION,
     images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'How to post a review on SnackSpot',
-    description:
-      'Share a photo review of a local food spot on SnackSpot. Step-by-step instructions for posting your first review.',
+    title: TITLE,
+    description: DESCRIPTION,
     images: ['/twitter-image'],
   },
 }
@@ -63,61 +64,73 @@ export default function HowToPostAReviewPage() {
     <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
       <BreadcrumbJsonLd
         items={[
-          { name: 'Guides', path: '/guides' },
-          { name: 'How to Post a Review', path: '/guides/how-to-post-a-review' },
+          { name: 'Uitleg', path: '/guides' },
+          { name: 'Een review plaatsen', path: '/guides/how-to-post-a-review' },
         ]}
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }} />
 
       <article className="guide-content guide-article prose prose-slate">
-        <h1>How to post a review on SnackSpot</h1>
+        <h1>Een review plaatsen op SnackSpot</h1>
 
         <p>
-          Posting a review on SnackSpot lets you share a food spot with others, add photos, rate the experience, and
-          write a short description so other users know what to expect.
+          Een review gaat over één gerecht bij één snackplek. Je voegt foto’s toe, geeft sterren en schrijft een paar
+          zinnen, zodat anderen weten wat ze kunnen verwachten.
         </p>
 
-        <h2>What you need</h2>
+        <h2>Wat je nodig hebt</h2>
         <ul>
           <li>
-            A SnackSpot account (<Link href="/guides/how-to-create-an-account">create one here</Link> if you do not have
-            one)
+            Een SnackSpot-account (<Link href="/guides/how-to-create-an-account">maak er hier een</Link> als je dat nog
+            niet hebt)
           </li>
-          <li>At least one photo of the food or place</li>
-          <li>The name of the place you visited</li>
+          <li>Minstens één foto van je eten</li>
+          <li>De naam van de snackplek waar je was</li>
         </ul>
 
-        <h2>Steps to post a review</h2>
+        <h2>Zo plaats je een review</h2>
         <ol>
           <li>
-            Tap the <strong>Post</strong> button in the navigation bar, or go to{' '}
-            <Link href="/add-review">add a review</Link> directly.
+            Tik op de plusknop (+) in het menu en kies voor een review, of ga direct naar{' '}
+            <Link href="/add-review">een review schrijven</Link>.
           </li>
           <li>
-            Search for the place you want to review. Type the name or address in the search field. If the place is not
-            on SnackSpot yet, you can add it,{' '}
-            <Link href="/guides/how-to-add-a-place">see the guide on adding a place</Link>.
+            <strong>Foto’s:</strong> voeg 1 tot 5 foto’s van je eten toe.
           </li>
-          <li>Select the correct place from the results.</li>
-          <li>Add one or more photos. You can upload up to 5 images.</li>
           <li>
-            Enter the name of the dish or item you ordered (optional but recommended, it helps others know what to get).
+            <strong>Beoordeling:</strong> geef sterren voor smaak, prijs-kwaliteit en portie. Service is optioneel.
           </li>
-          <li>Give a rating by selecting the number of stars.</li>
-          <li>Write a short description of your experience.</li>
+          <li>Vul de naam van het gerecht in, zodat anderen weten wat ze moeten bestellen.</li>
+          <li>Schrijf een paar zinnen over je ervaring.</li>
           <li>
-            Click <strong>Post review</strong>. Your review will appear in the feed and on the place page.
+            <strong>Snackplek:</strong> zoek de snackplek op naam of adres en kies hem uit de lijst. Staat hij er nog
+            niet op? <Link href="/guides/how-to-add-a-place">Lees hoe je een snackplek toevoegt</Link>.
+          </li>
+          <li>
+            Tik op <strong>Review plaatsen</strong>.
           </li>
         </ol>
 
-        <h2>After posting</h2>
+        <h2>Richtlijnen voor reviews</h2>
+        <ul>
+          <li>Wees eerlijk, ook als het tegenviel. Kritiek mag, als die klopt.</li>
+          <li>Schrijf alleen over je eigen ervaring: iets wat je zelf hebt gegeten.</li>
+          <li>Gebruik je eigen foto’s.</li>
+          <li>Geen reclame en geen betaalde reviews zonder dat te vermelden.</li>
+          <li>Geen persoonlijke aanvallen op medewerkers, eigenaren of andere gebruikers.</li>
+        </ul>
         <p>
-          Your review appears immediately on the <Link href="/">feed</Link> and on the place page. Other users can like
-          it, comment on it, and use it to decide where to eat.
+          De volledige regels staan in de <Link href="/terms">voorwaarden</Link>.
         </p>
-        <p>You can edit or delete your review at any time by opening it from your profile.</p>
 
-        <h2>FAQ</h2>
+        <h2>Na het plaatsen</h2>
+        <p>
+          Je review staat direct in de <Link href="/">feed</Link> en op de pagina van de snackplek. Anderen kunnen hem
+          liken en erop reageren.
+        </p>
+        <p>Je kunt je review altijd aanpassen of verwijderen door hem te openen vanaf je profiel.</p>
+
+        <h2>Veelgestelde vragen</h2>
         {faqItems.map((item) => (
           <section key={item.question}>
             <h3>{item.question}</h3>

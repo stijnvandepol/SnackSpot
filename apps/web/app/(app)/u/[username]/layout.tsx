@@ -35,7 +35,7 @@ export async function generateMetadata(
 
   if (!user) {
     return {
-      title: 'User not found',
+      title: 'Gebruiker niet gevonden',
       robots: { index: false, follow: false },
       alternates: {
         canonical: `/u/${encodeURIComponent(username)}`,
@@ -43,10 +43,10 @@ export async function generateMetadata(
     }
   }
 
-  const reviewLabel = user._count.reviews === 1 ? '1 public review' : `${user._count.reviews} public reviews`
+  const reviewLabel = user._count.reviews === 1 ? '1 openbare review' : `${user._count.reviews} openbare reviews`
   const description =
     summarizeBio(user.bio) ??
-    `${user.username} on SnackSpot. View ${reviewLabel} and recent food spot recommendations from this profile.`
+    `${user.username} op SnackSpot. Bekijk ${reviewLabel} van snackbars en andere snackplekken, met foto's en cijfers per gerecht.`
 
   return {
     title: `@${user.username}`,

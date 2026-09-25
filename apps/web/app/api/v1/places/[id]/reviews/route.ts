@@ -20,7 +20,7 @@ export async function GET(
     if (!auth) {
       const ip = getClientIP(req)
       const rl = await rateLimitIP(ip, 'place_reviews_public', 120, 60)
-      if (!rl.allowed) return err('Too many requests - try again later', 429)
+      if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
       const cacheKey = buildCacheKey(
         'place-reviews-public',

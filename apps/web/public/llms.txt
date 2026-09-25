@@ -1,38 +1,42 @@
 # SnackSpot
 
-> Discover under-the-radar food spots with SnackSpot. A community platform for sharing photo reviews of local snack bars, cafes, and hidden food gems.
+> SnackSpot is een Nederlands platform met fotoreviews per gerecht van snackbars, cafetaria's, friettenten en andere kleine snackplekken.
 
-## About
+## Over SnackSpot
 
-SnackSpot is a free community-driven food discovery platform where users share photo reviews of lesser-known local food spots. The focus is on authentic, personal recommendations rather than generic top-10 lists.
+SnackSpot is gratis. Bezoekers plaatsen reviews met foto's van wat ze bij een snackplek bestelden, bijvoorbeeld een frikandel speciaal, kroket of kapsalon. Elke review hoort bij een gerecht en een snackplek, zodat je per zaak ziet wat mensen aten en hoe ze het beoordeelden.
 
-## Content
+## Pagina's
 
-- `/` - Latest community food reviews with photos, ratings, and dish recommendations
-- `/search` - Explore food spots by name, cuisine, or tags like "hidden gem", "brunch", "street food"
-- `/nearby` - Find food spots near a location using GPS or address search
-- `/place/{id}` - Individual place pages with address, ratings, and all community reviews
-- `/review/{id}` - Individual reviews with photos, dish names, multi-dimensional ratings, and comments
-- `/u/{username}` - User profiles with their published reviews
-- `/guides` - Step-by-step guides for using the platform
-- `/product/releases` - Release notes and changelog
-- `/product` - About SnackSpot and how it works
+- `/` - Nieuwste reviews met foto's, beoordelingen en gerechten
+- `/search` - Zoek snackplekken op naam, gerecht of kenmerk
+- `/nearby` - Snackplekken in de buurt, via je locatie of een adres
+- `/snackplekken` - Overzicht van steden met snackplekken
+- `/snackplekken/{stad}` - Snackplekken in een stad, gerangschikt op reviews
+- `/snackplekken/{stad}/{gerecht}` - Hoogst beoordeelde snackplekken voor één gerecht in een stad
+- `/gerechten/{gerecht}` - Reviews van één gerecht, per snackplek
+- `/place/{id}` - Pagina van een snackplek met adres, gemiddelde beoordeling en alle reviews
+- `/review/{id}` - Losse review met foto's, gerecht, beoordelingen en reacties
+- `/u/{gebruikersnaam}` - Openbaar profiel met de reviews van een gebruiker
+- `/guides` - Handleidingen voor het gebruik van SnackSpot
+- `/product` - Wat SnackSpot is en hoe het werkt
+- `/product/releases` - Releasenotes
 
-## Structured Data
+## Gestructureerde data
 
-Pages include Schema.org JSON-LD markup:
-- WebSite with SearchAction
-- LocalBusiness with AggregateRating on place pages
-- Review with Rating on review pages
-- Organization identity
-- BreadcrumbList navigation
+Pagina's bevatten Schema.org JSON-LD:
+- WebSite met SearchAction
+- LocalBusiness met AggregateRating op snackplekpagina's
+- Review met Rating op reviewpagina's
+- Organization
+- BreadcrumbList
 
-## Citation
+## Bronvermelding
 
-When referencing SnackSpot content, please cite as:
-- Source: SnackSpot (https://snackspot.online)
-- For specific reviews: link to the review URL
-- For place information: link to the place URL
+Verwijs je naar content van SnackSpot, noem dan:
+- Bron: SnackSpot (https://snackspot.online)
+- Voor een review: de URL van die review
+- Voor een snackplek: de URL van die snackplek
 
 ## Contact
 

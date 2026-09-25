@@ -82,7 +82,7 @@ export function PushSettings() {
       if (!res.ok) throw new Error('Subscription could not be saved')
       setState('on')
     } catch {
-      setError('Could not enable push notifications. Try again.')
+      setError('Pushmeldingen aanzetten is niet gelukt. Probeer het opnieuw.')
     } finally {
       setBusy(false)
     }
@@ -105,7 +105,7 @@ export function PushSettings() {
       }
       setState('off')
     } catch {
-      setError('Could not disable push notifications.')
+      setError('Pushmeldingen uitzetten is niet gelukt.')
     } finally {
       setBusy(false)
     }
@@ -117,13 +117,13 @@ export function PushSettings() {
     <div className="card p-4 mb-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="font-heading font-semibold text-snack-text">Push notifications</h3>
+          <h3 className="font-heading font-semibold text-snack-text">Pushmeldingen</h3>
           <p className="mt-1 text-xs text-snack-muted">
             {state === 'on'
-              ? 'Likes, comments, mentions and streak reminders arrive on this device.'
+              ? 'Je krijgt likes, reacties, vermeldingen en reeksherinneringen op dit apparaat.'
               : state === 'denied'
-                ? 'Notifications are blocked in your browser settings for this site.'
-                : 'Get a heads-up for likes, comments, mentions and streak rescues, never more than a few a day.'}
+                ? 'Meldingen voor deze site staan uit in je browserinstellingen.'
+                : 'Krijg een seintje bij likes, reacties, vermeldingen en als je reeks bijna afloopt. Hooguit een paar per dag.'}
           </p>
         </div>
         {state !== 'denied' && (
@@ -133,7 +133,7 @@ export function PushSettings() {
             disabled={busy}
             onClick={state === 'on' ? disable : enable}
           >
-            {busy ? '...' : state === 'on' ? 'Turn off' : 'Turn on'}
+            {busy ? '…' : state === 'on' ? 'Uitzetten' : 'Aanzetten'}
           </button>
         )}
       </div>

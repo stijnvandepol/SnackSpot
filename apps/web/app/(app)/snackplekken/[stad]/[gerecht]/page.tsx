@@ -18,9 +18,9 @@ export const revalidate = 3600
 
 function describe(detail: CityDishDetail): string {
   const best = detail.places[0]
-  const opener = `${detail.placeCount} adressen in ${detail.city.name} waar je ${detail.name.toLowerCase()} kunt eten, beoordeeld in ${detail.reviewCount} fotoreviews.`
+  const opener = `${detail.name} bij ${detail.placeCount} snackplekken in ${detail.city.name}, beoordeeld in ${detail.reviewCount} reviews.`
   return best
-    ? `${opener} ${best.name} staat bovenaan met ${best.avgRating.toFixed(1)}★.`
+    ? `${opener} ${best.name} scoort het hoogst met gemiddeld ${best.avgRating.toFixed(1).replace('.', ',')} ★.`
     : opener
 }
 
@@ -33,12 +33,12 @@ export async function generateMetadata({
   const detail = await getCityDishDetail(stad, gerecht)
   if (!detail) return { title: 'Niet gevonden' }
 
-  const title = `De beste ${detail.name.toLowerCase()} in ${detail.city.name}`
+  const title = `${detail.name} in ${detail.city.name}: hoogst beoordeeld`
   const description = describe(detail)
   const image = detail.places.find((place) => place.photoUrl)?.photoUrl
 
   return {
-    title: { absolute: `${title} — SnackSpot` },
+    title: { absolute: `${title} | SnackSpot` },
     description,
     alternates: { canonical: `/snackplekken/${detail.city.slug}/${detail.slug}` },
     openGraph: {
@@ -74,7 +74,7 @@ export default async function CityDishPage({
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: `De beste ${dishLabel} in ${detail.city.name}`,
+    name: `${detail.name} in ${detail.city.name}: hoogst beoordeeld`,
     numberOfItems: detail.places.length,
     itemListElement: detail.places.map((place, index) => ({
       '@type': 'ListItem',
@@ -123,17 +123,17 @@ export default async function CityDishPage({
           ← Alle snackplekken in {detail.city.name}
         </Link>
         <h1 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-5xl">
-          De beste {dishLabel} in {detail.city.name}
+          {detail.name} in {detail.city.name}: hoogst beoordeeld
         </h1>
         <p className="mt-4 text-base leading-7 text-snack-muted md:text-lg">{describe(detail)}</p>
         <p className="mt-2 text-sm text-snack-muted">
           Gemiddeld cijfer voor {dishLabel} in {detail.city.name}:{' '}
-          <span className="font-semibold text-snack-text">★ {detail.avgRating.toFixed(1)}</span>
+          <span className="font-semibold text-snack-text">★ {detail.avgRating.toFixed(1).replace('.', ',')}</span>
         </p>
         {nationalHref && (
           <p className="mt-2 text-sm">
             <Link href={nationalHref} className="font-semibold text-snack-primary hover:underline">
-              Bekijk de beste {dishLabel} in heel Nederland
+              Bekijk {dishLabel} in heel Nederland
             </Link>
           </p>
         )}
@@ -141,10 +141,10 @@ export default async function CityDishPage({
 
       <section className="mt-10" aria-labelledby="ranglijst">
         <h2 id="ranglijst" className="font-heading text-xl font-semibold text-snack-text">
-          Waar ze de beste {dishLabel} maken
+          Ranglijst voor {dishLabel} in {detail.city.name}
         </h2>
         <p className="mt-1 text-sm text-snack-muted">
-          Gerangschikt op het cijfer voor dit gerecht alleen — niet op het cijfer van de zaak.
+          Gerangschikt op het cijfer voor dit gerecht, niet op het totaalcijfer van de snackplek.
         </p>
 
         <ol className="mt-5 space-y-4">
@@ -178,7 +178,7 @@ export default async function CityDishPage({
 
                   <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                     <span className="font-semibold text-snack-text">
-                      ★ {place.avgRating.toFixed(1)}
+                      ★ {place.avgRating.toFixed(1).replace('.', ',')}
                     </span>
                     <span className="text-snack-muted">
                       {place.reviewCount} {place.reviewCount === 1 ? 'review' : 'reviews'} van dit
@@ -200,11 +200,11 @@ export default async function CityDishPage({
 
       <section className="mt-12 rounded-2xl border border-snack-border bg-snack-surface p-6">
         <h2 className="font-heading text-lg font-semibold text-snack-text">
-          Ergens een betere {dishLabel} gegeten?
+          Zelf {dishLabel} gegeten in {detail.city.name}?
         </h2>
         <p className="mt-2 text-sm leading-6 text-snack-muted">
-          Deze ranglijst komt volledig uit reviews van bezoekers. Zet je eigen fotoreview erbij
-          en de volgorde past zich aan.
+          De volgorde komt uit reviews van bezoekers. Schrijf een review, dan telt jouw cijfer
+          mee.
         </p>
         <Link href="/add-review" className="btn-primary mt-4 inline-flex text-sm">
           Schrijf een review

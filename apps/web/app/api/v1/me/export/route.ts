@@ -187,7 +187,7 @@ export async function GET(req: NextRequest) {
   // Generating a full export is expensive and the data changes slowly: twice
   // a day per user is plenty and keeps the endpoint useless for abuse.
   const rl = await rateLimitUser(auth.sub, 'data_export', 2, 86400)
-  if (!rl.allowed) return err('Too many requests - you can export your data twice per day', 429)
+  if (!rl.allowed) return err('Je kunt je gegevens twee keer per dag exporteren. Probeer het later opnieuw.', 429)
 
   try {
     const pass = new PassThrough()

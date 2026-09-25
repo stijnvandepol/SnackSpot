@@ -93,11 +93,11 @@ describe('ReviewCard — content', () => {
   })
 
   it('renders the formatted overall rating', () => {
-    expect(screen.getByText('4.0')).toBeInTheDocument()
+    expect(screen.getByText('4,0')).toBeInTheDocument()
   })
 
   it('renders the comment count', () => {
-    expect(screen.getByText('3 comments')).toBeInTheDocument()
+    expect(screen.getByText('3 reacties')).toBeInTheDocument()
   })
 
   it('renders the like button with the correct count', () => {
@@ -122,19 +122,19 @@ describe('ReviewCard — place visibility', () => {
 // ─── Comment count grammar ────────────────────────────────────────────────────
 
 describe('ReviewCard — comment count singular / plural', () => {
-  it('uses "comments" (plural) for 0 comments', () => {
+  it('uses "reacties" (plural) for 0 comments', () => {
     render(<ReviewCard review={{ ...baseReview, commentCount: 0 }} />)
-    expect(screen.getByText('0 comments')).toBeInTheDocument()
+    expect(screen.getByText('0 reacties')).toBeInTheDocument()
   })
 
-  it('uses "comment" (singular) for exactly 1 comment', () => {
+  it('uses "reactie" (singular) for exactly 1 comment', () => {
     render(<ReviewCard review={{ ...baseReview, commentCount: 1 }} />)
-    expect(screen.getByText('1 comment')).toBeInTheDocument()
+    expect(screen.getByText('1 reactie')).toBeInTheDocument()
   })
 
-  it('uses "comments" (plural) for 2+ comments', () => {
+  it('uses "reacties" (plural) for 2+ comments', () => {
     render(<ReviewCard review={{ ...baseReview, commentCount: 5 }} />)
-    expect(screen.getByText('5 comments')).toBeInTheDocument()
+    expect(screen.getByText('5 reacties')).toBeInTheDocument()
   })
 })
 
@@ -143,19 +143,19 @@ describe('ReviewCard — comment count singular / plural', () => {
 describe('ReviewCard — review link', () => {
   it('links to /review/<id>', () => {
     render(<ReviewCard review={baseReview} />)
-    const link = screen.getByRole('link', { name: /open review/i })
+    const link = screen.getByRole('link', { name: /bekijk review/i })
     expect(link).toHaveAttribute('href', '/review/review-1')
   })
 
   it('appends ?from=<backContext> when backContext is provided', () => {
     render(<ReviewCard review={baseReview} backContext="feed" />)
-    const link = screen.getByRole('link', { name: /open review/i })
+    const link = screen.getByRole('link', { name: /bekijk review/i })
     expect(link).toHaveAttribute('href', '/review/review-1?from=feed')
   })
 
   it('URL-encodes the backContext value', () => {
     render(<ReviewCard review={baseReview} backContext="my feed" />)
-    const link = screen.getByRole('link', { name: /open review/i })
+    const link = screen.getByRole('link', { name: /bekijk review/i })
     expect(link).toHaveAttribute('href', '/review/review-1?from=my%20feed')
   })
 })
@@ -193,7 +193,7 @@ describe('ReviewCard — review photo', () => {
     expect(img.tagName).toBe('IMG')
   })
 
-  it('falls back to "Review photo" as alt text when dishName is null', () => {
+  it('falls back to "Reviewfoto" as alt text when dishName is null', () => {
     render(
       <ReviewCard
         review={{
@@ -203,7 +203,7 @@ describe('ReviewCard — review photo', () => {
         }}
       />,
     )
-    expect(screen.getByAltText('Review photo')).toBeInTheDocument()
+    expect(screen.getByAltText('Reviewfoto')).toBeInTheDocument()
   })
 
   it('does not render a review photo img when reviewPhotos is empty', () => {

@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch {
-    return new Response('Internal server error', { status: 500 })
+    return new Response('Er ging iets mis aan onze kant. Probeer het later opnieuw.', { status: 500 })
   }
 }
 

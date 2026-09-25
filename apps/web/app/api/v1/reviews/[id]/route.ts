@@ -38,7 +38,7 @@ export async function GET(
       },
     })
 
-    if (!review) return err('Review not found', 404)
+    if (!review) return err('Review niet gevonden.', 404)
 
     const visibilityError = checkReviewVisibility(
       { status: review.status as ReviewStatus, userId: review.user.id },
@@ -85,12 +85,12 @@ export async function DELETE(
       where: { id },
       select: { userId: true, status: true },
     })
-    if (!review || review.status === ReviewStatus.DELETED) return err('Review not found', 404)
+    if (!review || review.status === ReviewStatus.DELETED) return err('Review niet gevonden.', 404)
 
     // Owner or admin/mod may soft-delete
     const isOwner = review.userId === auth.sub
     const isMod = auth.role === 'MODERATOR' || auth.role === 'ADMIN'
-    if (!isOwner && !isMod) return err('Forbidden', 403)
+    if (!isOwner && !isMod) return err('Je hebt hier geen toegang toe.', 403)
 
     // Soft delete with a restore window: deletedAt drives the worker's purge
     // job (hard delete after 30 days, GDPR Art. 17) and deletedById records
@@ -102,7 +102,7 @@ export async function DELETE(
     })
     await recalculateUserBadges(review.userId)
     return ok({
-      message: 'Review deleted',
+      message: 'Review verwijderd.',
       restorableUntil: isOwner ? restorableUntil(deletedAt).toISOString() : null,
     })
   } catch (e) {

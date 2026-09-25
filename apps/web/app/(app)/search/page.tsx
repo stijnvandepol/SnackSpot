@@ -32,7 +32,7 @@ export default async function SearchPage() {
         Ontdek snackplekken
       </h1>
       <p className="mt-1 text-sm text-snack-muted">
-        Zoek op naam, gerecht of label — of begin bij een stad.
+        Zoek op naam, gerecht of label, of begin bij een stad.
       </p>
 
       <CityRail cities={cities} className="mt-4" />

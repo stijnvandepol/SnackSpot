@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
         },
       },
     })
-    if (!user) return err('User not found', 404)
+    if (!user) return err('Gebruiker niet gevonden.', 404)
     return ok(user)
   } catch (e) {
     return serverError('me', e)
