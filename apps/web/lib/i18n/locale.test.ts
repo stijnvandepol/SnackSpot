@@ -16,7 +16,7 @@ describe('pickLocale', () => {
   })
 
   it('defaults to Dutch', () => {
-    // The commercial target is the Dutch eettentje niche, and /product serves both
+    // The commercial target is the Dutch snackplek niche, and /product serves both
     // languages from one URL. A crawler carries no cookie, so this default decides
     // which language Google indexes for that URL — it must not depend on the request.
     expect(DEFAULT_LOCALE).toBe('nl')

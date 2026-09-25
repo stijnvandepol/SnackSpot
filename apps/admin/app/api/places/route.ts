@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
   const { name, address, lat, lng } = body
 
   try {
-    // `city` groups the public /eettentjes landing pages and gates whether a city page
+    // `city` groups the public /snackplekken landing pages and gates whether a city page
     // exists at all. Leaving it NULL here made an admin-created place invisible to its
     // own city page until someone edited it by hand. Same parser as the web app and as
     // migration 038's backfill, so the three cannot produce different spellings.

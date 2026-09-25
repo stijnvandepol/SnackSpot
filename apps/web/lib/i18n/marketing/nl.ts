@@ -4,19 +4,19 @@ export const nl: MarketingDict = {
   meta: {
     productTitle: 'Weet wat je moet bestellen voordat je gaat zitten | SnackSpot',
     productDescription:
-      'SnackSpot verzamelt fotoreviews per gerecht van kleine eettentjes: snackbars, cafetaria’s en broodjeszaken. Gratis, in je browser, gemaakt door mensen die er echt gegeten hebben.',
+      'SnackSpot verzamelt fotoreviews per gerecht van kleine snackplekken: snackbars, cafetaria’s en broodjeszaken. Gratis, in je browser, gemaakt door mensen die er echt gegeten hebben.',
     productSocialTitle: 'Weet wat je moet bestellen | SnackSpot',
     productSocialDescription:
-      'Fotoreviews per gerecht van kleine eettentjes bij jou in de buurt. Zie wat mensen er echt aten voordat je bestelt.',
+      'Fotoreviews per gerecht van kleine snackplekken bij jou in de buurt. Zie wat mensen er echt aten voordat je bestelt.',
   },
   product: {
     heroTitle: 'Weet wat je moet bestellen voordat je gaat zitten.',
     heroLead:
-      'Fotoreviews per gerecht van kleine eettentjes: de snackbar op de hoek, de cafetaria bij het station, de broodjeszaak die alleen de buurt kent. Gemaakt door mensen die er echt gegeten hebben.',
+      'Fotoreviews per gerecht van kleine snackplekken: de snackbar op de hoek, de cafetaria bij het station, de broodjeszaak die alleen de buurt kent. Gemaakt door mensen die er echt gegeten hebben.',
     ctaPrimary: 'Maak een gratis account',
     ctaSecondary: 'Bekijk de feed',
     heroFinePrint: 'Werkt in je browser, op elke telefoon. Geen appstore nodig.',
-    counts: 'Nu {reviews} fotoreviews van {places} zaken in {cities} steden.',
+    counts: 'Nu {reviews} fotoreviews van {places} snackplekken in {cities} steden.',
 
     stripTitle: 'Net gegeten',
     stripAll: 'Alles bekijken',
@@ -39,8 +39,8 @@ export const nl: MarketingDict = {
         body: 'Je ziet het echte bord, niet de menukaartfoto. Een review plaatsen kost dertig seconden.',
       },
       {
-        title: 'Alleen kleine zaken.',
-        body: 'Geen ketens, geen gesponsorde plekken. De zaken die grote reviewsites overslaan.',
+        title: 'Alleen kleine snackplekken.',
+        body: 'Geen ketens, geen gesponsorde plekken. De snackplek om de hoek die grote reviewsites overslaan.',
       },
     ],
 
@@ -54,14 +54,14 @@ export const nl: MarketingDict = {
     citiesTitle: 'Per stad',
     citiesBody: 'Elke stad met fotoreviews heeft een eigen pagina, gerangschikt op wat bezoekers er echt aten.',
     citiesAll: 'Alle steden',
-    placesOne: '1 zaak',
-    placesMany: '{n} zaken',
+    placesOne: '1 snackplek',
+    placesMany: '{n} snackplekken',
 
     faqTitle: 'Veelgestelde vragen',
     faqs: [
       {
         q: 'Wat is SnackSpot?',
-        a: 'Een gratis community-app om kleine eettentjes te ontdekken. Leden delen fotoreviews van specifieke gerechten, met een cijfer voor smaak, prijs, portie en service.',
+        a: 'Een gratis community-app om kleine snackplekken te ontdekken. Leden delen fotoreviews van specifieke gerechten, met een cijfer voor smaak, prijs, portie en service.',
       },
       {
         q: 'Is SnackSpot gratis?',
@@ -92,7 +92,7 @@ export const nl: MarketingDict = {
   },
   nav: {
     howItWorks: 'Hoe het werkt',
-    cities: 'Steden',
+    cities: 'Snackplekken',
     guides: 'Uitleg',
     releases: 'Releasenotes',
     login: 'Inloggen',

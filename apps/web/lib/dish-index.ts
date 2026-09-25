@@ -55,7 +55,7 @@ export interface DishCity {
   name: string
   placeCount: number
   reviewCount: number
-  /** Set when /eettentjes/[stad]/[gerecht] exists for this city, so the link never 404s. */
+  /** Set when /snackplekken/[stad]/[gerecht] exists for this city, so the link never 404s. */
   cityDishHref: string | null
 }
 
@@ -221,7 +221,7 @@ export const getDishDetail = cache(async (slug: string): Promise<DishDetail | nu
         name: row.city,
         placeCount: row.place_count,
         reviewCount: row.review_count,
-        cityDishHref: hasCityDishPage ? `/eettentjes/${slug}/${dish.slug}` : null,
+        cityDishHref: hasCityDishPage ? `/snackplekken/${slug}/${dish.slug}` : null,
       }
     }),
   }

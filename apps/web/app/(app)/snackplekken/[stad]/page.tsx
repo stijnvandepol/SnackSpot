@@ -24,7 +24,7 @@ export const revalidate = 3600
 function describe(city: CityDetail): string {
   const dishes = city.topDishes.slice(0, 2).map((dish) => dish.name)
   const places =
-    city.placeCount === 1 ? '1 eettentje' : `${city.placeCount} eettentjes`
+    city.placeCount === 1 ? '1 snackplek' : `${city.placeCount} snackplekken`
   const reviews =
     city.reviewCount === 1 ? '1 fotoreview' : `${city.reviewCount} fotoreviews`
   const opener = `${places} in ${city.name}, beoordeeld in ${reviews} door mensen die er echt gegeten hebben.`
@@ -46,15 +46,15 @@ export async function generateMetadata({
   // what the page actually is instead.
   const title =
     city.placeCount === 1
-      ? `Eettentjes in ${city.name}`
-      : `De beste eettentjes in ${city.name}`
+      ? `Snackplekken in ${city.name}`
+      : `De beste snackplekken in ${city.name}`
   const description = describe(city)
   const image = city.places.find((place) => place.photoUrl)?.photoUrl
 
   return {
     title: { absolute: `${title} — SnackSpot` },
     description,
-    alternates: { canonical: `/eettentjes/${city.slug}` },
+    alternates: { canonical: `/snackplekken/${city.slug}` },
     openGraph: {
       type: 'website',
       title,
@@ -83,8 +83,8 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
     '@type': 'ItemList',
     name:
       city.placeCount === 1
-        ? `Eettentjes in ${city.name}`
-        : `De beste eettentjes in ${city.name}`,
+        ? `Snackplekken in ${city.name}`
+        : `De beste snackplekken in ${city.name}`,
     numberOfItems: city.places.length,
     itemListElement: city.places.map((place, index) => ({
       '@type': 'ListItem',
@@ -119,19 +119,19 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListJsonLd) }} />
       <BreadcrumbJsonLd
         items={[
-          { name: 'Eettentjes', path: '/eettentjes' },
-          { name: city.name, path: `/eettentjes/${city.slug}` },
+          { name: 'Snackplekken', path: '/snackplekken' },
+          { name: city.name, path: `/snackplekken/${city.slug}` },
         ]}
       />
 
       <header className="max-w-3xl">
-        <Link href="/eettentjes" className="text-sm font-semibold text-snack-primary hover:underline">
+        <Link href="/snackplekken" className="text-sm font-semibold text-snack-primary hover:underline">
           ← Alle steden
         </Link>
         <h1 className="mt-3 font-heading text-3xl font-bold text-snack-text md:text-5xl">
           {city.placeCount === 1
-            ? `Eettentjes in ${city.name}`
-            : `De beste eettentjes in ${city.name}`}
+            ? `Snackplekken in ${city.name}`
+            : `De beste snackplekken in ${city.name}`}
         </h1>
         <p className="mt-4 text-base leading-7 text-snack-muted md:text-lg">{describe(city)}</p>
       </header>
@@ -174,7 +174,7 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
             {city.dishPages.map((dish) => (
               <li key={dish.slug}>
                 <Link
-                  href={`/eettentjes/${city.slug}/${dish.slug}`}
+                  href={`/snackplekken/${city.slug}/${dish.slug}`}
                   className="flex items-baseline justify-between gap-3 rounded-xl border border-snack-border bg-snack-background px-4 py-3 transition hover:border-snack-primary/40"
                 >
                   <span className="min-w-0">
@@ -266,7 +266,7 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
 
       <section className="mt-12 rounded-2xl border border-snack-border bg-snack-surface p-6">
         <h2 className="font-heading text-lg font-semibold text-snack-text">
-          Ken jij een beter eettentje in {city.name}?
+          Ken jij een betere snackplek in {city.name}?
         </h2>
         <p className="mt-2 text-sm leading-6 text-snack-muted">
           Deze lijst komt volledig uit reviews van bezoekers. Mis je een zaak, of ben je het niet

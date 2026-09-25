@@ -18,7 +18,7 @@ export function MarketingShell({ children, locale, dict }: { children: React.Rea
 
   const navItems = [
     { href: '/product#hoe-het-werkt', label: dict.nav.howItWorks, match: null },
-    { href: '/eettentjes', label: dict.nav.cities, match: '/eettentjes' },
+    { href: '/snackplekken', label: dict.nav.cities, match: '/snackplekken' },
     { href: '/guides', label: dict.nav.guides, match: '/guides' },
     { href: '/product/releases', label: dict.nav.releases, match: '/product/releases' },
   ]

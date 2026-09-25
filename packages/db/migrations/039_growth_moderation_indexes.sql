@@ -33,7 +33,7 @@ CREATE INDEX IF NOT EXISTS reports_place_idx ON reports (place_id) WHERE place_i
 CREATE INDEX IF NOT EXISTS reports_reporter_idx ON reports (reporter_id);
 CREATE INDEX IF NOT EXISTS moderation_actions_moderator_idx ON moderation_actions (moderator_id);
 
--- Dish aggregation (place page "Dit moet je bestellen", /eettentjes/[stad]/[gerecht],
+-- Dish aggregation (place page "Dit moet je bestellen", /snackplekken/[stad]/[gerecht],
 -- /gerechten/[gerecht]) groups and filters on LOWER(TRIM(dish_name)) over published reviews.
 CREATE INDEX IF NOT EXISTS reviews_published_dish_key_idx
   ON reviews (LOWER(TRIM(dish_name)), place_id)

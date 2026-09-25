@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { getQualifyingDishes } from '@/lib/dish-index'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
-// Per request for the same reason as /eettentjes: `next build` has no database, and a
+// Per request for the same reason as /snackplekken: `next build` has no database, and a
 // prerendered empty hub would be what crawlers see after every deploy. The dish list itself
 // is cached in Redis (lib/dish-index.ts), so this costs one cache read.
 export const dynamic = 'force-dynamic'
@@ -67,8 +67,8 @@ export default async function GerechtenIndexPage() {
 
       <p className="mt-10 text-sm text-snack-muted">
         Liever per stad zoeken?{' '}
-        <Link href="/eettentjes" className="font-semibold text-snack-primary hover:underline">
-          Bekijk eettentjes per stad
+        <Link href="/snackplekken" className="font-semibold text-snack-primary hover:underline">
+          Bekijk snackplekken per stad
         </Link>
         .
       </p>

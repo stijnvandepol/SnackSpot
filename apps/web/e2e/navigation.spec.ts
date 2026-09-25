@@ -12,12 +12,12 @@ test.describe('Desktop navigation (1280 px)', () => {
     await expect(page.locator('header')).toBeVisible()
   })
 
-  test('top nav contains Home, Ontdek, Dichtbij, Eettentjes and Post links', async ({ page }) => {
+  test('top nav contains Home, Ontdek, Dichtbij, Snackplekken and Post links', async ({ page }) => {
     await page.goto('/')
     const header = page.locator('header')
     await expect(header.getByRole('link', { name: 'Home', exact: true })).toBeVisible()
     await expect(header.getByRole('link', { name: 'Ontdek' })).toBeVisible()
-    await expect(header.getByRole('link', { name: 'Eettentjes' })).toBeVisible()
+    await expect(header.getByRole('link', { name: 'Snackplekken' })).toBeVisible()
     await expect(header.getByRole('link', { name: 'Dichtbij' })).toBeVisible()
     await expect(header.getByRole('link', { name: 'Post' })).toBeVisible()
   })

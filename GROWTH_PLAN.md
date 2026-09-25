@@ -149,7 +149,7 @@ over twaalf zaken en vijf gerechten, leveren een stadspagina en drie gerechtrang
 écht iets zeggen. Daarmee rankt SnackSpot op "beste frikandel speciaal [stad]".
 
 ### Fase 1 — Beachhead (week 1–6): één stad, 150 reviews
-- **Kies de stad** waar de meeste bestaande reviews zitten (zie `/eettentjes`). Waarschijnlijk
+- **Kies de stad** waar de meeste bestaande reviews zitten (zie `/snackplekken`). Waarschijnlijk
   de thuisstad van de oprichter: daar ken je de zaken.
 - **Seed zonder te liegen.** Geen nepreviews, ook niet "om op gang te komen". Wel:
   - de oprichter en 5–10 vrienden eten echt bij 15–20 zaken en reviewen met foto;
@@ -206,8 +206,8 @@ push-infrastructuur in `lib/push-service.ts` + BullMQ-worker).
 
 ## 7. Contentstrategie (lokaal en schaalbaar)
 
-- **Stadspagina's** (`/eettentjes/[stad]`) en **gerechtpagina's** (`/gerechten/…`,
-  `/eettentjes/[stad]/[gerecht]`) zijn de kern. Ze groeien automatisch mee met reviews en worden pas
+- **Stadspagina's** (`/snackplekken/[stad]`) en **gerechtpagina's** (`/gerechten/…`,
+  `/snackplekken/[stad]/[gerecht]`) zijn de kern. Ze groeien automatisch mee met reviews en worden pas
   zichtbaar boven de quality gate. Geen dunne, automatisch gegenereerde pagina's.
 - **Redactionele gidsen** (per kwartaal, handgeschreven): *"Frikandel speciaal: wat maakt een goede?"*,
   *"De kapsalon-test in Rotterdam"*. Ze linken naar de datagedreven pagina's.

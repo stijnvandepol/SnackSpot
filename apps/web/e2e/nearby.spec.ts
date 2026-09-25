@@ -12,9 +12,9 @@ test.describe('Nearby page — desktop (1280 px)', () => {
     expect(res?.status()).toBe(200)
   })
 
-  test('renders the "Eettentjes bij jou in de buurt" heading', async ({ page }) => {
+  test('renders the "Snackplekken bij jou in de buurt" heading', async ({ page }) => {
     await page.goto('/nearby')
-    await expect(page.getByRole('heading', { level: 1, name: /Eettentjes bij jou in de buurt/i })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: /Snackplekken bij jou in de buurt/i })).toBeVisible()
   })
 
   test('shows an address input on desktop', async ({ page }) => {

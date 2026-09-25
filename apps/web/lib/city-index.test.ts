@@ -69,7 +69,7 @@ describe('citySlug', () => {
 
 describe('getQualifyingCities', () => {
   it('gives a city with a single reviewed place its own page', async () => {
-    // The point of lowering the gate: somebody searching "eettentje Uden" wants that one
+    // The point of lowering the gate: somebody searching "snackplek Uden" wants that one
     // address, and a page naming it beats no page at all.
     queryRaw.mockResolvedValue([
       row('Uden', CITY_PAGE_MIN_PLACES, CITY_PAGE_MIN_REVIEWS),
@@ -176,7 +176,7 @@ describe('getCityDetail', () => {
       .mockResolvedValueOnce([
         {
           id: 'p2',
-          name: 'Eettentje Zonder Naam',
+          name: 'Snackplek Zonder Naam',
           address: 'Dorpsstraat 2, Eindhoven',
           cuisine: null,
           avg_rating: null,

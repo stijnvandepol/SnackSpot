@@ -5,7 +5,7 @@ import { photoVariantUrl } from '@/lib/photo-url'
 import { buildCacheKey, getCachedJson, setCachedJson } from '@/lib/cache'
 
 /**
- * City aggregation for the /eettentjes landing pages.
+ * City aggregation for the /snackplekken landing pages.
  *
  * Source of truth is `places.city` (migration 030), which is indexed and correctable from
  * the admin UI. Deriving the city from `address` was rejected: it cannot use the index, and
@@ -21,7 +21,7 @@ import { buildCacheKey, getCachedJson, setCachedJson } from '@/lib/cache'
 //
 // This gate used to require 3 places and 8 reviews, on the reasoning that 19 cities holding
 // a single place each would be 19 thin pages. That traded away the thing these pages are
-// for: somebody searching "eettentje Uden" wants the one good address, and a page naming it
+// for: somebody searching "snackplek Uden" wants the one good address, and a page naming it
 // answers that better than no page at all. Thin-content penalties target near-duplicate
 // mass-generated pages; these differ by venue, address, dish and photo, which is real
 // content however short.
@@ -35,7 +35,7 @@ export const CITY_PAGE_MIN_REVIEWS = 1
 /** How many dishes the "wat bestellen ze hier" section shows. */
 const CITY_TOP_DISH_LIMIT = 6
 
-// The gate for /eettentjes/[stad]/[gerecht] stays above the city gate, for a reason that is
+// The gate for /snackplekken/[stad]/[gerecht] stays above the city gate, for a reason that is
 // about the page rather than about volume: this page claims to rank places against each
 // other on one dish. With a single address there is nothing to rank, and the heading would
 // be a lie. Two is the smallest number that makes a comparison, so that is the floor.
@@ -215,7 +215,7 @@ async function loadQualifyingCities(): Promise<CitySummary[]> {
  * Slug of the city landing page a place belongs to, or null when that city has no page.
  *
  * Checked against the same gate the pages use, so a place page can only ever link to a
- * /eettentjes/[stad] URL that exists — a city below the gate 404s by design.
+ * /snackplekken/[stad] URL that exists — a city below the gate 404s by design.
  */
 export async function getCityPageSlug(city: string | null | undefined): Promise<string | null> {
   if (!city || city.trim() === '') return null

@@ -64,7 +64,7 @@ const baseReview = {
   },
   place: {
     id: 'place-1',
-    name: 'Eettentje De Hoek',
+    name: 'Snackplek De Hoek',
     address: 'Kerkstraat 1, 1234 AB Amsterdam',
   },
   likeCount: 12,
@@ -110,12 +110,12 @@ describe('ReviewCard — content', () => {
 describe('ReviewCard — place visibility', () => {
   it('shows the place name when showPlace=true (default)', () => {
     render(<ReviewCard review={baseReview} showPlace={true} />)
-    expect(screen.getByText('Eettentje De Hoek')).toBeInTheDocument()
+    expect(screen.getByText('Snackplek De Hoek')).toBeInTheDocument()
   })
 
   it('hides the place name when showPlace=false', () => {
     render(<ReviewCard review={baseReview} showPlace={false} />)
-    expect(screen.queryByText('Eettentje De Hoek')).not.toBeInTheDocument()
+    expect(screen.queryByText('Snackplek De Hoek')).not.toBeInTheDocument()
   })
 })
 

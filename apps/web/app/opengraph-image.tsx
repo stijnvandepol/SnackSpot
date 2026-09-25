@@ -57,7 +57,7 @@ export default function OpenGraphImage() {
             Weet wat je moet bestellen voordat je gaat zitten.
           </span>
           <span style={{ marginTop: 28, fontSize: 30, fontWeight: 500, color: 'rgba(31,41,55,0.75)' }}>
-            Fotoreviews per gerecht van kleine eettentjes
+            Fotoreviews per gerecht van kleine snackplekken
           </span>
         </div>
       </div>

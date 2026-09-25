@@ -34,7 +34,7 @@
 - Attach up to 5 photos per review (auto-converted to WebP with multiple size variants)
 - Like and comment on reviews; mention other users with `@username`
 - Discover places via text search or geolocation (nearby radius search)
-- Browse per city (`/eettentjes/[stad]`) and per dish, per city and nationwide (`/gerechten/[gerecht]`), ranked on the dish's own rating
+- Browse per city (`/snackplekken/[stad]`) and per dish, per city and nationwide (`/gerechten/[gerecht]`), ranked on the dish's own rating
 - Save places for later (private "Bewaard" list on the profile) and report stale place data (closed, wrong address, duplicate)
 - Earn badges for milestones: post streaks, unique locations, engagement, and more
 - Receive in-app and email notifications for likes, comments, mentions, and badge awards

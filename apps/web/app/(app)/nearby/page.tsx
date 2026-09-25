@@ -42,7 +42,7 @@ export default async function NearbyPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="font-heading text-xl font-bold leading-snug text-snack-text sm:text-2xl">
-        Eettentjes bij jou in de buurt
+        Snackplekken bij jou in de buurt
       </h1>
       <p className="mt-1 text-sm text-snack-muted">
         Zoek op de kaart, of begin bij een stad als je je locatie liever niet deelt.

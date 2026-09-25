@@ -294,7 +294,7 @@ export default async function ProductPage() {
             </p>
             {ranking && (
               <Link
-                href={`/eettentjes/${ranking.city.slug}/${ranking.slug}`}
+                href={`/snackplekken/${ranking.city.slug}/${ranking.slug}`}
                 className="mt-6 inline-flex text-base font-semibold text-snack-primary hover:underline"
               >
                 {t.rankingLink}
@@ -406,7 +406,7 @@ export default async function ProductPage() {
               {cities.map((city) => (
                 <li key={city.slug}>
                   <Link
-                    href={`/eettentjes/${city.slug}`}
+                    href={`/snackplekken/${city.slug}`}
                     className="group inline-flex items-baseline gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[#0F172A]"
                   >
                     <span className="font-heading text-3xl font-bold leading-none tracking-[-0.03em] transition-colors group-hover:text-snack-primary sm:text-4xl md:text-6xl">
@@ -420,7 +420,7 @@ export default async function ProductPage() {
               ))}
             </ul>
             <Link
-              href="/eettentjes"
+              href="/snackplekken"
               className="mt-12 inline-flex min-h-[44px] items-center rounded-xl border border-white/25 px-5 text-sm font-semibold transition-colors hover:border-white hover:bg-white hover:text-snack-text"
             >
               {t.citiesAll}

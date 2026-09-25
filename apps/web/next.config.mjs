@@ -39,6 +39,10 @@ const nextConfig = {
       { source: '/product/guides', destination: '/guides', permanent: true },
       { source: '/product/guides/:slug', destination: '/guides/:slug', permanent: true },
       { source: '/releases', destination: '/product/releases', permanent: true },
+      // The city and city-dish pages were /eettentjes from 15 Sep 2026 and are now
+      // /snackplekken. Permanent, so Google moves what it had indexed to the new URLs.
+      { source: '/eettentjes', destination: '/snackplekken', permanent: true },
+      { source: '/eettentjes/:path*', destination: '/snackplekken/:path*', permanent: true },
     ]
   },
 
