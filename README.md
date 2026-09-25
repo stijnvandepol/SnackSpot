@@ -232,6 +232,7 @@ Copy `.env.example` to `.env` and fill in the values below.
 | `CORS_ORIGINS` | `https://snackspot.online` | Comma-separated allowed API origins |
 | `MAX_FILE_SIZE_BYTES` | `10485760` | Max upload size (10 MB) |
 | `MAX_PHOTOS_PER_REVIEW` | `5` | Max photos per review |
+| `WEB_BIND_ADDRESS` | `0.0.0.0` | Network interface for the web app (port 8080); use `127.0.0.1` when cloudflared runs on the same host |
 | `ADMIN_BIND_ADDRESS` | `0.0.0.0` | Network interface for the admin panel |
 
 ### LAN / Cloudflare Tunnel setup
