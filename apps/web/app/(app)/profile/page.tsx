@@ -17,6 +17,7 @@ import { PrivacyDataSettings } from '@/components/privacy-data-settings'
 import { Modal } from '@/components/ui/modal'
 import dynamic from 'next/dynamic'
 import { AuthGate } from '@/components/auth-gate'
+import { SavedPlacesList } from '@/components/saved-places-list'
 
 const NotificationsList = dynamic(() => import('@/components/notifications-list'), {
   ssr: false,
@@ -99,7 +100,7 @@ function ProfileContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const tab = searchParams.get('tab') ?? 'posts'
-  const profileTabs = ['posts', 'stats', 'notifications', 'settings'] as const
+  const profileTabs = ['posts', 'saved', 'stats', 'notifications', 'settings'] as const
   const [reviews, setReviews] = useState<Review[]>([])
   const [earnedBadges, setEarnedBadges] = useState<BadgeRow[]>([])
   const [inProgressBadges, setInProgressBadges] = useState<BadgeRow[]>([])
@@ -467,7 +468,7 @@ function ProfileContent() {
                     : 'border-transparent text-snack-muted hover:text-snack-text'
                 }`}
               >
-                {t === 'posts' ? 'Posts' : t === 'stats' ? 'Stats' : t === 'notifications' ? 'Notifications' : 'Settings'}
+                {PROFILE_TAB_LABELS[t]}
               </Link>
             ))}
           </div>
@@ -511,6 +512,8 @@ function ProfileContent() {
               </div>
             </>
           )}
+
+          {tab === 'saved' && <SavedPlacesList />}
 
           {/* Notifications Tab */}
           {tab === 'notifications' && (
@@ -669,7 +672,7 @@ function ProfileContent() {
                 : 'border-transparent text-snack-muted hover:text-snack-text'
             }`}
           >
-            {t === 'posts' ? 'Posts' : t === 'stats' ? 'Stats' : t === 'notifications' ? 'Notifications' : 'Settings'}
+            {PROFILE_TAB_LABELS[t]}
           </Link>
         ))}
       </div>
@@ -711,9 +714,16 @@ function ProfileContent() {
         </>
       )}
 
+      {tab === 'saved' && (
+        <>
+          <h2 className="font-heading font-semibold text-lg text-snack-text">Bewaarde zaken</h2>
+          <SavedPlacesList />
+        </>
+      )}
+
       {tab === 'notifications' && (
         <>
-          <h2 className="font-heading font-semibold text-lg text-snack-text">Notifications</h2>
+          <h2 className="font-heading font-semibold text-lg text-snack-text">Meldingen</h2>
           <NotificationsList />
         </>
       )}
@@ -869,6 +879,14 @@ function ProfileContent() {
       </Modal>
     </div>
   )
+}
+
+const PROFILE_TAB_LABELS: Record<string, string> = {
+  posts: 'Reviews',
+  saved: 'Bewaard',
+  stats: 'Voortgang',
+  notifications: 'Meldingen',
+  settings: 'Instellingen',
 }
 
 export default function ProfilePage() {

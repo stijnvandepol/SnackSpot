@@ -15,6 +15,8 @@ import { reviewListSelect, serializeReview } from '@/lib/review-helpers'
 import { PlaceReviewsSection, type PlaceReviewListItem } from '@/components/place-reviews-section'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { PlaceMapEmbed } from '@/components/place-map-embed'
+import { SavePlaceButton } from '@/components/save-place-button'
+import { ReportPlace } from '@/components/report-place'
 import { TrackView } from '@/components/track-view'
 
 interface PlaceRow {
@@ -257,9 +259,12 @@ export default async function PlacePage({
       <Breadcrumb items={buildPlaceBreadcrumb(from, place.name)} />
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Link href={backHref} className="btn-secondary text-sm">Terug</Link>
-        <Link href={`/add-review?placeId=${place.id}`} className="btn-primary text-sm">
-          Schrijf een review
-        </Link>
+        <div className="flex gap-2">
+          <SavePlaceButton placeId={place.id} />
+          <Link href={`/add-review?placeId=${place.id}`} className="btn-primary flex-1 text-sm sm:flex-none">
+            Schrijf een review
+          </Link>
+        </div>
       </div>
 
       <div className="md:grid md:grid-cols-12 md:gap-6 md:items-start">
@@ -308,6 +313,9 @@ export default async function PlacePage({
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               Open in Maps
             </a>
+            <div className="mt-3">
+              <ReportPlace placeId={place.id} placeName={place.name} />
+            </div>
           </div>
           {topDishes.length > 0 && (
             <div className="card p-5">

@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
           },
         },
         photo: { select: { id: true, variants: true, moderationStatus: true } },
+        place: { select: { id: true, name: true, address: true } },
       },
     })
 

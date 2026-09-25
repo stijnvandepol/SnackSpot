@@ -8,6 +8,7 @@ interface NotificationPreferences {
   emailOnMention: boolean
   emailOnBadge: boolean
   emailOnFollow: boolean
+  marketingEmails: boolean
 }
 
 interface NotificationSettingsProps {
@@ -177,6 +178,23 @@ export function NotificationSettings({ embedded = false }: NotificationSettingsP
             checked={preferences.emailOnFollow}
             onChange={(e) =>
               setPreferences({ ...preferences, emailOnFollow: e.target.checked })
+            }
+            className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 rounded-xl p-3 transition hover:bg-snack-surface cursor-pointer">
+          <div>
+            <p className="text-sm font-medium text-snack-text">Nieuws van SnackSpot</p>
+            <p className="text-xs text-snack-muted">
+              Af en toe een mail over nieuwe steden, gerechtranglijsten en functies. Staat uit tot je het aanzet.
+            </p>
+          </div>
+          <input
+            type="checkbox"
+            checked={preferences.marketingEmails ?? false}
+            onChange={(e) =>
+              setPreferences({ ...preferences, marketingEmails: e.target.checked })
             }
             className="h-5 w-5 rounded border-snack-border text-snack-primary focus:ring-snack-primary"
           />

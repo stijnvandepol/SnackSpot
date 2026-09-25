@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 import { env } from './env'
 import { escapeHtml } from './html'
+import { getSiteUrl } from '@/lib/site-url'
 
 let _resend: Resend | null = null
 function getResend(): Resend {
@@ -227,6 +228,10 @@ export async function sendMarketingEmail(
   action?: { label: string; href: string },
 ): Promise<void> {
   const safeSubject = safeSubjectPart(subject)
+  // Every marketing mail says why it arrived and how to stop it (Telecommunicatiewet 11.7:
+  // each message must offer a free, easy way to opt out).
+  const settingsUrl = `${getSiteUrl()}/profile?tab=settings`
+  const unsubscribeText = `Je krijgt deze mail omdat je "Nieuws van SnackSpot" hebt aangezet. Afmelden kan met één klik in je instellingen: ${settingsUrl}`
   await sendEmailWithFallback({
     to,
     subject: safeSubject,
@@ -238,14 +243,18 @@ export async function sendMarketingEmail(
       action,
       calloutTitle,
       calloutBody: html(escapeHtml(calloutText).replace(/\n/g, '<br />')),
+      secondaryBlockTitle: 'Afmelden',
+      secondaryBlockBody: html(
+        `${escapeHtml('Je krijgt deze mail omdat je "Nieuws van SnackSpot" hebt aangezet.')} <a href="${escapeHtml(settingsUrl)}">Afmelden in je instellingen</a>.`,
+      ),
     }),
     fallbackHtml: renderFallbackEmail({
       title,
       body: escapeHtml(introText),
       ...(action ? { linkLabel: action.label, linkHref: action.href } : {}),
-      footer: escapeHtml(calloutText),
+      footer: `${escapeHtml(calloutText)}<br /><br />${escapeHtml(unsubscribeText)}`,
     }),
-    text: `${introText}\n\n${calloutTitle}\n${calloutText}${action ? `\n\n${action.href}` : ''}`,
+    text: `${introText}\n\n${calloutTitle}\n${calloutText}${action ? `\n\n${action.href}` : ''}\n\n${unsubscribeText}`,
     category: 'marketing',
   })
 }

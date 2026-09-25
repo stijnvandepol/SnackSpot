@@ -15,6 +15,7 @@ const PreferencesSchema = z.object({
   pushOnBadge: z.boolean().optional(),
   pushOnFollow: z.boolean().optional(),
   pushStreakReminder: z.boolean().optional(),
+  marketingEmails: z.boolean().optional(),
 })
 
 export async function GET(req: NextRequest) {

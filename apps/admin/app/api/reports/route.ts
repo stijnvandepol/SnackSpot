@@ -13,7 +13,7 @@ const ListReportsQuery = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),
   status: z.preprocess(emptyToUndefined, z.enum(['OPEN', 'RESOLVED', 'DISMISSED']).default('OPEN')),
-  targetType: z.preprocess(emptyToUndefined, z.enum(['REVIEW', 'PHOTO', 'USER']).optional()),
+  targetType: z.preprocess(emptyToUndefined, z.enum(['REVIEW', 'PHOTO', 'USER', 'PLACE']).optional()),
 })
 
 // GET /api/reports - List all reports
@@ -73,6 +73,14 @@ export async function GET(req: NextRequest) {
               id: true,
               moderationStatus: true,
               uploaderId: true,
+            },
+          },
+          place: {
+            select: {
+              id: true,
+              name: true,
+              address: true,
+              city: true,
             },
           },
         },
