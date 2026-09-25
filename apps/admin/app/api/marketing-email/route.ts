@@ -45,13 +45,19 @@ export async function POST(req: NextRequest) {
 
     if (body.recipients === 'all') {
       users = await db.user.findMany({
-        where: { bannedAt: null },
+        // Opt-in only (Telecommunicatiewet 11.7): marketing mail needs prior consent, so a
+        // user without a preferences row or with the switch off is never a recipient.
+        where: { bannedAt: null, notificationPreferences: { marketingEmails: true } },
         select: { email: true, username: true },
         orderBy: { createdAt: 'asc' },
       })
     } else {
       users = await db.user.findMany({
-        where: { username: { in: body.recipients.usernames }, bannedAt: null },
+        where: {
+          username: { in: body.recipients.usernames },
+          bannedAt: null,
+          notificationPreferences: { marketingEmails: true },
+        },
         select: { email: true, username: true },
       })
     }

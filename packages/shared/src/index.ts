@@ -250,9 +250,10 @@ export const DeleteAccountSchema = z.object({
 // ─── Report schemas ──────────────────────────────────────────────────────────
 
 export const CreateReportSchema = z.object({
-  targetType: z.enum(['REVIEW', 'PHOTO']),
-  reviewId: z.string().optional(),
-  photoId: z.string().optional(),
+  targetType: z.enum(['REVIEW', 'PHOTO', 'PLACE']),
+  reviewId: z.string().max(64).optional(),
+  photoId: z.string().max(64).optional(),
+  placeId: z.string().max(64).optional(),
   reason: z.string().min(5).max(500),
 })
 

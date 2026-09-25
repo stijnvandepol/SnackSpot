@@ -11,7 +11,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:px-3 focus:py-2 focus:text-sm focus:shadow"
         style={{ backgroundColor: 'var(--snack-bg)', color: 'var(--snack-text)' }}
       >
-        Skip to content
+        Naar de inhoud
       </a>
 
       {/* Desktop top nav */}
@@ -26,7 +26,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <main id="main-content" className="flex-1">
+      {/* tabIndex -1 makes the skip link actually move focus here (WCAG 2.4.1); without it
+          the browser scrolls but keyboard focus stays on the link. */}
+      <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
         {children}
       </main>
 
@@ -47,6 +49,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <nav aria-label="Ontdekken" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm font-medium">
             <Link href="/eettentjes" className="text-snack-primary hover:underline">
               Eettentjes per stad
+            </Link>
+            <Link href="/gerechten" className="text-snack-primary hover:underline">
+              Beste per gerecht
             </Link>
             <Link href="/guides" className="text-snack-primary hover:underline">
               Uitleg

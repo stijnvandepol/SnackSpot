@@ -7,6 +7,7 @@ import { created, err, parseBody, serverError, isResponse, requireSameOrigin, wi
 import { rateLimitIP, getClientIP } from '@/lib/rate-limit'
 import { sendWelcomeEmail } from '@/lib/email'
 import { logger } from '@/lib/logger'
+import { recordEvent } from '@/lib/analytics-store'
 
 export async function POST(req: NextRequest) {
   const sameOrigin = requireSameOrigin(req)
@@ -52,6 +53,7 @@ export async function POST(req: NextRequest) {
     })
 
     const { accessToken, setCookie } = await issueSession(user)
+    await recordEvent('signup_completed', 'email')
 
     try {
       await sendWelcomeEmail(user.email, user.username)

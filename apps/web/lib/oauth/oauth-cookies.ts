@@ -4,3 +4,5 @@
  *  (any other export fails `next build`'s route-type validation). */
 export const OAUTH_STATE_COOKIE = 'snackspot_oauth_state'
 export const OAUTH_VERIFIER_COOKIE = 'snackspot_oauth_verifier'
+/** Post-login destination, carried across the Google round-trip. Validated on both ends. */
+export const OAUTH_NEXT_COOKIE = 'snackspot_oauth_next'

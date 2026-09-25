@@ -5,8 +5,9 @@ import '@fontsource/poppins/600.css'
 import '@fontsource/poppins/700.css'
 import { AuthProvider } from '@/components/auth-provider'
 import { ThemeProvider } from '@/components/theme-provider'
-import { CookieConsent } from '@/components/cookie-consent'
+import { WebVitals } from '@/components/web-vitals'
 import { getSiteOrigin, getSiteUrl } from '@/lib/site-url'
+import { safeJsonLd } from '@/lib/html'
 import './globals.css'
 
 const metadataBase = getSiteOrigin()
@@ -132,15 +133,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `(function(){try{var t=localStorage.getItem('snackspot-theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}})()`,
           }}
         />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organization) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(website) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webApp) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(organization) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(website) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(webApp) }} />
       </head>
       <body className="h-full font-body">
+        <WebVitals />
         <ThemeProvider>
           <AuthProvider>
             {children}
-            <CookieConsent />
           </AuthProvider>
         </ThemeProvider>
       </body>

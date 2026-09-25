@@ -106,7 +106,7 @@ export function PlaceReviewsSection({ placeId, placeName, placeAddress, from, in
               key={r.id}
               review={{ ...r, place: { id: placeId, name: placeName, address: placeAddress } }}
               showPlace={false}
-              photoVariantPreference={['large', 'medium', 'thumb']}
+              photoVariantPreference={['medium', 'large', 'thumb']}
               backContext={`place:${placeId}:${encodeURIComponent(from ?? 'search')}`}
             />
           ))}

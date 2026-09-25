@@ -1,7 +1,8 @@
 import { type NextRequest } from 'next/server'
 import { generateState, generateCodeVerifier } from 'arctic'
 import { getGoogleProvider, createGoogleAuthUrl } from '@/lib/oauth/google'
-import { OAUTH_STATE_COOKIE, OAUTH_VERIFIER_COOKIE } from '@/lib/oauth/oauth-cookies'
+import { OAUTH_NEXT_COOKIE, OAUTH_STATE_COOKIE, OAUTH_VERIFIER_COOKIE } from '@/lib/oauth/oauth-cookies'
+import { DEFAULT_NEXT_PATH, safeNextPath } from '@/lib/next-path'
 import { err } from '@/lib/api-helpers'
 
 const TEN_MINUTES = 60 * 10
@@ -19,7 +20,7 @@ function tempCookie(name: string, value: string, secure: boolean): string {
   ].join('; ')
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   const google = getGoogleProvider()
   if (!google) return err('Google sign-in is not configured', 404)
 
@@ -31,6 +32,10 @@ export async function GET(_req: NextRequest) {
   const headers = new Headers()
   headers.append('Set-Cookie', tempCookie(OAUTH_STATE_COOKIE, state, secure))
   headers.append('Set-Cookie', tempCookie(OAUTH_VERIFIER_COOKIE, codeVerifier, secure))
+  const next = safeNextPath(req.nextUrl.searchParams.get('next'))
+  if (next !== DEFAULT_NEXT_PATH) {
+    headers.append('Set-Cookie', tempCookie(OAUTH_NEXT_COOKIE, encodeURIComponent(next), secure))
+  }
   headers.set('Location', url.toString())
   return new Response(null, { status: 302, headers })
 }

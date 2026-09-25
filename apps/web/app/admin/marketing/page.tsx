@@ -243,7 +243,7 @@ export default function MarketingPage() {
                 onChange={() => setRecipientMode('all')}
                 className="accent-snack-primary"
               />
-              <span className="text-sm font-medium text-snack-text">Everyone (all non-banned users)</span>
+              <span className="text-sm font-medium text-snack-text">Everyone who opted in to marketing email</span>
             </label>
             <label className="flex cursor-pointer items-center gap-3">
               <input
@@ -302,7 +302,7 @@ export default function MarketingPage() {
             {sending ? 'Sending…' : recipientMode === 'all' ? 'Send to everyone' : 'Send to selected users'}
           </button>
           {recipientMode === 'all' && (
-            <p className="text-xs text-snack-muted">This will email all non-banned users.</p>
+            <p className="text-xs text-snack-muted">Only users who switched on &quot;Nieuws van SnackSpot&quot; in their settings receive this. Selected usernames without that opt-in are skipped too.</p>
           )}
         </div>
       </div>

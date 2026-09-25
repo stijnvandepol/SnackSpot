@@ -1,6 +1,8 @@
+import { cache } from 'react'
 import { ReviewStatus } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { photoVariantUrl } from '@/lib/photo-url'
+import { buildCacheKey, getCachedJson, setCachedJson } from '@/lib/cache'
 
 /**
  * City aggregation for the /eettentjes landing pages.
@@ -156,13 +158,34 @@ interface CityDishPlaceRow {
 }
 
 /**
+ * How long the city list may be stale. It is read on the homepage, /search, /nearby and on
+ * every place page (to decide whether to link a city page), and each read used to be a full
+ * places ⋈ reviews GROUP BY. Five minutes is invisible to a visitor — a new city appears a
+ * few minutes after its first review — and turns that into one query per five minutes.
+ */
+const QUALIFYING_CITIES_TTL_SECONDS = 300
+
+/**
  * Cities that clear the quality gate, best-stocked first.
  *
  * The grouping runs in SQL; the threshold is applied here rather than in a HAVING clause so
  * the gate stays unit-testable. The number of distinct cities is small enough that filtering
  * in memory costs nothing.
+ *
+ * Wrapped twice: React `cache` dedupes calls within one render (metadata + page + helpers),
+ * Redis shares the result across requests.
  */
-export async function getQualifyingCities(): Promise<CitySummary[]> {
+export const getQualifyingCities = cache(async (): Promise<CitySummary[]> => {
+  const cacheKey = buildCacheKey('qualifying-cities', 'v1')
+  const cached = await getCachedJson<CitySummary[]>(cacheKey)
+  if (cached) return cached
+
+  const cities = await loadQualifyingCities()
+  await setCachedJson(cacheKey, cities, QUALIFYING_CITIES_TTL_SECONDS)
+  return cities
+})
+
+async function loadQualifyingCities(): Promise<CitySummary[]> {
   const rows = await prisma.$queryRaw<CityAggregateRow[]>`
     SELECT
       p.city                     AS city,
@@ -202,7 +225,7 @@ export async function getCityPageSlug(city: string | null | undefined): Promise<
 }
 
 /** Full page data, or null when the slug is unknown or the city is below the gate. */
-export async function getCityDetail(slug: string): Promise<CityDetail | null> {
+export const getCityDetail = cache(async (slug: string): Promise<CityDetail | null> => {
   const summary = (await getQualifyingCities()).find((city) => city.slug === slug)
   if (!summary) return null
 
@@ -287,7 +310,7 @@ export async function getCityDetail(slug: string): Promise<CityDetail | null> {
       avgRating: row.avg_rating,
     })),
   }
-}
+})
 
 /**
  * Dishes in a city that clear the dish gate, most-reviewed first.
@@ -347,10 +370,10 @@ export async function getQualifyingCityDishes(city: string): Promise<CityDishSum
  * Returns null when the city is below the city gate, the slug is unknown, or the dish is
  * below the dish gate. All three are a 404 for the same reason: there is nothing to read.
  */
-export async function getCityDishDetail(
+export const getCityDishDetail = cache(async (
   slug: string,
   dishSlug: string,
-): Promise<CityDishDetail | null> {
+): Promise<CityDishDetail | null> => {
   const city = (await getQualifyingCities()).find((candidate) => candidate.slug === slug)
   if (!city) return null
 
@@ -395,7 +418,7 @@ export async function getCityDishDetail(
       quote: truncate(row.quote, 180),
     })),
   }
-}
+})
 
 /** Trims review text to a readable pull quote without cutting mid-word. */
 function truncate(text: string | null, maxLength: number): string | null {
@@ -415,7 +438,7 @@ function truncate(text: string | null, maxLength: number): string | null {
  * Pass `dishKey` to restrict the photo to reviews of that dish, so a dish page shows the
  * dish rather than whatever was posted there most recently.
  */
-async function getPhotoByPlace(
+export async function getPhotoByPlace(
   placeIds: string[],
   dishKey?: string,
 ): Promise<Map<string, string>> {

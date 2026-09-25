@@ -1,13 +1,27 @@
+import { DEFAULT_NEXT_PATH, safeNextPath } from '@/lib/next-path'
+
 const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_ENABLED === '1'
 
 /** "Continue with Google" — a top-level navigation to the OAuth start route.
  *  Renders nothing when Google SSO is not enabled at build time. */
-export function GoogleSignInButton({ label = 'Continue with Google' }: { label?: string }) {
+export function GoogleSignInButton({
+  label = 'Verder met Google',
+  next,
+}: {
+  label?: string
+  /** Where to land after sign-in; validated again server-side. */
+  next?: string
+}) {
   if (!GOOGLE_ENABLED) return null
+  const target = safeNextPath(next)
+  const href =
+    target === DEFAULT_NEXT_PATH
+      ? '/api/v1/auth/google'
+      : `/api/v1/auth/google?next=${encodeURIComponent(target)}`
   return (
     <>
       <a
-        href="/api/v1/auth/google"
+        href={href}
         className="btn-secondary w-full flex items-center justify-center gap-2"
       >
         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18">
@@ -20,7 +34,7 @@ export function GoogleSignInButton({ label = 'Continue with Google' }: { label?:
       </a>
       <div className="flex items-center gap-3 text-snack-muted text-xs">
         <span className="h-px flex-1 bg-snack-border" />
-        or
+        of
         <span className="h-px flex-1 bg-snack-border" />
       </div>
     </>

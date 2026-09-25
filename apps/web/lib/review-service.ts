@@ -15,6 +15,7 @@ import { bumpQuestProgress } from './quest-service'
 import { notifyMention } from './notification-service'
 import { resolveProviderPlace, resolveManualPlace } from './place-service'
 import { logger } from './logger'
+import { recordEvent } from '@/lib/analytics-store'
 
 // ─── Use-case result ──────────────────────────────────────────────────────────
 // The service is transport-agnostic: it returns a domain result that the route
@@ -179,10 +180,6 @@ export async function createReview(params: {
   const normalizedDishName = normalizeDishName(input.dishName)
   const tags = Array.from(new Set(input.tags))
 
-  const place = await resolvePlaceId(input, role)
-  if (!place.ok) return place
-  const placeId = place.value
-
   // Validate photos before consuming rate-limit quota, so rejected attempts
   // don't burn the budget as fast.
   const photoError = await validatePhotos(input.photoIds, userId)
@@ -190,6 +187,13 @@ export async function createReview(params: {
 
   const rl = await rateLimitUser(userId, 'review_create', 60, 3600)
   if (!rl.allowed) return fail(429, 'Review rate limit exceeded')
+
+  // Resolved only after the photo check and the rate limit: this may insert a place row and
+  // call the geocoding provider, and neither should happen for a request that is about to be
+  // rejected (or for a flood of them — Nominatim allows ~1 request per second).
+  const place = await resolvePlaceId(input, role)
+  if (!place.ok) return place
+  const placeId = place.value
 
   // Per-place limit: max 5 reviews per user per place per day.
   const placeRl = await rateLimit(`rl:place_review:${userId}:${placeId}`, 5, 86400)
@@ -229,10 +233,11 @@ export async function createReview(params: {
   // The "First Bite" discovery bonus needs the place's prior review count, so
   // that one read must precede the XP awards (it decides whether the bonus is
   // granted). Everything else is an independent post-write side effect.
-  const isFirstReviewOfPlace =
-    (await prisma.review.count({
-      where: { placeId, status: 'PUBLISHED', id: { not: review.id } },
-    })) === 0
+  const [priorPlaceReviews, priorUserReviews] = await Promise.all([
+    prisma.review.count({ where: { placeId, status: 'PUBLISHED', id: { not: review.id } } }),
+    prisma.review.count({ where: { userId, status: 'PUBLISHED', id: { not: review.id } } }),
+  ])
+  const isFirstReviewOfPlace = priorPlaceReviews === 0
 
   // All side effects are independent (badges/collectibles read review counts,
   // not XP; mentions write their own rows) and each handles its own failure, so
@@ -250,6 +255,8 @@ export async function createReview(params: {
     }),
     recalculateCollectibles(userId), // never throws
     processMentions(input.text, review.id, userId, input.mentionedUserIds, notifyMention), // catches internally
+    recordEvent('review_created', isFirstReviewOfPlace ? 'new_place' : 'known_place'), // never throws
+    ...(priorUserReviews === 0 ? [recordEvent('first_review_created')] : []),
   ])
 
   return { ok: true, value: serializeRatings(review) }

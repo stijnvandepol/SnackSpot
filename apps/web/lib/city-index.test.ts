@@ -9,6 +9,14 @@ vi.mock('@/lib/db', () => ({
   },
 }))
 
+// The city list is cached in Redis. Under test there is no Redis (and the client would wait
+// for one indefinitely), so the cache always misses and every call reaches the mocked query.
+vi.mock('@/lib/cache', () => ({
+  buildCacheKey: (namespace: string, suffix: string) => `${namespace}:${suffix}`,
+  getCachedJson: vi.fn(async () => null),
+  setCachedJson: vi.fn(async () => undefined),
+}))
+
 import { prisma } from '@/lib/db'
 import {
   citySlug,

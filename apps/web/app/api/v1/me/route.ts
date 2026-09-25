@@ -26,12 +26,17 @@ export async function DELETE(req: NextRequest) {
     // never a user-supplied ID, so token tampering cannot target other accounts.
     const user = await prisma.user.findUnique({
       where: { id: auth.sub },
-      select: { id: true, passwordHash: true, avatarKey: true },
+      select: { id: true, username: true, passwordHash: true, avatarKey: true },
     })
     if (!user) return err('User not found', 404)
 
-    const valid = await verifyPassword(user.passwordHash, body.password)
-    if (!valid) return err('Incorrect password', 403)
+    // Accounts created through Google have no password, so asking for one locked them out
+    // of erasure (GDPR Art. 17). They confirm by typing their username instead; the request
+    // still needs a valid session, the same-origin check and the rate limit above.
+    const valid = user.passwordHash
+      ? await verifyPassword(user.passwordHash, body.password)
+      : body.password.trim().toLowerCase() === user.username.toLowerCase()
+    if (!valid) return err(user.passwordHash ? 'Incorrect password' : 'Username does not match', 403)
 
     // Collect every MinIO object key BEFORE the delete: the cascade removes
     // the Photo rows, and with them the only reference to the stored files.

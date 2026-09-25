@@ -22,14 +22,14 @@ export default function ForgotPasswordPage() {
       })
 
       if (res.status === 429) {
-        setError('Too many requests – please try again later.')
+        setError('Te veel verzoeken. Probeer het over een paar minuten opnieuw.')
         return
       }
 
       // Always show the success state regardless of whether the email exists
       setSubmitted(true)
     } catch {
-      setError('Something went wrong. Please try again.')
+      setError('Er ging iets mis. Probeer het opnieuw.')
     } finally {
       setLoading(false)
     }
@@ -42,9 +42,9 @@ export default function ForgotPasswordPage() {
           <div className="mb-3">
             <SnackSpotLogo className="text-2xl" />
           </div>
-          <h2 className="text-2xl font-heading font-bold text-snack-text">Forgot password?</h2>
+          <h1 className="text-2xl font-heading font-bold text-snack-text">Wachtwoord vergeten?</h1>
           <p className="text-sm text-snack-muted mt-1">
-            Enter your email and we&apos;ll send a reset link
+            Vul je e-mailadres in, dan sturen we je een link om een nieuw wachtwoord te kiezen.
           </p>
         </div>
 
@@ -56,33 +56,32 @@ export default function ForgotPasswordPage() {
               </svg>
             </div>
             <div>
-              <p className="font-medium text-snack-text">Check your email</p>
+              <p className="font-medium text-snack-text">Check je mail</p>
               <p className="text-sm text-snack-muted mt-1">
-                If an account with that email exists, we&apos;ve sent a password reset link.
-                The link is valid for 15 minutes.
+                Als er een account bij dit e-mailadres hoort, is de link onderweg. Hij is 15 minuten geldig.
                 <br />
-                If you can&apos;t find the email, please check your spam folder.
+                Niets ontvangen? Kijk even in je spammap.
               </p>
             </div>
             <Link href="/auth/login" className="text-sm text-snack-primary font-medium hover:underline">
-              Back to login
+              Terug naar inloggen
             </Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="card p-6 space-y-4">
             {error && (
-              <div className="bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl border border-red-100 dark:border-red-900">
+              <div role="alert" className="bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl border border-red-100 dark:border-red-900">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="label" htmlFor="email">Email</label>
+              <label className="label" htmlFor="email">E-mailadres</label>
               <input
                 id="email"
                 type="email"
                 className="input"
-                placeholder="you@example.com"
+                placeholder="jij@voorbeeld.nl"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -91,16 +90,16 @@ export default function ForgotPasswordPage() {
             </div>
 
             <button type="submit" className="btn-primary w-full" disabled={loading}>
-              {loading ? 'Sending…' : 'Send reset link'}
+              {loading ? 'Versturen…' : 'Stuur de link'}
             </button>
           </form>
         )}
 
         {!submitted && (
           <p className="text-center mt-6 text-sm text-snack-muted">
-            Remembered it?{' '}
+            Weer te binnen geschoten?{' '}
             <Link href="/auth/login" className="text-snack-primary font-medium hover:underline">
-              Back to login
+              Terug naar inloggen
             </Link>
           </p>
         )}

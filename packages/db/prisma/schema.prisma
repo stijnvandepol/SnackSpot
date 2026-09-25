@@ -36,6 +36,7 @@ enum ReportTargetType {
   REVIEW
   PHOTO
   USER
+  PLACE
 }
 
 enum ModerationActionType {
@@ -202,6 +203,7 @@ model Place {
   reviews   Review[]
   favorites Favorite[]
   bites     Bite[]
+  reports   Report[]
 
   @@map("places")
 }
@@ -416,6 +418,8 @@ model Favorite {
   place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
 
   @@id([userId, placeId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([placeId])
   @@map("favorites")
 }
 
@@ -425,6 +429,7 @@ model Report {
   targetType ReportTargetType @map("target_type")
   reviewId   String?          @map("review_id")
   photoId    String?          @map("photo_id")
+  placeId    String?          @map("place_id")
   reason     String
   status     ReportStatus     @default(OPEN)
   createdAt  DateTime         @default(now()) @map("created_at")
@@ -432,8 +437,11 @@ model Report {
   reporter User    @relation(fields: [reporterId], references: [id], onDelete: Cascade)
   review   Review? @relation(fields: [reviewId], references: [id], onDelete: SetNull)
   photo    Photo?  @relation(fields: [photoId], references: [id], onDelete: SetNull)
+  place    Place?  @relation(fields: [placeId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt(sort: Desc)])
+  @@index([reporterId])
+  @@index([placeId])
   @@map("reports")
 }
 
@@ -488,6 +496,8 @@ model NotificationPreferences {
   pushOnBadge        Boolean  @default(true)  @map("push_on_badge")
   pushOnFollow       Boolean  @default(true)  @map("push_on_follow")
   pushStreakReminder Boolean  @default(true)  @map("push_streak_reminder")
+  /// Opt-in for newsletters/announcements (Telecommunicatiewet 11.7); off until switched on
+  marketingEmails    Boolean  @default(false) @map("marketing_emails")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 

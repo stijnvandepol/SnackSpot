@@ -22,6 +22,12 @@ interface Report {
     moderationStatus: string
     uploaderId: string
   } | null
+  place: {
+    id: string
+    name: string
+    address: string
+    city: string | null
+  } | null
 }
 
 export default function ReportsPage() {
@@ -50,6 +56,26 @@ export default function ReportsPage() {
   useEffect(() => {
     loadReports()
   }, [loadReports])
+
+  // Place reports are fixed on the place page itself (name, address, merge), so closing the
+  // report is a plain status change rather than a moderation action on the report's target.
+  const markResolved = async (reportId: string) => {
+    try {
+      const res = await fetch(`/api/reports/${reportId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'RESOLVED' }),
+      })
+      if (res.ok) {
+        loadReports()
+      } else {
+        const data = await res.json()
+        alert(`Fout: ${data.error}`)
+      }
+    } catch {
+      alert('Er is een fout opgetreden')
+    }
+  }
 
   const handleAction = async (reportId: string, action: string, targetId: string) => {
     const actionName = action === 'DISMISS' ? 'afwijzen' : 'uitvoeren'
@@ -97,6 +123,8 @@ export default function ReportsPage() {
         return 'bg-purple-100 text-purple-800'
       case 'USER':
         return 'bg-orange-100 text-orange-800'
+      case 'PLACE':
+        return 'bg-blue-100 text-blue-800'
       default:
         return 'bg-gray-100 text-gray-800'
     }
@@ -135,6 +163,7 @@ export default function ReportsPage() {
             <option value="REVIEW">Reviews</option>
             <option value="PHOTO">Foto&apos;s</option>
             <option value="USER">Gebruikers</option>
+            <option value="PLACE">Locaties</option>
           </select>
         </div>
       </div>
@@ -227,6 +256,25 @@ export default function ReportsPage() {
                     </div>
                   )}
 
+                  {report.place && (
+                    <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm font-semibold mb-2">Gemelde locatie:</p>
+                      <Link
+                        href={`/dashboard/places/${report.place.id}`}
+                        className="text-sm font-medium text-orange-700 hover:underline"
+                      >
+                        {report.place.name}
+                      </Link>
+                      <p className="text-sm text-gray-600">
+                        {report.place.address}
+                        {report.place.city ? ` · ${report.place.city}` : ''}
+                      </p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Corrigeer of verwijder de locatie via de locatiepagina en markeer de melding daarna als afgehandeld.
+                      </p>
+                    </div>
+                  )}
+
                   {report.status === 'OPEN' && (
                     <div className="flex gap-2 pt-4 border-t">
                       {report.review && (
@@ -243,6 +291,14 @@ export default function ReportsPage() {
                           className="text-red-600 hover:text-red-800 text-sm font-medium"
                         >
                           Verwijder foto
+                        </button>
+                      )}
+                      {report.place && (
+                        <button
+                          onClick={() => markResolved(report.id)}
+                          className="text-green-700 hover:text-green-900 text-sm font-medium"
+                        >
+                          Gecorrigeerd, afhandelen
                         </button>
                       )}
                       <button

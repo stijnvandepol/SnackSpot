@@ -13,6 +13,7 @@ import {
   getLoginFailureCount,
 } from '@/lib/rate-limit'
 import { verifyTurnstileToken } from '@/lib/turnstile'
+import { recordEvent } from '@/lib/analytics-store'
 
 const CAPTCHA_THRESHOLD = 3
 
@@ -82,6 +83,7 @@ export async function POST(req: NextRequest) {
     await resetLoginFailures(ip, body.email)
 
     const { accessToken, setCookie } = await issueSession(user)
+    await recordEvent('login_completed', 'email')
 
     const { passwordHash: _, ...safeUser } = user
     const response = withNoStore(ok({ user: safeUser, access_token: accessToken }))

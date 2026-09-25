@@ -149,6 +149,13 @@ export async function getLoginFailureCount(
 /** Extract client IP. Trust proxy headers only when explicitly configured. */
 export function getClientIP(req: Request): string {
   if (env.TRUST_PROXY) {
+    // Cloudflare (tunnel or proxy) sets this to the connecting client and overwrites any
+    // value the client sent. It has to come first: behind the nginx → cloudflared chain,
+    // X-Real-IP is the tunnel container's address (one shared bucket for every visitor),
+    // and the first X-Forwarded-For entry is whatever the client chose to put there.
+    const cfConnectingIp = req.headers.get('cf-connecting-ip')?.trim()
+    if (cfConnectingIp) return cfConnectingIp
+
     const xRealIp = req.headers.get('x-real-ip')?.trim()
     if (xRealIp) return xRealIp
 

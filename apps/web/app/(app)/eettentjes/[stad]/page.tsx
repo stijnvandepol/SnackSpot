@@ -6,6 +6,7 @@ import { getCityDetail, type CityDetail } from '@/lib/city-index'
 import { getSiteUrl } from '@/lib/site-url'
 import { safeJsonLd } from '@/lib/html'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
+import { TrackView } from '@/components/track-view'
 
 // Rendered on demand and then cached for an hour, matching app/sitemap.ts so the page and
 // the sitemap age at the same rate.
@@ -114,6 +115,7 @@ export default async function CityPage({ params }: { params: Promise<{ stad: str
 
   return (
     <div lang="nl" className="mx-auto max-w-5xl px-4 py-8 md:py-12">
+      <TrackView event="city_page_view" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListJsonLd) }} />
       <BreadcrumbJsonLd
         items={[

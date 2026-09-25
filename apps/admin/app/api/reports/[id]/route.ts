@@ -4,6 +4,8 @@ import { ModerationActionType } from '@prisma/client'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { serverError, mapPrismaError, parseBody, isResponse } from '@/lib/api-helpers'
+import { BUCKET, minioClient } from '@/lib/minio'
+import { logger } from '@/lib/logger'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -17,6 +19,22 @@ const UpdateReportBody = z.object({
   action: z.enum(VALID_REPORT_ACTIONS).optional(),
   targetId: z.string().optional(),
 })
+
+/**
+ * A rejected photo must stop being served: the web app's variant route serves any key it is
+ * given. The public variants are removed; the private original stays for an appeal and is
+ * picked up by the worker's daily sweep. Best-effort — a storage error must not undo the
+ * moderation decision that was just committed.
+ */
+async function removePublicVariants(photo: { storageKey: string; variants: unknown }): Promise<void> {
+  if (!photo.variants || typeof photo.variants !== 'object' || Array.isArray(photo.variants)) return
+  const keys = Object.values(photo.variants).filter(
+    (value): value is string => typeof value === 'string' && value.length > 0 && value !== photo.storageKey,
+  )
+  const results = await Promise.allSettled(keys.map((key) => minioClient.removeObject(BUCKET, key)))
+  const failed = results.filter((result) => result.status === 'rejected').length
+  if (failed > 0) logger.warn({ failed, total: keys.length }, 'Could not remove all rejected photo variants')
+}
 
 // GET /api/reports/[id] - Get report details
 export async function GET(req: NextRequest, { params }: Params) {
@@ -163,11 +181,16 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
         case 'DELETE_PHOTO':
           if (report.photoId) {
-            await db.$transaction([
-              db.photo.update({ where: { id: report.photoId }, data: { moderationStatus: 'REJECTED' } }),
+            const [photo] = await db.$transaction([
+              db.photo.update({
+                where: { id: report.photoId },
+                data: { moderationStatus: 'REJECTED' },
+                select: { storageKey: true, variants: true },
+              }),
               db.report.update({ where: { id }, data: { status: 'RESOLVED' } }),
               logAction('DELETE_PHOTO'),
             ])
+            await removePublicVariants(photo)
           }
           break
 

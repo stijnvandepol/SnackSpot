@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
     <div className="mx-auto max-w-lg px-4 py-6 space-y-6">
       <div>
         <h1 className="font-heading font-bold text-2xl text-snack-text">Privacy Policy</h1>
-        <p className="text-sm text-snack-muted mt-1">Last updated: 12 June 2026</p>
+        <p className="text-sm text-snack-muted mt-1">Last updated: 25 September 2026</p>
       </div>
 
       <div className="card p-5 space-y-3">
@@ -30,7 +30,16 @@ export default function PrivacyPolicyPage() {
         </ul>
         <p className="text-sm text-snack-muted">
           We do not use tracking or advertising cookies, only one functional session
-          cookie to keep you logged in. We never sell your data.
+          cookie to keep you logged in. That cookie is strictly necessary, so there is no
+          cookie banner to click away. We never sell your data.
+        </p>
+        <p className="text-sm text-snack-muted">
+          <strong className="text-snack-text">Usage statistics.</strong> To see which parts of
+          SnackSpot work, we count how often certain steps happen per day, such as &quot;a place
+          page was viewed&quot; or &quot;an account was created&quot;, plus page-speed measurements
+          (Core Web Vitals). These counts are anonymous: no cookie, no IP address, no account id and
+          no browsing history is stored with them, so they cannot be linked to you. Daily totals are
+          kept for about 13 months.
         </p>
       </div>
 
@@ -38,7 +47,8 @@ export default function PrivacyPolicyPage() {
         <h2 className="font-heading font-semibold text-snack-text">Why we process it</h2>
         <ul className="list-disc pl-5 text-sm text-snack-muted space-y-1">
           <li>To provide the service: your account, your content, and the social feed (contract, Art. 6(1)(b) GDPR).</li>
-          <li>To keep the platform safe: rate limiting, abuse reports and moderation (legitimate interest, Art. 6(1)(f)).</li>
+          <li>To keep the platform safe: rate limiting, abuse reports and moderation (legitimate interest, Art. 6(1)(f)). Rate limiting briefly processes your IP address; those counters expire automatically within hours.</li>
+          <li>To improve the service with anonymous usage counts (legitimate interest, Art. 6(1)(f)); see above.</li>
           <li>To send optional emails and push notifications, only with your consent, configurable per category in Settings (Art. 6(1)(a)).</li>
         </ul>
       </div>

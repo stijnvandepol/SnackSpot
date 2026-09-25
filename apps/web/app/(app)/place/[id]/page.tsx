@@ -10,10 +10,14 @@ import { safeJsonLd } from '@/lib/html'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { extractCity } from '@/lib/utils'
 import { getCityPageSlug } from '@/lib/city-index'
+import { getDishPageHrefs } from '@/lib/dish-index'
 import { reviewListSelect, serializeReview } from '@/lib/review-helpers'
 import { PlaceReviewsSection, type PlaceReviewListItem } from '@/components/place-reviews-section'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { PlaceMapEmbed } from '@/components/place-map-embed'
+import { SavePlaceButton } from '@/components/save-place-button'
+import { ReportPlace } from '@/components/report-place'
+import { TrackView } from '@/components/track-view'
 
 interface PlaceRow {
   id: string
@@ -75,12 +79,18 @@ export async function generateMetadata({
   const place = await getPlace(id)
   if (!place) return { title: 'Place' }
 
-  const city = extractCity(place.address)
-  const title = city ? `${place.name} — ${city}` : place.name
-  const description =
-    place.avg_rating !== null && place.review_count > 0
-      ? `${place.name} staat op ${place.avg_rating.toFixed(1)}★ uit ${place.review_count} fotoreview${place.review_count === 1 ? '' : 's'} op SnackSpot. Zie wat mensen er echt aten en weet wat je moet bestellen.`
-      : `${place.name} op SnackSpot: fotoreviews van bezoekers, zodat je weet wat je moet bestellen voordat je gaat zitten.`
+  // Same source as the page body (places.city first), so title and breadcrumb agree.
+  const city = place.city?.trim() || extractCity(place.address)
+  // "<zaak> reviews" is how these pages are searched (GSC: "da verdi reviews",
+  // "reviews voor da verdi"), and the bare "Name — City" title matched none of it:
+  // place pages had impressions but a 0% click-through rate.
+  const hasReviews = place.avg_rating !== null && place.review_count > 0
+  const title = hasReviews
+    ? `${place.name}${city ? ` ${city}` : ''}: ${place.avg_rating!.toFixed(1)}★ reviews & wat je bestelt`
+    : `${place.name}${city ? ` in ${city}` : ''}: reviews en foto's`
+  const description = hasReviews
+    ? `${place.name} scoort ${place.avg_rating!.toFixed(1)}★ uit ${place.review_count} fotoreview${place.review_count === 1 ? '' : 's'}. Zie wat bezoekers er echt aten en wat je het best kunt bestellen.`
+    : `${place.name}${city ? ` in ${city}` : ''} op SnackSpot. Nog geen reviews: ben de eerste en laat zien wat je er at.`
 
   const ogImage = await getPlacePhoto(id)
 
@@ -105,6 +115,14 @@ function buildPlaceBreadcrumb(from: string | undefined, placeName: string): Arra
   }
   crumbs.push({ label: placeName })
   return crumbs
+}
+
+/** A fixed set, so a crafted `?from=` cannot mint new analytics counters. */
+const PLACE_VIEW_SOURCES = new Set(['search', 'nearby', 'feed', 'profile', 'user', 'place', 'review'])
+
+function placeViewSource(from: string | undefined): string {
+  const kind = from?.split(':')[0]
+  return kind && PLACE_VIEW_SOURCES.has(kind) ? kind : 'direct'
 }
 
 function resolveBackHref(from: string | undefined): string {
@@ -134,36 +152,47 @@ export default async function PlacePage({
 
   if (!place) notFound()
 
-  // "Order This": the dishes people actually order here, aggregated from
-  // dish-named reviews — the answer Google doesn't have.
-  const topDishes = await prisma.$queryRaw<
-    Array<{ dish: string; review_count: number; avg_rating: number; pct: number }>
-  >`
-    WITH dish_reviews AS (
-      SELECT TRIM(dish_name) AS dish_raw, LOWER(TRIM(dish_name)) AS dish_key, rating_overall
-      FROM reviews
-      WHERE place_id = ${id} AND status = 'PUBLISHED'
-        AND dish_name IS NOT NULL AND LENGTH(TRIM(dish_name)) > 0
-    )
-    SELECT
-      MIN(dish_raw) AS dish,
-      COUNT(*)::int AS review_count,
-      ROUND(AVG(rating_overall)::numeric, 1)::float AS avg_rating,
-      ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER ())::int AS pct
-    FROM dish_reviews
-    GROUP BY dish_key
-    ORDER BY review_count DESC, avg_rating DESC
-    LIMIT 3
-  `
+  // places.city is the column the city landing pages group on; extractCity() covers rows
+  // written before that column was populated on every insert path.
+  const city = place.city?.trim() || extractCity(place.address)
 
-  // Server-render the first page of reviews so the content is crawlable and
-  // instantly visible; the client section takes over for sorting and like-state.
-  const initialReviewRows = await prisma.review.findMany({
-    where: { placeId: id, status: ReviewStatus.PUBLISHED },
-    orderBy: { createdAt: 'desc' },
-    take: 20,
-    select: reviewListSelect(),
-  })
+  // Five independent reads: run together instead of one after another, so the page waits
+  // for the slowest query rather than the sum of all of them.
+  const [topDishes, initialReviewRows, photoUrl, cityPageSlug, dishHrefs] = await Promise.all([
+    // "Order This": the dishes people actually order here, aggregated from
+    // dish-named reviews — the answer Google doesn't have.
+    prisma.$queryRaw<Array<{ dish: string; review_count: number; avg_rating: number; pct: number }>>`
+      WITH dish_reviews AS (
+        SELECT TRIM(dish_name) AS dish_raw, LOWER(TRIM(dish_name)) AS dish_key, rating_overall
+        FROM reviews
+        WHERE place_id = ${id} AND status = 'PUBLISHED'
+          AND dish_name IS NOT NULL AND LENGTH(TRIM(dish_name)) > 0
+      )
+      SELECT
+        MIN(dish_raw) AS dish,
+        COUNT(*)::int AS review_count,
+        ROUND(AVG(rating_overall)::numeric, 1)::float AS avg_rating,
+        ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER ())::int AS pct
+      FROM dish_reviews
+      GROUP BY dish_key
+      ORDER BY review_count DESC, avg_rating DESC
+      LIMIT 3
+    `,
+    // Server-render the first page of reviews so the content is crawlable and
+    // instantly visible; the client section takes over for sorting and like-state.
+    prisma.review.findMany({
+      where: { placeId: id, status: ReviewStatus.PUBLISHED },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      select: reviewListSelect(),
+    }),
+    getPlacePhoto(id),
+    // Only links to a city that actually has a page — a city below the quality gate 404s.
+    getCityPageSlug(city),
+    // Dish names link to their national ranking when one exists.
+    getDishPageHrefs().catch(() => new Map<string, string>()),
+  ])
+
   const initialReviews = initialReviewRows.map((row) => ({
     ...serializeReview(row),
     createdAt: row.createdAt.toISOString(),
@@ -172,13 +201,7 @@ export default async function PlacePage({
   const backHref = resolveBackHref(from)
 
   const appUrl = getSiteUrl()
-  const photoUrl = await getPlacePhoto(id)
   const cuisine = cuisineLabel(place.cuisine)
-  // places.city is the column the city landing pages group on; extractCity() covers rows
-  // written before that column was populated on every insert path.
-  const city = place.city?.trim() || extractCity(place.address)
-  // Only links to a city that actually has a page — a city below the quality gate 404s.
-  const cityPageSlug = await getCityPageSlug(city)
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Restaurant',
@@ -230,14 +253,18 @@ export default async function PlacePage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
+      <TrackView event="place_view" source={placeViewSource(from)} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }} />
       <Breadcrumb items={buildPlaceBreadcrumb(from, place.name)} />
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Link href={backHref} className="btn-secondary text-sm">Terug</Link>
-        <Link href={`/add-review?placeId=${place.id}`} className="btn-primary text-sm">
-          Schrijf een review
-        </Link>
+        <div className="flex gap-2">
+          <SavePlaceButton placeId={place.id} />
+          <Link href={`/add-review?placeId=${place.id}`} className="btn-primary flex-1 text-sm sm:flex-none">
+            Schrijf een review
+          </Link>
+        </div>
       </div>
 
       <div className="md:grid md:grid-cols-12 md:gap-6 md:items-start">
@@ -286,6 +313,9 @@ export default async function PlacePage({
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               Open in Maps
             </a>
+            <div className="mt-3">
+              <ReportPlace placeId={place.id} placeName={place.name} />
+            </div>
           </div>
           {topDishes.length > 0 && (
             <div className="card p-5">
@@ -298,7 +328,16 @@ export default async function PlacePage({
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-snack-text">
                         {i === 0 && <span aria-hidden="true">🏆 </span>}
-                        {d.dish}
+                        {dishHrefs.get(d.dish.trim().toLowerCase()) ? (
+                          <Link
+                            href={dishHrefs.get(d.dish.trim().toLowerCase())!}
+                            className="hover:text-snack-primary hover:underline"
+                          >
+                            {d.dish}
+                          </Link>
+                        ) : (
+                          d.dish
+                        )}
                       </p>
                       <p className="text-xs text-snack-muted">
                         {d.pct}% van de gerechtreviews hier

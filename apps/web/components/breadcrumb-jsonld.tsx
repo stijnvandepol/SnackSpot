@@ -1,4 +1,5 @@
 import { getSiteUrl } from '@/lib/site-url'
+import { safeJsonLd } from '@/lib/html'
 
 interface BreadcrumbItem {
   name: string
@@ -24,7 +25,9 @@ export function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      // Item names include user-entered dish names; safeJsonLd escapes `<` so a name like
+      // "</script>" cannot close the tag.
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
     />
   )
 }
