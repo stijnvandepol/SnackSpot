@@ -5,7 +5,7 @@
 -- 2. Marketing email becomes opt-in. Until now the admin broadcast went to every user, which
 --    the Dutch Telecommunicatiewet (art. 11.7) does not allow without prior consent. The
 --    default is false, so existing users are opted out until they switch it on.
--- 3. Indexes the query patterns and cascades actually need (see docs/GROWTH_PLAN.md §5).
+-- 3. Indexes the query patterns and cascades actually need (see GROWTH_PLAN.md §5).
 
 ALTER TYPE "ReportTargetType" ADD VALUE IF NOT EXISTS 'PLACE';
 

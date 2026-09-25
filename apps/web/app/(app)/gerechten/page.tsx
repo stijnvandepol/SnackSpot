@@ -28,13 +28,11 @@ export default async function GerechtenIndexPage() {
       <BreadcrumbJsonLd items={[{ name: 'Gerechten', path: '/gerechten' }]} />
 
       <header className="max-w-3xl">
-        <h1 className="font-heading text-3xl font-bold text-snack-text md:text-5xl">
-          Waar eet je de beste…?
-        </h1>
+        <h1 className="font-heading text-3xl font-bold text-snack-text md:text-5xl">Waar eet je de beste…?</h1>
         <p className="mt-4 text-base leading-7 text-snack-muted md:text-lg">
-          Hier rangschikken we zaken niet op hun algemene cijfer, maar per gerecht. Een snackbar
-          kan middelmatig scoren en toch de beste kapsalon van de stad maken. Alles komt uit
-          fotoreviews van bezoekers, zonder gesponsorde plekken.
+          Hier rangschikken we zaken niet op hun algemene cijfer, maar per gerecht. Een snackbar kan middelmatig scoren
+          en toch de beste kapsalon van de stad maken. Alles komt uit fotoreviews van bezoekers, zonder gesponsorde
+          plekken.
         </p>
       </header>
 
@@ -48,8 +46,7 @@ export default async function GerechtenIndexPage() {
               >
                 <h2 className="font-heading text-lg font-semibold text-snack-text">{dish.name}</h2>
                 <p className="mt-1 text-sm text-snack-muted">
-                  ★ {dish.avgRating.toFixed(1)} gemiddeld · {dish.placeCount} adressen ·{' '}
-                  {dish.reviewCount} reviews
+                  ★ {dish.avgRating.toFixed(1)} gemiddeld · {dish.placeCount} adressen · {dish.reviewCount} reviews
                 </p>
               </Link>
             </li>
@@ -57,12 +54,10 @@ export default async function GerechtenIndexPage() {
         </ul>
       ) : (
         <section className="mt-8 rounded-2xl border border-snack-border bg-snack-surface p-6">
-          <h2 className="font-heading text-lg font-semibold text-snack-text">
-            Nog geen gerecht met genoeg reviews
-          </h2>
+          <h2 className="font-heading text-lg font-semibold text-snack-text">Nog geen gerecht met genoeg reviews</h2>
           <p className="mt-2 text-sm leading-6 text-snack-muted">
-            Een gerecht krijgt een eigen ranglijst zodra het bij minstens twee zaken is beoordeeld.
-            Vul bij je review in wat je bestelde, dan telt het mee.
+            Een gerecht krijgt een eigen ranglijst zodra het bij minstens twee zaken is beoordeeld. Vul bij je review in
+            wat je bestelde, dan telt het mee.
           </p>
           <Link href="/add-review" className="btn-primary mt-4 inline-flex text-sm">
             Schrijf een review

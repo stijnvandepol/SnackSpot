@@ -384,7 +384,7 @@ export function SearchClient() {
                 <ReviewCard
                   key={review.id}
                   review={review}
-                  photoVariantPreference={['large', 'medium', 'thumb']}
+                  photoVariantPreference={['medium', 'large', 'thumb']}
                   backContext="search"
                 />
               ))}

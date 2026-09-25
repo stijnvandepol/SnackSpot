@@ -23,9 +23,15 @@ export function SavePlaceButton({ placeId }: { placeId: string }) {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((json) => { if (!cancelled) setSaved(Boolean(json.data?.saved)) })
-      .catch(() => { if (!cancelled) setSaved(false) }) // unknown state: offer to save
-    return () => { cancelled = true }
+      .then((json) => {
+        if (!cancelled) setSaved(Boolean(json.data?.saved))
+      })
+      .catch(() => {
+        if (!cancelled) setSaved(false)
+      }) // unknown state: offer to save
+    return () => {
+      cancelled = true
+    }
   }, [accessToken, placeId])
 
   if (loading) return null
@@ -73,7 +79,11 @@ export function SavePlaceButton({ placeId }: { placeId: string }) {
       >
         <span aria-hidden="true">{saved ? '★' : '☆'}</span> {saved ? 'Bewaard' : 'Bewaren'}
       </button>
-      {error && <p role="alert" className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && (
+        <p role="alert" className="mt-1 text-xs text-red-600">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

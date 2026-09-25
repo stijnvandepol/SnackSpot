@@ -28,11 +28,7 @@ function describe(detail: DishDetail): string {
     : opener
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ gerecht: string }>
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ gerecht: string }> }): Promise<Metadata> {
   const { gerecht } = await params
   const detail = await getDishDetail(gerecht)
   if (!detail) return { title: 'Niet gevonden' }
@@ -156,7 +152,10 @@ export default async function DishPage({ params }: { params: Promise<{ gerecht: 
                     className="h-24 w-24 flex-shrink-0 rounded-xl object-cover"
                   />
                 ) : (
-                  <div aria-hidden="true" className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-xl bg-snack-surface text-2xl">
+                  <div
+                    aria-hidden="true"
+                    className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-xl bg-snack-surface text-2xl"
+                  >
                     🍟
                   </div>
                 )}
@@ -170,9 +169,7 @@ export default async function DishPage({ params }: { params: Promise<{ gerecht: 
                       {plural(place.reviewCount, 'review', 'reviews')} van dit gerecht
                     </span>
                   </div>
-                  {place.quote && (
-                    <p className="mt-2 text-sm italic leading-6 text-snack-muted">“{place.quote}”</p>
-                  )}
+                  {place.quote && <p className="mt-2 text-sm italic leading-6 text-snack-muted">“{place.quote}”</p>}
                 </div>
               </Link>
             </li>
@@ -181,12 +178,10 @@ export default async function DishPage({ params }: { params: Promise<{ gerecht: 
       </section>
 
       <section className="mt-12 rounded-2xl border border-snack-border bg-snack-surface p-6">
-        <h2 className="font-heading text-lg font-semibold text-snack-text">
-          Weet jij een betere {dishLabel}?
-        </h2>
+        <h2 className="font-heading text-lg font-semibold text-snack-text">Weet jij een betere {dishLabel}?</h2>
         <p className="mt-2 text-sm leading-6 text-snack-muted">
-          Deze lijst komt volledig uit reviews van bezoekers. Plaats een fotoreview, vul
-          &quot;{detail.name}&quot; in als gerecht, en je stem telt mee.
+          Deze lijst komt volledig uit reviews van bezoekers. Plaats een fotoreview, vul &quot;{detail.name}&quot; in
+          als gerecht, en je stem telt mee.
         </p>
         <Link href="/add-review" className="btn-primary mt-4 inline-flex text-sm">
           Schrijf een review

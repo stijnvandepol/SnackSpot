@@ -28,11 +28,7 @@ export function counterField(event: AnalyticsEvent, source?: string): string {
 export async function recordEvent(event: AnalyticsEvent, source?: string): Promise<void> {
   const key = dayKey(new Date())
   try {
-    await redis
-      .multi()
-      .hincrby(key, counterField(event, source), 1)
-      .expire(key, RETENTION_SECONDS)
-      .exec()
+    await redis.multi().hincrby(key, counterField(event, source), 1).expire(key, RETENTION_SECONDS).exec()
   } catch (error) {
     logger.warn({ err: error, event }, 'Failed to record analytics event')
   }

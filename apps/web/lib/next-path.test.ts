@@ -28,9 +28,7 @@ describe('safeNextPath', () => {
 
 describe('authHref', () => {
   it('encodes the destination', () => {
-    expect(authHref('login', '/add-review?placeId=abc')).toBe(
-      '/auth/login?next=%2Fadd-review%3FplaceId%3Dabc',
-    )
+    expect(authHref('login', '/add-review?placeId=abc')).toBe('/auth/login?next=%2Fadd-review%3FplaceId%3Dabc')
   })
 
   it('drops the parameter for the default destination or unsafe input', () => {

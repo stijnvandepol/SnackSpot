@@ -3,6 +3,7 @@ import { ModerationActionSchema } from '@snackspot/shared'
 import { prisma } from '@/lib/db'
 import { ok, err, parseBody, requireRole, serverError, isResponse } from '@/lib/api-helpers'
 import { rateLimitUser } from '@/lib/rate-limit'
+import { photoObjectKeys, removeObjectsBestEffort } from '@/lib/storage-cleanup'
 import { ReviewStatus, PhotoModerationStatus, ReportStatus, ModerationActionType } from '@prisma/client'
 
 export async function POST(req: NextRequest) {
@@ -92,6 +93,27 @@ export async function POST(req: NextRequest) {
         },
       }),
     ])
+
+    // A rejected photo must stop being served, not just be flagged: the variant route
+    // serves any key it is given, with a one-year immutable cache header. The public
+    // variants go now; the private original stays for an appeal and the daily sweep.
+    // (Edge caches still hold copies until purged — see GROWTH_PLAN.md.)
+    if (body.action === 'DELETE_PHOTO') {
+      const photo = await prisma.photo.findUnique({
+        where: { id: body.targetId },
+        select: { storageKey: true, variants: true },
+      })
+      if (photo) {
+        const variantKeys = photoObjectKeys(photo).filter((key) => key !== photo.storageKey)
+        await removeObjectsBestEffort(variantKeys, 'photo-rejected')
+      }
+    }
+
+    // A ban takes effect at the next refresh at the latest: without live refresh tokens
+    // the banned user is out once the current 15-minute access token expires.
+    if (body.action === 'BAN_USER') {
+      await prisma.refreshToken.deleteMany({ where: { userId: body.targetId } })
+    }
 
     // Resolve linked report if provided — best-effort, the report may be gone.
     if (body.reportId && body.action !== 'DISMISS_REPORT') {

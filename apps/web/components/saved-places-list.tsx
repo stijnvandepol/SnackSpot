@@ -15,17 +15,30 @@ export function SavedPlacesList() {
     let cancelled = false
     fetch('/api/v1/me/favorites?limit=100', { headers: { Authorization: `Bearer ${accessToken}` } })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((json) => { if (!cancelled) setPlaces(json.data?.data ?? []) })
-      .catch(() => { if (!cancelled) setError(true) })
-    return () => { cancelled = true }
+      .then((json) => {
+        if (!cancelled) setPlaces(json.data?.data ?? [])
+      })
+      .catch(() => {
+        if (!cancelled) setError(true)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [accessToken])
 
-  if (error) return <p role="alert" className="py-8 text-center text-sm text-red-600">Je bewaarde zaken konden niet worden geladen.</p>
+  if (error)
+    return (
+      <p role="alert" className="py-8 text-center text-sm text-red-600">
+        Je bewaarde zaken konden niet worden geladen.
+      </p>
+    )
 
   if (places === null) {
     return (
       <div className="space-y-3" aria-busy="true">
-        {[0, 1, 2].map((i) => <div key={i} className="card h-20 animate-pulse bg-snack-surface" />)}
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="card h-20 animate-pulse bg-snack-surface" />
+        ))}
       </div>
     )
   }
@@ -35,10 +48,12 @@ export function SavedPlacesList() {
       <div className="py-10 text-center">
         <p className="font-semibold text-snack-text">Nog niets bewaard</p>
         <p className="mx-auto mt-1 max-w-xs text-sm text-snack-muted">
-          Zie je een zaak die je wilt proberen? Tik op <span aria-hidden="true">☆</span> Bewaren, dan
-          staat hij hier klaar voor later.
+          Zie je een zaak die je wilt proberen? Tik op <span aria-hidden="true">☆</span> Bewaren, dan staat hij hier
+          klaar voor later.
         </p>
-        <Link href="/search" className="btn-primary mt-4 inline-block">Zaken ontdekken</Link>
+        <Link href="/search" className="btn-primary mt-4 inline-block">
+          Zaken ontdekken
+        </Link>
       </div>
     )
   }
@@ -53,10 +68,22 @@ export function SavedPlacesList() {
           >
             {place.photoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- pre-sized WebP variant
-              <img src={place.photoUrl} alt="" width={64} height={64} loading="lazy" decoding="async"
-                className="h-16 w-16 flex-shrink-0 rounded-xl object-cover" />
+              <img
+                src={place.photoUrl}
+                alt=""
+                width={64}
+                height={64}
+                loading="lazy"
+                decoding="async"
+                className="h-16 w-16 flex-shrink-0 rounded-xl object-cover"
+              />
             ) : (
-              <div aria-hidden="true" className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl bg-snack-surface text-xl">🍟</div>
+              <div
+                aria-hidden="true"
+                className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl bg-snack-surface text-xl"
+              >
+                🍟
+              </div>
             )}
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold text-snack-text">{place.name}</p>

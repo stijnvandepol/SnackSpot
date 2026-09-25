@@ -86,7 +86,9 @@ interface MeProfile {
 }
 
 // Stable reference so the memoized ReviewCard can skip unchanged cards.
-const PROFILE_VARIANT_PREF = ['large', 'medium', 'thumb'] as const
+// Cards render at most ~670px wide; the 1024px variant covers that at 1.5x, where
+// 'large' (2048px, q90) cost several times the bytes for no visible difference.
+const PROFILE_VARIANT_PREF = ['medium', 'large', 'thumb'] as const
 
 const TIER_LABEL: Record<string, string> = { BRONZE: 'Bronze', SILVER: 'Silver', GOLD: 'Gold' }
 const TIER_CLASS: Record<string, string> = {
@@ -848,11 +850,13 @@ function ProfileContent() {
       >
         <p className="text-sm text-snack-muted mb-4">
           This permanently deletes your account, reviews, and all associated data. Enter your password to confirm.
+          Signed up with Google? Type your username instead.
         </p>
         <input
           type="password"
           className="input mb-3"
-          placeholder="Your password"
+          aria-label="Password, or username for Google accounts"
+          placeholder="Password (or username for Google accounts)"
           value={deletePassword}
           onChange={(e) => setDeletePassword(e.target.value)}
           autoFocus

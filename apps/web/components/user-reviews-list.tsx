@@ -65,7 +65,7 @@ export function UserReviewsList({ username }: UserReviewsListProps) {
         <ReviewCard
           key={r.id}
           review={r}
-          photoVariantPreference={['large', 'medium', 'thumb']}
+          photoVariantPreference={['medium', 'large', 'thumb']}
           backContext={`user:${username}`}
         />
       ))}

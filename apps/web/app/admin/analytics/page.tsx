@@ -54,16 +54,24 @@ export default function AnalyticsPage() {
     setError(null)
     fetch(`/api/v1/admin/analytics?days=${range}`, { headers: { Authorization: `Bearer ${accessToken}` } })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((json) => { if (!cancelled) setData(json.data) })
-      .catch(() => { if (!cancelled) setError('Kon de cijfers niet laden.') })
-    return () => { cancelled = true }
+      .then((json) => {
+        if (!cancelled) setData(json.data)
+      })
+      .catch(() => {
+        if (!cancelled) setError('Kon de cijfers niet laden.')
+      })
+    return () => {
+      cancelled = true
+    }
   }, [accessToken, user?.role, range])
 
   if (!user || user.role !== 'ADMIN') {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <p className="font-semibold text-snack-text">Deze pagina is alleen voor admins.</p>
-        <Link href="/" className="btn-primary mt-4 inline-block">Naar de feed</Link>
+        <Link href="/" className="btn-primary mt-4 inline-block">
+          Naar de feed
+        </Link>
       </div>
     )
   }
@@ -72,8 +80,8 @@ export default function AnalyticsPage() {
     <div className="mx-auto max-w-4xl px-4 py-8">
       <h1 className="font-heading text-2xl font-bold text-snack-text">Funnel</h1>
       <p className="mt-1 text-sm text-snack-muted">
-        Anonieme dagtellingen: geen cookies, geen IP-adressen, geen gebruikers-id&apos;s. Adblockers
-        missen client-events; aanmeldingen, logins en reviews worden server-side geteld en zijn exact.
+        Anonieme dagtellingen: geen cookies, geen IP-adressen, geen gebruikers-id&apos;s. Adblockers missen
+        client-events; aanmeldingen, logins en reviews worden server-side geteld en zijn exact.
       </p>
 
       <label className="mt-4 inline-flex items-center gap-2 text-sm text-snack-text">
@@ -85,13 +93,19 @@ export default function AnalyticsPage() {
         </select>
       </label>
 
-      {error && <p role="alert" className="mt-4 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p role="alert" className="mt-4 text-sm text-red-600">
+          {error}
+        </p>
+      )}
       {!data && !error && <p className="mt-6 text-sm text-snack-muted">Laden…</p>}
 
       {data && (
         <>
           <section className="mt-6" aria-labelledby="funnel-heading">
-            <h2 id="funnel-heading" className="font-heading text-lg font-semibold text-snack-text">Stappen</h2>
+            <h2 id="funnel-heading" className="font-heading text-lg font-semibold text-snack-text">
+              Stappen
+            </h2>
             <table className="mt-2 w-full text-left text-sm">
               <thead className="text-snack-muted">
                 <tr>
@@ -141,7 +155,9 @@ export default function AnalyticsPage() {
           </section>
 
           <section className="mt-8" aria-labelledby="daily-heading">
-            <h2 id="daily-heading" className="font-heading text-lg font-semibold text-snack-text">Per dag</h2>
+            <h2 id="daily-heading" className="font-heading text-lg font-semibold text-snack-text">
+              Per dag
+            </h2>
             <div className="mt-2 overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="text-snack-muted">

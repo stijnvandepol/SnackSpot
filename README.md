@@ -20,6 +20,7 @@
 - [Photo Upload Flow](#photo-upload-flow)
 - [Database](#database)
 - [Testing](#testing)
+- [Analytics & growth](#analytics--growth)
 - [Security](#security)
 - [Contributing](#contributing)
 
@@ -33,6 +34,8 @@
 - Attach up to 5 photos per review (auto-converted to WebP with multiple size variants)
 - Like and comment on reviews; mention other users with `@username`
 - Discover places via text search or geolocation (nearby radius search)
+- Browse per city (`/eettentjes/[stad]`) and per dish, per city and nationwide (`/gerechten/[gerecht]`), ranked on the dish's own rating
+- Save places for later (private "Bewaard" list on the profile) and report stale place data (closed, wrong address, duplicate)
 - Earn badges for milestones: post streaks, unique locations, engagement, and more
 - Receive in-app and email notifications for likes, comments, mentions, and badge awards
 - Dark mode support — toggle in profile settings
@@ -43,6 +46,7 @@
 - Soft-delete reviews, hide content, ban/unban users, reset passwords
 - Handle community reports with open/resolved/dismissed statuses
 - Dashboard with stats and activity overview
+- Anonymous funnel and Core Web Vitals dashboard at `/admin/analytics` in the web app (ADMIN role)
 
 ---
 
@@ -440,6 +444,30 @@ pnpm test:watch
 - Domain logic — badge progress (`badge-service.test.ts`), rating normalization (`ratings.test.ts`), `@mention` parsing (`mentions.test.ts`), review schema validation (`review-schema.test.ts`), review tags
 - API & security helpers — `api-helpers`, `auth`, `rate-limit`, `turnstile`, `magic-bytes`, `html` sanitization, `upload`, `photo-url`, `time`
 - Components — `review-card`, `review-interactions`, `bottom-nav`
+
+End-to-end tests (Playwright) live in `apps/web/e2e` and run against a live app with a database
+(`pnpm --filter web test:e2e`). They are **not** part of CI; `e2e/growth-flow.spec.ts` covers the
+register → return → save → report path. Several older specs (`home`, `navigation`, `search`,
+the `<nav>` landmark check on auth pages) still target labels that have since changed and fail
+on `main` as well — see GROWTH_PLAN.md §4.
+
+---
+
+## Analytics & growth
+
+SnackSpot counts funnel steps per day, anonymously: no cookie, no IP address, no user id is
+stored with an event (`lib/analytics-events.ts` holds the allowlist). Sign-ups, logins, reviews,
+saves and reports are counted server-side; discovery steps and Core Web Vitals (LCP/INP/CLS,
+bucketed good / needs-improvement / poor) come from the browser via `POST /api/v1/events`.
+Counts live in Redis (`analytics:day:YYYY-MM-DD`, ~13 months) and are shown at
+`/admin/analytics`. Because nothing identifies a visitor, no consent banner is needed; the
+privacy page describes it.
+
+The audit behind these changes, the growth playbook for the first 1,000 users, the experiments,
+KPIs and the 30/60/90-day roadmap are in [GROWTH_PLAN.md](GROWTH_PLAN.md).
+
+Marketing email is **opt-in** (`notification_preferences.marketing_emails`, default off):
+admin broadcasts only reach users who switched on "Nieuws van SnackSpot" in their settings.
 
 ---
 

@@ -91,20 +91,22 @@ interface DishCityRow {
 
 /** Pure gate + slug step, split out so it is testable without a database. */
 export function toQualifyingDishes(rows: DishAggregateRow[]): DishSummary[] {
-  return rows
-    .filter((row) => row.place_count >= DISH_PAGE_MIN_PLACES && row.review_count >= DISH_PAGE_MIN_REVIEWS)
-    .map((row) => ({
-      slug: citySlug(row.dish),
-      name: row.dish,
-      key: row.dish_key,
-      placeCount: row.place_count,
-      cityCount: row.city_count,
-      reviewCount: row.review_count,
-      avgRating: row.avg_rating,
-    }))
-    .filter((dish) => dish.slug.length > 0)
-    // Two spellings that slug the same would make one page unreachable; the most-reviewed wins.
-    .filter((dish, index, all) => all.findIndex((d) => d.slug === dish.slug) === index)
+  return (
+    rows
+      .filter((row) => row.place_count >= DISH_PAGE_MIN_PLACES && row.review_count >= DISH_PAGE_MIN_REVIEWS)
+      .map((row) => ({
+        slug: citySlug(row.dish),
+        name: row.dish,
+        key: row.dish_key,
+        placeCount: row.place_count,
+        cityCount: row.city_count,
+        reviewCount: row.review_count,
+        avgRating: row.avg_rating,
+      }))
+      .filter((dish) => dish.slug.length > 0)
+      // Two spellings that slug the same would make one page unreachable; the most-reviewed wins.
+      .filter((dish, index, all) => all.findIndex((d) => d.slug === dish.slug) === index)
+  )
 }
 
 /** Dishes that clear the gate, most-reviewed first. Cached: it also drives internal links. */

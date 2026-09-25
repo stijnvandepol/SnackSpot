@@ -8,15 +8,7 @@ import { authHref } from '@/lib/next-path'
  * now offers registration first (most visitors here do not have an account yet) and brings
  * them back to `returnTo` once they do.
  */
-export function AuthGate({
-  title,
-  body,
-  returnTo,
-}: {
-  title: string
-  body: string
-  returnTo: string
-}) {
+export function AuthGate({ title, body, returnTo }: { title: string; body: string; returnTo: string }) {
   return (
     <div className="mx-auto max-w-md px-4 py-16 text-center">
       <h1 className="font-heading text-xl font-bold text-snack-text">{title}</h1>

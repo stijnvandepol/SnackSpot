@@ -38,7 +38,5 @@ export function safeNextPath(raw: string | null | undefined): string {
 /** `/auth/login?next=…` for a given destination; omits the parameter for the default. */
 export function authHref(page: 'login' | 'register', next: string | null | undefined): string {
   const target = safeNextPath(next)
-  return target === DEFAULT_NEXT_PATH
-    ? `/auth/${page}`
-    : `/auth/${page}?next=${encodeURIComponent(target)}`
+  return target === DEFAULT_NEXT_PATH ? `/auth/${page}` : `/auth/${page}?next=${encodeURIComponent(target)}`
 }

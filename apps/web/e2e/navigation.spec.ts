@@ -15,7 +15,7 @@ test.describe('Desktop navigation (1280 px)', () => {
   test('top nav contains Home, Ontdek, Dichtbij, Eettentjes and Post links', async ({ page }) => {
     await page.goto('/')
     const header = page.locator('header')
-    await expect(header.getByRole('link', { name: 'Home' })).toBeVisible()
+    await expect(header.getByRole('link', { name: 'Home', exact: true })).toBeVisible()
     await expect(header.getByRole('link', { name: 'Ontdek' })).toBeVisible()
     await expect(header.getByRole('link', { name: 'Eettentjes' })).toBeVisible()
     await expect(header.getByRole('link', { name: 'Dichtbij' })).toBeVisible()
@@ -32,7 +32,7 @@ test.describe('Desktop navigation (1280 px)', () => {
   test('Home link has aria-current="page" when on /', async ({ page }) => {
     await page.goto('/')
     const header = page.locator('header')
-    await expect(header.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page')
+    await expect(header.getByRole('link', { name: 'Home', exact: true })).toHaveAttribute('aria-current', 'page')
   })
 
   test('Ontdek link has aria-current="page" on /search', async ({ page }) => {
@@ -47,11 +47,11 @@ test.describe('Desktop navigation (1280 px)', () => {
     await expect(header.getByRole('link', { name: 'Dichtbij' })).toHaveAttribute('aria-current', 'page')
   })
 
-  test('shows Log in and Sign up links when not authenticated', async ({ page }) => {
+  test('shows Inloggen and Account maken links when not authenticated', async ({ page }) => {
     await page.goto('/')
     const header = page.locator('header')
-    await expect(header.getByRole('link', { name: 'Log in' })).toBeVisible()
-    await expect(header.getByRole('link', { name: 'Sign up' })).toBeVisible()
+    await expect(header.getByRole('link', { name: 'Inloggen' })).toBeVisible()
+    await expect(header.getByRole('link', { name: 'Account maken' })).toBeVisible()
   })
 })
 

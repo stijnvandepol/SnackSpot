@@ -35,7 +35,11 @@ export function ReportPlace({ placeId, placeName }: { placeId: string; placeName
       const res = await fetch('/api/v1/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-        body: JSON.stringify({ targetType: 'PLACE', placeId, reason: text.length >= 5 ? text : `${text} (${placeName})` }),
+        body: JSON.stringify({
+          targetType: 'PLACE',
+          placeId,
+          reason: text.length >= 5 ? text : `${text} (${placeName})`,
+        }),
       })
       setState(res.ok ? 'sent' : 'error')
     } catch {
@@ -95,7 +99,9 @@ export function ReportPlace({ placeId, placeName }: { placeId: string; placeName
             {state === 'sending' ? 'Versturen…' : 'Doorgeven'}
           </button>
           {state === 'error' && (
-            <p role="alert" className="text-xs text-red-600">Versturen lukte niet. Probeer het opnieuw.</p>
+            <p role="alert" className="text-xs text-red-600">
+              Versturen lukte niet. Probeer het opnieuw.
+            </p>
           )}
         </form>
       )}

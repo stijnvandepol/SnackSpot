@@ -26,7 +26,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <main id="main-content" className="flex-1">
+      {/* tabIndex -1 makes the skip link actually move focus here (WCAG 2.4.1); without it
+          the browser scrolls but keyboard focus stays on the link. */}
+      <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
         {children}
       </main>
 

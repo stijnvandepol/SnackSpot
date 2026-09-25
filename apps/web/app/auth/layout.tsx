@@ -17,7 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       >
         Naar de inhoud
       </a>
-      <main id="auth-main">
+      <main id="auth-main" tabIndex={-1} className="focus:outline-none">
         {children}
       </main>
     </>
