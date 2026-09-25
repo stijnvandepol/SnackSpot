@@ -69,7 +69,15 @@ interface RawReviewListItem {
 export function serializeReview(item: RawReviewListItem) {
   return {
     ...item,
+    // Every Decimal column is converted, not only `rating`: the spread above carries the
+    // raw Prisma Decimals along, and those cannot cross into a Client Component (the feed
+    // and place pages pass this straight to one on a cache miss).
     rating: Number(item.rating),
+    ratingTaste: Number(item.ratingTaste),
+    ratingValue: Number(item.ratingValue),
+    ratingPortion: Number(item.ratingPortion),
+    ratingService: item.ratingService === null ? null : Number(item.ratingService),
+    ratingOverall: Number(item.ratingOverall),
     likeCount: item._count.reviewLikes,
     commentCount: item._count.comments ?? 0,
     likedByMe: item.reviewLikes.length > 0,

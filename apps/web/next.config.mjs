@@ -3,6 +3,9 @@ const nextConfig = {
   output: 'standalone',
   compress: true,
   reactStrictMode: true,
+  // The dev-tools badge sits bottom-left, on top of the mobile bottom nav: it covered the Home
+  // and Ontdek links in development and intercepted e2e clicks there. Error overlays still show.
+  devIndicators: false,
 
   images: {
     formats: ['image/avif', 'image/webp'],
