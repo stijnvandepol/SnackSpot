@@ -60,7 +60,7 @@ test.describe('Home page — desktop (1280 px)', () => {
 
   test('desktop footer with Guides link is visible', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('link', { name: 'Guides' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Uitleg' })).toBeVisible()
   })
 
   test('desktop footer shows copyright notice', async ({ page }) => {

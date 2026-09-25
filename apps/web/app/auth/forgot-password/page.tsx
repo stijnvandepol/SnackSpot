@@ -96,12 +96,12 @@ export default function ForgotPasswordPage() {
         )}
 
         {!submitted && (
-          <p className="text-center mt-6 text-sm text-snack-muted">
+          <nav aria-label="Account" className="text-center mt-6 text-sm text-snack-muted">
             Weer te binnen geschoten?{' '}
             <Link href="/auth/login" className="text-snack-primary font-medium hover:underline">
               Terug naar inloggen
             </Link>
-          </p>
+          </nav>
         )}
       </div>
     </div>

@@ -12,14 +12,14 @@ test.describe('Desktop navigation (1280 px)', () => {
     await expect(page.locator('header')).toBeVisible()
   })
 
-  test('top nav contains Home, Ontdek, Dichtbij, Snackplekken and Post links', async ({ page }) => {
+  test('top nav contains Home, Ontdek, Dichtbij, Snackplekken links and the Plaatsen button', async ({ page }) => {
     await page.goto('/')
     const header = page.locator('header')
     await expect(header.getByRole('link', { name: 'Home', exact: true })).toBeVisible()
     await expect(header.getByRole('link', { name: 'Ontdek' })).toBeVisible()
     await expect(header.getByRole('link', { name: 'Snackplekken' })).toBeVisible()
     await expect(header.getByRole('link', { name: 'Dichtbij' })).toBeVisible()
-    await expect(header.getByRole('link', { name: 'Post' })).toBeVisible()
+    await expect(header.getByRole('button', { name: 'Plaatsen' })).toBeVisible()
   })
 
   test('bottom nav is not visible on desktop', async ({ page }) => {

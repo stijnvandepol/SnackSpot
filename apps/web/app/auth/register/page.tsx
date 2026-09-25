@@ -135,10 +135,10 @@ function RegisterContent() {
           </p>
         </form>
 
-        <p className="text-center mt-6 text-sm text-snack-muted">
+        <nav aria-label="Account" className="text-center mt-6 text-sm text-snack-muted">
           Heb je al een account?{' '}
           <Link href={authHref('login', next)} className="text-snack-primary font-medium hover:underline">Inloggen</Link>
-        </p>
+        </nav>
       </div>
     </div>
   )

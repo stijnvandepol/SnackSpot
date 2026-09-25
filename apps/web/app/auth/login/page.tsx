@@ -146,7 +146,7 @@ function LoginContent() {
           </button>
         </form>
 
-        <div className="text-center mt-6 space-y-2 text-sm">
+        <nav aria-label="Account" className="text-center mt-6 space-y-2 text-sm">
           <p className="text-snack-muted">
             Nog geen account?{' '}
             <Link href={authHref('register', next)} className="text-snack-primary font-medium hover:underline">Account maken</Link>
@@ -154,7 +154,7 @@ function LoginContent() {
           <Link href="/auth/forgot-password" className="text-snack-muted hover:text-snack-text">
             Wachtwoord vergeten?
           </Link>
-        </div>
+        </nav>
       </div>
     </div>
   )

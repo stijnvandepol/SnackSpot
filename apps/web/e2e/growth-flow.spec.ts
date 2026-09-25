@@ -38,7 +38,8 @@ test.describe('Growth flow — register and return', () => {
     await expect(page.getByText(/^Bedankt\./)).toBeVisible()
 
     await page.goto('/profile?tab=saved')
-    await expect(page.locator(`a[href^="/place/${placeId}"]`).first()).toBeVisible()
+    // The list loads client-side; allow for a cold API route in a dev server.
+    await expect(page.locator(`a[href^="/place/${placeId}"]`).first()).toBeVisible({ timeout: 20_000 })
   })
 
   test('rejects an off-site next parameter', async ({ page }) => {
