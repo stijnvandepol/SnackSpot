@@ -8,10 +8,12 @@ vi.mock('@/lib/db', () => ({
   },
 }))
 vi.mock('@/lib/city-index', () => ({ getQualifyingCities: vi.fn(), getQualifyingCityDishes: vi.fn() }))
+vi.mock('@/lib/dish-index', () => ({ getQualifyingDishes: vi.fn() }))
 vi.mock('@/lib/logger', () => ({ logger: { error: vi.fn() } }))
 
 import { prisma } from '@/lib/db'
 import { getQualifyingCities, getQualifyingCityDishes } from '@/lib/city-index'
+import { getQualifyingDishes } from '@/lib/dish-index'
 import sitemap from './sitemap'
 
 const getCities = vi.mocked(getQualifyingCities)
@@ -24,6 +26,7 @@ beforeEach(() => {
   vi.mocked(prisma.user.findMany).mockResolvedValue([] as never)
   getCities.mockResolvedValue([])
   getCityDishes.mockResolvedValue([])
+  vi.mocked(getQualifyingDishes).mockResolvedValue([])
 })
 
 async function urls(): Promise<string[]> {
@@ -144,5 +147,16 @@ describe('sitemap city entries', () => {
     // getSiteUrl() strips the trailing slash, so the homepage entry is the bare origin.
     expect(result).toContain('https://snackspot.online')
     expect(result.filter((url) => url.includes('/eettentjes/'))).toEqual([])
+  })
+})
+
+describe('sitemap — national dish pages', () => {
+  it('lists the hub and every dish that clears the gate', async () => {
+    vi.mocked(getQualifyingDishes).mockResolvedValue([
+      { slug: 'frikandel-speciaal', name: 'Frikandel speciaal', key: 'frikandel speciaal', placeCount: 3, cityCount: 2, reviewCount: 5, avgRating: 4.2 },
+    ])
+    const all = await urls()
+    expect(all).toContain('https://snackspot.online/gerechten')
+    expect(all).toContain('https://snackspot.online/gerechten/frikandel-speciaal')
   })
 })

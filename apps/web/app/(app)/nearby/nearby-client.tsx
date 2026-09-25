@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { PlaceCard } from '@/components/place-card'
+import { track } from '@/lib/analytics'
 
 const PlaceMap = dynamic(() => import('@/components/place-map').then((mod) => ({ default: mod.PlaceMap })), {
   ssr: false,
@@ -84,6 +85,7 @@ export function NearbyClient() {
 
   const search = useCallback(
     async (lat: number, lng: number, r: number) => {
+      track('nearby_used')
       setLoading(true)
       setSearchError(null)
       try {

@@ -9,6 +9,7 @@ import { NotificationBell } from './notification-bell'
 import { SnackSpotLogo } from './snack-spot-logo'
 import { CreateOptions } from '@/components/create-options'
 import { TOP_NAV_LINKS } from '@/lib/nav-links'
+import { authHref } from '@/lib/next-path'
 
 /** Desktop "Post" button → popover with the same Review/Bite chooser as mobile. */
 function CreatePopover() {
@@ -111,13 +112,13 @@ export function TopNav() {
                 )}
               </Link>
               <button onClick={async () => { await logout(); router.push('/auth/login') }} className="btn-ghost text-sm">
-                Log out
+                Uitloggen
               </button>
             </>
           ) : (
             <>
-              <Link href="/auth/login" className="btn-ghost text-sm">Log in</Link>
-              <Link href="/auth/register" className="btn-primary py-2 text-sm">Sign up</Link>
+              <Link href={authHref('login', pathname)} className="btn-ghost text-sm">Inloggen</Link>
+              <Link href={authHref('register', pathname)} className="btn-primary py-2 text-sm">Account maken</Link>
             </>
           )}
         </div>

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { getSiteUrl } from '@/lib/site-url'
 import { PILLAR_GUIDES } from '@/lib/guides'
 import { getQualifyingCities, getQualifyingCityDishes } from '@/lib/city-index'
+import { getQualifyingDishes } from '@/lib/dish-index'
 import { logger } from '@/lib/logger'
 
 // Cached for an hour via ISR so crawlers don't trigger a full places+reviews+users
@@ -23,6 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${appUrl}/product`, lastModified: staticLastMod },
     { url: `${appUrl}/guides`, lastModified: staticLastMod },
     { url: `${appUrl}/eettentjes`, lastModified: staticLastMod },
+    { url: `${appUrl}/gerechten`, lastModified: new Date() },
     { url: `${appUrl}/product/releases`, lastModified: staticLastMod },
     { url: `${appUrl}/search`, lastModified: staticLastMod },
     { url: `${appUrl}/nearby`, lastModified: staticLastMod },
@@ -37,7 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   try {
-    const [places, reviews, users, cities] = await Promise.all([
+    const [places, reviews, users, cities, dishes] = await Promise.all([
       // Only include places that have at least one published review — avoids thin content pages
       prisma.place.findMany({
         where: { reviews: { some: { status: 'PUBLISHED' } } },
@@ -70,6 +72,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       // Same source as the pages themselves, so the sitemap can never advertise a city URL
       // that would 404 — a city below the quality gate has no page at all.
       getQualifyingCities(),
+      // Same gate as /gerechten/[gerecht], so no advertised dish URL can 404.
+      getQualifyingDishes(),
     ])
 
     const placeEntries: MetadataRoute.Sitemap = places.map((place) => ({
@@ -110,9 +114,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       })),
     )
 
+    const nationalDishEntries: MetadataRoute.Sitemap = dishes.map((dish) => ({
+      url: `${appUrl}/gerechten/${dish.slug}`,
+      lastModified: new Date(),
+    }))
+
     return [
       ...staticEntries,
       ...cityEntries,
+      ...nationalDishEntries,
       ...dishEntries,
       ...placeEntries,
       ...reviewEntries,

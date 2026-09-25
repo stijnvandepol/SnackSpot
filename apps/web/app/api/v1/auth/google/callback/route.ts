@@ -7,10 +7,12 @@ import { issueSession } from '@/lib/session'
 import { getGoogleProvider, validateGoogleCallback } from '@/lib/oauth/google'
 import { decideAccountAction, type GoogleClaims } from '@/lib/oauth/account-resolution'
 import { generateUniqueUsername } from '@/lib/username'
-import { OAUTH_STATE_COOKIE, OAUTH_VERIFIER_COOKIE } from '@/lib/oauth/oauth-cookies'
+import { OAUTH_NEXT_COOKIE, OAUTH_STATE_COOKIE, OAUTH_VERIFIER_COOKIE } from '@/lib/oauth/oauth-cookies'
+import { DEFAULT_NEXT_PATH, safeNextPath } from '@/lib/next-path'
+import { recordEvent } from '@/lib/analytics-store'
 
 type SessionUser = { id: string; email: string; username: string; role: 'USER' | 'MODERATOR' | 'ADMIN' }
-type ResolveResult = { ok: true; user: SessionUser } | { ok: false; reason: string }
+type ResolveResult = { ok: true; user: SessionUser; created: boolean } | { ok: false; reason: string }
 
 function isUniqueViolation(e: unknown): boolean {
   return e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002'
@@ -56,7 +58,7 @@ async function resolveSessionUser(claims: GoogleClaims): Promise<ResolveResult> 
       },
       select: { id: true, email: true, username: true, role: true },
     })
-    return { ok: true, user }
+    return { ok: true, user, created: true }
   }
 
   // login or link — both resolve to an existing user id.
@@ -69,7 +71,7 @@ async function resolveSessionUser(claims: GoogleClaims): Promise<ResolveResult> 
     where: { id: action.userId },
     select: { id: true, email: true, username: true, role: true },
   })
-  return { ok: true, user }
+  return { ok: true, user, created: false }
 }
 
 function readCookie(req: NextRequest, name: string): string | null {
@@ -87,7 +89,19 @@ function redirectToLogin(error: string): Response {
   headers.set('Location', `${env.NEXT_PUBLIC_APP_URL}/auth/login?error=${error}`)
   headers.append('Set-Cookie', clearTempCookie(OAUTH_STATE_COOKIE))
   headers.append('Set-Cookie', clearTempCookie(OAUTH_VERIFIER_COOKIE))
+  headers.append('Set-Cookie', clearTempCookie(OAUTH_NEXT_COOKIE))
   return new Response(null, { status: 302, headers })
+}
+
+/** The destination stored by the start route, re-validated: a cookie is still user input. */
+function readNextPath(req: NextRequest): string {
+  const raw = readCookie(req, OAUTH_NEXT_COOKIE)
+  if (!raw) return DEFAULT_NEXT_PATH
+  try {
+    return safeNextPath(decodeURIComponent(raw))
+  } catch {
+    return DEFAULT_NEXT_PATH
+  }
 }
 
 export async function GET(req: NextRequest) {
@@ -123,11 +137,13 @@ export async function GET(req: NextRequest) {
     if (!resolved.ok) return redirectToLogin(resolved.reason)
 
     const { setCookie } = await issueSession(resolved.user)
+    await recordEvent(resolved.created ? 'signup_completed' : 'login_completed', 'google')
     const headers = new Headers()
-    headers.set('Location', `${env.NEXT_PUBLIC_APP_URL}/`)
+    headers.set('Location', `${env.NEXT_PUBLIC_APP_URL}${readNextPath(req)}`)
     headers.append('Set-Cookie', setCookie)
     headers.append('Set-Cookie', clearTempCookie(OAUTH_STATE_COOKIE))
     headers.append('Set-Cookie', clearTempCookie(OAUTH_VERIFIER_COOKIE))
+    headers.append('Set-Cookie', clearTempCookie(OAUTH_NEXT_COOKIE))
     return new Response(null, { status: 302, headers })
   } catch (e) {
     logger.error({ err: e, context: 'google-callback' }, 'Google SSO callback failed')

@@ -16,6 +16,7 @@ import { LeaderboardPanel } from '@/components/leaderboard-panel'
 import { PrivacyDataSettings } from '@/components/privacy-data-settings'
 import { Modal } from '@/components/ui/modal'
 import dynamic from 'next/dynamic'
+import { AuthGate } from '@/components/auth-gate'
 
 const NotificationsList = dynamic(() => import('@/components/notifications-list'), {
   ssr: false,
@@ -405,10 +406,11 @@ function ProfileContent() {
 
   if (!user) {
     return (
-      <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <p className="font-semibold text-snack-text">Log in to view your profile.</p>
-        <a href="/auth/login" className="btn-primary mt-4 inline-block">Log in</a>
-      </div>
+      <AuthGate
+        title="Je eigen SnackSpot-profiel"
+        body="Met een account zie je hier je reviews, bewaarde zaken en badges."
+        returnTo={'/profile'}
+      />
     )
   }
 

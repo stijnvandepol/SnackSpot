@@ -6,6 +6,7 @@ import { ReviewLikeButton } from '@/components/review-like-button'
 import { AvatarLightbox } from '@/components/avatar-lightbox'
 import { MentionText } from '@/components/mention-text'
 import { Modal } from '@/components/ui/modal'
+import { authHref } from '@/lib/next-path'
 
 interface CommentItem {
   id: string
@@ -263,7 +264,9 @@ export function ReviewInteractions({
           </div>
         ) : (
           <div className="rounded-xl border border-snack-border bg-snack-surface px-4 py-3 text-sm text-snack-muted">
-            <Link href="/auth/login" className="text-snack-primary hover:underline">Log in</Link> to join the conversation.
+            <Link href={authHref('login', `/review/${reviewId}`)} className="text-snack-primary hover:underline">Log in</Link> om mee te praten.
+            Nog geen account?{' '}
+            <Link href={authHref('register', `/review/${reviewId}`)} className="text-snack-primary hover:underline">Maak er gratis een</Link>.
           </div>
         )}
 

@@ -2,9 +2,11 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getCityDishDetail, type CityDishDetail } from '@/lib/city-index'
+import { getDishPageHref } from '@/lib/dish-index'
 import { getSiteUrl } from '@/lib/site-url'
 import { safeJsonLd } from '@/lib/html'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
+import { TrackView } from '@/components/track-view'
 
 // Cached for an hour on demand, matching /eettentjes/[stad] and app/sitemap.ts so the
 // page, its parent and the sitemap all age at the same rate. No generateStaticParams for
@@ -67,6 +69,7 @@ export default async function CityDishPage({
 
   const appUrl = getSiteUrl()
   const dishLabel = detail.name.toLowerCase()
+  const nationalHref = await getDishPageHref(detail.key)
 
   const itemListJsonLd = {
     '@context': 'https://schema.org',
@@ -99,6 +102,7 @@ export default async function CityDishPage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 md:py-12">
+      <TrackView event="dish_page_view" source="city" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListJsonLd) }}
@@ -126,6 +130,13 @@ export default async function CityDishPage({
           Gemiddeld cijfer voor {dishLabel} in {detail.city.name}:{' '}
           <span className="font-semibold text-snack-text">★ {detail.avgRating.toFixed(1)}</span>
         </p>
+        {nationalHref && (
+          <p className="mt-2 text-sm">
+            <Link href={nationalHref} className="font-semibold text-snack-primary hover:underline">
+              Bekijk de beste {dishLabel} in heel Nederland
+            </Link>
+          </p>
+        )}
       </header>
 
       <section className="mt-10" aria-labelledby="ranglijst">

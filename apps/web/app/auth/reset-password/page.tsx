@@ -26,7 +26,7 @@ function ResetPasswordForm() {
     setError(null)
 
     if (password !== confirm) {
-      setError('Passwords do not match.')
+      setError('De wachtwoorden zijn niet hetzelfde.')
       return
     }
 
@@ -42,18 +42,18 @@ function ResetPasswordForm() {
       const json = await res.json()
 
       if (res.status === 429) {
-        setError('Too many requests – please try again later.')
+        setError('Te veel verzoeken. Probeer het over een paar minuten opnieuw.')
         return
       }
 
       if (!res.ok) {
-        setError(json?.error ?? 'This reset link is invalid or has expired.')
+        setError('Deze link is ongeldig of verlopen. Vraag een nieuwe aan.')
         return
       }
 
       setDone(true)
     } catch {
-      setError('Something went wrong. Please try again.')
+      setError('Er ging iets mis. Probeer het opnieuw.')
     } finally {
       setLoading(false)
     }
@@ -68,8 +68,8 @@ function ResetPasswordForm() {
           <div className="mb-3">
             <SnackSpotLogo className="text-2xl" />
           </div>
-          <h2 className="text-2xl font-heading font-bold text-snack-text">Choose a new password</h2>
-          <p className="text-sm text-snack-muted mt-1">Min. 8 characters, 1 uppercase, 1 number</p>
+          <h1 className="text-2xl font-heading font-bold text-snack-text">Kies een nieuw wachtwoord</h1>
+          <p className="text-sm text-snack-muted mt-1">Minstens 8 tekens, met een hoofdletter en een cijfer</p>
         </div>
 
         {done ? (
@@ -80,25 +80,25 @@ function ResetPasswordForm() {
               </svg>
             </div>
             <div>
-              <p className="font-medium text-snack-text">Password changed</p>
+              <p className="font-medium text-snack-text">Wachtwoord gewijzigd</p>
               <p className="text-sm text-snack-muted mt-1">
-                Your password has been updated and all sessions have been signed out.
+                Je wachtwoord is aangepast en je bent overal uitgelogd.
               </p>
             </div>
             <Link href="/auth/login" className="btn-primary inline-block w-full text-center">
-              Log in
+              Inloggen
             </Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="card p-6 space-y-4">
             {error && (
-              <div className="bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl border border-red-100 dark:border-red-900">
+              <div role="alert" className="bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl border border-red-100 dark:border-red-900">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="label" htmlFor="password">New password</label>
+              <label className="label" htmlFor="password">Nieuw wachtwoord</label>
               <input
                 id="password"
                 type="password"
@@ -113,7 +113,7 @@ function ResetPasswordForm() {
             </div>
 
             <div>
-              <label className="label" htmlFor="confirm">Confirm new password</label>
+              <label className="label" htmlFor="confirm">Herhaal je nieuwe wachtwoord</label>
               <input
                 id="confirm"
                 type="password"
@@ -128,7 +128,7 @@ function ResetPasswordForm() {
             </div>
 
             <button type="submit" className="btn-primary w-full" disabled={loading}>
-              {loading ? 'Saving…' : 'Set new password'}
+              {loading ? 'Opslaan…' : 'Wachtwoord opslaan'}
             </button>
           </form>
         )}

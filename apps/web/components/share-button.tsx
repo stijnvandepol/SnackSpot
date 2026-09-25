@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Modal } from '@/components/ui/modal'
 import { whatsappShareHref } from '@/lib/share'
+import { track } from '@/lib/analytics'
 
 interface ShareButtonProps {
   /** Path or absolute URL of the thing being shared. A path is resolved against the current origin. */
@@ -63,6 +64,7 @@ export function ShareButton({ url, title, text, variant = 'icon', label = 'Delen
 
   const share = useCallback(async () => {
     const href = absoluteUrl()
+    track('share_clicked')
     if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       try {
         await navigator.share({ title, text, url: href })

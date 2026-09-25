@@ -4,6 +4,7 @@ import { PlaceCard } from '@/components/place-card'
 import { ReviewCard } from '@/components/review-card'
 import { useAuth } from '@/components/auth-provider'
 import { REVIEW_TAG_OPTIONS, type ReviewTag, getReviewTagLabel } from '@/lib/review-tags'
+import { track } from '@/lib/analytics'
 
 interface Place {
   id: string
@@ -162,6 +163,7 @@ export function SearchClient() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (q.trim()) track('search_performed', { source: 'search_page' })
     void search(q)
   }
 

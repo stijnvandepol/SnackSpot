@@ -7,6 +7,8 @@ import type { TurnstileInstance } from '@marsidev/react-turnstile'
 import { useAuth } from '@/components/auth-provider'
 import { SnackSpotLogo } from '@/components/snack-spot-logo'
 import { GoogleSignInButton } from '@/components/google-sign-in-button'
+import { authErrorNl, oauthErrorNl } from '@/lib/auth-messages'
+import { authHref, safeNextPath } from '@/lib/next-path'
 
 const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ''
 
@@ -16,6 +18,7 @@ function LoginContent() {
   const searchParams = useSearchParams()
   const sessionExpired = searchParams.get('expired') === '1'
   const oauthError = searchParams.get('error')
+  const next = safeNextPath(searchParams.get('next'))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -56,52 +59,52 @@ function LoginContent() {
         setCaptchaRequired(true)
         setCaptchaToken(null)
         turnstileRef.current?.reset()
-        setError('Please complete the security check below to continue')
+        setError('Rond eerst de beveiligingscheck hieronder af.')
         return
       }
-      setError(result.error ?? 'Login failed')
+      setError(authErrorNl(result.error, 'Inloggen is niet gelukt. Probeer het opnieuw.'))
       return
     }
 
-    router.push('/')
+    router.push(next)
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-snack-surface to-snack-background flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-b from-snack-surface to-snack-background flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="mb-3">
+          <Link href="/" aria-label="Naar de SnackSpot-homepage" className="mb-3 inline-block">
             <SnackSpotLogo className="text-2xl" />
-          </div>
-          <h2 className="text-2xl font-heading font-bold text-snack-text">Welcome back</h2>
-          <p className="text-sm text-snack-muted mt-1">Log in to your SnackSpot account</p>
+          </Link>
+          <h1 className="text-2xl font-heading font-bold text-snack-text">Welkom terug</h1>
+          <p className="text-sm text-snack-muted mt-1">Log in op je SnackSpot-account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">
-          <GoogleSignInButton label="Log in with Google" />
+          <GoogleSignInButton label="Inloggen met Google" next={next} />
           {oauthError && (
-            <div className="bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl border border-red-100 dark:border-red-900">
-              Google sign-in failed. Please try again or use email and password.
+            <div role="alert" className="bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl border border-red-100 dark:border-red-900">
+              {oauthErrorNl(oauthError)}
             </div>
           )}
           {sessionExpired && !error && (
             <div className="bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-sm px-4 py-3 rounded-xl border border-amber-100 dark:border-amber-900">
-              Your session has expired. Please log in again.
+              Je sessie is verlopen. Log opnieuw in.
             </div>
           )}
           {error && (
-            <div className="bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl border border-red-100 dark:border-red-900">
+            <div role="alert" className="bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl border border-red-100 dark:border-red-900">
               {error}
             </div>
           )}
 
           <div>
-            <label className="label" htmlFor="email">Email</label>
+            <label className="label" htmlFor="email">E-mailadres</label>
             <input
               id="email"
               type="email"
               className="input"
-              placeholder="you@example.com"
+              placeholder="jij@voorbeeld.nl"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onBlur={(e) => { if (e.target.value) void checkCaptchaStatus(e.target.value) }}
@@ -111,7 +114,7 @@ function LoginContent() {
           </div>
 
           <div>
-            <label className="label" htmlFor="password">Password</label>
+            <label className="label" htmlFor="password">Wachtwoord</label>
             <input
               id="password"
               type="password"
@@ -139,17 +142,17 @@ function LoginContent() {
             className="btn-primary w-full"
             disabled={loading || (captchaRequired && !captchaToken)}
           >
-            {loading ? 'Logging in…' : 'Log in'}
+            {loading ? 'Bezig met inloggen…' : 'Inloggen'}
           </button>
         </form>
 
         <div className="text-center mt-6 space-y-2 text-sm">
           <p className="text-snack-muted">
-            Don&apos;t have an account?{' '}
-            <Link href="/auth/register" className="text-snack-primary font-medium hover:underline">Sign up</Link>
+            Nog geen account?{' '}
+            <Link href={authHref('register', next)} className="text-snack-primary font-medium hover:underline">Maak er gratis een</Link>
           </p>
           <Link href="/auth/forgot-password" className="text-snack-muted hover:text-snack-text">
-            Forgot password?
+            Wachtwoord vergeten?
           </Link>
         </div>
       </div>

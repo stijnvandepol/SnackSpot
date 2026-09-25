@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/components/auth-provider'
 import { normalizeUploadMime, shouldUseDirectBrowserUpload, compressImage } from '@/lib/upload'
 import { MEAL_SLOTS, type MealSlot } from '@/lib/meal'
+import { AuthGate } from '@/components/auth-gate'
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
 
@@ -67,10 +68,11 @@ export default function AddBitePage() {
   if (loading) return null
   if (!user) {
     return (
-      <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <p className="font-semibold text-snack-text">Please log in to log a bite.</p>
-        <a href="/auth/login" className="btn-primary mt-4 inline-block">Log in</a>
-      </div>
+      <AuthGate
+        title="Een bite vastleggen"
+        body="Leg in een paar seconden vast wat je at. Daarvoor heb je een gratis account nodig."
+        returnTo={'/add-bite'}
+      />
     )
   }
 

@@ -8,6 +8,8 @@ import { PlacePicker, type PickedPlace } from '@/components/place-picker'
 import { computeOverallRating } from '@/lib/ratings'
 import { REVIEW_TAG_OPTIONS, type ReviewTag } from '@/lib/review-tags'
 import { shouldUseDirectBrowserUpload, normalizeUploadMime, compressImage } from '@/lib/upload'
+import { AuthGate } from '@/components/auth-gate'
+import { track } from '@/lib/analytics'
 
 type Step = 'place' | 'review' | 'photos'
 
@@ -73,6 +75,7 @@ function AddReviewForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const prefillPlaceId = searchParams.get('placeId')
+  const returnPath = prefillPlaceId ? `/add-review?placeId=${encodeURIComponent(prefillPlaceId)}` : '/add-review'
   const isDev = process.env.NODE_ENV !== 'production'
   // The photo comes first: the camera is the habit, the details follow.
   const [step, setStep] = useState<Step>('photos')
@@ -132,14 +135,24 @@ function AddReviewForm() {
     }
   }, [])
 
+  // Counted once per visit by a signed-in user; the gap to "review_created" is the
+  // form's own drop-off.
+  const reviewStartTracked = useRef(false)
+  useEffect(() => {
+    if (!user || reviewStartTracked.current) return
+    reviewStartTracked.current = true
+    track('review_started', { source: prefillPlaceId ? 'place_page' : 'direct' })
+  }, [user, prefillPlaceId])
+
   if (loading) return null
 
   if (!user) {
     return (
-      <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <p className="font-semibold text-snack-text">Please log in to add a review.</p>
-        <a href="/auth/login" className="btn-primary mt-4 inline-block">Log in</a>
-      </div>
+      <AuthGate
+        title="Deel wat je at"
+        body="Met een gratis account plaats je een fotoreview in een paar tikken. Daarna brengen we je meteen terug naar deze pagina."
+        returnTo={returnPath}
+      />
     )
   }
 

@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/modal'
 import { photoVariantUrl } from '@/lib/photo-url'
 import { mealEmoji, mealLabel } from '@/lib/meal'
 import { formatDateMedium } from '@/lib/time'
+import { AuthGate } from '@/components/auth-gate'
 
 interface Bite {
   id: string
@@ -112,10 +113,11 @@ export default function MyBitesPage() {
 
   if (!user) {
     return (
-      <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <p className="font-semibold text-snack-text">Log in to view your bites.</p>
-        <a href="/auth/login" className="btn-primary mt-4 inline-block">Log in</a>
-      </div>
+      <AuthGate
+        title="Je bites bekijken"
+        body="Bites zijn je snelle dagboek van wat je at. Maak een gratis account om ze bij te houden."
+        returnTo={'/bites'}
+      />
     )
   }
 

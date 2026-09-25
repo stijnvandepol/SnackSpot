@@ -7,6 +7,7 @@ import { photoVariantUrl } from '@/lib/photo-url'
 import { computeOverallRating } from '@/lib/ratings'
 import { REVIEW_TAG_OPTIONS, type ReviewTag } from '@/lib/review-tags'
 import { shouldUseDirectBrowserUpload, normalizeUploadMime, compressImage } from '@/lib/upload'
+import { AuthGate } from '@/components/auth-gate'
 
 interface ReviewEditData {
   id: string
@@ -219,10 +220,11 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
 
   if (!user || !accessToken) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="font-semibold text-snack-text">Please log in to edit your review.</p>
-        <Link href="/auth/login" className="btn-primary mt-4 inline-block">Log in</Link>
-      </div>
+      <AuthGate
+        title="Log in om je review te bewerken"
+        body="Alleen de schrijver van een review kan hem aanpassen."
+        returnTo={`/review/${id}/edit`}
+      />
     )
   }
 
