@@ -40,9 +40,9 @@ export function PassportPanel() {
 
   return (
     <div className="card p-4 mb-6">
-      <h2 className="font-heading font-semibold text-snack-text mb-1">Food Passport</h2>
+      <h2 className="font-heading font-semibold text-snack-text mb-1">Snackpaspoort</h2>
       <p className="text-xs text-snack-muted mb-4">
-        Collect stamps by reviewing dishes, spots and cities.
+        Verzamel stempels door gerechten, snackplekken en steden te reviewen.
       </p>
       <div className="space-y-5">
         {sets.map((set) => (

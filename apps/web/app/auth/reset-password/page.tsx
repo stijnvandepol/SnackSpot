@@ -69,7 +69,7 @@ function ResetPasswordForm() {
             <SnackSpotLogo className="text-2xl" />
           </div>
           <h1 className="text-2xl font-heading font-bold text-snack-text">Kies een nieuw wachtwoord</h1>
-          <p className="text-sm text-snack-muted mt-1">Minstens 8 tekens, met een hoofdletter en een cijfer</p>
+          <p className="text-sm text-snack-muted mt-1">Minstens 8 tekens, met een hoofdletter en een cijfer.</p>
         </div>
 
         {done ? (
@@ -113,7 +113,7 @@ function ResetPasswordForm() {
             </div>
 
             <div>
-              <label className="label" htmlFor="confirm">Herhaal je nieuwe wachtwoord</label>
+              <label className="label" htmlFor="confirm">Herhaal nieuw wachtwoord</label>
               <input
                 id="confirm"
                 type="password"

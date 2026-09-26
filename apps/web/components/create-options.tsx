@@ -18,8 +18,8 @@ export function CreateOptions({ onPick }: { onPick?: () => void }) {
           <span className="rounded-full bg-snack-primary px-2.5 py-0.5 text-xs font-semibold text-white">+75 XP</span>
         </span>
         <span className="mt-1 block text-sm text-snack-muted">
-          A dish at a place, with photos and ratings. Public and permanent, it puts the spot on
-          the map and helps others choose.
+          Een gerecht bij een snackplek, met foto&apos;s en cijfers. Openbaar en blijvend: zo zet
+          je de plek op de kaart en help je anderen kiezen.
         </span>
       </Link>
 
@@ -32,11 +32,11 @@ export function CreateOptions({ onPick }: { onPick?: () => void }) {
           <span className="flex items-center gap-2 font-heading text-lg font-bold text-snack-text">
             <span aria-hidden="true">📸</span> Bite
           </span>
-          <span className="rounded-full bg-snack-surface px-2.5 py-0.5 text-xs font-semibold text-snack-muted">24h · +10 XP</span>
+          <span className="rounded-full bg-snack-surface px-2.5 py-0.5 text-xs font-semibold text-snack-muted">24 uur · +10 XP</span>
         </span>
         <span className="mt-1 block text-sm text-snack-muted">
-          A quick photo of what you&apos;re eating right now. Friends see it for 24 hours, then
-          it&apos;s gone from their feed. Keeps your streak alive.
+          Snel een foto van wat je nu eet. Vrienden zien hem 24 uur in hun feed, daarna
+          verdwijnt hij. Zo houd je je reeks vast.
         </span>
       </Link>
     </>

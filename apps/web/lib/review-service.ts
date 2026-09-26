@@ -149,13 +149,13 @@ async function resolvePlaceId(
     // Free-text place creation bypasses venue verification, so it is restricted
     // to moderators/admins. Regular users must pick a verified venue.
     if (role !== 'ADMIN' && role !== 'MODERATOR') {
-      return fail(422, 'Pick a verified place from the list instead of free text')
+      return fail(422, 'Kies een snackplek uit de lijst.')
     }
     const resolved = await resolveManualPlace(input.place)
     return { ok: true, value: resolved.id }
   }
 
-  return fail(422, 'A place is required: pick one or select a verified venue')
+  return fail(422, 'Kies een snackplek voor je review.')
 }
 
 // ─── Create ────────────────────────────────────────────────────────────────────
@@ -167,9 +167,9 @@ export async function createReview(params: {
 }): Promise<ServiceResult<ReturnType<typeof serializeRatings>>> {
   const { userId, role, input } = params
 
-  if (input.photoIds.length === 0) return fail(422, 'At least one photo is required')
+  if (input.photoIds.length === 0) return fail(422, 'Voeg minstens één foto toe.')
   if (input.photoIds.length > env.MAX_PHOTOS_PER_REVIEW) {
-    return fail(422, `Too many photos - max ${env.MAX_PHOTOS_PER_REVIEW}`)
+    return fail(422, `Te veel foto's. Je kunt er maximaal ${env.MAX_PHOTOS_PER_REVIEW} toevoegen.`)
   }
 
   const normalizedRatings = input.ratings
@@ -186,7 +186,7 @@ export async function createReview(params: {
   if (photoError) return fail(photoError.status, photoError.error)
 
   const rl = await rateLimitUser(userId, 'review_create', 60, 3600)
-  if (!rl.allowed) return fail(429, 'Review rate limit exceeded')
+  if (!rl.allowed) return fail(429, 'Te veel reviews achter elkaar. Probeer het later opnieuw.')
 
   // Resolved only after the photo check and the rate limit: this may insert a place row and
   // call the geocoding provider, and neither should happen for a request that is about to be
@@ -197,7 +197,7 @@ export async function createReview(params: {
 
   // Per-place limit: max 5 reviews per user per place per day.
   const placeRl = await rateLimit(`rl:place_review:${userId}:${placeId}`, 5, 86400)
-  if (!placeRl.allowed) return fail(429, 'Too many reviews for this place')
+  if (!placeRl.allowed) return fail(429, 'Je hebt deze snackplek vandaag al vaak beoordeeld. Probeer het morgen opnieuw.')
 
   const review = await prisma.review.create({
     data: buildReviewCreateData({
@@ -283,15 +283,15 @@ export async function updateReview(params: {
     where: { id: reviewId },
     select: { userId: true, status: true },
   })
-  if (!existing || existing.status === 'DELETED') return fail(404, 'Review not found')
-  if (existing.userId !== userId) return fail(403, 'Forbidden')
+  if (!existing || existing.status === 'DELETED') return fail(404, 'Review niet gevonden.')
+  if (existing.userId !== userId) return fail(403, 'Je hebt hier geen toegang toe.')
 
   if (nextPhotoIds !== null && dedupedPhotoIds !== null) {
     if (nextPhotoIds.length > env.MAX_PHOTOS_PER_REVIEW) {
-      return fail(422, `Too many photos - max ${env.MAX_PHOTOS_PER_REVIEW}`)
+      return fail(422, `Te veel foto's. Je kunt er maximaal ${env.MAX_PHOTOS_PER_REVIEW} toevoegen.`)
     }
     if (dedupedPhotoIds.length !== nextPhotoIds.length) {
-      return fail(422, 'Duplicate photo IDs are not allowed')
+      return fail(422, 'Je hebt dezelfde foto meer dan één keer toegevoegd.')
     }
     if (dedupedPhotoIds.length > 0) {
       const photoError = await validatePhotos(dedupedPhotoIds, userId, reviewId)

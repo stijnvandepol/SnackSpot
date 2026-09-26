@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
               </svg>
             </div>
             <div>
-              <p className="font-medium text-snack-text">Check je mail</p>
+              <p className="font-medium text-snack-text">Kijk in je mail</p>
               <p className="text-sm text-snack-muted mt-1">
                 Als er een account bij dit e-mailadres hoort, is de link onderweg. Hij is 15 minuten geldig.
                 <br />
@@ -90,18 +90,18 @@ export default function ForgotPasswordPage() {
             </div>
 
             <button type="submit" className="btn-primary w-full" disabled={loading}>
-              {loading ? 'Versturen…' : 'Stuur de link'}
+              {loading ? 'Versturen…' : 'Link versturen'}
             </button>
           </form>
         )}
 
         {!submitted && (
-          <p className="text-center mt-6 text-sm text-snack-muted">
+          <nav aria-label="Account" className="text-center mt-6 text-sm text-snack-muted">
             Weer te binnen geschoten?{' '}
             <Link href="/auth/login" className="text-snack-primary font-medium hover:underline">
               Terug naar inloggen
             </Link>
-          </p>
+          </nav>
         )}
       </div>
     </div>

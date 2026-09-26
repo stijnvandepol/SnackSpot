@@ -34,13 +34,13 @@ export async function GET(req: NextRequest) {
 
   try {
     if (query.scope === 'following' && !auth) {
-      return err('Authentication required for the following feed', 401)
+      return err('Log in om te zien wat mensen die je volgt plaatsen.', 401)
     }
 
     if (!auth) {
       const ip = getClientIP(req)
       const rl = await rateLimitIP(ip, 'feed_public', 120, 60)
-      if (!rl.allowed) return err('Too many feed requests - try again later', 429)
+      if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
       const cacheKey = buildCacheKey('feed-public', stableSearchParams(req.nextUrl.searchParams))
       const cached = await getCachedJson<{

@@ -54,7 +54,7 @@ export function PlaceReviewsSection({ placeId, placeName, placeAddress, from, in
     })
       .then((r) => r.json())
       .then((json) => setReviews(json.data?.data ?? []))
-      .catch(() => setReviewsError('Could not load reviews for this place.'))
+      .catch(() => setReviewsError('Kon de reviews van deze snackplek niet laden.'))
       .finally(() => setLoading(false))
   }, [placeId, sort, accessToken, authLoading, initialReviews])
 
@@ -81,7 +81,7 @@ export function PlaceReviewsSection({ placeId, placeName, placeAddress, from, in
               aria-pressed={sort === s}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${sort === s ? 'bg-snack-primary text-white' : 'bg-snack-surface text-snack-muted hover:opacity-90'}`}
             >
-              {s === 'new' ? 'Newest' : 'Top'}
+              {s === 'new' ? 'Nieuwste' : 'Hoogst beoordeeld'}
             </button>
           ))}
         </div>
@@ -93,10 +93,10 @@ export function PlaceReviewsSection({ placeId, placeName, placeAddress, from, in
         </div>
       ) : reviews.length === 0 ? (
         <div className="card py-12 text-center">
-          <p className="font-medium text-snack-text">No reviews yet.</p>
-          <p className="mt-1 text-sm text-snack-muted">Be the first person to post a snack from this place.</p>
+          <p className="font-medium text-snack-text">Nog geen reviews.</p>
+          <p className="mt-1 text-sm text-snack-muted">Wat heb je hier gegeten? Deel je ervaring met een foto en een cijfer.</p>
           <Link href={`/add-review?placeId=${placeId}`} className="btn-primary mt-4 text-sm">
-            Write the first review
+            Schrijf de eerste review
           </Link>
         </div>
       ) : (

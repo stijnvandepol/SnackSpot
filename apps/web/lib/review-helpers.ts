@@ -69,7 +69,15 @@ interface RawReviewListItem {
 export function serializeReview(item: RawReviewListItem) {
   return {
     ...item,
+    // Every Decimal column is converted, not only `rating`: the spread above carries the
+    // raw Prisma Decimals along, and those cannot cross into a Client Component (the feed
+    // and place pages pass this straight to one on a cache miss).
     rating: Number(item.rating),
+    ratingTaste: Number(item.ratingTaste),
+    ratingValue: Number(item.ratingValue),
+    ratingPortion: Number(item.ratingPortion),
+    ratingService: item.ratingService === null ? null : Number(item.ratingService),
+    ratingOverall: Number(item.ratingOverall),
     likeCount: item._count.reviewLikes,
     commentCount: item._count.comments ?? 0,
     likedByMe: item.reviewLikes.length > 0,
@@ -100,7 +108,7 @@ export function checkReviewVisibility(
   if (review.status === ReviewStatus.DELETED || review.status === ReviewStatus.HIDDEN) {
     const isOwner = auth?.sub === review.userId
     const isMod = auth?.role === 'MODERATOR' || auth?.role === 'ADMIN'
-    if (!isOwner && !isMod) return err('Review not found', 404)
+    if (!isOwner && !isMod) return err('Review niet gevonden.', 404)
   }
   return null
 }
@@ -134,12 +142,12 @@ export async function validatePhotos(
   })
 
   if (photos.length !== photoIds.length) {
-    return { status: 422, error: 'One or more photo IDs are invalid' }
+    return { status: 422, error: "Een of meer foto's zijn niet gevonden. Voeg ze opnieuw toe." }
   }
 
   const pending = photos.filter((p) => p.moderationStatus === 'PENDING')
   if (pending.length > 0) {
-    return { status: 409, error: 'One or more photos are not uploaded yet - please wait for upload confirmation' }
+    return { status: 409, error: "Een of meer foto's worden nog geüpload. Wacht even en probeer het opnieuw." }
   }
 
   const attachedElsewhere = photos.filter(
@@ -149,8 +157,8 @@ export async function validatePhotos(
     return {
       status: 409,
       error: currentReviewId
-        ? 'One or more photos are already attached to another review'
-        : 'One or more photos are already attached to a review',
+        ? "Een of meer foto's horen al bij een andere review."
+        : "Een of meer foto's horen al bij een review.",
     }
   }
 

@@ -60,9 +60,9 @@ function buildReviewBreadcrumb(
       href: `/place/${encodeURIComponent(parsedPlaceContext.placeId)}?from=${encodeURIComponent(parsedPlaceContext.origin)}`,
     })
   } else if (from === 'feed' || !from) {
-    crumbs.push({ label: 'Feed', href: '/' })
+    crumbs.push({ label: 'Home', href: '/' })
   } else if (from === 'profile') {
-    crumbs.push({ label: 'Profile', href: '/profile' })
+    crumbs.push({ label: 'Profiel', href: '/profile' })
   } else if (from.startsWith('user:')) {
     const username = from.slice('user:'.length)
     crumbs.push({ label: `@${username}`, href: `/u/${encodeURIComponent(username)}` })
@@ -113,11 +113,11 @@ export async function generateMetadata({
     return { title: 'Review' }
   }
 
-  const rating = Number(review.ratingOverall).toFixed(1)
+  const rating = Number(review.ratingOverall).toFixed(1).replace('.', ',')
   const city = extractCity(review.place.address)
   const title = review.dishName
-    ? `${review.dishName} bij ${review.place.name}${city ? `, ${city}` : ''} — ${rating}★`
-    : `${review.place.name}${city ? `, ${city}` : ''} — review met ${rating}★`
+    ? `${review.dishName} bij ${review.place.name}${city ? `, ${city}` : ''}: ${rating} ★`
+    : `Review van ${review.place.name}${city ? `, ${city}` : ''}: ${rating} ★`
   const description =
     review.text.length > 155 ? `${review.text.slice(0, 152).trimEnd()}…` : review.text
 
@@ -177,7 +177,7 @@ export default async function ReviewPage({
       const src = photoVariantUrl(rp.photo.variants as Record<string, string>, ['large', 'medium', 'thumb'])
       const thumbnail = photoVariantUrl(rp.photo.variants as Record<string, string>, ['medium', 'thumb', 'large'])
       if (!src) return null
-      return { src, thumbnail: thumbnail ?? src, alt: review.dishName ?? 'Review photo', priority: rp.sortOrder === 0 }
+      return { src, thumbnail: thumbnail ?? src, alt: review.dishName ?? `Foto bij review van ${review.place.name}`, priority: rp.sortOrder === 0 }
     })
     .filter((img): img is NonNullable<typeof img> => img !== null)
 
@@ -200,7 +200,7 @@ export default async function ReviewPage({
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'SnackSpot', item: appUrl },
       { '@type': 'ListItem', position: 2, name: review.place.name, item: `${appUrl}/place/${review.place.id}` },
-      { '@type': 'ListItem', position: 3, name: review.dishName ?? `Review of ${review.place.name}`, item: `${appUrl}/review/${review.id}` },
+      { '@type': 'ListItem', position: 3, name: review.dishName ?? `Review van ${review.place.name}`, item: `${appUrl}/review/${review.id}` },
     ],
   }
   const reviewJsonLd = {
@@ -238,7 +238,7 @@ export default async function ReviewPage({
       <Breadcrumb items={buildReviewBreadcrumb(from, review.place.name, review.place.id, parsedPlaceContext)} />
       <div className="flex items-center justify-between gap-2">
         <Link href={backHref} className="btn-secondary text-sm">
-          Back
+          Terug
         </Link>
         <ShareButton {...shareProps} variant="button" />
       </div>
@@ -250,9 +250,9 @@ export default async function ReviewPage({
           aria-live="polite"
         >
           <div>
-            <p className="font-heading font-semibold text-snack-text">Je review staat online 🎉</p>
+            <p className="font-heading font-semibold text-snack-text">Je review staat online.</p>
             <p className="mt-0.5 text-sm text-snack-muted">
-              Stuur hem door via WhatsApp, dan weet je groep meteen wat ze hier moeten bestellen.
+              Deel hem met je vrienden, dan weten ze wat ze hier moeten bestellen.
             </p>
           </div>
           <ShareButton {...shareProps} variant="primary" label="Deel je review" className="sm:flex-shrink-0" />
@@ -294,13 +294,13 @@ export default async function ReviewPage({
           <div className="text-snack-rating text-lg flex-shrink-0">
             {'★'.repeat(Math.round(overallRating))}
             <span className="text-snack-border">{'★'.repeat(5 - Math.round(overallRating))}</span>
-            <p className="text-xs text-snack-muted text-right mt-0.5">{overallRating.toFixed(1)}</p>
+            <p className="text-xs text-snack-muted text-right mt-0.5">{overallRating.toFixed(1).replace('.', ',')}</p>
           </div>
         </div>
 
         <p className="text-xs text-snack-muted">
-          Taste {Number(review.ratingTaste)} • Value {Number(review.ratingValue)} • Portion {Number(review.ratingPortion)}
-          {review.ratingService !== null ? ` • Service ${Number(review.ratingService)}` : ''}
+          Smaak {String(Number(review.ratingTaste)).replace('.', ',')} • Prijs {String(Number(review.ratingValue)).replace('.', ',')} • Portie {String(Number(review.ratingPortion)).replace('.', ',')}
+          {review.ratingService !== null ? ` • Service ${String(Number(review.ratingService)).replace('.', ',')}` : ''}
         </p>
 
         {tags.length > 0 && (

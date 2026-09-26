@@ -19,9 +19,9 @@ import { logger } from '@/lib/logger'
 // database sees at most one feed query per minute regardless of traffic.
 export const dynamic = 'force-dynamic'
 
-const title = 'SnackSpot — eettentjes beoordeeld per gerecht'
+const title = 'SnackSpot: snackplekken beoordeeld per gerecht'
 const description =
-  'Ontdek kleine eettentjes via fotoreviews van bezoekers — van snackbar en cafetaria tot broodjeszaak. Zie per zaak wat mensen er echt aten, zodat je weet wat je moet bestellen.'
+  'Bekijk fotoreviews per gerecht van snackbars, cafetaria\'s en andere kleine snackplekken. Zie per zaak wat bezoekers bestelden en wat ze ervan vonden.'
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -55,11 +55,11 @@ export default async function FeedPage() {
         search — it just does not need to shout it.
       */}
       <h1 className="font-heading text-lg font-bold leading-snug text-snack-text sm:text-2xl">
-        Eettentjes, beoordeeld per gerecht
+        Snackplekken, beoordeeld per gerecht
       </h1>
 
       {/*
-        The homepage is the strongest internal link source on the site, and /eettentjes had
+        The homepage is the strongest internal link source on the site, and /snackplekken had
         none at all — it sat in the sitemap with zero inbound links.
       */}
       <CityRail cities={cities} className="mt-3" />

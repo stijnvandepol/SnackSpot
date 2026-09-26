@@ -154,7 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!res.ok) {
           return {
             ok: false,
-            error: json.error ?? 'Login failed',
+            error: json.error ?? 'Inloggen is niet gelukt. Probeer het opnieuw.',
             captchaRequired: json.captchaRequired === true,
           }
         }
@@ -163,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(json.data.user)
         return { ok: true }
       } catch {
-        return { ok: false, error: 'Network error' }
+        return { ok: false, error: 'Geen verbinding' }
       }
     },
     [],
@@ -178,7 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify(data),
       })
       const json = await res.json()
-      if (!res.ok) return { ok: false, error: json.error ?? 'Registration failed' }
+      if (!res.ok) return { ok: false, error: json.error ?? 'Account maken is niet gelukt. Probeer het opnieuw.' }
       tokenRef.current = json.data.access_token
       setAccessToken(json.data.access_token)
       setUser(json.data.user)

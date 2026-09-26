@@ -16,7 +16,7 @@ export async function DELETE(req: NextRequest) {
 
   // 5 attempts per 15 min — prevents password brute-force via this endpoint
   const rl = await rateLimitUser(auth.sub, 'delete_account', 5, 900)
-  if (!rl.allowed) return err('Too many requests', 429)
+  if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
   const body = await parseBody(req, DeleteAccountSchema)
   if (isResponse(body)) return body
@@ -28,7 +28,7 @@ export async function DELETE(req: NextRequest) {
       where: { id: auth.sub },
       select: { id: true, username: true, passwordHash: true, avatarKey: true },
     })
-    if (!user) return err('User not found', 404)
+    if (!user) return err('Gebruiker niet gevonden.', 404)
 
     // Accounts created through Google have no password, so asking for one locked them out
     // of erasure (GDPR Art. 17). They confirm by typing their username instead; the request
@@ -36,7 +36,7 @@ export async function DELETE(req: NextRequest) {
     const valid = user.passwordHash
       ? await verifyPassword(user.passwordHash, body.password)
       : body.password.trim().toLowerCase() === user.username.toLowerCase()
-    if (!valid) return err(user.passwordHash ? 'Incorrect password' : 'Username does not match', 403)
+    if (!valid) return err(user.passwordHash ? 'Wachtwoord klopt niet.' : 'Gebruikersnaam komt niet overeen.', 403)
 
     // Collect every MinIO object key BEFORE the delete: the cascade removes
     // the Photo rows, and with them the only reference to the stored files.
@@ -61,7 +61,7 @@ export async function DELETE(req: NextRequest) {
     // is stored, so the entry is not linkable to a person after erasure.
     await logPrivacyAction(user.id, 'ACCOUNT_DELETED', { photoCount: photos.length })
 
-    const res = withNoStore(ok({ message: 'Account deleted' }))
+    const res = withNoStore(ok({ message: 'Je account is verwijderd.' }))
     res.headers.set('Set-Cookie', buildClearCookie())
     return res
   } catch (e) {

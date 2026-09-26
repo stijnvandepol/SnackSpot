@@ -2,29 +2,29 @@ import type { MarketingDict } from '../types'
 
 export const nl: MarketingDict = {
   meta: {
-    productTitle: 'Weet wat je moet bestellen voordat je gaat zitten | SnackSpot',
+    productTitle: 'Reviews van snackbars per gerecht, met foto’s | SnackSpot',
     productDescription:
-      'SnackSpot verzamelt fotoreviews per gerecht van kleine eettentjes: snackbars, cafetaria’s en broodjeszaken. Gratis, in je browser, gemaakt door mensen die er echt gegeten hebben.',
-    productSocialTitle: 'Weet wat je moet bestellen | SnackSpot',
+      'Lees en schrijf reviews met foto’s van snackbars en andere snackplekken, per gerecht. Gratis, in je browser en geschreven door echte bezoekers.',
+    productSocialTitle: 'Weet wat je bestelt | SnackSpot',
     productSocialDescription:
-      'Fotoreviews per gerecht van kleine eettentjes bij jou in de buurt. Zie wat mensen er echt aten voordat je bestelt.',
+      'Reviews met foto’s per gerecht van snackbars en andere snackplekken. Zie wat anderen er echt aten voordat je bestelt.',
   },
   product: {
-    heroTitle: 'Weet wat je moet bestellen voordat je gaat zitten.',
+    heroTitle: 'Weet wat je bestelt voordat je aan de toonbank staat.',
     heroLead:
-      'Fotoreviews per gerecht van kleine eettentjes: de snackbar op de hoek, de cafetaria bij het station, de broodjeszaak die alleen de buurt kent. Gemaakt door mensen die er echt gegeten hebben.',
-    ctaPrimary: 'Maak een gratis account',
-    ctaSecondary: 'Bekijk de feed',
-    heroFinePrint: 'Werkt in je browser, op elke telefoon. Geen appstore nodig.',
-    counts: 'Nu {reviews} fotoreviews van {places} zaken in {cities} steden.',
+      'SnackSpot verzamelt reviews met foto’s van snackbars en andere snackplekken, per gerecht. Zoek een snackplek, lees wat anderen er aten, schrijf zelf een review en bewaar plekken die je nog wilt proberen. Alle reviews komen van echte bezoekers, en gesponsorde plekken bestaan hier niet.',
+    ctaPrimary: 'Account maken',
+    ctaSecondary: 'Bekijk recente reviews',
+    heroFinePrint: 'Gratis. Werkt in je browser op elke telefoon, zonder app store.',
+    counts: 'Nu {reviews} reviews met foto’s van {places} snackplekken in {cities} steden.',
 
     stripTitle: 'Net gegeten',
     stripAll: 'Alles bekijken',
 
     rankingTitle: 'Niet “is deze zaak goed?”, maar “wat moet ik hier bestellen?”',
     rankingBody:
-      'Elke review op SnackSpot gaat over één gerecht. Daardoor kunnen we iets wat een sterrengemiddelde niet kan: per stad aanwijzen waar de kapsalon, de friet of het broodje het beste is.',
-    rankingCaption: 'De beste {dish} in {city}',
+      'Elke review op SnackSpot gaat over één gerecht. Zo zie je per stad welke snackplekken het hoogst scoren op kapsalon, friet of een broodje.',
+    rankingCaption: '{city}: hoogst beoordeelde {dish}',
     rankingLink: 'Bekijk de hele ranglijst',
     reviewsOne: '1 review',
     reviewsMany: '{n} reviews',
@@ -32,69 +32,73 @@ export const nl: MarketingDict = {
     claims: [
       {
         title: 'Per gerecht, niet per zaak.',
-        body: 'Een cijfer voor smaak, prijs en portie, per bord. Zo zegt een 4 echt iets.',
+        body: 'Een cijfer voor smaak, prijs en portie, per gerecht. Zo zegt een 4 ook echt iets.',
       },
       {
-        title: 'Foto eerst.',
-        body: 'Je ziet het echte bord, niet de menukaartfoto. Een review plaatsen kost dertig seconden.',
+        title: 'Eerst de foto.',
+        body: 'Je ziet wat er echt over de toonbank ging, niet de foto op het menubord.',
       },
       {
-        title: 'Alleen kleine zaken.',
-        body: 'Geen ketens, geen gesponsorde plekken. De zaken die grote reviewsites overslaan.',
+        title: 'Echte bezoekers, geen reclame.',
+        body: 'Reviews komen van mensen die er zelf gegeten hebben. Geen advertenties en geen gesponsorde plekken.',
       },
     ],
 
     stepsTitle: 'Zo werkt het',
     steps: [
-      { title: 'Fotografeer je eten', body: 'Camera eerst, vork daarna. Tot vijf foto’s per review.' },
-      { title: 'Geef het gerecht een cijfer', body: 'Schuif de sterren voor smaak, prijs en portie. Noem het gerecht.' },
-      { title: 'Deel het', body: 'Je review staat direct in de feed en gaat met één tik door naar WhatsApp.' },
+      { title: 'Maak een foto van je eten', body: 'Eerst de foto, dan eten. Je kunt tot vijf foto’s per review toevoegen.' },
+      { title: 'Geef het gerecht een cijfer', body: 'Geef sterren voor smaak, prijs en portie en zet erbij welk gerecht het was.' },
+      { title: 'Kies de snackplek en plaats je review', body: 'Je review staat direct in de feed en op de pagina van de snackplek. Delen via WhatsApp kan met één tik.' },
     ],
 
     citiesTitle: 'Per stad',
-    citiesBody: 'Elke stad met fotoreviews heeft een eigen pagina, gerangschikt op wat bezoekers er echt aten.',
+    citiesBody: 'Elke stad met reviews heeft een eigen pagina met snackplekken, gerangschikt op de cijfers van bezoekers.',
     citiesAll: 'Alle steden',
-    placesOne: '1 zaak',
-    placesMany: '{n} zaken',
+    placesOne: '1 snackplek',
+    placesMany: '{n} snackplekken',
 
     faqTitle: 'Veelgestelde vragen',
     faqs: [
       {
         q: 'Wat is SnackSpot?',
-        a: 'Een gratis community-app om kleine eettentjes te ontdekken. Leden delen fotoreviews van specifieke gerechten, met een cijfer voor smaak, prijs, portie en service.',
+        a: 'Een gratis site met reviews en foto’s van snackbars en andere snackplekken. Elke review gaat over één gerecht, met cijfers voor smaak, prijs, portie en eventueel service.',
       },
       {
         q: 'Is SnackSpot gratis?',
-        a: 'Ja, helemaal. Geen abonnement, geen advertenties, geen gesponsorde plekken.',
+        a: 'Ja. Geen abonnement, geen advertenties en geen gesponsorde plekken.',
+      },
+      {
+        q: 'Kan ik kijken zonder account?',
+        a: 'Ja. Zoeken en reviews lezen kan zonder account. Voor een review plaatsen of een snackplek bewaren heb je een gratis account nodig.',
       },
       {
         q: 'Moet ik een app downloaden?',
-        a: 'Nee. SnackSpot werkt in je browser en gedraagt zich op je telefoon als een app. Je kunt hem in twee tikken aan je beginscherm toevoegen.',
+        a: 'Nee. SnackSpot werkt in je browser. Op je telefoon kun je het aan je beginscherm toevoegen, dan opent het als een app.',
       },
       {
-        q: 'Hoe verschilt dit van Google Maps?',
-        a: 'Google geeft een cijfer aan een zaak. SnackSpot geeft een cijfer aan een gerecht, met een foto van het echte bord. Daardoor weet je niet alleen óf een zaak goed is, maar wát je er moet bestellen.',
+        q: 'Wat is het verschil met Google Maps?',
+        a: 'Google Maps geeft een cijfer aan een zaak. SnackSpot geeft een cijfer aan een gerecht, met een foto van wat je echt kreeg. Zo weet je niet alleen óf een snackbar goed is, maar ook wat je er moet bestellen.',
       },
       {
-        q: 'Moet ik lange reviews schrijven?',
-        a: 'Nee. Een review is foto’s, cijfers en een korte notitie. De meeste kosten minder dan een minuut.',
+        q: 'Moet ik een lange review schrijven?',
+        a: 'Nee. Foto’s, cijfers en een paar zinnen zijn genoeg.',
       },
       {
         q: 'Wie ziet mijn reviews?',
-        a: 'Reviews en profielen zijn openbaar, dat is het idee: jouw vondst helpt de volgende. Je kiest zelf je gebruikersnaam en wat je deelt.',
+        a: 'Iedereen. Reviews en profielen zijn openbaar, zodat anderen er iets aan hebben. Je kiest zelf je gebruikersnaam en wat je deelt.',
       },
     ],
 
-    finalTitle: 'Honger? Begin met spotten.',
-    finalBody: 'Maak een account, plaats je eerste fotoreview en help de volgende die voor dezelfde toonbank staat.',
-    finalButton: 'Maak een gratis account',
-    finalFinePrint: 'Dertig seconden. Werkt op elke telefoon.',
+    finalTitle: 'Zelf ergens gegeten?',
+    finalBody: 'Maak een account en plaats je eerste review. Dan weet de volgende aan de toonbank wat hij moet bestellen.',
+    finalButton: 'Account maken',
+    finalFinePrint: 'Gratis. Werkt op elke telefoon.',
   },
   nav: {
     howItWorks: 'Hoe het werkt',
-    cities: 'Steden',
+    cities: 'Snackplekken',
     guides: 'Uitleg',
-    releases: 'Releasenotes',
+    releases: 'Updates',
     login: 'Inloggen',
     createAccount: 'Account maken',
   },
@@ -106,10 +110,10 @@ export const nl: MarketingDict = {
   },
   switcher: { label: 'Taal', en: 'English', nl: 'Nederlands' },
   releasesChrome: {
-    title: 'Releasenotes',
-    intro: 'Wat we hebben uitgebracht: nieuwe functies, verbeteringen en fixes.',
-    metaTitle: 'Releasenotes | SnackSpot',
-    metaDescription: 'Wat er nieuw is in SnackSpot: functies, verbeteringen en fixes.',
-    eyebrow: 'Wijzigingen',
+    title: 'Wat is er nieuw',
+    intro: 'Nieuwe functies, verbeteringen en opgeloste fouten in SnackSpot.',
+    metaTitle: 'Wat is er nieuw | SnackSpot',
+    metaDescription: 'Alle updates van SnackSpot op een rij: nieuwe functies, verbeteringen en opgeloste fouten, met de datum waarop ze live gingen.',
+    eyebrow: 'Updates',
   },
 }

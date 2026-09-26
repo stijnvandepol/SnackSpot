@@ -73,3 +73,17 @@ describe('security headers still apply everywhere', () => {
     expect(rule.headers.some((h) => h.key.toLowerCase() === 'cache-control')).toBe(false)
   })
 })
+
+describe('/eettentjes → /snackplekken', () => {
+  type Redirect = { source: string; destination: string; permanent: boolean }
+
+  it('permanently redirects the old hub and every page under it', async () => {
+    const redirects = (await nextConfig.redirects!()) as Redirect[]
+    expect(redirects).toContainEqual({ source: '/eettentjes', destination: '/snackplekken', permanent: true })
+    expect(redirects).toContainEqual({
+      source: '/eettentjes/:path*',
+      destination: '/snackplekken/:path*',
+      permanent: true,
+    })
+  })
+})

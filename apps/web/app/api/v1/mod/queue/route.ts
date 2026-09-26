@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 
   // Rate limit: 120 requests per minute per moderator
   const rl = await rateLimitUser(auth.sub, 'mod_queue', 120, 60)
-  if (!rl.allowed) return err('Too many requests', 429)
+  if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
   const query = parseQuery(req, QueueQuerySchema)
   if (isResponse(query)) return query

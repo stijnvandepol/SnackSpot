@@ -74,23 +74,23 @@ describe('ReviewInteractions — comment count grammar', () => {
   // The component fetches comments on mount, so each test settles that async
   // state update (via findByText) to keep React's act(...) happy.
   const settled = () =>
-    screen.findByText('No comments yet. Be the first to add context or a recommendation.')
+    screen.findByText('Nog geen reacties. Heb je een tip of iets toe te voegen? Laat het hier weten.')
 
-  it('uses "comments" (plural) for 0 comments', async () => {
+  it('uses "reacties" (plural) for 0 comments', async () => {
     render(<ReviewInteractions {...baseProps} initialCommentCount={0} />)
-    expect(screen.getByText('0 comments')).toBeInTheDocument()
+    expect(screen.getByText('0 reacties')).toBeInTheDocument()
     await settled()
   })
 
-  it('uses "comment" (singular) for exactly 1 comment', async () => {
+  it('uses "reactie" (singular) for exactly 1 comment', async () => {
     render(<ReviewInteractions {...baseProps} initialCommentCount={1} />)
-    expect(screen.getByText('1 comment')).toBeInTheDocument()
+    expect(screen.getByText('1 reactie')).toBeInTheDocument()
     await settled()
   })
 
-  it('uses "comments" (plural) for 2+ comments', async () => {
+  it('uses "reacties" (plural) for 2+ comments', async () => {
     render(<ReviewInteractions {...baseProps} initialCommentCount={5} />)
-    expect(screen.getByText('5 comments')).toBeInTheDocument()
+    expect(screen.getByText('5 reacties')).toBeInTheDocument()
     await settled()
   })
 })

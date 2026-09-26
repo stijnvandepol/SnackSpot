@@ -64,7 +64,7 @@ describe('FollowCounts', () => {
     render(<FollowCounts username="alice" />)
 
     // Counts load and render as clickable triggers.
-    const followersTrigger = await screen.findByRole('button', { name: /2 followers/i })
+    const followersTrigger = await screen.findByRole('button', { name: /2 volgers/i })
 
     fireEvent.click(followersTrigger)
 

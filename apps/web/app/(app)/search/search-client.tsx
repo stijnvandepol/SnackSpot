@@ -1,5 +1,6 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { PlaceCard } from '@/components/place-card'
 import { ReviewCard } from '@/components/review-card'
 import { useAuth } from '@/components/auth-provider'
@@ -78,7 +79,7 @@ export function SearchClient() {
       })
       .catch((err) => {
         console.error(err)
-        setFeaturedError('Could not load places with recent reviews.')
+        setFeaturedError('Kon de snackplekken met recente reviews niet laden.')
       })
       .finally(() => setFeaturedLoading(false))
   }, [])
@@ -111,7 +112,7 @@ export function SearchClient() {
       })
       .catch((err) => {
         console.error(err)
-        setTagError('Could not load tagged posts right now.')
+        setTagError('Kon de reviews met dit label niet laden. Probeer het later opnieuw.')
       })
       .finally(() => setTagLoading(false))
   }, [activeTag, accessToken])
@@ -132,7 +133,7 @@ export function SearchClient() {
       setPlaces(Array.isArray(json.data?.data) ? json.data.data : [])
     } catch (err) {
       console.error(err)
-      setSearchError('Search failed. Try again in a moment.')
+      setSearchError('Zoeken is mislukt. Probeer het zo opnieuw.')
     } finally {
       setLoading(false)
     }
@@ -228,7 +229,7 @@ export function SearchClient() {
 
         <div className="mt-4">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <p className="text-sm font-medium text-snack-text">Blader op label</p>
+            <p className="text-sm font-medium text-snack-text">Filter op label</p>
             {hasActiveTag && (
               <button type="button" className="text-xs font-medium text-snack-primary hover:underline" onClick={() => setActiveTag('all')}>
                 Label wissen
@@ -289,7 +290,7 @@ export function SearchClient() {
         <section className="space-y-3">
           <div>
             <h2 className="text-lg font-heading font-semibold text-snack-text">Net beoordeeld</h2>
-            <p className="text-xs text-snack-muted">Zaken waar zojuist een nieuwe review is geplaatst.</p>
+            <p className="text-xs text-snack-muted">Snackplekken met de nieuwste reviews.</p>
           </div>
 
           {featuredLoading ? (
@@ -316,7 +317,10 @@ export function SearchClient() {
             </div>
           ) : (
             <div className="card p-4 text-sm text-snack-muted">
-              Nog geen zaken met recente reviews.
+              Nog geen snackplekken met recente reviews.{' '}
+              <Link href="/add-review" className="font-medium text-snack-primary hover:underline">
+                Schrijf de eerste review
+              </Link>
             </div>
           )}
         </section>
@@ -333,7 +337,7 @@ export function SearchClient() {
       {!loading && searched && (
         <section className="space-y-3">
           <div>
-            <h2 className="text-lg font-heading font-semibold text-snack-text">Gevonden zaken</h2>
+            <h2 className="text-lg font-heading font-semibold text-snack-text">Gevonden snackplekken</h2>
             <p className="text-xs text-snack-muted">{places.length} {places.length === 1 ? 'resultaat' : 'resultaten'} voor &ldquo;{q}&rdquo;.</p>
           </div>
 
@@ -355,11 +359,16 @@ export function SearchClient() {
             </div>
           ) : (
             <div className="card py-12 text-center">
-              <p className="text-snack-text font-medium">Geen zaak gevonden voor &ldquo;{q}&rdquo;.</p>
-              <p className="mt-1 text-sm text-snack-muted">Probeer een andere schrijfwijze of een plaatsnaam, of blader op label.</p>
-              <button type="button" className="btn-secondary mt-4 text-sm" onClick={resetSearch}>
-                Zoekopdracht wissen
-              </button>
+              <p className="text-snack-text font-medium">Geen snackplek gevonden voor &ldquo;{q}&rdquo;.</p>
+              <p className="mt-1 text-sm text-snack-muted">Probeer een andere schrijfwijze of een plaatsnaam. Staat de zaak er niet bij? Voeg hem toe met je review.</p>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <Link href="/add-review" className="btn-primary text-sm">
+                  Schrijf een review
+                </Link>
+                <button type="button" className="btn-secondary text-sm" onClick={resetSearch}>
+                  Zoekopdracht wissen
+                </button>
+              </div>
             </div>
           )}
         </section>
@@ -391,7 +400,10 @@ export function SearchClient() {
             </div>
           ) : (
             <div className="card p-4 text-sm text-snack-muted">
-              Nog geen reviews met het label {getReviewTagLabel(activeTag).toLowerCase()}.
+              Nog geen reviews met het label {getReviewTagLabel(activeTag).toLowerCase()}.{' '}
+              <Link href="/add-review" className="font-medium text-snack-primary hover:underline">
+                Schrijf de eerste review
+              </Link>
             </div>
           )}
         </section>
@@ -399,7 +411,7 @@ export function SearchClient() {
 
       {!hasCustomCriteria && !featuredLoading && featuredPlaces.length === 0 && !featuredError && (
         <div className="py-10 text-center text-sm text-snack-muted">
-          Zoek iets, of kies een label om het lijstje kleiner te maken.
+          Zoek op naam of gerecht, of kies een label.
         </div>
       )}
     </div>

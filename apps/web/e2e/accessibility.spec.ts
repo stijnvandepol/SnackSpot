@@ -109,7 +109,7 @@ test.describe('Accessibility — mobile viewport (390 px)', () => {
 
   test('bottom nav links have min touch target height of 44 px', async ({ page }) => {
     await page.goto('/')
-    const nav = page.locator('nav').filter({ hasText: 'Create new post' })
+    const nav = page.getByRole('navigation', { name: 'Hoofdmenu' })
     const links = await nav.getByRole('link').all()
 
     for (const link of links) {

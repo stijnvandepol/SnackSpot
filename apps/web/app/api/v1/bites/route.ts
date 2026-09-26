@@ -34,12 +34,12 @@ export async function POST(req: NextRequest) {
   if (isResponse(body)) return body
 
   if (!isValidTimeZone(body.timezone)) {
-    return err('Invalid timezone', 422)
+    return err('Ongeldige tijdzone.', 422)
   }
 
   try {
     const rl = await rateLimitUser(auth.sub, 'bite_create', 30, 3600)
-    if (!rl.allowed) return err('Bite rate limit exceeded', 429)
+    if (!rl.allowed) return err('Te veel bites achter elkaar. Probeer het later opnieuw.', 429)
 
     const photo = await prisma.photo.findUnique({
       where: { id: body.photoId },
@@ -50,20 +50,20 @@ export async function POST(req: NextRequest) {
         _count: { select: { reviewPhotos: true } },
       },
     })
-    if (!photo || photo.uploaderId !== auth.sub) return err('Photo not found', 404)
+    if (!photo || photo.uploaderId !== auth.sub) return err('Foto niet gevonden.', 404)
     if (photo.moderationStatus === PhotoModerationStatus.PENDING) {
-      return err('Photo upload is not confirmed yet', 422)
+      return err('De foto wordt nog geüpload. Wacht even en probeer het opnieuw.', 422)
     }
     if (photo.moderationStatus === PhotoModerationStatus.REJECTED) {
-      return err('Photo was rejected', 422)
+      return err('Deze foto is afgekeurd. Kies een andere foto.', 422)
     }
     if (photo._count.reviewPhotos > 0) {
-      return err('Photo is already attached to a review', 409)
+      return err('Deze foto hoort al bij een review.', 409)
     }
 
     if (body.placeId) {
       const place = await prisma.place.findUnique({ where: { id: body.placeId }, select: { id: true } })
-      if (!place) return err('Place not found', 404)
+      if (!place) return err('Snackplek niet gevonden.', 404)
     }
 
     const localDate = new Date(`${localDateInZone(body.timezone)}T00:00:00.000Z`)
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
     })
   } catch (e: unknown) {
     if (typeof e === 'object' && e !== null && 'code' in e && (e as { code: unknown }).code === 'P2002') {
-      return err('Photo is already used for a bite', 409)
+      return err('Deze foto is al gebruikt voor een bite.', 409)
     }
     logger.error({ err: e, userId: auth.sub }, 'bite create failed')
     return serverError('bites POST', e)

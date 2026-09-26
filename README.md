@@ -34,7 +34,7 @@
 - Attach up to 5 photos per review (auto-converted to WebP with multiple size variants)
 - Like and comment on reviews; mention other users with `@username`
 - Discover places via text search or geolocation (nearby radius search)
-- Browse per city (`/eettentjes/[stad]`) and per dish, per city and nationwide (`/gerechten/[gerecht]`), ranked on the dish's own rating
+- Browse per city (`/snackplekken/[stad]`) and per dish, per city and nationwide (`/gerechten/[gerecht]`), ranked on the dish's own rating
 - Save places for later (private "Bewaard" list on the profile) and report stale place data (closed, wrong address, duplicate)
 - Earn badges for milestones: post streaks, unique locations, engagement, and more
 - Receive in-app and email notifications for likes, comments, mentions, and badge awards
@@ -232,6 +232,7 @@ Copy `.env.example` to `.env` and fill in the values below.
 | `CORS_ORIGINS` | `https://snackspot.online` | Comma-separated allowed API origins |
 | `MAX_FILE_SIZE_BYTES` | `10485760` | Max upload size (10 MB) |
 | `MAX_PHOTOS_PER_REVIEW` | `5` | Max photos per review |
+| `WEB_BIND_ADDRESS` | `0.0.0.0` | Network interface for the web app (port 8080); use `127.0.0.1` when cloudflared runs on the same host |
 | `ADMIN_BIND_ADDRESS` | `0.0.0.0` | Network interface for the admin panel |
 
 ### LAN / Cloudflare Tunnel setup

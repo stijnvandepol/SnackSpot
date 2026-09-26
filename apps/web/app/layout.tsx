@@ -17,7 +17,7 @@ const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?
 // at position 3.48, against 10 clicks from the US at 10.19. The description, og:locale
 // and <html lang> below all follow from that.
 const appDescription =
-  'Ontdek kleine eettentjes via fotoreviews van bezoekers — van snackbar en cafetaria tot broodjeszaak. Zie per zaak wat mensen er echt aten, zodat je weet wat je moet bestellen voordat je gaat zitten.'
+  'Fotoreviews per gerecht van snackbars, cafetaria\'s en andere kleine snackplekken. Zie wat bezoekers bestelden en hoe ze het beoordeelden.'
 
 function buildJsonLd(appUrl: string) {
   const organization = {

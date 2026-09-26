@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
-const title = 'Eettentjes in de buurt'
+const title = 'Snackplekken in de buurt'
 const description =
-  'Vind eettentjes bij jou in de buurt — van snackbar tot broodjeszaak. Gebruik je locatie of vul een adres in en zie op de kaart waar mensen recent gegeten hebben, of begin bij een stad.'
+  'Vind snackbars en cafetaria\'s bij je in de buurt. Gebruik je locatie of vul een adres in en bekijk op de kaart welke snackplekken reviews hebben.'
 
 export const metadata: Metadata = {
   title,

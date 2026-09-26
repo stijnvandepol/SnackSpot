@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     // updateMany over all unread rows is comparatively expensive; once per
     // bell-open is the legitimate pattern, so 10/min is already generous.
     const rl = await rateLimitUser(auth.sub, 'notifications_read_all', 10, 60)
-    if (!rl.allowed) return err('Too many requests', 429)
+    if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
     const result = await prisma.notification.updateMany({
       where: {

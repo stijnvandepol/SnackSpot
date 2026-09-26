@@ -14,32 +14,32 @@ import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 // The cost is one indexed GROUP BY per request, which is the cheaper side of that trade.
 export const dynamic = 'force-dynamic'
 
-const TITLE = 'Eettentjes per stad'
+const TITLE = 'Snackplekken per stad'
 const DESCRIPTION =
-  'Ontdek per stad de best beoordeelde eettentjes, cafetaria’s en frituren — gerangschikt op fotoreviews van mensen die er echt gegeten hebben.'
+  'Per stad de snackbars, cafetaria\'s en frituren op SnackSpot, gerangschikt op reviews van bezoekers. Met cijfers, foto\'s en de gerechten die ze bestelden.'
 
 export const metadata: Metadata = {
-  title: { absolute: `${TITLE} — SnackSpot` },
+  title: { absolute: `${TITLE} | SnackSpot` },
   description: DESCRIPTION,
-  alternates: { canonical: '/eettentjes' },
+  alternates: { canonical: '/snackplekken' },
   openGraph: { type: 'website', title: TITLE, description: DESCRIPTION, locale: 'nl_NL' },
   twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION },
 }
 
-export default async function EettentjesIndexPage() {
+export default async function SnackplekkenIndexPage() {
   const cities = await getQualifyingCities()
 
   return (
     <div lang="nl" className="mx-auto max-w-5xl px-4 py-8 md:py-12">
-      <BreadcrumbJsonLd items={[{ name: 'Eettentjes', path: '/eettentjes' }]} />
+      <BreadcrumbJsonLd items={[{ name: 'Snackplekken', path: '/snackplekken' }]} />
 
       <header className="max-w-3xl">
         <h1 className="font-heading text-3xl font-bold text-snack-text md:text-5xl">
-          Eettentjes per stad
+          Snackplekken per stad
         </h1>
         <p className="mt-4 text-base leading-7 text-snack-muted md:text-lg">
-          Per stad de best beoordeelde zaken, gerangschikt op fotoreviews van bezoekers. Geen
-          advertenties, geen gesponsorde plekken — alleen wat mensen er daadwerkelijk aten.
+          Per stad de snackplekken met reviews, gerangschikt op het cijfer dat bezoekers gaven.
+          De volgorde komt alleen uit reviews: geen advertenties en geen gesponsorde plekken.
         </p>
       </header>
 
@@ -48,12 +48,12 @@ export default async function EettentjesIndexPage() {
           {cities.map((city) => (
             <li key={city.slug}>
               <Link
-                href={`/eettentjes/${city.slug}`}
+                href={`/snackplekken/${city.slug}`}
                 className="block rounded-2xl border border-snack-border bg-snack-background p-6 shadow-sm transition hover:border-snack-primary/40"
               >
                 <h2 className="font-heading text-xl font-semibold text-snack-text">{city.name}</h2>
                 <p className="mt-1 text-sm text-snack-muted">
-                  {city.placeCount === 1 ? '1 zaak' : `${city.placeCount} zaken`} ·{' '}
+                  {city.placeCount === 1 ? '1 snackplek' : `${city.placeCount} snackplekken`} ·{' '}
                   {city.reviewCount === 1 ? '1 review' : `${city.reviewCount} reviews`}
                 </p>
               </Link>
@@ -66,11 +66,11 @@ export default async function EettentjesIndexPage() {
         // than shipping an empty grid.
         <section className="mt-8 rounded-2xl border border-snack-border bg-snack-surface p-6">
           <h2 className="font-heading text-lg font-semibold text-snack-text">
-            Nog geen stad compleet genoeg
+            Nog geen steden met genoeg reviews
           </h2>
           <p className="mt-2 text-sm leading-6 text-snack-muted">
-            Een stad krijgt pas een eigen pagina zodra er genoeg zaken en reviews zijn om een
-            eerlijke ranglijst te maken. Help mee: plaats een fotoreview van je vaste eettentje.
+            Een stad krijgt een eigen pagina zodra er genoeg snackplekken en reviews zijn voor een
+            eerlijke ranglijst. Schrijf een review van een snackplek die je kent.
           </p>
           <Link href="/add-review" className="btn-primary mt-4 inline-flex text-sm">
             Schrijf een review

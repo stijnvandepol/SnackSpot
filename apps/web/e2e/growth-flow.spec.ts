@@ -32,18 +32,19 @@ test.describe('Growth flow — register and return', () => {
     await page.getByRole('button', { name: /Bewaren/ }).click()
     await expect(page.getByRole('button', { name: /Bewaard/ })).toBeVisible()
 
-    await page.getByText('Klopt er iets niet aan deze zaak?').click()
-    await page.getByLabel('Deze zaak is gesloten').check()
+    await page.getByText('Klopt er iets niet aan deze snackplek?').click()
+    await page.getByLabel('Deze snackplek is gesloten').check()
     await page.getByRole('button', { name: 'Doorgeven' }).click()
-    await expect(page.getByText('Bedankt!')).toBeVisible()
+    await expect(page.getByText(/^Bedankt\./)).toBeVisible()
 
     await page.goto('/profile?tab=saved')
-    await expect(page.locator(`a[href^="/place/${placeId}"]`).first()).toBeVisible()
+    // The list loads client-side; allow for a cold API route in a dev server.
+    await expect(page.locator(`a[href^="/place/${placeId}"]`).first()).toBeVisible({ timeout: 20_000 })
   })
 
   test('rejects an off-site next parameter', async ({ page }) => {
     await page.goto('/auth/login?next=//evil.example')
-    const registerLink = page.getByRole('link', { name: 'Maak er gratis een' })
+    const registerLink = page.getByRole('link', { name: 'Account maken' })
     await expect(registerLink).toHaveAttribute('href', '/auth/register')
   })
 })

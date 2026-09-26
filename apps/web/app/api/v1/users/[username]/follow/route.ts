@@ -22,7 +22,7 @@ export async function GET(
 
   try {
     const target = await resolveUser(username)
-    if (!target) return err('User not found', 404)
+    if (!target) return err('Gebruiker niet gevonden.', 404)
 
     const [followerCount, followingCount, following, followsMe] = await Promise.all([
       prisma.follow.count({ where: { followeeId: target.id } }),
@@ -65,11 +65,11 @@ export async function POST(
 
   try {
     const rl = await rateLimitUser(auth.sub, 'follow', 60, 3600)
-    if (!rl.allowed) return err('Too many follow actions', 429)
+    if (!rl.allowed) return err('Te veel volgacties achter elkaar. Probeer het zo opnieuw.', 429)
 
     const target = await resolveUser(username)
-    if (!target) return err('User not found', 404)
-    if (target.id === auth.sub) return err('You cannot follow yourself', 422)
+    if (!target) return err('Gebruiker niet gevonden.', 404)
+    if (target.id === auth.sub) return err('Je kunt jezelf niet volgen.', 422)
 
     const created = await prisma.follow.createMany({
       data: [{ followerId: auth.sub, followeeId: target.id }],
@@ -102,10 +102,10 @@ export async function DELETE(
     // Same bucket as POST: a follow/unfollow flip-flop loop is the abuse
     // pattern (notification spam, counter churn), so both share one budget.
     const rl = await rateLimitUser(auth.sub, 'follow', 60, 3600)
-    if (!rl.allowed) return err('Too many follow actions', 429)
+    if (!rl.allowed) return err('Te veel volgacties achter elkaar. Probeer het zo opnieuw.', 429)
 
     const target = await resolveUser(username)
-    if (!target) return err('User not found', 404)
+    if (!target) return err('Gebruiker niet gevonden.', 404)
 
     await prisma.follow.deleteMany({
       where: { followerId: auth.sub, followeeId: target.id },

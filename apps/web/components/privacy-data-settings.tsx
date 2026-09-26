@@ -16,7 +16,7 @@ const RESTORE_WINDOW_DAYS = 30
 function restorableUntilLabel(deletedAt: string | null | undefined): string | null {
   if (!deletedAt) return null
   const until = new Date(new Date(deletedAt).getTime() + RESTORE_WINDOW_DAYS * 24 * 60 * 60 * 1000)
-  return until.toLocaleDateString()
+  return until.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 /**
@@ -58,7 +58,7 @@ export function PrivacyDataSettings() {
       })
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
-        setExportError(json.error ?? 'Export failed. Please try again.')
+        setExportError(json.error ?? 'Exporteren is mislukt. Probeer het opnieuw.')
         return
       }
       const blob = await res.blob()
@@ -70,9 +70,9 @@ export function PrivacyDataSettings() {
       a.click()
       a.remove()
       URL.revokeObjectURL(url)
-      setExportMessage('Your data export has been downloaded.')
+      setExportMessage('Je gegevens zijn gedownload.')
     } catch {
-      setExportError('Export failed. Please try again.')
+      setExportError('Exporteren is mislukt. Probeer het opnieuw.')
     } finally {
       setExporting(false)
     }
@@ -90,14 +90,14 @@ export function PrivacyDataSettings() {
       })
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
-        setRestoreError(json.error ?? 'Could not restore review. Please try again.')
+        setRestoreError(json.error ?? 'Review terugzetten is mislukt. Probeer het opnieuw.')
         return
       }
       setDeletedReviews((prev) => prev.filter((r) => r.id !== id))
-      setRestoredMessage('Review restored.')
+      setRestoredMessage('Review teruggezet.')
       setTimeout(() => setRestoredMessage(null), 3000)
     } catch {
-      setRestoreError('Could not restore review. Please try again.')
+      setRestoreError('Review terugzetten is mislukt. Probeer het opnieuw.')
     } finally {
       setRestoringId(null)
     }
@@ -105,12 +105,12 @@ export function PrivacyDataSettings() {
 
   return (
     <div className="card p-4">
-      <h3 className="font-heading font-semibold text-snack-text mb-1">Privacy &amp; data</h3>
+      <h3 className="font-heading font-semibold text-snack-text mb-1">Privacy en gegevens</h3>
       <p className="text-xs text-snack-muted mb-3">
-        We store your profile, reviews, photos, comments, likes, bites and notification
-        preferences, nothing else. Read the{' '}
-        <Link href="/privacy" className="text-snack-primary hover:underline">privacy policy</Link>{' '}
-        for what we keep and for how long.
+        We bewaren je profiel, reviews, foto&apos;s, reacties, likes, bites en
+        meldingsinstellingen, verder niets. In de{' '}
+        <Link href="/privacy" className="text-snack-primary hover:underline">privacyverklaring</Link>{' '}
+        lees je wat we bewaren en hoe lang.
       </p>
 
       <button
@@ -119,20 +119,20 @@ export function PrivacyDataSettings() {
         onClick={() => void downloadExport()}
         disabled={exporting}
       >
-        {exporting ? 'Preparing your export...' : 'Download my data (ZIP)'}
+        {exporting ? 'Export klaarzetten…' : 'Download mijn gegevens (ZIP)'}
       </button>
       <p className="mt-1 text-xs text-snack-muted">
-        All your personal data as JSON plus your uploaded photos (GDPR Art. 15/20).
+        Al je persoonsgegevens als JSON, plus je geüploade foto&apos;s (AVG art. 15 en 20).
       </p>
       {exportError && <p className="mt-2 text-xs text-red-500" role="status" aria-live="polite">{exportError}</p>}
       {exportMessage && <p className="mt-2 text-xs text-green-600" role="status" aria-live="polite">{exportMessage}</p>}
 
       {deletedReviews.length > 0 && (
         <div className="mt-4 border-t border-snack-border pt-3">
-          <h4 className="text-sm font-semibold text-snack-text mb-1">Recently deleted reviews</h4>
+          <h4 className="text-sm font-semibold text-snack-text mb-1">Onlangs verwijderde reviews</h4>
           <p className="text-xs text-snack-muted mb-2">
-            Deleted reviews can be restored for 30 days. After that they are permanently
-            erased, including their photos.
+            Verwijderde reviews kun je 30 dagen terugzetten. Daarna worden ze met foto&apos;s
+            en al definitief gewist.
           </p>
           <div className="space-y-2">
             {deletedReviews.map((r) => (
@@ -141,7 +141,7 @@ export function PrivacyDataSettings() {
                   <p className="text-sm text-snack-text truncate">{r.dishName ?? r.place.name}</p>
                   <p className="text-xs text-snack-muted truncate">
                     {restorableUntilLabel(r.deletedAt)
-                      ? `Restorable until ${restorableUntilLabel(r.deletedAt)}`
+                      ? `Terug te zetten tot ${restorableUntilLabel(r.deletedAt)}`
                       : r.place.name}
                   </p>
                 </div>
@@ -151,7 +151,7 @@ export function PrivacyDataSettings() {
                   onClick={() => void restoreReview(r.id)}
                   disabled={restoringId === r.id}
                 >
-                  {restoringId === r.id ? 'Restoring...' : 'Restore'}
+                  {restoringId === r.id ? 'Terugzetten…' : 'Terugzetten'}
                 </button>
               </div>
             ))}

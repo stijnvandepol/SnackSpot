@@ -103,7 +103,7 @@ async function sendEmailForNotification(params: CreateNotificationParams): Promi
         await sendNotificationLikeEmail(
           recipient.email,
           recipient.username,
-          params.actorName ?? 'Someone',
+          params.actorName ?? 'Iemand',
           params.dishName ?? null,
           reviewUrl,
         )
@@ -114,7 +114,7 @@ async function sendEmailForNotification(params: CreateNotificationParams): Promi
         await sendNotificationCommentEmail(
           recipient.email,
           recipient.username,
-          params.actorName ?? 'Someone',
+          params.actorName ?? 'Iemand',
           params.dishName ?? null,
           reviewUrl,
         )
@@ -126,7 +126,7 @@ async function sendEmailForNotification(params: CreateNotificationParams): Promi
         await sendNotificationMentionEmail(
           recipient.email,
           recipient.username,
-          params.actorName ?? 'Someone',
+          params.actorName ?? 'Iemand',
           params.placeName ?? null,
           reviewUrl,
         )
@@ -137,7 +137,7 @@ async function sendEmailForNotification(params: CreateNotificationParams): Promi
         await sendNotificationBadgeEmail(
           recipient.email,
           recipient.username,
-          params.badgeName ?? 'New badge',
+          params.badgeName ?? 'Nieuwe badge',
           profileUrl,
         )
       }
@@ -147,7 +147,7 @@ async function sendEmailForNotification(params: CreateNotificationParams): Promi
         await sendNotificationFollowEmail(
           recipient.email,
           recipient.username,
-          params.actorName ?? 'Someone',
+          params.actorName ?? 'Iemand',
           // Link points at the new follower's profile (params.link is /u/<follower>).
           params.link ? `${appUrl}${params.link}` : `${appUrl}/`,
         )
@@ -211,8 +211,8 @@ export function notifyReviewLike(reviewId: string, actorId: string) {
     return createNotification({
       userId: review.userId,
       type: 'REVIEW_LIKE',
-      title: 'New like',
-      message: `${actorName} liked your review${review.dishName ? ` of ${review.dishName}` : ''}`,
+      title: 'Nieuwe like',
+      message: `${actorName} vindt je review${review.dishName ? ` over ${review.dishName}` : ''} leuk`,
       link: `/review/${reviewId}`,
       actorId,
       reviewId,
@@ -233,8 +233,8 @@ export function notifyReviewComment(reviewId: string, commentId: string, actorId
     return createNotification({
       userId: review.userId,
       type: 'REVIEW_COMMENT',
-      title: 'New comment',
-      message: `${actorName} commented on your review${review.dishName ? ` of ${review.dishName}` : ''}`,
+      title: 'Nieuwe reactie',
+      message: `${actorName} reageerde op je review${review.dishName ? ` over ${review.dishName}` : ''}`,
       link: `/review/${reviewId}`,
       actorId,
       reviewId,
@@ -256,8 +256,8 @@ export function notifyMention(mentionedUserId: string, reviewId: string, actorId
     return createNotification({
       userId: mentionedUserId,
       type: 'REVIEW_MENTION',
-      title: 'You were mentioned',
-      message: `${actorName} mentioned you in a review${review.place ? ` at ${review.place.name}` : ''}`,
+      title: 'Je bent genoemd',
+      message: `${actorName} noemde je in een review${review.place ? ` over ${review.place.name}` : ''}`,
       link: `/review/${reviewId}`,
       actorId,
       reviewId,
@@ -283,8 +283,8 @@ export function notifyCommentMention(
     return createNotification({
       userId: mentionedUserId,
       type: 'COMMENT_MENTION',
-      title: 'You were mentioned',
-      message: `${actorName} mentioned you in a comment${review.place ? ` at ${review.place.name}` : ''}`,
+      title: 'Je bent genoemd',
+      message: `${actorName} noemde je in een reactie${review.place ? ` bij een review over ${review.place.name}` : ''}`,
       link: `/review/${reviewId}`,
       actorId,
       reviewId,
@@ -303,8 +303,8 @@ export function notifyNewFollower(followeeId: string, followerUserId: string) {
     return createNotification({
       userId: followeeId,
       type: 'NEW_FOLLOWER',
-      title: 'New follower',
-      message: `${followerName} started following you`,
+      title: 'Nieuwe volger',
+      message: `${followerName} volgt je nu`,
       link: `/u/${followerName}`,
       actorId: followerUserId,
       actorName: followerName,
@@ -317,8 +317,8 @@ export function notifyBadgeEarned(userId: string, badgeName: string) {
     createNotification({
       userId,
       type: 'BADGE_EARNED',
-      title: 'Achievement unlocked',
-      message: `You unlocked "${badgeName}"`,
+      title: 'Nieuwe badge',
+      message: `Je hebt de badge "${badgeName}" verdiend`,
       link: '/profile',
       badgeName,
     }),

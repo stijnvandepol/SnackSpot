@@ -8,7 +8,7 @@ test.describe('Search / Ontdek page', () => {
 
   test('renders the Ontdek heading', async ({ page }) => {
     await page.goto('/search')
-    await expect(page.getByRole('heading', { level: 1, name: /Ontdek eettentjes/i })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: /Ontdek snackplekken/i })).toBeVisible()
   })
 
   test('has a search input', async ({ page }) => {
@@ -29,7 +29,7 @@ test.describe('Search / Ontdek page', () => {
 
   test('shows all tag filter buttons', async ({ page }) => {
     await page.goto('/search')
-    const tags = ['Budget spot', 'Street food', 'Late night', 'Local favorite', 'Worth the detour']
+    const tags = ['Voordelig', 'Streetfood', 'Late trek', 'Favoriet in de buurt', 'Omrijden waard']
     for (const tag of tags) {
       await expect(page.getByRole('button', { name: tag })).toBeVisible()
     }
@@ -37,36 +37,36 @@ test.describe('Search / Ontdek page', () => {
 
   test('tag buttons start with aria-pressed="false"', async ({ page }) => {
     await page.goto('/search')
-    await expect(page.getByRole('button', { name: 'Budget spot' })).toHaveAttribute('aria-pressed', 'false')
+    await expect(page.getByRole('button', { name: 'Voordelig' })).toHaveAttribute('aria-pressed', 'false')
   })
 
   test('clicking a tag sets aria-pressed="true"', async ({ page }) => {
     await page.goto('/search')
-    const tagBtn = page.getByRole('button', { name: 'Budget spot' })
+    const tagBtn = page.getByRole('button', { name: 'Voordelig' })
     await tagBtn.click()
     await expect(tagBtn).toHaveAttribute('aria-pressed', 'true')
   })
 
   test('clicking an active tag deactivates it', async ({ page }) => {
     await page.goto('/search')
-    const tagBtn = page.getByRole('button', { name: 'Budget spot' })
+    const tagBtn = page.getByRole('button', { name: 'Voordelig' })
     await tagBtn.click()
     await expect(tagBtn).toHaveAttribute('aria-pressed', 'true')
     await tagBtn.click()
     await expect(tagBtn).toHaveAttribute('aria-pressed', 'false')
   })
 
-  test('Reset button appears after typing a query', async ({ page }) => {
+  test('Wissen button appears after typing a query', async ({ page }) => {
     await page.goto('/search')
     await page.getByRole('searchbox', { name: 'Zoek op zaak of gerecht' }).fill('fries')
-    await expect(page.getByRole('button', { name: 'Reset' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Wissen' })).toBeVisible()
   })
 
-  test('Reset button clears the search input', async ({ page }) => {
+  test('Wissen button clears the search input', async ({ page }) => {
     await page.goto('/search')
     const input = page.getByRole('searchbox', { name: 'Zoek op zaak of gerecht' })
     await input.fill('fries')
-    await page.getByRole('button', { name: 'Reset' }).click()
+    await page.getByRole('button', { name: 'Wissen' }).click()
     await expect(input).toHaveValue('')
   })
 })
@@ -86,25 +86,26 @@ test.describe('Search page — mobile (390 px)', () => {
 
   test('tag pills are horizontally scrollable', async ({ page }) => {
     await page.goto('/search')
-    // Tag container exists and is visible — overflow-x-auto container
-    const tagRow = page.locator('.overflow-x-auto')
+    // The scrollable row that holds the tag buttons (the page has more than one scroller).
+    const tagRow = page.locator('.overflow-x-auto').filter({ has: page.getByRole('button', { name: 'Voordelig' }) })
     await expect(tagRow).toBeVisible()
   })
 
   test('keyboard shortcut tip is not shown on mobile', async ({ page }) => {
     await page.goto('/search')
-    await expect(page.getByText('Tip: press / to focus search.')).toBeHidden()
+    await expect(page.getByText('Tip: druk op / om te zoeken.')).toBeHidden()
   })
 })
 
 // ─── Desktop-specific ────────────────────────────────────────────────────────
 
 test.describe('Search page — desktop (1280 px)', () => {
-  test.use({ viewport: { width: 1280, height: 720 } })
+  // The keyboard tip is shown for a fine pointer only (see search-client.tsx).
+  test.use({ viewport: { width: 1280, height: 720 }, hasTouch: false })
 
   test('keyboard shortcut tip is shown on desktop', async ({ page }) => {
     await page.goto('/search')
-    await expect(page.getByText('Tip: press / to focus search.')).toBeVisible()
+    await expect(page.getByText('Tip: druk op / om te zoeken.')).toBeVisible()
   })
 
   test('pressing / focuses the search input', async ({ page }) => {

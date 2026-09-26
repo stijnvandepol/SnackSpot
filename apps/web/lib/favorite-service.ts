@@ -43,11 +43,11 @@ export type SaveResult = { ok: true } | { ok: false; status: 404 | 409; error: s
 
 export async function saveFavorite(userId: string, placeId: string): Promise<SaveResult> {
   const place = await prisma.place.findUnique({ where: { id: placeId }, select: { id: true } })
-  if (!place) return { ok: false, status: 404, error: 'Place not found' }
+  if (!place) return { ok: false, status: 404, error: 'Snackplek niet gevonden.' }
 
   const count = await prisma.favorite.count({ where: { userId } })
   if (count >= MAX_FAVORITES_PER_USER) {
-    return { ok: false, status: 409, error: `You can save up to ${MAX_FAVORITES_PER_USER} places` }
+    return { ok: false, status: 409, error: `Je kunt maximaal ${MAX_FAVORITES_PER_USER} snackplekken bewaren.` }
   }
 
   // Idempotent: saving twice is not an error, the second tap just confirms.

@@ -22,7 +22,7 @@ function tempCookie(name: string, value: string, secure: boolean): string {
 
 export async function GET(req: NextRequest) {
   const google = getGoogleProvider()
-  if (!google) return err('Google sign-in is not configured', 404)
+  if (!google) return err('Inloggen met Google is nu niet beschikbaar.', 404)
 
   const state = generateState()
   const codeVerifier = generateCodeVerifier()

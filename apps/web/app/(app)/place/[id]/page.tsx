@@ -77,7 +77,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params
   const place = await getPlace(id)
-  if (!place) return { title: 'Place' }
+  if (!place) return { title: 'Snackplek' }
 
   // Same source as the page body (places.city first), so title and breadcrumb agree.
   const city = place.city?.trim() || extractCity(place.address)
@@ -85,12 +85,14 @@ export async function generateMetadata({
   // "reviews voor da verdi"), and the bare "Name — City" title matched none of it:
   // place pages had impressions but a 0% click-through rate.
   const hasReviews = place.avg_rating !== null && place.review_count > 0
+  const rating = hasReviews ? place.avg_rating!.toFixed(1).replace('.', ',') : ''
+  const reviewLabel = `${place.review_count} review${place.review_count === 1 ? '' : 's'}`
   const title = hasReviews
-    ? `${place.name}${city ? ` ${city}` : ''}: ${place.avg_rating!.toFixed(1)}★ reviews & wat je bestelt`
+    ? `${place.name}${city ? ` in ${city}` : ''}: ${rating} ★ uit ${reviewLabel}`
     : `${place.name}${city ? ` in ${city}` : ''}: reviews en foto's`
   const description = hasReviews
-    ? `${place.name} scoort ${place.avg_rating!.toFixed(1)}★ uit ${place.review_count} fotoreview${place.review_count === 1 ? '' : 's'}. Zie wat bezoekers er echt aten en wat je het best kunt bestellen.`
-    : `${place.name}${city ? ` in ${city}` : ''} op SnackSpot. Nog geen reviews: ben de eerste en laat zien wat je er at.`
+    ? `${place.name}${city ? ` in ${city}` : ''} scoort gemiddeld ${rating} ★ uit ${reviewLabel}. Bekijk foto's, welke gerechten bezoekers bestelden en hoe ze die beoordeelden.`
+    : `${place.name}${city ? ` in ${city}` : ''} staat op SnackSpot, maar heeft nog geen reviews. Schrijf de eerste review en laat zien wat je er bestelde.`
 
   const ogImage = await getPlacePhoto(id)
 
@@ -107,7 +109,7 @@ function buildPlaceBreadcrumb(from: string | undefined, placeName: string): Arra
   const crumbs: Array<{ label: string; href?: string }> = []
   if (from === 'search' || !from) crumbs.push({ label: 'Ontdek', href: '/search' })
   else if (from === 'nearby') crumbs.push({ label: 'Dichtbij', href: '/nearby' })
-  else if (from === 'feed') crumbs.push({ label: 'Feed', href: '/' })
+  else if (from === 'feed') crumbs.push({ label: 'Home', href: '/' })
   else if (from === 'profile') crumbs.push({ label: 'Profiel', href: '/profile' })
   else if (from.startsWith('user:')) {
     const username = from.slice('user:'.length)
@@ -240,7 +242,7 @@ export default async function PlacePage({
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'SnackSpot', item: appUrl },
       ...(cityPageSlug && city
-        ? [{ '@type': 'ListItem', position: 2, name: `Eettentjes in ${city}`, item: `${appUrl}/eettentjes/${cityPageSlug}` }]
+        ? [{ '@type': 'ListItem', position: 2, name: `Snackplekken in ${city}`, item: `${appUrl}/snackplekken/${cityPageSlug}` }]
         : []),
       {
         '@type': 'ListItem',
@@ -276,10 +278,10 @@ export default async function PlacePage({
             {cityPageSlug && city && (
               <p className="mt-2 text-sm">
                 <Link
-                  href={`/eettentjes/${cityPageSlug}`}
+                  href={`/snackplekken/${cityPageSlug}`}
                   className="font-semibold text-snack-primary hover:underline"
                 >
-                  Alle eettentjes in {city}
+                  Alle snackplekken in {city}
                 </Link>
               </p>
             )}
@@ -294,7 +296,7 @@ export default async function PlacePage({
                 <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">Cijfer</p>
                 <div className="mt-1 flex items-center gap-1.5">
                   <span className="text-snack-rating text-sm">{place.avg_rating !== null ? '★'.repeat(Math.max(1, Math.round(place.avg_rating ?? 0))) : '-'}</span>
-                  <span className="font-semibold text-snack-text">{place.avg_rating?.toFixed(1) ?? '-'}</span>
+                  <span className="font-semibold text-snack-text">{place.avg_rating?.toFixed(1).replace('.', ',') ?? '-'}</span>
                 </div>
               </div>
               <div className="h-8 w-px bg-snack-border" />
@@ -308,10 +310,10 @@ export default async function PlacePage({
               target="_blank"
               rel="noopener noreferrer"
               className="mt-3 flex items-center gap-2 rounded-xl border border-snack-border px-4 py-3 text-sm font-semibold text-snack-primary transition hover:bg-snack-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2"
-              aria-label={`Open ${place.name} in Maps`}
+              aria-label={`Open ${place.name} in Google Maps`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              Open in Maps
+              Open in Google Maps
             </a>
             <div className="mt-3">
               <ReportPlace placeId={place.id} placeName={place.name} />
@@ -320,7 +322,7 @@ export default async function PlacePage({
           {topDishes.length > 0 && (
             <div className="card p-5">
               <p className="text-xs font-medium uppercase tracking-[0.16em] text-snack-muted">
-                Dit moet je bestellen
+                Meest beoordeelde gerechten
               </p>
               <ul className="mt-3 space-y-2.5">
                 {topDishes.map((d, i) => (
@@ -345,7 +347,7 @@ export default async function PlacePage({
                       </p>
                     </div>
                     <span className="flex-shrink-0 rounded-full bg-snack-surface px-2.5 py-1 text-sm font-semibold text-snack-text">
-                      ★ {d.avg_rating.toFixed(1)}
+                      ★ {d.avg_rating.toFixed(1).replace('.', ',')}
                     </span>
                   </li>
                 ))}
@@ -367,8 +369,8 @@ export default async function PlacePage({
                 className="hover:underline"
               >
                 OpenStreetMap
-              </a>{' '}
-              contributors
+              </a>
+              -bijdragers
             </p>
           </div>
         </div>

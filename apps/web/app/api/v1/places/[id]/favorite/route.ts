@@ -23,7 +23,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   if (isResponse(auth)) return auth
 
   const rl = await rateLimitUser(auth.sub, 'favorite_toggle', 60, 3600)
-  if (!rl.allowed) return err('Too many changes, try again later', 429)
+  if (!rl.allowed) return err('Te veel wijzigingen achter elkaar. Probeer het zo opnieuw.', 429)
 
   const { id } = await params
   try {
@@ -41,7 +41,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   if (isResponse(auth)) return auth
 
   const rl = await rateLimitUser(auth.sub, 'favorite_toggle', 60, 3600)
-  if (!rl.allowed) return err('Too many changes, try again later', 429)
+  if (!rl.allowed) return err('Te veel wijzigingen achter elkaar. Probeer het zo opnieuw.', 429)
 
   const { id } = await params
   try {

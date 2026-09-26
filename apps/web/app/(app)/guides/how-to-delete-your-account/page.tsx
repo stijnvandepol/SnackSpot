@@ -6,17 +6,17 @@ import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
 const faqItems = [
   {
-    question: 'Is account deletion permanent?',
+    question: 'Is het verwijderen van mijn account definitief?',
     answer:
-      'Yes. Once your account is deleted, your profile, reviews, and all associated data are permanently removed and cannot be recovered.',
+      'Ja. Je profiel, je reviews en al je andere gegevens worden voorgoed verwijderd. Je kunt ze daarna niet meer terughalen.',
   },
   {
-    question: 'What happens to my reviews after I delete my account?',
-    answer: 'Your reviews and all content posted under your account will be removed along with your account.',
+    question: 'Wat gebeurt er met mijn reviews?',
+    answer: 'Je reviews en alles wat je verder hebt geplaatst, worden samen met je account verwijderd.',
   },
   {
-    question: 'Can I reuse my username after deleting my account?',
-    answer: 'After deletion the username is released. Another user may register with the same username in the future.',
+    question: 'Kan ik mijn gebruikersnaam later opnieuw gebruiken?',
+    answer: 'Na het verwijderen komt je gebruikersnaam vrij. Iemand anders kan hem daarna ook kiezen.',
   },
 ]
 
@@ -30,22 +30,26 @@ const faqSchema = {
   })),
 }
 
+const TITLE = 'Je SnackSpot-account verwijderen'
+const DESCRIPTION =
+  'Zo verwijder je je SnackSpot-account en al je gegevens definitief via je profielinstellingen. Lees ook wat er met je reviews en foto’s gebeurt.'
+
 export const metadata: Metadata = {
-  title: { absolute: 'How to delete your SnackSpot account' },
-  description: 'Permanently delete your SnackSpot account and all associated data from your profile settings.',
+  title: { absolute: TITLE },
+  description: DESCRIPTION,
   alternates: {
     canonical: '/guides/how-to-delete-your-account',
   },
   openGraph: {
     type: 'article',
-    title: 'How to delete your SnackSpot account',
-    description: 'Permanently delete your SnackSpot account and all associated data from your profile settings.',
+    title: TITLE,
+    description: DESCRIPTION,
     images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'How to delete your SnackSpot account',
-    description: 'Permanently delete your SnackSpot account and all associated data from your profile settings.',
+    title: TITLE,
+    description: DESCRIPTION,
     images: ['/twitter-image'],
   },
 }
@@ -55,44 +59,47 @@ export default function HowToDeleteYourAccountPage() {
     <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
       <BreadcrumbJsonLd
         items={[
-          { name: 'Guides', path: '/guides' },
-          { name: 'How to Delete Your Account', path: '/guides/how-to-delete-your-account' },
+          { name: 'Uitleg', path: '/guides' },
+          { name: 'Je account verwijderen', path: '/guides/how-to-delete-your-account' },
         ]}
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }} />
 
       <article className="guide-content guide-article prose prose-slate">
-        <h1>How to delete your SnackSpot account</h1>
+        <h1>Je SnackSpot-account verwijderen</h1>
 
         <p>
-          You can permanently delete your SnackSpot account from your profile settings. Deleting your account removes
-          your profile, all reviews you have posted, and all other data associated with your account. This action cannot
-          be undone.
+          Je kunt je account verwijderen via je profielinstellingen. Daarmee verdwijnen je profiel, al je reviews en
+          foto’s en alle andere gegevens van je account. Dit kun je niet terugdraaien.
         </p>
 
-        <h2>Before you delete</h2>
+        <h2>Voordat je begint</h2>
         <p>
-          Make sure you want to permanently remove your account. There is no way to recover your data after deletion. If
-          you just want a break, you can simply stop using the app, your account will remain untouched.
+          Weet je zeker dat je je account wilt verwijderen? Je gegevens zijn daarna niet meer terug te halen. Wil je een
+          kopie bewaren, download dan eerst je gegevens via Instellingen. Wil je alleen even pauze, dan kun je de app
+          ook gewoon niet gebruiken. Je account blijft dan zoals het is.
         </p>
 
-        <h2>Steps to delete your account</h2>
+        <h2>Zo verwijder je je account</h2>
         <ol>
           <li>
-            Make sure you are <Link href="/auth/login">logged in</Link>.
+            Zorg dat je bent <Link href="/auth/login">ingelogd</Link>.
           </li>
           <li>
-            Go to your <Link href="/profile">profile settings</Link>.
+            Ga naar je <Link href="/profile?tab=settings">profielinstellingen</Link>.
           </li>
-          <li>Scroll to the bottom of the settings page.</li>
+          <li>Scrol naar onderen.</li>
           <li>
-            Click <strong>Delete account</strong>.
+            Tik op <strong>Account verwijderen</strong>.
           </li>
-          <li>Confirm the deletion when prompted.</li>
-          <li>Your account and all associated data will be permanently removed.</li>
+          <li>Vul ter bevestiging je wachtwoord in. Log je in met Google, typ dan je gebruikersnaam.</li>
+          <li>
+            Tik nog een keer op <strong>Account verwijderen</strong>. Je account en al je gegevens worden direct
+            verwijderd.
+          </li>
         </ol>
 
-        <h2>FAQ</h2>
+        <h2>Veelgestelde vragen</h2>
         {faqItems.map((item) => (
           <section key={item.question}>
             <h3>{item.question}</h3>

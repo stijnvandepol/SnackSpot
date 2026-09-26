@@ -33,7 +33,7 @@ describe('BottomNav — link structure', () => {
     render(<BottomNav />)
     expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Ontdek' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Create a review or bite' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Review of bite plaatsen' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Dichtbij' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Profiel' })).toBeInTheDocument()
   })
@@ -54,21 +54,21 @@ describe('BottomNav — create sheet', () => {
   })
 
   it('opens the chooser with a Review and a Bite option', () => {
-    fireEvent.click(screen.getByRole('button', { name: 'Create a review or bite' }))
-    expect(screen.getByRole('dialog', { name: 'Create a review or bite' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Review of bite plaatsen' }))
+    expect(screen.getByRole('dialog', { name: 'Review of bite plaatsen' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Review/ })).toHaveAttribute('href', '/add-review')
     expect(screen.getByRole('link', { name: /Bite/ })).toHaveAttribute('href', '/add-bite')
   })
 
   it('explains both options', () => {
-    fireEvent.click(screen.getByRole('button', { name: 'Create a review or bite' }))
-    expect(screen.getByText(/Public and permanent/)).toBeInTheDocument()
-    expect(screen.getByText(/Friends see it for 24 hours/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Review of bite plaatsen' }))
+    expect(screen.getByText(/Openbaar en blijvend/)).toBeInTheDocument()
+    expect(screen.getByText(/Vrienden zien hem 24 uur/)).toBeInTheDocument()
   })
 
   it('closes via the backdrop', () => {
-    fireEvent.click(screen.getByRole('button', { name: 'Create a review or bite' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Review of bite plaatsen' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Sluiten' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })
@@ -128,13 +128,13 @@ describe('BottomNav — create button accessibility', () => {
   })
 
   it('create button announces the dialog it opens', () => {
-    const button = screen.getByRole('button', { name: 'Create a review or bite' })
+    const button = screen.getByRole('button', { name: 'Review of bite plaatsen' })
     expect(button).toHaveAttribute('aria-haspopup', 'dialog')
     expect(button).toHaveAttribute('aria-expanded', 'false')
   })
 
   it('create button has a visually hidden label text', () => {
-    const srText = screen.getByText('Post')
+    const srText = screen.getByText('Plaatsen')
     expect(srText).toHaveClass('sr-only')
   })
 })

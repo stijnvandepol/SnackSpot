@@ -21,17 +21,17 @@ export default function Error({
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
-      <h1 className="font-heading text-6xl font-bold text-snack-primary">Oops</h1>
-      <p className="mt-4 text-xl font-semibold text-snack-text">Something went wrong</p>
+      <h1 className="font-heading text-6xl font-bold text-snack-primary">Oeps</h1>
+      <p className="mt-4 text-xl font-semibold text-snack-text">Er ging iets mis</p>
       <p className="mt-2 text-sm text-snack-muted">
-        An unexpected error occurred. You can try again or head back to the feed.
+        Deze pagina kon niet worden geladen. Probeer het opnieuw of ga terug naar de feed.
       </p>
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <button onClick={reset} className="btn-primary text-sm">
-          Try again
+          Opnieuw proberen
         </button>
         <Link href="/" className="btn-secondary text-sm">
-          Go to Feed
+          Naar de feed
         </Link>
       </div>
     </div>

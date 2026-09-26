@@ -24,7 +24,7 @@ export async function GET(
       where: { username: { equals: username, mode: 'insensitive' } },
       select: { id: true },
     })
-    if (!user) return err('User not found', 404)
+    if (!user) return err('Gebruiker niet gevonden.', 404)
 
     const reviews = await prisma.review.findMany({
       where: {

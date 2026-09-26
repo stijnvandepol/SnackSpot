@@ -6,19 +6,19 @@ import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
 const faqItems = [
   {
-    question: 'Can I add a place even if I am the first person reviewing it?',
+    question: 'Kan ik een snackplek toevoegen als nog niemand er een review over heeft geschreven?',
     answer:
-      'Yes. If the place does not appear in search during the review flow, you can create it yourself and continue posting your review.',
+      'Ja. Staat de snackplek nog niet op SnackSpot, dan kies je hem uit de zoekresultaten en wordt hij toegevoegd zodra je je review plaatst.',
   },
   {
-    question: 'What details should I add for a new place?',
+    question: 'Waar komen de namen en adressen vandaan?',
     answer:
-      'Add the official place name and the most accurate address possible so other people can find it and post about the same location.',
+      'Uit OpenStreetMap. Daardoor hoef je zelf geen naam of adres in te typen en komen reviews van dezelfde zaak op één pagina terecht.',
   },
   {
-    question: 'Do I need to add a place before I can post?',
+    question: 'Moet ik een snackplek toevoegen voordat ik een review kan plaatsen?',
     answer:
-      'Only if the place is not already listed. If it exists in SnackSpot search results, select it and continue with your review.',
+      'Alleen als hij nog niet op SnackSpot staat. Staat hij er al op, kies hem dan uit de lijst en ga verder met je review.',
   },
 ]
 
@@ -32,25 +32,26 @@ const faqSchema = {
   })),
 }
 
+const TITLE = 'Een snackplek toevoegen op SnackSpot'
+const DESCRIPTION =
+  'Staat een snackbar of andere snackplek nog niet op SnackSpot? Zo voeg je hem toe terwijl je een review plaatst, in een paar stappen.'
+
 export const metadata: Metadata = {
-  title: { absolute: 'How to add a place or restaurant on SnackSpot' },
-  description:
-    'Add a new place or restaurant on SnackSpot during the posting flow when the location is not listed yet.',
+  title: { absolute: TITLE },
+  description: DESCRIPTION,
   alternates: {
     canonical: '/guides/how-to-add-a-place',
   },
   openGraph: {
     type: 'article',
-    title: 'How to add a place or restaurant on SnackSpot',
-    description:
-      'Add a new place or restaurant on SnackSpot during the posting flow when the location is not listed yet.',
+    title: TITLE,
+    description: DESCRIPTION,
     images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'How to add a place or restaurant on SnackSpot',
-    description:
-      'Add a new place or restaurant on SnackSpot during the posting flow when the location is not listed yet.',
+    title: TITLE,
+    description: DESCRIPTION,
     images: ['/twitter-image'],
   },
 }
@@ -60,58 +61,58 @@ export default function HowToAddAPlacePage() {
     <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
       <BreadcrumbJsonLd
         items={[
-          { name: 'Guides', path: '/guides' },
-          { name: 'How to Add a Place', path: '/guides/how-to-add-a-place' },
+          { name: 'Uitleg', path: '/guides' },
+          { name: 'Een snackplek toevoegen', path: '/guides/how-to-add-a-place' },
         ]}
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }} />
 
       <article className="guide-content guide-article prose prose-slate">
-        <h1>How to add a place or restaurant on SnackSpot</h1>
+        <h1>Een snackplek toevoegen op SnackSpot</h1>
 
         <p>
-          If the place you want to review is not listed yet, you can add it during the posting flow. This keeps reviews
-          organised under the correct location and makes the place discoverable for other users.
+          Staat de snackplek die je wilt reviewen nog niet op SnackSpot? Dan voeg je hem toe terwijl je je review
+          plaatst. Zo komen reviews bij de juiste zaak terecht en kunnen anderen hem ook vinden.
         </p>
 
-        <h2>When you should add a new place</h2>
+        <h2>Wanneer voeg je een snackplek toe?</h2>
         <ul>
-          <li>The place does not appear in SnackSpot search results.</li>
-          <li>You checked the name and address carefully and still cannot find it.</li>
-          <li>You want to post a review for a real location that has not been added yet.</li>
+          <li>De snackplek staat niet tussen de plekken die al op SnackSpot staan.</li>
+          <li>Je hebt goed gezocht op naam en adres en vindt hem nog steeds niet.</li>
+          <li>Het gaat om een echte zaak waar je zelf hebt gegeten.</li>
         </ul>
 
-        <h2>How to add a place</h2>
+        <h2>Zo voeg je een snackplek toe</h2>
         <ol>
           <li>
-            Open the <Link href="/add-review">post a review</Link> flow.
+            Begin met <Link href="/add-review">een review schrijven</Link> en ga naar de stap <strong>Snackplek</strong>.
           </li>
-          <li>Search for the place by name or address first.</li>
-          <li>If no correct result appears, choose the option to add a new place.</li>
-          <li>Enter the place name exactly as it is used publicly.</li>
-          <li>Add the most complete address you can.</li>
-          <li>Save the place and continue with your review.</li>
+          <li>Zoek op de naam van de zaak. Vind je hem niet, zet dan de straat of plaats erbij.</li>
+          <li>
+            Plekken die al op SnackSpot staan, komen bovenaan. Plekken die er nog niet op staan, zijn in de lijst
+            gemarkeerd als nieuw.
+          </li>
+          <li>Kies de juiste zaak. Controleer het adres onder de naam.</li>
+          <li>Plaats je review. De snackplek wordt dan meteen toegevoegd.</li>
         </ol>
 
-        <h2>Tips for better place data</h2>
+        <h2>Tips</h2>
         <ul>
-          <li>Use the official business name instead of a nickname.</li>
-          <li>Double-check the spelling before saving.</li>
-          <li>Use the correct street address so the place appears in the right area.</li>
-          <li>Avoid adding duplicates if the place already exists under a slightly different spelling.</li>
+          <li>Kijk eerst of de zaak al op SnackSpot staat, soms met een net iets andere schrijfwijze.</li>
+          <li>Let op het adres als een zaak meerdere vestigingen heeft.</li>
+          <li>Gebruik de knop voor plekken bij jou in de buurt als je er nu bent.</li>
         </ul>
 
-        <h2>What happens next</h2>
+        <h2>Wat gebeurt er daarna?</h2>
         <p>
-          After saving the place, you can finish your review immediately. Your review will be linked to the new place,
-          and future users can select the same place when they post.
+          De nieuwe snackplek krijgt een eigen pagina met jouw review erop. Anderen kunnen dezelfde snackplek daarna
+          gewoon kiezen als ze een review plaatsen.
         </p>
         <p>
-          If you have not posted before, read <Link href="/guides/how-to-post-a-review">how to post a review</Link> for
-          the full step-by-step flow.
+          Nog nooit een review geplaatst? Lees <Link href="/guides/how-to-post-a-review">hoe je een review plaatst</Link>.
         </p>
 
-        <h2>FAQ</h2>
+        <h2>Veelgestelde vragen</h2>
         {faqItems.map((item) => (
           <section key={item.question}>
             <h3>{item.question}</h3>

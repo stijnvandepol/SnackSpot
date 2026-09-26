@@ -39,12 +39,12 @@ export function FollowCounts({ username }: { username: string }) {
     <>
       <p className="text-sm text-snack-muted">
         <button type="button" onClick={() => setOpenList('followers')} className="hover:underline">
-          <span className="font-semibold text-snack-text">{counts.followerCount}</span> follower
-          {counts.followerCount === 1 ? '' : 's'}
+          <span className="font-semibold text-snack-text">{counts.followerCount}</span>{' '}
+          {counts.followerCount === 1 ? 'volger' : 'volgers'}
         </button>
         <span className="mx-1.5">·</span>
         <button type="button" onClick={() => setOpenList('following')} className="hover:underline">
-          <span className="font-semibold text-snack-text">{counts.followingCount}</span> following
+          <span className="font-semibold text-snack-text">{counts.followingCount}</span> volgend
         </button>
       </p>
       {openList && (

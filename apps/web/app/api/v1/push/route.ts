@@ -11,7 +11,7 @@ const HttpsUrl = z
   .string()
   .url()
   .max(1024)
-  .refine((u) => u.startsWith('https://'), { message: 'Endpoint must be https' })
+  .refine((u) => u.startsWith('https://'), { message: 'Endpoint moet https gebruiken.' })
 
 const SubscribeSchema = z.object({
   endpoint: HttpsUrl,
@@ -49,14 +49,14 @@ export async function POST(req: NextRequest) {
   const auth = requireAuth(req)
   if (isResponse(auth)) return auth
 
-  if (!env.VAPID_PUBLIC_KEY) return err('Push is not configured on this server', 503)
+  if (!env.VAPID_PUBLIC_KEY) return err('Pushmeldingen zijn nu niet beschikbaar.', 503)
 
   const body = await parseBody(req, SubscribeSchema)
   if (isResponse(body)) return body
 
   try {
     const rl = await rateLimitUser(auth.sub, 'push_subscribe', 20, 3600)
-    if (!rl.allowed) return err('Too many subscription attempts', 429)
+    if (!rl.allowed) return err('Te veel pogingen. Probeer het over een paar minuten opnieuw.', 429)
 
     // Upsert by endpoint: a browser re-subscribing (or a device changing
     // accounts) re-claims the endpoint for the current user.

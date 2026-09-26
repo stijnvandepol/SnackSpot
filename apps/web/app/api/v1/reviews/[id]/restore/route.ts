@@ -19,7 +19,7 @@ export async function POST(
   if (isResponse(auth)) return auth
 
   const rl = await rateLimitUser(auth.sub, 'restore_review', 10, 3600)
-  if (!rl.allowed) return err('Too many requests', 429)
+  if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
   const { id } = await params
 
@@ -28,18 +28,18 @@ export async function POST(
       where: { id },
       select: { userId: true, status: true, deletedAt: true, deletedById: true },
     })
-    if (!review || review.status !== ReviewStatus.DELETED) return err('Review not found', 404)
+    if (!review || review.status !== ReviewStatus.DELETED) return err('Review niet gevonden.', 404)
 
     const verdict = canRestoreReview(review, auth.sub)
     if (!verdict.allowed) {
       switch (verdict.reason) {
         case 'NOT_OWNER':
           // 404, not 403: don't leak the existence of someone else's deleted review
-          return err('Review not found', 404)
+          return err('Review niet gevonden.', 404)
         case 'MOD_DELETED':
-          return err('This review was removed by a moderator and cannot be restored', 403)
+          return err('Deze review is door een moderator verwijderd en kan niet worden teruggezet.', 403)
         case 'WINDOW_EXPIRED':
-          return err('The restore window for this review has expired', 410)
+          return err('De termijn om deze review terug te zetten is verlopen.', 410)
       }
     }
 
@@ -49,7 +49,7 @@ export async function POST(
     })
     await recalculateUserBadges(review.userId)
 
-    return ok({ message: 'Review restored' })
+    return ok({ message: 'Review teruggezet.' })
   } catch (e) {
     return serverError('reviews/[id]/restore', e)
   }

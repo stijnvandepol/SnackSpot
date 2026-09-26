@@ -7,38 +7,38 @@ export interface GuideDefinition {
 export const PILLAR_GUIDES: GuideDefinition[] = [
   {
     href: '/guides/add-snackspot-to-home-screen',
-    title: 'Add SnackSpot to your home screen (iOS & Android)',
+    title: 'SnackSpot op je beginscherm zetten (iPhone en Android)',
     description:
-      'Step-by-step instructions to add SnackSpot as a home screen icon on your phone, including troubleshooting tips.',
+      'Zet SnackSpot als icoon op het beginscherm van je telefoon. Met stappen voor iPhone en Android en oplossingen als het niet lukt.',
   },
   {
     href: '/guides/how-to-create-an-account',
-    title: 'How to create an account',
+    title: 'Een account maken',
     description:
-      'Create a free SnackSpot account in under a minute so you can post reviews, like posts, and save your favourite spots.',
+      'Maak in een paar stappen een gratis account, zodat je reviews kunt plaatsen, kunt liken en snackplekken kunt bewaren.',
   },
   {
     href: '/guides/how-to-change-your-password',
-    title: 'How to change your password',
+    title: 'Je wachtwoord wijzigen',
     description:
-      'Reset or update your SnackSpot password using the forgot-password flow or your account settings.',
+      'Wachtwoord vergeten of wil je een nieuw wachtwoord? Zo stel je het opnieuw in via een link in je mail.',
   },
   {
     href: '/guides/how-to-delete-your-account',
-    title: 'How to delete your account',
+    title: 'Je account verwijderen',
     description:
-      'Permanently remove your SnackSpot account and all associated data from your profile settings.',
+      'Verwijder je account en al je gegevens definitief via je profielinstellingen.',
   },
   {
     href: '/guides/how-to-post-a-review',
-    title: 'How to post a review',
+    title: 'Een review plaatsen',
     description:
-      'Share a photo review of a local food spot — add a place, rate it, write your take, and publish in a few taps.',
+      'Plaats een review met foto’s van een gerecht: foto’s toevoegen, cijfers geven, snackplek kiezen en plaatsen.',
   },
   {
     href: '/guides/how-to-add-a-place',
-    title: 'How to add a place or restaurant',
+    title: 'Een snackplek toevoegen',
     description:
-      'If a spot is not on SnackSpot yet, you can add it yourself while posting a review.',
+      'Staat een snackplek nog niet op SnackSpot? Dan voeg je hem toe terwijl je een review plaatst.',
   },
 ]

@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const rl = await rateLimitIP(getClientIP(req), 'places_verify', 30, 60)
-    if (!rl.allowed) return err('Too many search requests - slow down a moment', 429)
+    if (!rl.allowed) return err('Je zoekt even te snel. Probeer het zo opnieuw.', 429)
 
     const coords = query.lat !== undefined && query.lng !== undefined
       ? { lat: query.lat, lng: query.lng }

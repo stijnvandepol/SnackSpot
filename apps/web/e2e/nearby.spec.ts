@@ -5,16 +5,18 @@ import { test, expect } from '@playwright/test'
 // map tile rendering.
 
 test.describe('Nearby page — desktop (1280 px)', () => {
-  test.use({ viewport: { width: 1280, height: 720 } })
+  // The page picks its layout from `pointer: coarse`, not from the width, so the pointer
+  // type is pinned too: otherwise the mobile project renders the touch layout here.
+  test.use({ viewport: { width: 1280, height: 720 }, hasTouch: false })
 
   test('loads with HTTP 200', async ({ page }) => {
     const res = await page.goto('/nearby')
     expect(res?.status()).toBe(200)
   })
 
-  test('renders the "Eettentjes bij jou in de buurt" heading', async ({ page }) => {
+  test('renders the "Snackplekken bij je in de buurt" heading', async ({ page }) => {
     await page.goto('/nearby')
-    await expect(page.getByRole('heading', { level: 1, name: /Eettentjes bij jou in de buurt/i })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: /Snackplekken bij je in de buurt/i })).toBeVisible()
   })
 
   test('shows an address input on desktop', async ({ page }) => {
@@ -45,7 +47,7 @@ test.describe('Nearby page — desktop (1280 px)', () => {
 
   test('radius slider has an accessible label', async ({ page }) => {
     await page.goto('/nearby')
-    await expect(page.getByRole('slider', { name: 'Search radius' })).toBeVisible()
+    await expect(page.getByRole('slider', { name: 'Zoekstraal' })).toBeVisible()
   })
 
   test('clicking a radius preset activates it', async ({ page }) => {
@@ -81,7 +83,7 @@ test.describe('Nearby page — desktop (1280 px)', () => {
 // ─── Mobile ───────────────────────────────────────────────────────────────────
 
 test.describe('Nearby page — mobile (390 px)', () => {
-  test.use({ viewport: { width: 390, height: 844 } })
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true })
 
   test('loads with HTTP 200', async ({ page }) => {
     const res = await page.goto('/nearby')
@@ -100,18 +102,18 @@ test.describe('Nearby page — mobile (390 px)', () => {
 
   test('radius slider is visible on mobile', async ({ page }) => {
     await page.goto('/nearby')
-    await expect(page.getByRole('slider', { name: 'Search radius' })).toBeVisible()
+    await expect(page.getByRole('slider', { name: 'Zoekstraal' })).toBeVisible()
   })
 
   test('bottom nav is visible on mobile nearby page', async ({ page }) => {
     await page.goto('/nearby')
-    const nav = page.locator('nav').filter({ hasText: 'Create new post' })
+    const nav = page.getByRole('navigation', { name: 'Hoofdmenu' })
     await expect(nav).toBeVisible()
   })
 
   test('Nearby link in bottom nav is marked as current', async ({ page }) => {
     await page.goto('/nearby')
-    const nav = page.locator('nav').filter({ hasText: 'Create new post' })
-    await expect(nav.getByRole('link', { name: 'Nearby' })).toHaveAttribute('aria-current', 'page')
+    const nav = page.getByRole('navigation', { name: 'Hoofdmenu' })
+    await expect(nav.getByRole('link', { name: 'Dichtbij' })).toHaveAttribute('aria-current', 'page')
   })
 })

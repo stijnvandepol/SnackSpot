@@ -74,8 +74,8 @@ export function FollowButton({ username }: { username: string }) {
             onClick={() => setOpenList('followers')}
             className="hover:underline"
           >
-            <span className="font-semibold text-snack-text">{state.followerCount}</span> follower
-            {state.followerCount === 1 ? '' : 's'}
+            <span className="font-semibold text-snack-text">{state.followerCount}</span>{' '}
+            {state.followerCount === 1 ? 'volger' : 'volgers'}
           </button>
           <span className="mx-1.5">·</span>
           <button
@@ -83,7 +83,7 @@ export function FollowButton({ username }: { username: string }) {
             onClick={() => setOpenList('following')}
             className="hover:underline"
           >
-            <span className="font-semibold text-snack-text">{state.followingCount}</span> following
+            <span className="font-semibold text-snack-text">{state.followingCount}</span> volgend
           </button>
         </p>
       )}
@@ -97,7 +97,7 @@ export function FollowButton({ username }: { username: string }) {
           disabled={busy}
           className={state.following ? 'btn-secondary text-sm' : 'btn-primary text-sm'}
         >
-          {state.following ? 'Following' : state.followsMe ? 'Follow back' : 'Follow'}
+          {state.following ? 'Volgend' : state.followsMe ? 'Terugvolgen' : 'Volgen'}
         </button>
       )}
     </div>

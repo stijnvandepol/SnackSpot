@@ -22,10 +22,10 @@ export async function POST(req: NextRequest) {
   if (isResponse(auth)) return auth
 
   const rl = await rateLimitUser(auth.sub, 'photo_upload_fallback', 30, 3600)
-  if (!rl.allowed) return err('Fallback upload rate limit exceeded', 429)
+  if (!rl.allowed) return err("Je uploadt te veel foto's achter elkaar. Probeer het zo opnieuw.", 429)
 
   const photoId = req.nextUrl.searchParams.get('photoId')
-  if (!photoId) return err('photoId is required', 422)
+  if (!photoId) return err('Er ontbreekt een foto. Probeer het opnieuw.', 422)
 
   try {
     const photo = await prisma.photo.findUnique({
@@ -33,21 +33,21 @@ export async function POST(req: NextRequest) {
       select: { id: true, uploaderId: true, storageKey: true, moderationStatus: true },
     })
 
-    if (!photo) return err('Photo not found', 404)
-    if (photo.uploaderId !== auth.sub) return err('Forbidden', 403)
-    if (photo.moderationStatus !== 'PENDING') return err('Photo already uploaded', 409)
+    if (!photo) return err('Foto niet gevonden.', 404)
+    if (photo.uploaderId !== auth.sub) return err('Je hebt hier geen toegang toe.', 403)
+    if (photo.moderationStatus !== 'PENDING') return err('Deze foto is al geüpload.', 409)
 
     const contentTypeRaw = req.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase() ?? ''
-    if (!ALLOWED_MIMES.has(contentTypeRaw)) return err('File type not allowed', 415)
+    if (!ALLOWED_MIMES.has(contentTypeRaw)) return err('Dit bestandstype wordt niet ondersteund. Kies een foto.', 415)
 
     const buffer = Buffer.from(await req.arrayBuffer())
-    if (buffer.length === 0) return err('Empty upload body', 400)
+    if (buffer.length === 0) return err('Het bestand is leeg. Kies een andere foto.', 400)
     if (buffer.length > env.MAX_FILE_SIZE_BYTES) {
-      return err(`Fallback upload too large - max ${env.MAX_FILE_SIZE_BYTES / 1024 / 1024} MB`, 413)
+      return err(`Dit bestand is te groot. Maximaal ${env.MAX_FILE_SIZE_BYTES / 1024 / 1024} MB.`, 413)
     }
 
     if (!matchesMagicBytes(contentTypeRaw, buffer.subarray(0, 12))) {
-      return err('File contents do not match declared type', 415)
+      return err('Dit bestand is geen geldige foto. Kies een andere foto.', 415)
     }
 
     await minioClient.putObject(BUCKET, photo.storageKey, buffer, buffer.length, {

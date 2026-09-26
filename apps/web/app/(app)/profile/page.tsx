@@ -90,7 +90,7 @@ interface MeProfile {
 // 'large' (2048px, q90) cost several times the bytes for no visible difference.
 const PROFILE_VARIANT_PREF = ['medium', 'large', 'thumb'] as const
 
-const TIER_LABEL: Record<string, string> = { BRONZE: 'Bronze', SILVER: 'Silver', GOLD: 'Gold' }
+const TIER_LABEL: Record<string, string> = { BRONZE: 'Brons', SILVER: 'Zilver', GOLD: 'Goud' }
 const TIER_CLASS: Record<string, string> = {
   BRONZE: 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800',
   SILVER: 'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700',
@@ -149,7 +149,7 @@ function ProfileContent() {
       })
       .catch(() => {
         // Network failure: surface it instead of silently showing an empty page.
-        setProfileError('Failed to load profile data')
+        setProfileError('Je profiel kon niet worden geladen.')
       })
       .finally(() => setLoading(false))
   }, [user, accessToken])
@@ -184,15 +184,15 @@ function ProfileContent() {
 
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setProfileError(json.error ?? 'Avatar upload failed')
+        setProfileError(json.error ?? 'Uploaden van je profielfoto is mislukt.')
         return
       }
 
       setMeProfile((prev) => prev ? { ...prev, avatarKey: json.data.avatarKey } : prev)
       await reloadMe()
-      setProfileMessage('Profile image updated.')
+      setProfileMessage('Profielfoto bijgewerkt.')
     } catch {
-      setProfileError('Avatar upload failed')
+      setProfileError('Uploaden van je profielfoto is mislukt.')
     } finally {
       setAvatarUploading(false)
     }
@@ -220,7 +220,7 @@ function ProfileContent() {
 
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setProfileError(json.error ?? 'Failed to save profile')
+        setProfileError(json.error ?? 'Opslaan van je profiel is mislukt.')
         return
       }
 
@@ -228,9 +228,9 @@ function ProfileContent() {
       setEditUsername(json.data.username ?? '')
       setEditBio(json.data.bio ?? '')
       await reloadMe()
-      setProfileMessage('Profile updated.')
+      setProfileMessage('Profiel bijgewerkt.')
     } catch {
-      setProfileError('Failed to save profile')
+      setProfileError('Opslaan van je profiel is mislukt.')
     } finally {
       setProfileSaving(false)
     }
@@ -249,13 +249,13 @@ function ProfileContent() {
       })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setDeleteError(json.error ?? 'Failed to delete account')
+        setDeleteError(json.error ?? 'Account verwijderen is mislukt.')
         return
       }
       await logout()
       router.push('/auth/login')
     } catch {
-      setDeleteError('Failed to delete account')
+      setDeleteError('Account verwijderen is mislukt.')
     } finally {
       setDeleteLoading(false)
     }
@@ -263,17 +263,17 @@ function ProfileContent() {
 
   const dangerZone = (
     <div className="card p-4 border border-red-200 dark:border-red-900">
-      <h3 className="font-heading font-semibold text-red-600 dark:text-red-400 mb-1">Danger Zone</h3>
+      <h3 className="font-heading font-semibold text-red-600 dark:text-red-400 mb-1">Account verwijderen</h3>
       <p className="text-xs text-snack-muted mb-3">
-        Permanently delete your account and all your data, including your photos.
-        This cannot be undone. Tip: download a copy of your data first via Privacy &amp; data.
+        Verwijder je account en al je gegevens, ook je foto&apos;s. Dit kun je niet terugdraaien.
+        Tip: download eerst een kopie van je gegevens via Privacy en gegevens.
       </p>
       <button
         type="button"
         className="w-full text-sm py-2 px-4 rounded-xl border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition font-medium"
         onClick={() => { setDeleteModalOpen(true); setDeletePassword(''); setDeleteError(null) }}
       >
-        Delete my account
+        Account verwijderen
       </button>
     </div>
   )
@@ -294,13 +294,13 @@ function ProfileContent() {
 
   const statsPanel = stats ? (
     <div className="card p-4 mb-6">
-      <h2 className="font-heading font-semibold text-snack-text mb-4">Stats</h2>
+      <h2 className="font-heading font-semibold text-snack-text mb-4">Statistieken</h2>
 
       {/* Level & XP */}
       <div className="mb-3 rounded-xl bg-snack-surface px-4 py-3">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold text-snack-text">
-            Level {stats.xp.level}
+            Niveau {stats.xp.level}
             <span className="ml-1.5 text-xs font-medium text-snack-primary">{stats.xp.title}</span>
           </p>
           <p className="text-xs text-snack-muted">
@@ -328,25 +328,25 @@ function ProfileContent() {
           <p className="text-2xl font-bold leading-none text-snack-text">
             {stats.streak.current}
             <span className="ml-1.5 text-sm font-medium text-snack-muted">
-              day{stats.streak.current === 1 ? '' : 's'} streak
+              {stats.streak.current === 1 ? 'dag' : 'dagen'} op rij
             </span>
           </p>
           <p className="mt-1 text-xs text-snack-muted">
             {stats.streak.current > 0
-              ? 'Log a bite or review today to keep it going.'
-              : 'Log a bite or review today to start a streak.'}
+              ? 'Log vandaag een bite of plaats een review om je reeks vast te houden.'
+              : 'Log vandaag een bite of plaats een review om een reeks te starten.'}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         {[
-          { value: stats.totalPosts, label: 'Reviews written' },
-          { value: stats.bitesCount, label: 'Bites logged', href: '/bites' },
-          { value: stats.totalLikesReceived, label: 'Likes received' },
-          { value: stats.uniqueLocationsVisited, label: 'Locations visited' },
-          { value: stats.streak.best, label: 'Best streak (days)' },
-          { value: stats.xp.total, label: 'Total XP' },
+          { value: stats.totalPosts, label: 'Reviews geschreven' },
+          { value: stats.bitesCount, label: 'Bites gelogd', href: '/bites' },
+          { value: stats.totalLikesReceived, label: 'Likes ontvangen' },
+          { value: stats.uniqueLocationsVisited, label: 'Snackplekken bezocht' },
+          { value: stats.streak.best, label: 'Langste reeks (dagen)' },
+          { value: stats.xp.total, label: 'XP totaal' },
         ].map(({ value, label, href }) =>
           href ? (
             <Link key={label} href={href} className="rounded-xl bg-snack-surface p-3 transition hover:bg-snack-border/40 focus:outline-none focus:ring-2 focus:ring-snack-primary">
@@ -366,9 +366,9 @@ function ProfileContent() {
 
   const achievementsPanel = (
     <div className="card p-4 mb-6">
-      <h2 className="font-heading font-semibold text-snack-text mb-4">Achievements</h2>
+      <h2 className="font-heading font-semibold text-snack-text mb-4">Badges</h2>
       {allBadgeRows.length === 0 ? (
-        <p className="text-sm text-snack-muted">Write your first review to start earning achievements.</p>
+        <p className="text-sm text-snack-muted">Schrijf je eerste review om badges te verdienen.</p>
       ) : (
         <div className="space-y-3">
           {allBadgeRows.map((row) => {
@@ -411,11 +411,54 @@ function ProfileContent() {
     return (
       <AuthGate
         title="Je eigen SnackSpot-profiel"
-        body="Met een account zie je hier je reviews, bewaarde zaken en badges."
+        body="Met een account zie je hier je reviews, bewaarde snackplekken en badges."
         returnTo={'/profile'}
       />
     )
   }
+
+  // Rendered in both layouts: the mobile settings tab shows the delete button too, and the
+  // modal used to live in the desktop branch only, so on a phone the button did nothing.
+  const deleteAccountModal = (
+  <Modal
+    open={deleteModalOpen}
+    onClose={() => { if (!deleteLoading) setDeleteModalOpen(false) }}
+    title="Account verwijderen"
+  >
+    <p className="text-sm text-snack-muted mb-4">
+      Je account, je reviews en al je andere gegevens worden voorgoed verwijderd. Vul je wachtwoord in om te bevestigen.
+      Aangemeld met Google? Typ dan je gebruikersnaam.
+    </p>
+    <input
+      type="password"
+      className="input mb-3"
+      aria-label="Wachtwoord, of gebruikersnaam bij een Google-account"
+      placeholder="Wachtwoord (of gebruikersnaam bij Google)"
+      value={deletePassword}
+      onChange={(e) => setDeletePassword(e.target.value)}
+      autoFocus
+    />
+    {deleteError && <p className="text-xs text-red-500 mb-3">{deleteError}</p>}
+    <div className="flex gap-2">
+      <button
+        type="button"
+        className="btn-secondary flex-1 text-sm"
+        onClick={() => setDeleteModalOpen(false)}
+        disabled={deleteLoading}
+      >
+        Annuleren
+      </button>
+      <button
+        type="button"
+        className="flex-1 text-sm py-2 px-4 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium disabled:opacity-50"
+        onClick={handleDeleteAccount}
+        disabled={deleteLoading || !deletePassword}
+      >
+        {deleteLoading ? 'Verwijderen…' : 'Account verwijderen'}
+      </button>
+    </div>
+  </Modal>
+  )
 
   if (isMobileViewport === null) {
     return (
@@ -444,7 +487,7 @@ function ProfileContent() {
                 {meProfile?.isVerified && <VerifiedBadge className="w-4 h-4" />}
               </h1>
               <p className="text-xs text-snack-muted">@{meProfile?.username ?? user.username}</p>
-              <p className="mt-1 text-xs text-snack-muted line-clamp-2">{meProfile?.bio?.trim() || 'Snack hunter & reviewer'}</p>
+              <p className="mt-1 text-xs text-snack-muted line-clamp-2">{meProfile?.bio?.trim() || 'Snackliefhebber'}</p>
               <div className="mt-1">
                 <FollowCounts username={meProfile?.username ?? user.username} />
               </div>
@@ -453,7 +496,7 @@ function ProfileContent() {
               onClick={async () => { await logout(); router.push('/auth/login') }}
               className="btn-secondary text-xs py-1 px-2"
             >
-              Log out
+              Uitloggen
             </button>
           </div>
 
@@ -485,7 +528,7 @@ function ProfileContent() {
                 href="/bites"
                 className="btn-secondary mb-4 flex w-full items-center justify-center gap-1.5 text-sm"
               >
-                <span aria-hidden="true">🍟</span> My Bites
+                <span aria-hidden="true">🍟</span> Mijn bites
               </Link>
               {loading && (
                 <div className="space-y-4">
@@ -497,8 +540,8 @@ function ProfileContent() {
 
               {!loading && reviews.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-snack-muted text-sm">You haven&apos;t written any reviews yet.</p>
-                  <a href="/add-review" className="btn-primary mt-4 inline-block">Add your first review</a>
+                  <p className="text-snack-muted text-sm">Je hebt nog geen reviews geschreven.</p>
+                  <a href="/add-review" className="btn-primary mt-4 inline-block">Schrijf je eerste review</a>
                 </div>
               )}
 
@@ -537,20 +580,20 @@ function ProfileContent() {
             <div className="space-y-4">
               {/* Profile Settings */}
               <div className="card p-4">
-                <h3 className="font-heading font-semibold text-snack-text mb-3">Profile Settings</h3>
+                <h3 className="font-heading font-semibold text-snack-text mb-3">Profiel</h3>
                 <button
                   type="button"
                   className="btn-secondary w-full text-sm mb-3"
                   onClick={() => setIsEditingProfile((v) => !v)}
                 >
-                  {isEditingProfile ? 'Close' : 'Edit Profile'}
+                  {isEditingProfile ? 'Sluiten' : 'Profiel bewerken'}
                 </button>
 
                 {isEditingProfile && (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <label className="btn-secondary text-xs cursor-pointer">
-                        {avatarUploading ? 'Uploading...' : 'Change picture'}
+                        {avatarUploading ? 'Uploaden…' : 'Profielfoto wijzigen'}
                         <input
                           type="file"
                           accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif"
@@ -566,7 +609,7 @@ function ProfileContent() {
                     </div>
 
                     <div>
-                      <label htmlFor="profile-username" className="label text-xs">Username</label>
+                      <label htmlFor="profile-username" className="label text-xs">Gebruikersnaam</label>
                       <input
                         id="profile-username"
                         className="input text-sm"
@@ -588,7 +631,7 @@ function ProfileContent() {
                         value={editBio}
                         onChange={(e) => setEditBio(e.target.value)}
                         maxLength={280}
-                        placeholder="Tell people who you are"
+                        placeholder="Vertel wie je bent"
                       />
                     </div>
 
@@ -596,7 +639,7 @@ function ProfileContent() {
                     {profileMessage && <p className="text-xs text-green-600">{profileMessage}</p>}
 
                     <button className="btn-primary w-full text-sm" onClick={handleSaveProfile} disabled={profileSaving || avatarUploading}>
-                      {profileSaving ? 'Saving...' : 'Save'}
+                      {profileSaving ? 'Opslaan…' : 'Opslaan'}
                     </button>
                   </div>
                 )}
@@ -604,14 +647,14 @@ function ProfileContent() {
 
               {/* Appearance */}
               <div className="card p-4">
-                <h3 className="font-heading font-semibold text-snack-text mb-3">Appearance</h3>
+                <h3 className="font-heading font-semibold text-snack-text mb-3">Weergave</h3>
                 <ThemeSettings />
               </div>
 
               {/* Notification Preferences */}
               <PushSettings />
               <div className="card p-4">
-                <h3 className="font-heading font-semibold text-snack-text mb-3">Notification Preferences</h3>
+                <h3 className="font-heading font-semibold text-snack-text mb-3">E-mailmeldingen</h3>
                 <NotificationSettings embedded />
               </div>
 
@@ -621,6 +664,7 @@ function ProfileContent() {
             </div>
           )}
         </div>
+        {deleteAccountModal}
       </div>
     )
   }
@@ -640,7 +684,7 @@ function ProfileContent() {
             {meProfile?.isVerified && <VerifiedBadge className="w-5 h-5" />}
           </h1>
           <p className="text-sm text-snack-muted">@{meProfile?.username ?? user.username}</p>
-          <p className="text-xs text-snack-muted mt-1">{meProfile?.bio?.trim() || 'Snack hunter & reviewer'}</p>
+          <p className="text-xs text-snack-muted mt-1">{meProfile?.bio?.trim() || 'Snackliefhebber'}</p>
           <div className="mt-1">
             <FollowCounts username={meProfile?.username ?? user.username} />
           </div>
@@ -649,7 +693,7 @@ function ProfileContent() {
             : user.role === 'MODERATOR' ? 'bg-purple-100 text-purple-700'
             : 'bg-snack-surface text-snack-muted'
           }`}>
-            {user.role}
+            {ROLE_LABELS[user.role] ?? user.role}
           </span>
         </div>
         <div className="ml-auto">
@@ -657,7 +701,7 @@ function ProfileContent() {
             onClick={async () => { await logout(); router.push('/auth/login') }}
             className="btn-secondary text-sm"
           >
-            Log out
+            Uitloggen
           </button>
         </div>
       </div>
@@ -682,9 +726,9 @@ function ProfileContent() {
       {tab === 'posts' && (
         <>
           <div className="flex items-center justify-between">
-            <h2 className="font-heading font-semibold text-lg text-snack-text">My Posts</h2>
+            <h2 className="font-heading font-semibold text-lg text-snack-text">Mijn reviews</h2>
             <Link href="/bites" className="btn-secondary text-sm">
-              <span aria-hidden="true">🍟</span> My Bites
+              <span aria-hidden="true">🍟</span> Mijn bites
             </Link>
           </div>
 
@@ -698,8 +742,8 @@ function ProfileContent() {
 
           {!loading && reviews.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-snack-muted text-sm">You haven&apos;t written any reviews yet.</p>
-              <a href="/add-review" className="btn-primary mt-4 inline-block">Add your first review</a>
+              <p className="text-snack-muted text-sm">Je hebt nog geen reviews geschreven.</p>
+              <a href="/add-review" className="btn-primary mt-4 inline-block">Schrijf je eerste review</a>
             </div>
           )}
 
@@ -718,7 +762,7 @@ function ProfileContent() {
 
       {tab === 'saved' && (
         <>
-          <h2 className="font-heading font-semibold text-lg text-snack-text">Bewaarde zaken</h2>
+          <h2 className="font-heading font-semibold text-lg text-snack-text">Bewaarde snackplekken</h2>
           <SavedPlacesList />
         </>
       )}
@@ -746,23 +790,23 @@ function ProfileContent() {
       {tab === 'settings' && (
         <>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-heading font-semibold text-snack-text">Profile</h2>
+            <h2 className="font-heading font-semibold text-snack-text">Profiel</h2>
             <button
               type="button"
               className="btn-secondary text-sm"
               onClick={() => setIsEditingProfile((v) => !v)}
             >
-              {isEditingProfile ? 'Close' : 'Edit Profile'}
+              {isEditingProfile ? 'Sluiten' : 'Profiel bewerken'}
             </button>
           </div>
 
           {isEditingProfile && (
             <div className="card p-4 mb-6 space-y-3">
-              <h3 className="font-heading font-semibold text-snack-text">Edit Profile</h3>
+              <h3 className="font-heading font-semibold text-snack-text">Profiel bewerken</h3>
 
               <div className="flex items-center gap-3">
                 <label className="btn-secondary text-sm cursor-pointer">
-                  {avatarUploading ? 'Uploading...' : 'Change profile image'}
+                  {avatarUploading ? 'Uploaden…' : 'Profielfoto wijzigen'}
                   <input
                     type="file"
                     accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif"
@@ -778,7 +822,7 @@ function ProfileContent() {
               </div>
 
               <div>
-                <label htmlFor="profile-username" className="label">Username</label>
+                <label htmlFor="profile-username" className="label">Gebruikersnaam</label>
                 <input
                   id="profile-username"
                   className="input"
@@ -791,10 +835,10 @@ function ProfileContent() {
                 />
                 <p className="mt-1 text-xs text-snack-muted">
                   {meProfile?.usernameCanChangeNow
-                    ? 'You can change your username now.'
+                    ? 'Je kunt je gebruikersnaam nu wijzigen.'
                     : meProfile?.nextUsernameChangeAt
-                      ? `Username can be changed again after ${new Date(meProfile.nextUsernameChangeAt).toLocaleDateString()}.`
-                      : 'Username can be changed once every 30 days.'}
+                      ? `Je kunt je gebruikersnaam weer wijzigen na ${new Date(meProfile.nextUsernameChangeAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}.`
+                      : 'Je kunt je gebruikersnaam één keer per 30 dagen wijzigen.'}
                 </p>
               </div>
 
@@ -807,7 +851,7 @@ function ProfileContent() {
                   value={editBio}
                   onChange={(e) => setEditBio(e.target.value)}
                   maxLength={280}
-                  placeholder="Tell people who you are and what you love to eat."
+                  placeholder="Vertel wie je bent en wat je graag eet."
                 />
               </div>
 
@@ -815,22 +859,22 @@ function ProfileContent() {
               {profileMessage && <p className="text-sm text-green-600">{profileMessage}</p>}
 
               <button className="btn-primary" onClick={handleSaveProfile} disabled={profileSaving || avatarUploading}>
-                {profileSaving ? 'Saving...' : 'Save profile'}
+                {profileSaving ? 'Opslaan…' : 'Profiel opslaan'}
               </button>
             </div>
           )}
 
           <div className="mb-6 flex flex-wrap gap-2">
-            <Link href={`/u/${user.username}`} className="btn-secondary text-sm py-2">Public Profile</Link>
+            <Link href={`/u/${user.username}`} className="btn-secondary text-sm py-2">Openbaar profiel</Link>
           </div>
 
           <div className="mb-6">
-            <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Appearance</h2>
+            <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Weergave</h2>
             <ThemeSettings />
           </div>
 
           <div className="mb-6">
-            <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Notification Settings</h2>
+            <h2 className="font-heading font-semibold text-lg text-snack-text mb-4">Meldingen</h2>
             <PushSettings />
             <NotificationSettings embedded />
           </div>
@@ -843,46 +887,15 @@ function ProfileContent() {
         </>
       )}
 
-      <Modal
-        open={deleteModalOpen}
-        onClose={() => { if (!deleteLoading) setDeleteModalOpen(false) }}
-        title="Delete account"
-      >
-        <p className="text-sm text-snack-muted mb-4">
-          This permanently deletes your account, reviews, and all associated data. Enter your password to confirm.
-          Signed up with Google? Type your username instead.
-        </p>
-        <input
-          type="password"
-          className="input mb-3"
-          aria-label="Password, or username for Google accounts"
-          placeholder="Password (or username for Google accounts)"
-          value={deletePassword}
-          onChange={(e) => setDeletePassword(e.target.value)}
-          autoFocus
-        />
-        {deleteError && <p className="text-xs text-red-500 mb-3">{deleteError}</p>}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            className="btn-secondary flex-1 text-sm"
-            onClick={() => setDeleteModalOpen(false)}
-            disabled={deleteLoading}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="flex-1 text-sm py-2 px-4 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium disabled:opacity-50"
-            onClick={handleDeleteAccount}
-            disabled={deleteLoading || !deletePassword}
-          >
-            {deleteLoading ? 'Deleting...' : 'Delete account'}
-          </button>
-        </div>
-      </Modal>
+      {deleteAccountModal}
     </div>
   )
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  USER: 'Lid',
+  MODERATOR: 'Moderator',
+  ADMIN: 'Beheerder',
 }
 
 const PROFILE_TAB_LABELS: Record<string, string> = {

@@ -18,7 +18,7 @@ export default async function PlaceOpenGraphImage({ params }: { params: Promise<
     },
   })
 
-  const name = place?.name ?? 'Food Spot'
+  const name = place?.name ?? 'Snackplek'
   const city = place ? (extractCity(place.address) ?? place.address) : ''
   const reviewCount = place?._count.reviews ?? 0
   const reviewLabel = reviewCount === 1 ? '1 review' : `${reviewCount} reviews`

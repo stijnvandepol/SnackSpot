@@ -12,20 +12,20 @@ test.describe('Desktop navigation (1280 px)', () => {
     await expect(page.locator('header')).toBeVisible()
   })
 
-  test('top nav contains Home, Ontdek, Dichtbij, Eettentjes and Post links', async ({ page }) => {
+  test('top nav contains Home, Ontdek, Dichtbij, Snackplekken links and the Plaatsen button', async ({ page }) => {
     await page.goto('/')
     const header = page.locator('header')
     await expect(header.getByRole('link', { name: 'Home', exact: true })).toBeVisible()
     await expect(header.getByRole('link', { name: 'Ontdek' })).toBeVisible()
-    await expect(header.getByRole('link', { name: 'Eettentjes' })).toBeVisible()
+    await expect(header.getByRole('link', { name: 'Snackplekken' })).toBeVisible()
     await expect(header.getByRole('link', { name: 'Dichtbij' })).toBeVisible()
-    await expect(header.getByRole('link', { name: 'Post' })).toBeVisible()
+    await expect(header.getByRole('button', { name: 'Plaatsen' })).toBeVisible()
   })
 
   test('bottom nav is not visible on desktop', async ({ page }) => {
     await page.goto('/')
     // The BottomNav renders inside a <nav> with md:hidden; at 1280px it is display:none
-    const bottomNav = page.locator('nav').filter({ hasText: 'Create new post' })
+    const bottomNav = page.getByRole('navigation', { name: 'Hoofdmenu' })
     await expect(bottomNav).toBeHidden()
   })
 
@@ -62,16 +62,16 @@ test.describe('Mobile navigation (390 px)', () => {
 
   test('shows the bottom navigation bar', async ({ page }) => {
     await page.goto('/')
-    const bottomNav = page.locator('nav').filter({ hasText: 'Create new post' })
+    const bottomNav = page.getByRole('navigation', { name: 'Hoofdmenu' })
     await expect(bottomNav).toBeVisible()
   })
 
   test('bottom nav has all 5 links', async ({ page }) => {
     await page.goto('/')
-    const bottomNav = page.locator('nav').filter({ hasText: 'Create new post' })
+    const bottomNav = page.getByRole('navigation', { name: 'Hoofdmenu' })
     await expect(bottomNav.getByRole('link', { name: 'Home' })).toBeVisible()
     await expect(bottomNav.getByRole('link', { name: 'Ontdek' })).toBeVisible()
-    await expect(bottomNav.getByRole('link', { name: 'Create new post' })).toBeVisible()
+    await expect(bottomNav.getByRole('button', { name: 'Review of bite plaatsen' })).toBeVisible()
     await expect(bottomNav.getByRole('link', { name: 'Dichtbij' })).toBeVisible()
     await expect(bottomNav.getByRole('link', { name: 'Profiel' })).toBeVisible()
   })
@@ -84,24 +84,24 @@ test.describe('Mobile navigation (390 px)', () => {
 
   test('mobile brand bar is visible', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('link', { name: 'SnackSpot home' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Naar de SnackSpot-homepage' })).toBeVisible()
   })
 
   test('Home link in bottom nav has aria-current="page" on /', async ({ page }) => {
     await page.goto('/')
-    const bottomNav = page.locator('nav').filter({ hasText: 'Create new post' })
+    const bottomNav = page.getByRole('navigation', { name: 'Hoofdmenu' })
     await expect(bottomNav.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page')
   })
 
   test('Ontdek link in bottom nav has aria-current="page" on /search', async ({ page }) => {
     await page.goto('/search')
-    const bottomNav = page.locator('nav').filter({ hasText: 'Create new post' })
+    const bottomNav = page.getByRole('navigation', { name: 'Hoofdmenu' })
     await expect(bottomNav.getByRole('link', { name: 'Ontdek' })).toHaveAttribute('aria-current', 'page')
   })
 
   test('clicking a bottom nav link navigates to the correct page', async ({ page }) => {
     await page.goto('/')
-    const bottomNav = page.locator('nav').filter({ hasText: 'Create new post' })
+    const bottomNav = page.getByRole('navigation', { name: 'Hoofdmenu' })
     await bottomNav.getByRole('link', { name: 'Ontdek' }).click()
     await expect(page).toHaveURL('/search')
   })

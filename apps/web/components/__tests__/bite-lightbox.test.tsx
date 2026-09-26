@@ -50,7 +50,7 @@ describe('BiteLightbox', () => {
       expect.stringContaining(encodeURIComponent('photos/large/abc.webp')),
     )
     expect(screen.getByText(/Lunch/)).toBeInTheDocument()
-    expect(screen.getByText(/10 Jun 2026/)).toBeInTheDocument()
+    expect(screen.getByText(/10 jun 2026/)).toBeInTheDocument()
     expect(screen.getByText('Broodje Bram')).toBeInTheDocument()
     expect(screen.getByText('Beste broodje van de stad')).toBeInTheDocument()
   })
@@ -82,7 +82,7 @@ describe('BiteLightbox', () => {
     // Press that starts on the backdrop itself: must close.
     fireEvent.mouseDown(dialog.parentElement!)
     expect(onClose).toHaveBeenCalledTimes(2)
-    fireEvent.click(screen.getByRole('button', { name: 'Close photo viewer' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Foto sluiten' }))
     expect(onClose).toHaveBeenCalledTimes(3)
   })
 
@@ -110,7 +110,7 @@ describe('BiteLightbox', () => {
     render(
       <BiteLightbox bite={{ ...baseBite, user: { username: 'foodie_nl' } }} onClose={() => {}} />,
     )
-    const closeButton = screen.getByRole('button', { name: 'Close photo viewer' })
+    const closeButton = screen.getByRole('button', { name: 'Foto sluiten' })
     const link = screen.getByRole('link', { name: '@foodie_nl' })
     link.focus()
     fireEvent.keyDown(document, { key: 'Tab' })

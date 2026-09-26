@@ -35,10 +35,10 @@ describe('level titles', () => {
   it('maps levels to the highest earned title', () => {
     expect(levelTitle(1)).toBe('Snacker')
     expect(levelTitle(2)).toBe('Snacker')
-    expect(levelTitle(3)).toBe('Taster')
-    expect(levelTitle(5)).toBe('Foodie')
-    expect(levelTitle(11)).toBe('Local Explorer')
-    expect(levelTitle(99)).toBe('Food Legend')
+    expect(levelTitle(3)).toBe('Proever')
+    expect(levelTitle(5)).toBe('Snackfan')
+    expect(levelTitle(11)).toBe('Ontdekker')
+    expect(levelTitle(99)).toBe('Snacklegende')
   })
 })
 

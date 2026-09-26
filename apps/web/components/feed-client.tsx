@@ -163,15 +163,15 @@ export function FeedClient({
       {!initial && reviews.length === 0 && scope === 'discover' && (
         <div className="text-center py-20">
           <p className="text-snack-muted">Er staan nog geen reviews.</p>
-          <Link href="/add-review" className="btn-primary mt-4 inline-block">Plaats de eerste</Link>
+          <Link href="/add-review" className="btn-primary mt-4 inline-block">Schrijf de eerste review</Link>
         </div>
       )}
 
       {!initial && reviews.length === 0 && scope === 'following' && (
         <div className="text-center py-20">
-          <p className="font-medium text-snack-text">Het is hier nog stil.</p>
-          <p className="mt-1 text-sm text-snack-muted">Volg andere spotters om hun reviews hier te zien.</p>
-          <Link href="/search" className="btn-primary mt-4 inline-block">Vind mensen &amp; zaken</Link>
+          <p className="font-medium text-snack-text">Nog geen reviews van mensen die je volgt.</p>
+          <p className="mt-1 text-sm text-snack-muted">Volg andere gebruikers om hun reviews hier te zien.</p>
+          <Link href="/search" className="btn-primary mt-4 inline-block">Zoek mensen en snackplekken</Link>
         </div>
       )}
 
@@ -206,7 +206,7 @@ export function FeedClient({
       )}
 
       {!hasMore && reviews.length > 0 && (
-        <p className="text-center text-sm text-snack-muted py-6">Meer is er niet. Tijd om er zelf een te halen.</p>
+        <p className="text-center text-sm text-snack-muted py-6">Je hebt alles gezien. Zelf iets gegeten? Schrijf een review.</p>
       )}
     </PullToRefresh>
   )

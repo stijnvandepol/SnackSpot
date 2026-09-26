@@ -12,7 +12,7 @@ import { logger } from '@/lib/logger'
 // A module-level Response constant would return a drained stream on the second request.
 function genericOk() {
   return withNoStore(ok({
-    message: 'If an account with that email exists, a reset link has been sent. If you cannot find the email, please check your spam folder.',
+    message: 'Als er een account bij dit e-mailadres hoort, hebben we een resetlink gestuurd. Zie je niets? Kijk ook in je spammap.',
   }))
 }
 
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   const ip = getClientIP(req)
   const ipRl = await rateLimitIP(ip, 'forgot-password', 5, 900)
   if (!ipRl.allowed) {
-    return err('Too many requests – try again later', 429)
+    return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
   }
 
   const body = await parseBody(req, ForgotPasswordSchema)

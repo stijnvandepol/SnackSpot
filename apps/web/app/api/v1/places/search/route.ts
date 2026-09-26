@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   try {
     const ip = getClientIP(req)
     const rl = await rateLimitIP(ip, 'places_search', 120, 60)
-    if (!rl.allowed) return err('Too many search requests - try again later', 429)
+    if (!rl.allowed) return err('Je zoekt even te snel. Probeer het zo opnieuw.', 429)
 
     const cacheKey = buildCacheKey('places-search', stableSearchParams(req.nextUrl.searchParams))
     const cached = await getCachedJson<PlaceSearchResult>(cacheKey)

@@ -29,7 +29,7 @@ export function SavedPlacesList() {
   if (error)
     return (
       <p role="alert" className="py-8 text-center text-sm text-red-600">
-        Je bewaarde zaken konden niet worden geladen.
+        Kon je bewaarde snackplekken niet laden. Probeer het later opnieuw.
       </p>
     )
 
@@ -48,11 +48,11 @@ export function SavedPlacesList() {
       <div className="py-10 text-center">
         <p className="font-semibold text-snack-text">Nog niets bewaard</p>
         <p className="mx-auto mt-1 max-w-xs text-sm text-snack-muted">
-          Zie je een zaak die je wilt proberen? Tik op <span aria-hidden="true">☆</span> Bewaren, dan staat hij hier
+          Zie je een snackplek die je wilt proberen? Tik op <span aria-hidden="true">☆</span> Bewaren, dan staat hij hier
           klaar voor later.
         </p>
         <Link href="/search" className="btn-primary mt-4 inline-block">
-          Zaken ontdekken
+          Zoek een snackbar
         </Link>
       </div>
     )
@@ -89,7 +89,7 @@ export function SavedPlacesList() {
               <p className="truncate font-semibold text-snack-text">{place.name}</p>
               <p className="truncate text-xs text-snack-muted">{place.city ?? place.address}</p>
               <p className="mt-0.5 text-xs text-snack-muted">
-                {place.avgRating !== null ? `★ ${place.avgRating.toFixed(1)} · ` : ''}
+                {place.avgRating !== null ? `★ ${place.avgRating.toFixed(1).replace('.', ',')} · ` : ''}
                 {place.reviewCount === 1 ? '1 review' : `${place.reviewCount} reviews`}
               </p>
             </div>

@@ -42,10 +42,10 @@ export async function resolveProviderPlace(
     // lookup must succeed. We never fall back to client-supplied coordinates
     // here — that would defeat the point of verifying.
     if (input.provider !== placesProvider.id) {
-      return { error: 'Unknown place provider.' }
+      return { error: 'We konden deze snackplek niet controleren. Kies hem opnieuw uit de lijst.' }
     }
     venue = await placesProvider.lookup(input.providerPlaceId)
-    if (!venue) return { error: 'Could not verify this place. Pick it from the list again.' }
+    if (!venue) return { error: 'We konden deze snackplek niet controleren. Kies hem opnieuw uit de lijst.' }
   } else if (input.name && input.address && input.lat != null && input.lng != null) {
     venue = {
       provider: input.provider,
@@ -57,7 +57,7 @@ export async function resolveProviderPlace(
       city: input.city ?? null,
     }
   } else {
-    return { error: 'Incomplete place data.' }
+    return { error: 'De gegevens van deze snackplek zijn onvolledig. Kies een andere uit de lijst.' }
   }
 
   // Nominatim usually supplies a city, but the unverified branch above takes it
@@ -84,7 +84,7 @@ export async function resolveProviderPlace(
     where: { provider: venue.provider, providerPlaceId: venue.providerPlaceId },
     select: { id: true },
   })
-  return raced ?? { error: 'Could not create place.' }
+  return raced ?? { error: 'De snackplek kon niet worden toegevoegd. Probeer het opnieuw.' }
 }
 
 /**
@@ -118,7 +118,7 @@ export async function resolveManualPlace(input: {
     const match = nearby.find((p) => normalizeName(p.name) === normalized)
     if (match) return { id: match.id, deduped: true }
 
-    // `city` is what the /eettentjes landing pages group on (lib/city-index.ts).
+    // `city` is what the /snackplekken landing pages group on (lib/city-index.ts).
     // This path used to leave it NULL, so every place a user added by hand was
     // invisible to its own city page — permanently, unless an admin edited it —
     // and never counted toward CITY_PAGE_MIN_PLACES. The provider path already

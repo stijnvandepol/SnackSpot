@@ -17,7 +17,7 @@ test('product page switches to Dutch and persists', async ({ page }) => {
   await page.getByRole('button', { name: 'NL' }).click()
   await expect(page.getByRole('button', { name: 'NL' })).toHaveAttribute('aria-pressed', 'true')
   // a known Dutch string from the dict
-  await expect(page.getByText('Weet wat je moet bestellen')).toBeVisible()
+  await expect(page.getByText('Weet wat je bestelt voordat je aan de toonbank staat.')).toBeVisible()
 })
 
 test('product page renders 200 with hero visible', async ({ page }) => {
@@ -35,5 +35,5 @@ test('serves Dutch by default, without a language cookie', async ({ page }) => {
   await page.goto('/product')
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'nl')
-  await expect(page.getByText('Weet wat je moet bestellen')).toBeVisible()
+  await expect(page.getByText('Weet wat je bestelt voordat je aan de toonbank staat.')).toBeVisible()
 })

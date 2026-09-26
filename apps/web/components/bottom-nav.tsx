@@ -55,14 +55,14 @@ function CreateSheet({ onClose }: { onClose: () => void }) {
   }, [onClose])
 
   return (
-    <div className="md:hidden fixed inset-0 z-40" role="dialog" aria-modal="true" aria-label="Create a review or bite">
-      <button type="button" className="absolute inset-0 bg-black/40" aria-label="Close" onClick={onClose} />
+    <div className="md:hidden fixed inset-0 z-40" role="dialog" aria-modal="true" aria-label="Review of bite plaatsen">
+      <button type="button" className="absolute inset-0 bg-black/40" aria-label="Sluiten" onClick={onClose} />
       <div
         className="absolute inset-x-0 bottom-0 rounded-t-3xl border-t p-4 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] shadow-[0_-12px_40px_rgba(15,23,42,0.18)]"
         style={{ backgroundColor: 'var(--snack-bg)', borderColor: 'var(--snack-border-soft)' }}
       >
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-snack-border" aria-hidden="true" />
-        <p className="mb-3 text-center text-sm font-semibold text-snack-text">What are you sharing?</p>
+        <p className="mb-3 text-center text-sm font-semibold text-snack-text">Wat wil je delen?</p>
         <CreateOptions onPick={onClose} />
       </div>
     </div>
@@ -77,7 +77,7 @@ export function BottomNav() {
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 backdrop-blur border-t pb-[env(safe-area-inset-bottom)]" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>
+      <nav aria-label="Hoofdmenu" className="md:hidden fixed bottom-0 inset-x-0 z-30 backdrop-blur border-t pb-[env(safe-area-inset-bottom)]" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>
         <ul className="flex h-[4.5rem] items-end pb-2">
           <li className="flex-1">
             <NavLink href={links[0].href} icon={links[0].icon} label={links[0].label} active={pathname === '/'} />
@@ -88,7 +88,7 @@ export function BottomNav() {
           <li className="flex-1">
             <button
               type="button"
-              aria-label="Create a review or bite"
+              aria-label="Review of bite plaatsen"
               aria-haspopup="dialog"
               aria-expanded={sheetOpen}
               onClick={() => setSheetOpen((open) => !open)}
@@ -104,7 +104,7 @@ export function BottomNav() {
                   <path d="M12 5v14M5 12h14"/>
                 </svg>
               </span>
-              <span className="sr-only">Post</span>
+              <span className="sr-only">Plaatsen</span>
             </button>
           </li>
           <li className="flex-1">

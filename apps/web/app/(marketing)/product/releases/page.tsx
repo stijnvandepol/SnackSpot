@@ -42,64 +42,64 @@ interface Release {
 }
 
 const CHANGE_TYPE_CONFIG: Record<ChangeType, { label: string; className: string }> = {
-  new:      { label: 'New',      className: 'bg-green-100 text-green-700' },
-  improved: { label: 'Improved', className: 'bg-blue-100 text-blue-700' },
-  fixed:    { label: 'Fixed',    className: 'bg-amber-100 text-amber-700' },
-  removed:  { label: 'Removed',  className: 'bg-red-100 text-red-700' },
+  new:      { label: 'Nieuw',      className: 'bg-green-100 text-green-700' },
+  improved: { label: 'Verbeterd',  className: 'bg-blue-100 text-blue-700' },
+  fixed:    { label: 'Opgelost',   className: 'bg-amber-100 text-amber-700' },
+  removed:  { label: 'Verwijderd', className: 'bg-red-100 text-red-700' },
 }
 
 // Add new releases at the top of this array.
 const releases: Release[] = [
   {
     version: '2.0.0',
-    date: '18 June 2026',
-    summary: 'A bilingual product site, legal & privacy pages, and a tidier structure.',
+    date: '18 juni 2026',
+    summary: 'Productsite in twee talen, juridische pagina’s en een overzichtelijkere opbouw.',
     changes: [
-      { type: 'new',      text: 'The product site is now bilingual, it automatically shows in English or Dutch based on your browser, with a language switcher in the top-right corner.' },
-      { type: 'new',      text: 'Legal and privacy pages added: Terms of Service, Privacy Policy, a Sub-processors transparency list, and Company information.' },
-      { type: 'new',      text: 'Age confirmation added at sign-up, you now confirm you meet the minimum age when creating an account.' },
-      { type: 'improved', text: 'Clearer structure: step-by-step guides now live at /guides and release notes at /product/releases. Old links redirect automatically, so existing bookmarks keep working.' },
-      { type: 'improved', text: 'Place pages now credit OpenStreetMap for venue and map data.' },
+      { type: 'new',      text: 'De productsite is er nu in het Nederlands en Engels. Rechtsboven wissel je van taal.' },
+      { type: 'new',      text: 'Juridische pagina’s toegevoegd: voorwaarden, privacyverklaring, een lijst met subverwerkers en bedrijfsgegevens.' },
+      { type: 'new',      text: 'Bij het aanmaken van een account bevestig je nu dat je de minimumleeftijd hebt.' },
+      { type: 'improved', text: 'Overzichtelijkere opbouw: handleidingen staan nu op /guides en updates op /product/releases. Oude links sturen je automatisch door, dus bestaande bladwijzers blijven werken.' },
+      { type: 'improved', text: 'Pagina’s van snackplekken vermelden nu OpenStreetMap als bron van locatie- en kaartgegevens.' },
     ],
   },
   {
     version: '1.4.0',
-    date: '2 April 2026',
-    summary: 'Email notifications, feed standardization, and bug fixes.',
+    date: '2 april 2026',
+    summary: 'Meldingen per e-mail, een vaste opmaak voor de feed en bugfixes.',
     changes: [
-      { type: 'new',      text: 'Email notifications for likes, comments, mentions, and badge awards.' },
-      { type: 'new',      text: 'Feed post layout standardized, every review card now shows the dish name, place, rating, tags, and like count in a consistent format.' },
-      { type: 'new',      text: 'Dynamic Open Graph images for places, reviews, and user profiles.' },
-      { type: 'new',      text: 'Release notes page added to track changes.' },
-      { type: 'improved', text: 'Like button redesigned with a filled heart animation, matching familiar social app patterns.' },
-      { type: 'improved', text: 'Likes now correctly reflect your previous activity when reopening the app.' },
-      { type: 'improved', text: 'Stats and achievements page redesigned with inline descriptions and a unified earned/in-progress list.' },
-      { type: 'improved', text: 'Place page titles now include the city name for better search results.' },
-      { type: 'fixed',    text: 'Like state was lost after reopening the app, the feed now waits for your session to restore before loading.' },
-      { type: 'fixed',    text: 'Several hardcoded colors replaced with dark mode-aware tokens across add-review, search, notifications, and profile pages.' },
-      { type: 'removed',  text: 'Push notification settings removed, push was never fully functional.' },
+      { type: 'new',      text: 'Meldingen per e-mail voor likes, reacties, vermeldingen en nieuwe badges.' },
+      { type: 'new',      text: 'Vaste opmaak voor berichten in de feed: elke review toont nu gerecht, snackplek, cijfer, tags en aantal likes op dezelfde manier.' },
+      { type: 'new',      text: 'Eigen voorbeeldafbeeldingen bij het delen van snackplekken, reviews en profielen.' },
+      { type: 'new',      text: 'Pagina met updates toegevoegd, zodat je kunt zien wat er verandert.' },
+      { type: 'improved', text: 'Nieuwe likeknop met een hartje dat zich vult, zoals je gewend bent van andere sociale apps.' },
+      { type: 'improved', text: 'Likes kloppen nu weer als je de app opnieuw opent.' },
+      { type: 'improved', text: 'Pagina met statistieken en prestaties vernieuwd: met uitleg bij elke badge en één lijst voor behaalde en lopende badges.' },
+      { type: 'improved', text: 'De paginatitel van een snackplek bevat nu de stad, zodat je hem beter vindt in zoekmachines.' },
+      { type: 'fixed',    text: 'Likes verdwenen na het opnieuw openen van de app. De feed wacht nu tot je sessie is hersteld voordat hij laadt.' },
+      { type: 'fixed',    text: 'Vaste kleuren op de pagina’s voor reviews plaatsen, zoeken, meldingen en profiel vervangen door kleuren die ook in de donkere modus werken.' },
+      { type: 'removed',  text: 'Instellingen voor pushmeldingen verwijderd, omdat pushmeldingen nooit goed werkten.' },
     ],
   },
   {
     version: '1.3.0',
-    date: '14 March 2026',
-    summary: 'Dark mode support and verification badges.',
+    date: '14 maart 2026',
+    summary: 'Donkere modus en verificatiebadges.',
     changes: [
-      { type: 'new',      text: 'Dark mode added across the entire app, toggle it in your profile settings.' },
-      { type: 'new',      text: 'Verification badge shown on profiles of trusted contributors.' },
-      { type: 'improved', text: 'Admin panel: review title and body can now be edited directly from the dashboard.' },
-      { type: 'fixed',    text: 'Hardcoded colors replaced with design tokens throughout the app for full dark mode compatibility.' },
+      { type: 'new',      text: 'Donkere modus in de hele app. Zet hem aan in je profielinstellingen.' },
+      { type: 'new',      text: 'Verificatiebadge op profielen van betrouwbare reviewers.' },
+      { type: 'improved', text: 'Beheer: de titel en tekst van een review zijn nu direct aan te passen vanuit het dashboard.' },
+      { type: 'fixed',    text: 'Vaste kleuren in de hele app vervangen door designtokens, zodat alles goed werkt in de donkere modus.' },
     ],
   },
   {
     version: '1.2.0',
-    date: '1 March 2026',
-    summary: 'Badge system, notifications, and performance improvements.',
+    date: '1 maart 2026',
+    summary: 'Badges, meldingen en een snellere app.',
     changes: [
-      { type: 'new',      text: 'Badge system with Bronze, Silver, and Gold tiers based on posts, streaks, likes received, and locations visited.' },
-      { type: 'new',      text: 'In-app notification bell for likes, comments, mentions, and badge awards.' },
-      { type: 'improved', text: 'Photo upload flow improved with fallback support and better error messages.' },
-      { type: 'improved', text: 'Feed pagination performance improved.' },
+      { type: 'new',      text: 'Badges in brons, zilver en goud, voor het aantal berichten, reeksen, ontvangen likes en bezochte plekken.' },
+      { type: 'new',      text: 'Meldingenbel in de app voor likes, reacties, vermeldingen en nieuwe badges.' },
+      { type: 'improved', text: 'Foto’s uploaden werkt beter, met een terugvaloptie en duidelijkere foutmeldingen.' },
+      { type: 'improved', text: 'De feed laadt sneller bij doorscrollen.' },
     ],
   },
 ]
@@ -110,7 +110,7 @@ export default async function ReleasesPage() {
 
   return (
     <MarketingShell locale={locale} dict={dict}>
-      <BreadcrumbJsonLd items={[{ name: 'Release Notes', path: '/product/releases' }]} />
+      <BreadcrumbJsonLd items={[{ name: 'Updates', path: '/product/releases' }]} />
 
       <div className="mx-auto max-w-3xl px-4 py-16 md:py-24">
         <div className="mb-12">

@@ -92,7 +92,7 @@ export function ImageLightbox({
             type="button"
             onClick={() => setOpenIndex(idx)}
             className={`relative ${itemClassName ?? 'cursor-zoom-in'}`}
-            aria-label={`View ${img.alt} in full size`}
+            aria-label={`${img.alt} groot bekijken`}
           >
             <Image
               src={img.thumbnail}
@@ -112,7 +112,7 @@ export function ImageLightbox({
           onClick={close}
           role="dialog"
           aria-modal="true"
-          aria-label={count > 1 ? `Image viewer, ${openIndex! + 1} of ${count}` : 'Image viewer'}
+          aria-label={count > 1 ? `Foto ${openIndex! + 1} van ${count}` : 'Foto'}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
@@ -121,7 +121,7 @@ export function ImageLightbox({
             type="button"
             onClick={close}
             className="absolute top-4 right-4 text-white text-2xl w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition z-10"
-            aria-label="Close image viewer"
+            aria-label="Sluiten"
           >
             ×
           </button>
@@ -132,7 +132,7 @@ export function ImageLightbox({
               type="button"
               onClick={handlePrev}
               className="absolute left-2 top-1/2 -translate-y-1/2 text-white text-5xl w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/10 transition z-10 select-none"
-              aria-label="Previous image"
+              aria-label="Vorige foto"
             >
               ‹
             </button>
@@ -144,7 +144,7 @@ export function ImageLightbox({
               type="button"
               onClick={handleNext}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-5xl w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/10 transition z-10 select-none"
-              aria-label="Next image"
+              aria-label="Volgende foto"
             >
               ›
             </button>

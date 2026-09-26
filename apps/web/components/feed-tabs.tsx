@@ -94,7 +94,7 @@ export function FeedTabs({ seed }: { seed?: FeedSeed }) {
 
   return (
     <>
-      <div className="mb-4 flex gap-1 rounded-xl bg-snack-surface p-1" role="tablist" aria-label="Feed scope">
+      <div className="mb-4 flex gap-1 rounded-xl bg-snack-surface p-1" role="tablist" aria-label="Kies een feed">
         {([
           ['following', 'Volgend'],
           ['discover', 'Ontdek'],

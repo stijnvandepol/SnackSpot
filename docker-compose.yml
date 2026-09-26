@@ -147,8 +147,10 @@ services:
     restart: unless-stopped
     init: true
     ports:
-      # Keep LAN-reachable for internal users + Cloudflare tunnel host on another machine.
-      - "8080:3000"
+      # Default stays LAN-reachable (internal users, or a Cloudflare tunnel on another machine).
+      # When cloudflared runs on this host, set WEB_BIND_ADDRESS=127.0.0.1: with TRUST_PROXY=true
+      # the app trusts CF-Connecting-IP, and anyone who can reach 8080 directly could forge it.
+      - "${WEB_BIND_ADDRESS:-0.0.0.0}:8080:3000"
     environment:
       <<: *common-env
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}

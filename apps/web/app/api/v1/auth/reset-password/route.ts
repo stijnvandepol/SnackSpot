@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   const ip = getClientIP(req)
   const rl = await rateLimitIP(ip, 'reset-password', 10, 900)
   if (!rl.allowed) {
-    return err('Too many requests – try again later', 429)
+    return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
   }
 
   const body = await parseBody(req, ResetPasswordSchema)
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     // Reject if token is unknown, expired, or already used.
     // Return a generic error to avoid leaking information.
     if (!record || record.usedAt !== null || record.expiresAt < new Date()) {
-      return err('This reset link is invalid or has expired.', 400)
+      return err('Deze resetlink is ongeldig of verlopen. Vraag een nieuwe aan.', 400)
     }
 
     const newPasswordHash = await hashPassword(body.password)
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Clear the refresh-token cookie in the response (session is already invalidated in DB)
-    const response = withNoStore(ok({ message: 'Password has been reset successfully.' }))
+    const response = withNoStore(ok({ message: 'Je wachtwoord is gewijzigd.' }))
     response.headers.set('Set-Cookie', buildClearCookie())
     return response
   } catch (e) {

@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'SnackSpot',
     short_name: 'SnackSpot',
     description:
-      'Discover under-the-radar food spots with SnackSpot. Share reviews of smaller local places, surface hidden gems, and help others find great food they would otherwise miss.',
+      'Fotoreviews van snackbars, cafetaria\'s en friettenten, per gerecht. Zie wat anderen bestelden en deel wat jij at.',
     id: '/',
     scope: '/',
     start_url: '/',

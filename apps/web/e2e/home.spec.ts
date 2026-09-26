@@ -34,13 +34,13 @@ test.describe('Home page — mobile (390 px)', () => {
 
   test('mobile brand bar is visible', async ({ page }) => {
     await page.goto('/')
-    const brandLink = page.getByRole('link', { name: 'SnackSpot home' })
+    const brandLink = page.getByRole('link', { name: 'Naar de SnackSpot-homepage' })
     await expect(brandLink).toBeVisible()
   })
 
   test('bottom nav is visible and spans full width', async ({ page }) => {
     await page.goto('/')
-    const nav = page.locator('nav').filter({ hasText: 'Create new post' })
+    const nav = page.getByRole('navigation', { name: 'Hoofdmenu' })
     await expect(nav).toBeVisible()
     const box = await nav.boundingBox()
     // At 390px the nav should span at least 300px wide
@@ -60,7 +60,7 @@ test.describe('Home page — desktop (1280 px)', () => {
 
   test('desktop footer with Guides link is visible', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('link', { name: 'Guides' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Uitleg' })).toBeVisible()
   })
 
   test('desktop footer shows copyright notice', async ({ page }) => {

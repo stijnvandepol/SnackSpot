@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const ip = getClientIP(req)
   const rl = await rateLimitIP(ip, 'register', 5, 3600)
   if (!rl.allowed) {
-    return err('Too many registration attempts – try again later', 429)
+    return err('Te veel pogingen. Probeer het over een paar minuten opnieuw.', 429)
   }
 
   const body = await parseBody(req, RegisterSchema)
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       select: { email: true, username: true },
     })
     if (conflict) {
-      return err('Email or username already taken', 409)
+      return err('Dit e-mailadres of deze gebruikersnaam is al in gebruik. Log in, of kies een andere gebruikersnaam.', 409)
     }
 
     const passwordHash = await hashPassword(body.password)

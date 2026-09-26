@@ -12,7 +12,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     // Generous (a fast reader marks dozens per minute) but caps update-spam.
     const rl = await rateLimitUser(auth.sub, 'notification_read', 120, 60)
-    if (!rl.allowed) return err('Too many requests', 429)
+    if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
     const notification = await prisma.notification.findUnique({
       where: { id },
@@ -20,7 +20,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     })
 
     if (!notification || notification.userId !== auth.sub) {
-      return err('Notification not found', 404)
+      return err('Melding niet gevonden.', 404)
     }
 
     const updated = await prisma.notification.update({

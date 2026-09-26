@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   if (isResponse(auth)) return auth
 
   const rl = await rateLimitUser(auth.sub, 'users-search', 30, 60)
-  if (!rl.allowed) return err('Too many requests', 429)
+  if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
   const query = parseQuery(req, SearchUsersQuerySchema)
   if (isResponse(query)) return query

@@ -6,18 +6,18 @@ import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
 const faqItems = [
   {
-    question: 'Can I add SnackSpot to my home screen without installing from an app store?',
-    answer: 'Yes. Open SnackSpot in your browser and use Add to Home Screen to place it as an icon on your phone.',
+    question: 'Kan ik SnackSpot op mijn beginscherm zetten zonder app store?',
+    answer: 'Ja. Open SnackSpot in je browser en zet het via het browsermenu op je beginscherm. Je krijgt dan een icoon zoals bij een app.',
   },
   {
-    question: 'Why do I not see “Add to Home Screen”?',
+    question: 'Waarom zie ik de optie voor het beginscherm niet?',
     answer:
-      'Use Chrome on Android or Safari on iPhone, and open SnackSpot directly in the browser instead of an in-app browser.',
+      'Gebruik Chrome op Android of Safari op de iPhone, en open SnackSpot direct in de browser en niet via een link in een andere app.',
   },
   {
-    question: 'Does this work on both Android and iOS?',
+    question: 'Werkt dit op Android en op de iPhone?',
     answer:
-      'Yes. The exact steps differ by platform, but both Android and iPhone support adding SnackSpot to the home screen.',
+      'Ja. De stappen verschillen per telefoon, maar op allebei kun je SnackSpot op je beginscherm zetten.',
   },
 ]
 
@@ -34,25 +34,26 @@ const faqSchema = {
   })),
 }
 
+const TITLE = 'SnackSpot op je beginscherm zetten (iPhone en Android)'
+const DESCRIPTION =
+  'Zet SnackSpot als icoon op het beginscherm van je iPhone of Android-telefoon. Met stappen per browser en oplossingen als het niet lukt.'
+
 export const metadata: Metadata = {
-  title: { absolute: 'Add SnackSpot to your home screen (Android & iPhone)' },
-  description:
-    'Step-by-step guide to add SnackSpot to your mobile home screen on Android and iOS, including fixes for common issues.',
+  title: { absolute: TITLE },
+  description: DESCRIPTION,
   alternates: {
     canonical: '/guides/add-snackspot-to-home-screen',
   },
   openGraph: {
     type: 'article',
-    title: 'Add SnackSpot to your home screen (Android & iPhone)',
-    description:
-      'Step-by-step guide to add SnackSpot to your mobile home screen on Android and iOS, including fixes for common issues.',
+    title: TITLE,
+    description: DESCRIPTION,
     images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Add SnackSpot to your home screen (Android & iPhone)',
-    description:
-      'Step-by-step guide to add SnackSpot to your mobile home screen on Android and iOS, including fixes for common issues.',
+    title: TITLE,
+    description: DESCRIPTION,
     images: ['/twitter-image'],
   },
 }
@@ -62,145 +63,110 @@ export default function AddSnackSpotToHomescreenGuidePage() {
     <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
       <BreadcrumbJsonLd
         items={[
-          { name: 'Guides', path: '/guides' },
-          { name: 'Add SnackSpot to Home Screen', path: '/guides/add-snackspot-to-home-screen' },
+          { name: 'Uitleg', path: '/guides' },
+          { name: 'SnackSpot op je beginscherm', path: '/guides/add-snackspot-to-home-screen' },
         ]}
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }} />
 
       <article className="guide-content guide-article prose prose-slate">
-        <h1>Add SnackSpot to your home screen (Android &amp; iPhone)</h1>
+        <h1>SnackSpot op je beginscherm zetten (iPhone en Android)</h1>
 
         <p>
-          You can use SnackSpot like an app experience without installing anything from an app store. By adding
-          SnackSpot to your home screen, you can open it instantly with one tap.
+          Je hoeft niets te downloaden uit een app store. Zet SnackSpot op je beginscherm en open het daarna met één
+          tik, net als een app.
         </p>
+        <p>Hieronder staan de stappen voor Android en iPhone, en wat je doet als het niet lukt.</p>
+
+        <h2>Waarom op je beginscherm?</h2>
+        <h3>Sneller openen</h3>
+        <p>Je hoeft niet elke keer je browser te openen en het adres in te typen. SnackSpot staat tussen je andere apps.</p>
+        <h3>Meer ruimte op je scherm</h3>
+        <p>SnackSpot opent zonder adresbalk en knoppen van de browser, zodat je reviews en snackplekken beter ziet.</p>
+        <h3>Handig onderweg</h3>
         <p>
-          This guide gives you clear step-by-step instructions for Android and iOS, plus quick fixes for the most common
-          setup issues.
+          Snel <Link href="/nearby">snackplekken in de buurt</Link> bekijken, <Link href="/">de nieuwste reviews</Link>{' '}
+          lezen of <Link href="/search">een snackbar zoeken</Link>.
         </p>
 
-        <h2>Why add SnackSpot to your home screen?</h2>
-        <h3>Faster access</h3>
-        <p>
-          You do not need to open a browser and type the URL every time. SnackSpot appears as an icon next to your other
-          apps.
-        </p>
-        <h3>Cleaner app-like experience</h3>
-        <p>
-          SnackSpot opens in a focused view with less browser clutter, making it easier to browse places and reviews.
-        </p>
-        <h3>Better daily flow</h3>
-        <p>
-          It is ideal if you frequently want to <Link href="/nearby">find hidden gem restaurants near you</Link>,{' '}
-          <Link href="/">see real food reviews on SnackSpot</Link>, or quickly{' '}
-          <Link href="/search">discover restaurants nearby</Link>.
-        </p>
-
-        <h2>Android: add SnackSpot to home screen</h2>
-        <h3>Method 1: Google Chrome</h3>
+        <h2>Android</h2>
+        <h3>Met Google Chrome</h3>
         <ol>
-          <li>Open Chrome on your Android phone.</li>
-          <li>Go to SnackSpot (for example the feed or nearby page).</li>
-          <li>Tap the three-dot menu in the top-right corner.</li>
+          <li>Open Chrome op je telefoon.</li>
+          <li>Ga naar SnackSpot.</li>
+          <li>Tik rechtsboven op het menu met de drie puntjes.</li>
           <li>
-            Select <strong>Add to Home screen</strong>.
+            Kies <strong>Toevoegen aan startscherm</strong>.
           </li>
-          <li>Optionally rename it to “SnackSpot”.</li>
+          <li>Pas de naam eventueel aan naar “SnackSpot”.</li>
           <li>
-            Tap <strong>Add</strong> and confirm placement.
+            Tik op <strong>Toevoegen</strong> en bevestig.
           </li>
         </ol>
 
-        <h3>Method 2: Samsung Internet</h3>
+        <h3>Met Samsung Internet</h3>
         <ol>
           <li>Open Samsung Internet.</li>
-          <li>Go to SnackSpot.</li>
-          <li>Open the browser menu.</li>
+          <li>Ga naar SnackSpot.</li>
+          <li>Open het menu van de browser.</li>
           <li>
-            Choose <strong>Add page to</strong> and then <strong>Home screen</strong>.
+            Kies <strong>Pagina toevoegen aan</strong> en daarna <strong>Startscherm</strong>.
           </li>
-          <li>Confirm to place the icon.</li>
+          <li>Bevestig om het icoon te plaatsen.</li>
         </ol>
 
-        <h3>After adding on Android</h3>
+        <h3>Daarna</h3>
+        <p>Tik op het SnackSpot-icoon op je startscherm om het te openen. Je kunt het verplaatsen of in een map zetten.</p>
+
+        <h2>iPhone</h2>
+        <h3>Gebruik Safari</h3>
         <p>
-          Locate the SnackSpot icon on your home screen and tap it to launch. You can move it into your dock or any
-          folder.
+          Op de iPhone werkt dit het best in Safari. In de browser van andere apps en in sommige andere browsers ontbreekt
+          de optie.
         </p>
 
-        <h2>iPhone (iOS): add SnackSpot to home screen</h2>
-        <h3>Important: use Safari</h3>
-        <p>
-          On iPhone, Add to Home Screen works best from Safari. In-app browsers and some third-party browsers may hide
-          this option.
-        </p>
-
-        <h3>Steps in Safari</h3>
+        <h3>Stappen in Safari</h3>
         <ol>
-          <li>Open Safari on your iPhone.</li>
-          <li>Go to SnackSpot.</li>
+          <li>Open Safari.</li>
+          <li>Ga naar SnackSpot.</li>
           <li>
-            Tap the <strong>Share</strong> button (square with upward arrow).
+            Tik op de <strong>deelknop</strong> (het vierkantje met het pijltje omhoog).
           </li>
           <li>
-            Scroll and tap <strong>Add to Home Screen</strong>.
+            Scrol omlaag en tik op <strong>Zet op beginscherm</strong>.
           </li>
-          <li>Confirm the icon name (for example “SnackSpot”).</li>
+          <li>Controleer de naam, bijvoorbeeld “SnackSpot”.</li>
           <li>
-            Tap <strong>Add</strong>.
+            Tik op <strong>Voeg toe</strong>.
           </li>
         </ol>
 
-        <h3>After adding on iPhone</h3>
-        <p>
-          SnackSpot now appears on your home screen. You can move it like any other app and place it in your dock if you
-          use it often.
-        </p>
+        <h3>Daarna</h3>
+        <p>SnackSpot staat nu op je beginscherm. Je kunt het verplaatsen zoals elke andere app, ook naar je dock.</p>
 
-        <h2>Troubleshooting</h2>
-        <h3>“Add to Home Screen” is missing</h3>
+        <h2>Lukt het niet?</h2>
+        <h3>De optie voor het beginscherm ontbreekt</h3>
         <ul>
-          <li>Use Safari on iPhone and Chrome on Android.</li>
-          <li>Open SnackSpot directly in the browser, not inside Instagram/Facebook/WhatsApp browsers.</li>
-          <li>Refresh the page and try again.</li>
+          <li>Gebruik Safari op de iPhone en Chrome op Android.</li>
+          <li>Open SnackSpot direct in de browser, niet via Instagram, Facebook of WhatsApp.</li>
+          <li>Ververs de pagina en probeer het opnieuw.</li>
         </ul>
 
-        <h3>Icon was added but opens incorrectly</h3>
+        <h3>Het icoon staat erop, maar opent niet goed</h3>
         <ul>
-          <li>Remove the home screen icon.</li>
-          <li>Open SnackSpot again in the correct browser.</li>
-          <li>Add it again using the steps above.</li>
+          <li>Verwijder het icoon van je beginscherm.</li>
+          <li>Open SnackSpot opnieuw in de juiste browser.</li>
+          <li>Zet het er opnieuw op met de stappen hierboven.</li>
         </ul>
 
-        <h3>The app view looks outdated</h3>
+        <h3>SnackSpot toont oude informatie</h3>
         <ul>
-          <li>Close and reopen SnackSpot from the icon.</li>
-          <li>Refresh inside SnackSpot.</li>
-          <li>If needed, clear browser cache and add again.</li>
+          <li>Sluit SnackSpot en open het opnieuw via het icoon.</li>
+          <li>Ververs de pagina in SnackSpot.</li>
+          <li>Helpt dat niet, wis dan de cache van je browser en zet SnackSpot opnieuw op je beginscherm.</li>
         </ul>
 
-        <h2>Quick usage tips</h2>
-        <h3>Pin SnackSpot in your dock</h3>
-        <p>This gives one-tap access all day.</p>
-        <h3>Use a simple decision flow</h3>
-        <p>
-          Start in <Link href="/search">search</Link>, validate options in <Link href="/nearby">nearby</Link>, and check
-          context in the <Link href="/">live review feed</Link>.
-        </p>
-        <h3>Create an account for faster return visits</h3>
-        <p>
-          With an account you can move faster through your own discovery flow. Sign up via{' '}
-          <Link href="/auth/register">SnackSpot registration</Link>.
-        </p>
-
-        <h2>Ready to use SnackSpot from your home screen?</h2>
-        <p>
-          Once added, SnackSpot behaves like a lightweight app shortcut so you can quickly open nearby discovery and
-          review context whenever you need a better local food decision.
-        </p>
-
-        <h2>FAQ</h2>
+        <h2>Veelgestelde vragen</h2>
         {faqItems.map((item) => (
           <section key={item.question}>
             <h3>{item.question}</h3>
@@ -209,12 +175,11 @@ export default function AddSnackSpotToHomescreenGuidePage() {
         ))}
 
         <section className="mt-8 rounded-2xl border border-snack-border bg-snack-surface p-5">
-          <h3 className="m-0">Start now</h3>
+          <h3 className="m-0">Aan de slag</h3>
           <p className="mt-3">
-            Open <Link href="/nearby">find hidden gem restaurants near you</Link>, continue with{' '}
-            <Link href="/search">discover restaurants nearby</Link>, and verify your pick in{' '}
-            <Link href="/">real SnackSpot reviews</Link>. Need an account first?{' '}
-            <Link href="/auth/register">Create one here</Link>.
+            Bekijk <Link href="/nearby">snackplekken in de buurt</Link>,{' '}
+            <Link href="/search">zoek een snackbar</Link> of lees <Link href="/">de nieuwste reviews</Link>. Nog geen
+            account? <Link href="/auth/register">Maak er hier een</Link>.
           </p>
         </section>
       </article>

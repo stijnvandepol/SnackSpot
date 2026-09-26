@@ -14,7 +14,7 @@ interface PlaceCardProps {
 
 function formatDistance(meters: number): string {
   if (meters < 1000) return `${Math.round(meters)} m`
-  return `${(meters / 1000).toFixed(1)} km`
+  return `${(meters / 1000).toFixed(1).replace('.', ',')} km`
 }
 
 export function PlaceCard({ place, from }: PlaceCardProps) {
@@ -23,7 +23,7 @@ export function PlaceCard({ place, from }: PlaceCardProps) {
     : `/place/${place.id}`
 
   return (
-    <Link href={href} aria-label={`Open place ${place.name}`} className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2">
+    <Link href={href} aria-label={`Bekijk snackplek ${place.name}`} className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2">
       <article className="card p-4 transition hover:shadow-md">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -40,7 +40,7 @@ export function PlaceCard({ place, from }: PlaceCardProps) {
           {place.avgRating !== null && place.avgRating !== undefined && (
             <div className="flex items-center gap-1">
               <span className="text-snack-rating text-sm">{'★'.repeat(Math.round(place.avgRating))}</span>
-              <span className="text-sm font-medium text-snack-text">{place.avgRating.toFixed(1)}</span>
+              <span className="text-sm font-medium text-snack-text">{place.avgRating.toFixed(1).replace('.', ',')}</span>
             </div>
           )}
           {place.reviewCount !== undefined && (

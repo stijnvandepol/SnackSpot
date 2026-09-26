@@ -41,16 +41,16 @@ function CreatePopover() {
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
-        Post
+        Plaatsen
       </button>
       {open && (
         <div
           role="dialog"
-          aria-label="Create a review or bite"
+          aria-label="Review of bite plaatsen"
           className="absolute right-0 top-full z-40 mt-2 w-80 rounded-2xl border p-4 shadow-xl"
           style={{ backgroundColor: 'var(--snack-bg)', borderColor: 'var(--snack-border-soft)' }}
         >
-          <p className="mb-3 text-sm font-semibold text-snack-text">What are you sharing?</p>
+          <p className="mb-3 text-sm font-semibold text-snack-text">Wat wil je delen?</p>
           <CreateOptions onPick={() => setOpen(false)} />
         </div>
       )}
@@ -68,7 +68,7 @@ export function TopNav() {
   return (
     <header className="hidden md:block sticky top-0 z-30 backdrop-blur border-b" style={{ backgroundColor: 'var(--snack-nav-bg)', borderColor: 'var(--snack-border-soft)' }}>
       <div className="mx-auto max-w-6xl px-4 flex h-16 items-center justify-between gap-4">
-        <Link href="/" aria-label="SnackSpot home">
+        <Link href="/" aria-label="Naar de SnackSpot-homepage">
           <SnackSpotLogo className="text-xl" />
         </Link>
 
@@ -96,13 +96,13 @@ export function TopNav() {
               <NotificationBell />
               <Link
                 href="/profile"
-                aria-label="Open profile"
+                aria-label="Naar je profiel"
                 className="h-11 w-11 rounded-full bg-snack-surface flex items-center justify-center text-snack-primary font-semibold text-sm uppercase overflow-hidden"
               >
                 {user.avatarKey ? (
                   <Image
                     src={avatarUrl(user.avatarKey) ?? ''}
-                    alt="Profile avatar"
+                    alt="Profielfoto"
                     width={44}
                     height={44}
                     className="rounded-full object-cover"

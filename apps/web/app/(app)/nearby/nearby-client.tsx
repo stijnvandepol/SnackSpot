@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { PlaceCard } from '@/components/place-card'
 import { track } from '@/lib/analytics'
 
@@ -44,7 +45,7 @@ function normalizePlace(raw: unknown): Place | null {
   if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) return null
   return {
     id: typeof candidate.id === 'string' ? candidate.id : '',
-    name: typeof candidate.name === 'string' ? candidate.name : 'Unknown place',
+    name: typeof candidate.name === 'string' ? candidate.name : 'Onbekende snackplek',
     address: typeof candidate.address === 'string' ? candidate.address : '',
     lat,
     lng,
@@ -100,7 +101,7 @@ export function NearbyClient() {
         )
       } catch (err) {
         console.error(err)
-        setSearchError('Could not load nearby places. Try again.')
+        setSearchError('Kon de snackplekken in de buurt niet laden. Probeer het opnieuw.')
       } finally {
         setLoading(false)
       }
@@ -111,7 +112,7 @@ export function NearbyClient() {
   // ── Mobile: browser GPS geolocation ───────────────────────────────────────
   const useMyLocation = () => {
     if (!navigator.geolocation) {
-      setGeoError('Geolocation not supported by your browser.')
+      setGeoError('Je browser ondersteunt geen locatiebepaling. Kies hierboven een stad.')
       return
     }
     setGeoError(null)
@@ -123,7 +124,7 @@ export function NearbyClient() {
           try {
             const perm = await navigator.permissions.query({ name: 'geolocation' })
             if (perm.state === 'denied') {
-              setGeoError('Location permission is blocked. Enable it in your browser site settings.')
+              setGeoError('Locatietoegang staat uit. Zet hem aan in de site-instellingen van je browser, of kies hierboven een stad.')
               return
             }
           } catch { /* Permissions API not supported — continue */ }
@@ -138,16 +139,16 @@ export function NearbyClient() {
         }).catch((err: GeolocationPositionError) => {
           switch (err.code) {
             case 1: // PERMISSION_DENIED
-              setGeoError('Location access denied. Enable location in your browser settings.')
+              setGeoError('Je hebt locatietoegang geweigerd. Zet locatie aan in je browserinstellingen, of kies hierboven een stad.')
               break
             case 2: // POSITION_UNAVAILABLE
-              setGeoError('Location unavailable. Make sure GPS is enabled.')
+              setGeoError('Je locatie is niet beschikbaar. Controleer of gps aanstaat.')
               break
             case 3: // TIMEOUT
-              setGeoError('Location request timed out. Try again.')
+              setGeoError('Het duurde te lang om je locatie te bepalen. Probeer het opnieuw.')
               break
             default:
-              setGeoError('Could not get your location. Try again.')
+              setGeoError('Kon je locatie niet bepalen. Probeer het opnieuw.')
           }
           return null
         })
@@ -160,7 +161,7 @@ export function NearbyClient() {
         await search(pos.coords.latitude, pos.coords.longitude, radius)
       } catch (err) {
         console.error('[Geolocation]', err)
-        if (!geoError) setGeoError('Could not get your location. Try again.')
+        if (!geoError) setGeoError('Kon je locatie niet bepalen. Probeer het opnieuw.')
       } finally {
         setLoading(false)
       }
@@ -173,7 +174,7 @@ export function NearbyClient() {
   const searchAddress = async () => {
     const query = addressQuery.trim()
     if (!query) {
-      setGeoError('Enter a city or address first.')
+      setGeoError('Vul eerst een plaats of adres in.')
       return
     }
     setGeoError(null)
@@ -189,14 +190,14 @@ export function NearbyClient() {
       const lat = toFiniteNumber(first?.lat)
       const lng = toFiniteNumber(first?.lon)
       if (lat === null || lng === null || !isValidLatitude(lat) || !isValidLongitude(lng)) {
-        setGeoError('No location found. Try a more specific city or address.')
+        setGeoError('Geen locatie gevonden. Probeer een preciezere plaats of een adres.')
         return
       }
       setPosition({ lat, lng })
       await search(lat, lng, radius)
     } catch (err) {
       console.error('[Address lookup]', err)
-      setGeoError('Address lookup failed. Check your connection and try again.')
+      setGeoError('Adres zoeken is mislukt. Controleer je verbinding en probeer het opnieuw.')
     } finally {
       setLoading(false)
     }
@@ -230,6 +231,7 @@ export function NearbyClient() {
               onChange={(e: { target: { value: string } }) => setAddressQuery(e.target.value)}
               onKeyDown={(e: { key: string }) => { if (e.key === 'Enter') void searchAddress() }}
               placeholder="Plaats of adres…"
+              aria-label="Plaats of adres"
               className="input flex-1"
               disabled={loading}
             />
@@ -296,7 +298,7 @@ export function NearbyClient() {
       {!position && !loading && (
         <div className="text-center py-16">
           <p className="text-snack-muted">
-            {isMobile ? 'Tik op de knop hierboven om zaken bij jou in de buurt te vinden.' : 'Vul hierboven je plaats of adres in om zaken in de buurt te vinden.'}
+            {isMobile ? 'Tik op de knop hierboven om snackplekken bij je in de buurt te zien.' : 'Vul hierboven een plaats of adres in om snackplekken in de buurt te zien.'}
           </p>
         </div>
       )}
@@ -311,8 +313,11 @@ export function NearbyClient() {
 
       {!loading && position && places.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-snack-muted">Geen zaken gevonden binnen {radius >= 1000 ? `${radius / 1000} km` : `${radius} m`}.</p>
-          <p className="text-sm text-snack-muted mt-1">Probeer de straal te vergroten.</p>
+          <p className="text-snack-muted">Geen snackplekken gevonden binnen {radius >= 1000 ? `${radius / 1000} km` : `${radius} m`}.</p>
+          <p className="text-sm text-snack-muted mt-1">Vergroot de straal, of zet zelf een snackplek uit de buurt op de kaart.</p>
+          <Link href="/add-review" className="btn-primary mt-4 inline-block text-sm">
+            Schrijf de eerste review
+          </Link>
         </div>
       )}
 

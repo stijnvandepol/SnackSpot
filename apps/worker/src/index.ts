@@ -735,8 +735,8 @@ async function runStreakReminders(): Promise<void> {
     await deliverPush({
       userId: candidate.id,
       category: 'STREAK',
-      title: 'Your streak is on the line 🔥',
-      message: 'One photo of any meal keeps it alive. Still time today.',
+      title: 'Houd je reeks vast 🔥',
+      message: 'Eén foto van wat je eet is genoeg. Je hebt nog tot het eind van de dag.',
       url: '/add-bite',
     })
     sent += 1

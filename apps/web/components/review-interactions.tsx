@@ -17,7 +17,7 @@ interface CommentItem {
   canDelete: boolean
 }
 
-const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+const dateFormatter = new Intl.DateTimeFormat('nl-NL', {
   dateStyle: 'medium',
   timeZone: 'UTC',
 })
@@ -119,7 +119,7 @@ export function ReviewInteractions({
       })
       const json = await res.json().catch(() => ({}))
       if (!res.ok || !json.data) {
-        setCommentError('Could not post comment. Please try again.')
+        setCommentError('Je reactie is niet geplaatst. Probeer het opnieuw.')
         return
       }
       setComments((prev) => [json.data, ...prev])
@@ -140,7 +140,7 @@ export function ReviewInteractions({
         headers: { Authorization: `Bearer ${accessToken}` },
       })
       if (!res.ok) {
-        setCommentError('Could not delete comment. Please try again.')
+        setCommentError('Verwijderen is niet gelukt. Probeer het opnieuw.')
         return
       }
       setComments((prev) => prev.filter((c) => c.id !== commentId))
@@ -161,12 +161,12 @@ export function ReviewInteractions({
         headers: { Authorization: `Bearer ${accessToken}` },
       })
       if (!res.ok) {
-        setDeleteError('Could not delete review. Please try again.')
+        setDeleteError('Verwijderen is niet gelukt. Probeer het opnieuw.')
         return
       }
       setDeleteStep('deleted')
     } catch {
-      setDeleteError('Could not delete review. Please try again.')
+      setDeleteError('Verwijderen is niet gelukt. Probeer het opnieuw.')
     } finally {
       setDeleteBusy(false)
     }
@@ -182,12 +182,12 @@ export function ReviewInteractions({
         headers: { Authorization: `Bearer ${accessToken}` },
       })
       if (!res.ok) {
-        setDeleteError('Could not restore review. Please try again.')
+        setDeleteError('Herstellen is niet gelukt. Probeer het opnieuw.')
         return
       }
       setDeleteStep('closed')
     } catch {
-      setDeleteError('Could not restore review. Please try again.')
+      setDeleteError('Herstellen is niet gelukt. Probeer het opnieuw.')
     } finally {
       setDeleteBusy(false)
     }
@@ -207,7 +207,7 @@ export function ReviewInteractions({
       setReported(true)
       setReportReason('')
     } else {
-      setReportError('Could not submit report. Please try again.')
+      setReportError('Je melding is niet verstuurd. Probeer het opnieuw.')
     }
   }
 
@@ -222,7 +222,7 @@ export function ReviewInteractions({
               initialLikedByMe={likedByMe}
             />
           )}
-          <p className="text-xs text-snack-muted">{commentCount} {commentCount === 1 ? 'comment' : 'comments'}</p>
+          <p className="text-xs text-snack-muted">{commentCount} {commentCount === 1 ? 'reactie' : 'reacties'}</p>
         </div>
 
         <div className="flex items-center justify-between pt-2 border-t border-snack-border">
@@ -237,44 +237,44 @@ export function ReviewInteractions({
       </div>
 
       <div className="card p-5 space-y-4">
-        <h2 className="font-heading font-semibold text-snack-text">Comments</h2>
+        <h2 className="font-heading font-semibold text-snack-text">Reacties</h2>
 
         {user ? (
           <div className="space-y-2">
             <textarea
               className="input min-h-[84px] text-sm"
-              placeholder="Write a comment..."
+              placeholder="Schrijf een reactie…"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               maxLength={1000}
-              aria-label="Write a comment"
+              aria-label="Schrijf een reactie"
             />
             <div className="flex items-center justify-between">
-              <p className="text-xs text-snack-muted">Keep it constructive. {newComment.length}/1000</p>
+              <p className="text-xs text-snack-muted">Houd het vriendelijk. {newComment.length}/1000</p>
               <button
                 type="button"
                 className="btn-primary text-sm"
                 onClick={submitComment}
                 disabled={commentSubmitting || newComment.trim().length < 1}
               >
-                {commentSubmitting ? 'Posting...' : 'Post comment'}
+                {commentSubmitting ? 'Plaatsen…' : 'Reactie plaatsen'}
               </button>
             </div>
             {commentError && <p className="text-sm text-red-600" role="status" aria-live="polite">{commentError}</p>}
           </div>
         ) : (
           <div className="rounded-xl border border-snack-border bg-snack-surface px-4 py-3 text-sm text-snack-muted">
-            <Link href={authHref('login', `/review/${reviewId}`)} className="text-snack-primary hover:underline">Log in</Link> om mee te praten.
+            <Link href={authHref('login', `/review/${reviewId}`)} className="text-snack-primary hover:underline">Log in</Link> om te reageren.
             Nog geen account?{' '}
-            <Link href={authHref('register', `/review/${reviewId}`)} className="text-snack-primary hover:underline">Maak er gratis een</Link>.
+            <Link href={authHref('register', `/review/${reviewId}`)} className="text-snack-primary hover:underline">Account maken</Link>
           </div>
         )}
 
         {commentsLoading ? (
-          <p className="text-sm text-snack-muted">Loading comments...</p>
+          <p className="text-sm text-snack-muted">Reacties laden…</p>
         ) : comments.length === 0 ? (
           <div className="rounded-xl border border-dashed border-snack-border px-4 py-6 text-center text-sm text-snack-muted">
-            No comments yet. Be the first to add context or a recommendation.
+            Nog geen reacties. Heb je een tip of iets toe te voegen? Laat het hier weten.
           </div>
         ) : (
           <div className="space-y-3">
@@ -294,7 +294,7 @@ export function ReviewInteractions({
                       className="text-xs text-red-600 hover:underline"
                       onClick={() => setCommentToDelete(comment)}
                     >
-                      Delete
+                      Verwijderen
                     </button>
                   )}
                 </div>
@@ -307,13 +307,13 @@ export function ReviewInteractions({
 
       {isOwner && isOwnerAllowed && (
         <div className="flex gap-2">
-          <Link href={editHref} className="btn-secondary flex-1 text-center text-sm">Edit</Link>
+          <Link href={editHref} className="btn-secondary flex-1 text-center text-sm">Bewerken</Link>
           <button
             type="button"
             className="btn-secondary flex-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
             onClick={() => { setDeleteStep('confirm'); setDeleteError(null) }}
           >
-            Delete
+            Verwijderen
           </button>
         </div>
       )}
@@ -321,16 +321,16 @@ export function ReviewInteractions({
       <Modal
         open={deleteStep === 'confirm'}
         onClose={() => { if (!deleteBusy) setDeleteStep('closed') }}
-        title="Delete this review?"
+        title="Review verwijderen?"
       >
         <p className="text-sm text-snack-muted mb-4">
-          Your review will no longer be visible. You can restore it within 30 days;
-          after that it is permanently erased, including its photos.
+          Je review is dan niet meer zichtbaar. Binnen 30 dagen kun je hem herstellen.
+          Daarna wordt hij definitief gewist, samen met de foto&apos;s.
         </p>
         {deleteError && <p className="text-xs text-red-500 mb-3" role="status" aria-live="polite">{deleteError}</p>}
         <div className="flex gap-2">
           <button type="button" className="btn-secondary flex-1 text-sm" onClick={() => setDeleteStep('closed')} disabled={deleteBusy}>
-            Cancel
+            Annuleren
           </button>
           <button
             type="button"
@@ -338,7 +338,7 @@ export function ReviewInteractions({
             onClick={() => void deleteReview()}
             disabled={deleteBusy}
           >
-            {deleteBusy ? 'Deleting...' : 'Delete review'}
+            {deleteBusy ? 'Verwijderen…' : 'Review verwijderen'}
           </button>
         </div>
       </Modal>
@@ -348,15 +348,15 @@ export function ReviewInteractions({
         // Deletion is already committed; dismissing without choosing Undo just
         // leaves, same as Done — the deleted review is gone from this page.
         onClose={() => { if (!deleteBusy) window.location.href = '/' }}
-        title="Review deleted"
+        title="Review verwijderd"
       >
         <p className="text-sm text-snack-muted mb-4">
-          Your review has been deleted. You can restore it from this page for 30 days.
+          Je review is verwijderd. Je kunt hem 30 dagen lang herstellen via deze pagina.
         </p>
         {deleteError && <p className="text-xs text-red-500 mb-3" role="status" aria-live="polite">{deleteError}</p>}
         <div className="flex gap-2">
           <button type="button" className="btn-secondary flex-1 text-sm" onClick={() => void undoDeleteReview()} disabled={deleteBusy}>
-            {deleteBusy ? 'Restoring...' : 'Undo'}
+            {deleteBusy ? 'Herstellen…' : 'Ongedaan maken'}
           </button>
           <button
             type="button"
@@ -364,7 +364,7 @@ export function ReviewInteractions({
             onClick={() => { window.location.href = '/' }}
             disabled={deleteBusy}
           >
-            Done
+            Klaar
           </button>
         </div>
       </Modal>
@@ -372,12 +372,12 @@ export function ReviewInteractions({
       <Modal
         open={commentToDelete !== null}
         onClose={() => { if (!commentDeleteBusy) setCommentToDelete(null) }}
-        title="Delete this comment?"
+        title="Reactie verwijderen?"
       >
-        <p className="text-sm text-snack-muted mb-4">This permanently deletes the comment. This cannot be undone.</p>
+        <p className="text-sm text-snack-muted mb-4">De reactie wordt definitief verwijderd. Dit kun je niet ongedaan maken.</p>
         <div className="flex gap-2">
           <button type="button" className="btn-secondary flex-1 text-sm" onClick={() => setCommentToDelete(null)} disabled={commentDeleteBusy}>
-            Cancel
+            Annuleren
           </button>
           <button
             type="button"
@@ -385,30 +385,30 @@ export function ReviewInteractions({
             onClick={() => { if (commentToDelete) void deleteComment(commentToDelete.id) }}
             disabled={commentDeleteBusy}
           >
-            {commentDeleteBusy ? 'Deleting...' : 'Delete comment'}
+            {commentDeleteBusy ? 'Verwijderen…' : 'Reactie verwijderen'}
           </button>
         </div>
       </Modal>
 
       {user && !isOwner && !reported && (
         <details className="rounded-xl border border-snack-border px-4 py-3 text-sm">
-          <summary className="cursor-pointer font-medium text-snack-muted hover:text-snack-text">Report this review</summary>
+          <summary className="cursor-pointer font-medium text-snack-muted hover:text-snack-text">Review melden</summary>
           <div className="mt-3 space-y-2 pl-2 border-l-2 border-snack-border">
             <textarea
               className="input text-sm min-h-[80px]"
-              placeholder="Describe the issue…"
+              placeholder="Wat klopt er niet aan deze review?"
               value={reportReason}
               onChange={(e) => setReportReason(e.target.value)}
               maxLength={500}
             />
             <button type="button" onClick={submitReport} disabled={reporting || reportReason.length < 5} className="btn-secondary text-sm py-2">
-              {reporting ? 'Sending…' : 'Submit report'}
+              {reporting ? 'Versturen…' : 'Melding versturen'}
             </button>
             {reportError && <p className="text-sm text-red-600" role="status" aria-live="polite">{reportError}</p>}
           </div>
         </details>
       )}
-      {reported && <p className="text-sm text-green-600">✓ Report submitted. Thank you.</p>}
+      {reported && <p className="text-sm text-green-600">✓ Melding verstuurd. Bedankt, we kijken ernaar.</p>}
     </>
   )
 }

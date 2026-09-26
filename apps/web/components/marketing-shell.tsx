@@ -18,7 +18,7 @@ export function MarketingShell({ children, locale, dict }: { children: React.Rea
 
   const navItems = [
     { href: '/product#hoe-het-werkt', label: dict.nav.howItWorks, match: null },
-    { href: '/eettentjes', label: dict.nav.cities, match: '/eettentjes' },
+    { href: '/snackplekken', label: dict.nav.cities, match: '/snackplekken' },
     { href: '/guides', label: dict.nav.guides, match: '/guides' },
     { href: '/product/releases', label: dict.nav.releases, match: '/product/releases' },
   ]
@@ -30,7 +30,7 @@ export function MarketingShell({ children, locale, dict }: { children: React.Rea
           <Link href="/product" className="shrink-0" aria-label="SnackSpot">
             <SnackSpotLogo className="text-xl" />
           </Link>
-          <nav aria-label="Product" className="hidden items-center gap-6 text-sm font-medium text-snack-muted md:flex">
+          <nav aria-label={locale === 'nl' ? 'Hoofdmenu' : 'Main menu'} className="hidden items-center gap-6 text-sm font-medium text-snack-muted md:flex">
             {navItems.map((item) => {
               const active = item.match && pathname.startsWith(item.match)
               return active ? (
@@ -53,7 +53,7 @@ export function MarketingShell({ children, locale, dict }: { children: React.Rea
       <footer className="border-t" style={{ borderColor: 'var(--snack-border-soft)' }}>
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-snack-muted sm:flex-row sm:items-center sm:justify-between">
           <p className="font-medium">&copy; {new Date().getFullYear()} SnackSpot</p>
-          <nav aria-label="Legal" className="flex flex-wrap gap-x-5 gap-y-1">
+          <nav aria-label={locale === 'nl' ? 'Juridisch' : 'Legal'} className="flex flex-wrap gap-x-5 gap-y-1">
             <Link href="/terms" className="hover:text-snack-text">{dict.footer.terms}</Link>
             <Link href="/privacy" className="hover:text-snack-text">{dict.footer.privacy}</Link>
             <Link href="/subprocessors" className="hover:text-snack-text">{dict.footer.subprocessors}</Link>

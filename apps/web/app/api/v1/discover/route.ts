@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     if (!auth) {
       const ip = getClientIP(req)
       const rl = await rateLimitIP(ip, 'discover_public', 90, 60)
-      if (!rl.allowed) return err('Too many discover requests - try again later', 429)
+      if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
       const cacheKey = buildCacheKey('discover-public', stableSearchParams(req.nextUrl.searchParams))
       const cached = await getCachedJson<{

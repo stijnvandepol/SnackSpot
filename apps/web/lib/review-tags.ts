@@ -3,14 +3,14 @@ import { REVIEW_TAG_VALUES } from '@snackspot/shared'
 export type ReviewTag = (typeof REVIEW_TAG_VALUES)[number]
 
 export const REVIEW_TAG_OPTIONS: Array<{ value: ReviewTag; label: string; hint: string }> = [
-  { value: 'budget-spot', label: 'Budget spot', hint: 'Great value without spending much.' },
-  { value: 'street-food', label: 'Street food', hint: 'Casual, quick, and worth stopping for.' },
-  { value: 'late-night', label: 'Late night', hint: 'Good when most kitchens are already closed.' },
-  { value: 'local-favorite', label: 'Local favorite', hint: 'The kind of place locals keep returning to.' },
-  { value: 'worth-the-detour', label: 'Worth the detour', hint: 'Good enough to travel a bit further for.' },
-  { value: 'small-but-mighty', label: 'Small but mighty', hint: 'Tiny spot, strong food.' },
-  { value: 'under-the-radar', label: 'Under the radar', hint: 'Easy to miss unless someone tips you off.' },
-  { value: 'unexpected-location', label: 'Unexpected location', hint: 'Hidden in a place you would not expect.' },
+  { value: 'budget-spot', label: 'Voordelig', hint: 'Waar voor je geld zonder veel uit te geven.' },
+  { value: 'street-food', label: 'Streetfood', hint: 'Snel, informeel en de moeite waard om even te stoppen.' },
+  { value: 'late-night', label: 'Late trek', hint: 'Handig als de meeste keukens al dicht zijn.' },
+  { value: 'local-favorite', label: 'Favoriet in de buurt', hint: 'Een plek waar mensen uit de buurt steeds terugkomen.' },
+  { value: 'worth-the-detour', label: 'Omrijden waard', hint: 'Goed genoeg om een stukje verder voor te rijden.' },
+  { value: 'small-but-mighty', label: 'Klein maar fijn', hint: 'Kleine zaak, goed eten.' },
+  { value: 'under-the-radar', label: 'Onder de radar', hint: 'Makkelijk te missen als niemand je tipt.' },
+  { value: 'unexpected-location', label: 'Onverwachte locatie', hint: 'Zit op een plek waar je het niet zou verwachten.' },
 ]
 
 const reviewTagLabels = new Map(REVIEW_TAG_OPTIONS.map((option) => [option.value, option.label]))

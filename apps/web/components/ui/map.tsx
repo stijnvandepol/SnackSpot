@@ -530,10 +530,10 @@ function MarkerPopup({
           type="button"
           onClick={handleClose}
           className="absolute top-1 right-1 z-10 rounded-sm opacity-70 transition-opacity hover:opacity-100"
-          aria-label="Close popup"
+          aria-label="Pop-up sluiten"
         >
           <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">Sluiten</span>
         </button>
       )}
       {children}
@@ -736,10 +736,10 @@ function MapControls({
     >
       {showZoom && (
         <ControlGroup>
-          <ControlButton onClick={handleZoomIn} label="Zoom in">
+          <ControlButton onClick={handleZoomIn} label="Inzoomen">
             <Plus className="size-4" />
           </ControlButton>
-          <ControlButton onClick={handleZoomOut} label="Zoom out">
+          <ControlButton onClick={handleZoomOut} label="Uitzoomen">
             <Minus className="size-4" />
           </ControlButton>
         </ControlGroup>
@@ -753,7 +753,7 @@ function MapControls({
         <ControlGroup>
           <ControlButton
             onClick={handleLocate}
-            label="Find my location"
+            label="Mijn locatie tonen"
             disabled={waitingForLocation}
           >
             {waitingForLocation ? (
@@ -766,7 +766,7 @@ function MapControls({
       )}
       {showFullscreen && (
         <ControlGroup>
-          <ControlButton onClick={handleFullscreen} label="Toggle fullscreen">
+          <ControlButton onClick={handleFullscreen} label="Volledig scherm aan of uit">
             <Maximize className="size-4" />
           </ControlButton>
         </ControlGroup>
@@ -801,7 +801,7 @@ function CompassButton({ onClick }: { onClick: () => void }) {
   }, [map]);
 
   return (
-    <ControlButton onClick={onClick} label="Reset bearing to north">
+    <ControlButton onClick={onClick} label="Kaart naar het noorden draaien">
       <svg
         ref={compassRef}
         viewBox="0 0 24 24"
@@ -907,10 +907,10 @@ function MapPopup({
           type="button"
           onClick={handleClose}
           className="absolute top-1 right-1 z-10 rounded-sm opacity-70 transition-opacity hover:opacity-100"
-          aria-label="Close popup"
+          aria-label="Pop-up sluiten"
         >
           <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">Sluiten</span>
         </button>
       )}
       {children}

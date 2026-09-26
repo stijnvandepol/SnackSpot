@@ -65,13 +65,13 @@ function Stars({ value, onChange }: { value: number; onChange: (v: number) => vo
           <button
             type="button"
             className="absolute inset-y-0 left-0 z-10 w-1/2"
-            aria-label={`Set ${s - 0.5} stars`}
+            aria-label={`${String(s - 0.5).replace('.', ',')} sterren geven`}
             onClick={() => onChange(s - 0.5)}
           />
           <button
             type="button"
             className="absolute inset-y-0 right-0 z-10 w-1/2"
-            aria-label={`Set ${s} stars`}
+            aria-label={`${s} ${s === 1 ? 'ster' : 'sterren'} geven`}
             onClick={() => onChange(s)}
           />
           <span
@@ -83,7 +83,7 @@ function Stars({ value, onChange }: { value: number; onChange: (v: number) => vo
           </span>
         </div>
       ))}
-      {value >= 1 && <span className="ml-2 text-sm font-semibold text-snack-text">{value.toFixed(1)}</span>}
+      {value >= 1 && <span className="ml-2 text-sm font-semibold text-snack-text">{value.toFixed(1).replace('.', ',')}</span>}
     </div>
   )
 }
@@ -150,7 +150,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
       .then((res) => res.json())
       .then((json) => {
         if (!json.data) {
-          setError(json.error ?? 'Review not found')
+          setError(json.error ?? 'Deze review bestaat niet (meer).')
           setPageLoading(false)
           return
         }
@@ -184,7 +184,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
         setPageLoading(false)
       })
       .catch(() => {
-        setError('Failed to load review')
+        setError('Review laden is niet gelukt. Probeer het later opnieuw.')
         setPageLoading(false)
       })
   }, [id])
@@ -213,7 +213,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <p className="font-semibold text-snack-text">{error}</p>
-        <Link href="/" className="btn-primary mt-4 inline-block">Back to Feed</Link>
+        <Link href="/" className="btn-primary mt-4 inline-block">Naar home</Link>
       </div>
     )
   }
@@ -231,27 +231,27 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
   if (!review || review.user.id !== user.id) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="font-semibold text-snack-text">You can only edit your own review.</p>
-        <Link href={reviewHref} className="btn-primary mt-4 inline-block">Back to Review</Link>
+        <p className="font-semibold text-snack-text">Je kunt alleen je eigen reviews bewerken.</p>
+        <Link href={reviewHref} className="btn-primary mt-4 inline-block">Terug naar review</Link>
       </div>
     )
   }
 
   const submit = async () => {
     if (!isHalfStepRating(ratings.taste) || !isHalfStepRating(ratings.value) || !isHalfStepRating(ratings.portion)) {
-      setError('Choose ratings from 1 to 5 in steps of 0.5')
+      setError('Geef smaak, prijs-kwaliteit en portie een score van 1 tot 5 sterren.')
       return
     }
     if (ratings.service !== null && !isHalfStepRating(ratings.service)) {
-      setError('Service rating must be between 1 and 5 in steps of 0.5')
+      setError('Geef service een score van 1 tot 5 sterren, of kies "Geen score".')
       return
     }
     if (text.trim().length < 10) {
-      setError('Review text must be at least 10 characters')
+      setError('Schrijf minstens 10 tekens over je ervaring.')
       return
     }
     if (photos.some((p) => p.status === 'uploading' || p.status === 'confirming')) {
-      setError('Please wait until photo uploads are finished')
+      setError('Wacht tot alle foto\'s geüpload zijn.')
       return
     }
 
@@ -280,14 +280,14 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
 
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError(json.error ?? 'Failed to save changes')
+        setError(json.error ?? 'Opslaan is niet gelukt. Probeer het opnieuw.')
         return
       }
 
       router.push(reviewHref)
       router.refresh()
     } catch {
-      setError('Failed to save changes')
+      setError('Opslaan is niet gelukt. Probeer het opnieuw.')
     } finally {
       setSaving(false)
     }
@@ -296,7 +296,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
   const handleFileSelect = async (files: FileList | null) => {
     if (!files) return
     if (!accessToken) {
-      setError('Your session is not ready yet. Please wait a moment and try again.')
+      setError('Je sessie is nog niet klaar. Wacht even en probeer het opnieuw.')
       return
     }
 
@@ -306,12 +306,12 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
     for (const file of toUpload) {
       const normalizedMime = normalizeUploadMime(file)
       if (!normalizedMime) {
-        setError(`Unsupported image type for ${file.name || 'selected file'}. Use JPG, PNG, WEBP, AVIF or HEIC.`)
+        setError(`${file.name || 'Dit bestand'} kunnen we niet gebruiken. Kies een JPG, PNG, WEBP, AVIF of HEIC.`)
         continue
       }
 
       if (file.size > MAX_FILE_SIZE_BYTES * 2) {
-        setError(`${file.name || 'File'} is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 10 MB before compression.`)
+        setError(`${file.name || 'Deze foto'} is te groot (${(file.size / 1024 / 1024).toFixed(1).replace('.', ',')} MB). Kies een kleinere foto, maximaal 10 MB.`)
         continue
       }
 
@@ -331,7 +331,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
           uploadMime = compressed.mime
         } catch {
           if (file.size > MAX_FILE_SIZE_BYTES) {
-            throw new Error(`Photo is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Try a smaller photo or use a different browser.`)
+            throw new Error(`Deze foto is te groot (${(file.size / 1024 / 1024).toFixed(1).replace('.', ',')} MB). Kies een kleinere foto of probeer een andere browser.`)
           }
         }
 
@@ -341,8 +341,8 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
           body: JSON.stringify({ filename: file.name, contentType: uploadMime, size: uploadBlob.size }),
         })
         if (!initRes.ok) {
-          const errorData = await initRes.json().catch(() => ({ error: 'Unknown error' }))
-          throw new Error(`Initiate failed: ${errorData.error || initRes.statusText}`)
+          const errorData = await initRes.json().catch(() => ({ error: 'onbekende fout' }))
+          throw new Error(`Uploaden mislukt: ${errorData.error || initRes.statusText}`)
         }
 
         const { data: initData } = await initRes.json()
@@ -379,7 +379,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
           })
           if (!fallbackRes.ok) {
             const fallbackErr = await fallbackRes.json().catch(() => ({ error: fallbackRes.statusText }))
-            throw new Error(`Upload fallback failed: ${fallbackErr.error || fallbackRes.statusText}`)
+            throw new Error(`Uploaden mislukt: ${fallbackErr.error || fallbackRes.statusText}`)
           }
         }
 
@@ -391,8 +391,8 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
           body: JSON.stringify({ photoId: realId }),
         })
         if (!confirmRes.ok) {
-          const errorData = await confirmRes.json().catch(() => ({ error: 'Unknown error' }))
-          throw new Error(`Confirm failed: ${errorData.error || confirmRes.statusText}`)
+          const errorData = await confirmRes.json().catch(() => ({ error: 'onbekende fout' }))
+          throw new Error(`Foto verwerken mislukt: ${errorData.error || confirmRes.statusText}`)
         }
 
         setPhotos((prev) =>
@@ -402,7 +402,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
           ),
         )
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Photo upload failed'
+        const msg = err instanceof Error ? err.message : 'Foto uploaden mislukt. Probeer het opnieuw.'
         setError(msg)
         setPhotos((prev) => prev.map((p) => (p.photoId === tempId || p.photoId === realId) ? { ...p, status: 'error' } : p))
       }
@@ -411,14 +411,14 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="mb-6 text-2xl font-heading font-bold text-snack-text">Edit Post</h1>
+      <h1 className="mb-6 text-2xl font-heading font-bold text-snack-text">Review bewerken</h1>
 
       <StepIndicators step={step} />
 
       {step === 'place' && (
         <div className="space-y-4">
           <div className="card p-4">
-            <p className="text-sm text-snack-muted">Place</p>
+            <p className="text-sm text-snack-muted">Snackplek</p>
             <p className="font-semibold text-snack-text">{review.place.name}</p>
             <p className="mt-1 text-xs text-snack-muted">{review.place.address}</p>
           </div>
@@ -430,11 +430,11 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
               setStep('review')
             }}
           >
-            Next: Write Review -&gt;
+            Volgende: beoordeling
           </button>
 
           <Link href={reviewHref} className="btn-secondary block w-full text-center">
-            Cancel
+            Annuleren
           </Link>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
@@ -444,22 +444,22 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
       {step === 'review' && (
         <div className="space-y-4">
           <div>
-            <label className="label">Taste *</label>
+            <label className="label">Smaak *</label>
             <Stars value={ratings.taste} onChange={(value) => setRatings((prev) => ({ ...prev, taste: value }))} />
           </div>
 
           <div>
-            <label className="label">Value / Price *</label>
+            <label className="label">Prijs-kwaliteit *</label>
             <Stars value={ratings.value} onChange={(value) => setRatings((prev) => ({ ...prev, value: value }))} />
           </div>
 
           <div>
-            <label className="label">Portion *</label>
+            <label className="label">Portie *</label>
             <Stars value={ratings.portion} onChange={(value) => setRatings((prev) => ({ ...prev, portion: value }))} />
           </div>
 
           <div>
-            <label className="label">Service (optional)</label>
+            <label className="label">Service (optioneel)</label>
             <div className="flex items-center gap-3">
               <Stars value={ratings.service ?? 0} onChange={(value) => setRatings((prev) => ({ ...prev, service: value }))} />
               <button
@@ -467,20 +467,20 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
                 className="btn-secondary px-2 py-1 text-xs"
                 onClick={() => setRatings((prev) => ({ ...prev, service: null }))}
               >
-                Not set
+                Geen score
               </button>
             </div>
           </div>
 
           <div className="rounded-lg bg-snack-surface px-3 py-2 text-sm text-snack-text">
-            Overall rating: <span className="font-semibold">{computeOverallRating(ratings).toFixed(1)}</span>
+            Totaalscore: <span className="font-semibold">{computeOverallRating(ratings).toFixed(1).replace('.', ',')}</span>
           </div>
 
           <div>
-            <label className="label">Dish name</label>
+            <label className="label">Gerecht</label>
             <input
               className="input"
-              placeholder="e.g. Stroopwafel, Currywurst"
+              placeholder="Bijv. frikandel speciaal, kroket, kapsalon"
               value={dishName}
               onChange={(e) => setDishName(e.target.value)}
               maxLength={100}
@@ -489,10 +489,10 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
 
           <div>
             <div className="flex items-center justify-between gap-3">
-              <label className="label mb-0">Post tags</label>
+              <label className="label mb-0">Tags</label>
               <span className="text-xs text-snack-muted">{selectedTags.length}/6</span>
             </div>
-            <p className="mt-1 text-xs text-snack-muted">Keep the tags accurate so Explore can place this post in the right discovery lane.</p>
+            <p className="mt-1 text-xs text-snack-muted">Kies tags die bij deze plek passen. Zo komt je review op de juiste plek in Ontdek.</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {REVIEW_TAG_OPTIONS.map((option) => {
                 const isActive = selectedTags.includes(option.value)
@@ -528,7 +528,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
           </div>
 
           <div>
-            <label className="label">Your review * <span className="text-snack-muted font-normal">({text.length}/2000)</span></label>
+            <label className="label">Je review * <span className="text-snack-muted font-normal">({text.length}/2000)</span></label>
             <textarea
               className="input min-h-[140px] resize-none"
               value={text}
@@ -540,19 +540,19 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
           {error && <p className="text-sm text-red-500">{error}</p>}
 
           <div className="flex gap-2">
-            <button className="btn-secondary flex-1" onClick={() => setStep('place')}>{"<- Back"}</button>
+            <button className="btn-secondary flex-1" onClick={() => setStep('place')}>Terug</button>
             <button
               className="btn-primary flex-1"
               onClick={() => {
                 if (text.trim().length < 10) {
-                  setError('Review text must be at least 10 characters')
+                  setError('Schrijf minstens 10 tekens over je ervaring.')
                   return
                 }
                 setError(null)
                 setStep('photos')
               }}
             >
-              Next: Add Photos -&gt;
+              Volgende: foto&apos;s
             </button>
           </div>
         </div>
@@ -560,7 +560,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
 
       {step === 'photos' && (
         <div className="space-y-4">
-          <p className="text-sm text-snack-muted">Add up to 5 photos (optional). Remove any photo with x.</p>
+          <p className="text-sm text-snack-muted">Maximaal 5 foto&apos;s. Tik op × om een foto te verwijderen.</p>
 
           <input
             id="edit-review-photo-input"
@@ -580,7 +580,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
               htmlFor="edit-review-photo-input"
               className="btn-secondary block w-full cursor-pointer text-center"
             >
-              Add photos ({photos.length}/{MAX_PHOTOS})
+              Foto&apos;s toevoegen ({photos.length}/{MAX_PHOTOS})
             </label>
           )}
 
@@ -592,12 +592,13 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
                   <div className={`absolute inset-0 flex items-center justify-center ${p.status !== 'ready' ? 'bg-black/40' : 'opacity-0'}`}>
                     {p.status === 'uploading' || p.status === 'confirming'
                       ? <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      : p.status === 'error' && <span className="text-sm font-semibold text-white">Error</span>
+                      : p.status === 'error' && <span className="text-sm font-semibold text-white">Mislukt</span>
                     }
                   </div>
                   <button
                     type="button"
                     className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-xs text-white"
+                    aria-label="Foto verwijderen"
                     onClick={() => {
                       revokePreviewUrl(p.previewUrl)
                       setPhotos((prev) => prev.filter((x) => x.photoId !== p.photoId))
@@ -613,13 +614,13 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
           {error && <p className="text-sm text-red-500">{error}</p>}
 
           <div className="flex gap-2">
-            <button className="btn-secondary flex-1" onClick={() => setStep('review')}>{"<- Back"}</button>
+            <button className="btn-secondary flex-1" onClick={() => setStep('review')}>Terug</button>
             <button
               className="btn-primary flex-1"
               onClick={submit}
               disabled={saving || photos.some((p) => p.status === 'uploading' || p.status === 'confirming')}
             >
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? 'Opslaan…' : 'Wijzigingen opslaan'}
             </button>
           </div>
         </div>

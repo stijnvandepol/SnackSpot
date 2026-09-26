@@ -22,7 +22,7 @@ export function LanguageSwitcher({ current }: { current: Locale }) {
   }
 
   return (
-    <div role="group" aria-label="Language" className="inline-flex items-center rounded-full border border-[var(--snack-border-soft)] p-0.5 text-xs">
+    <div role="group" aria-label={current === 'nl' ? 'Taal' : 'Language'} className="inline-flex items-center rounded-full border border-[var(--snack-border-soft)] p-0.5 text-xs">
       {OPTIONS.map((opt) => {
         const active = opt.value === current
         return (

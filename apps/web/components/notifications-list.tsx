@@ -115,7 +115,7 @@ function NotificationsList() {
   if (notifications.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-snack-muted text-sm">No notifications yet</p>
+        <p className="text-snack-muted text-sm">Nog geen meldingen</p>
       </div>
     )
   }
@@ -124,12 +124,12 @@ function NotificationsList() {
     <div className="space-y-3">
       {unreadCount > 0 && (
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-medium text-snack-muted">{unreadCount} unread</span>
+          <span className="text-xs font-medium text-snack-muted">{unreadCount} ongelezen</span>
           <button
             onClick={markAllAsRead}
             className="text-xs text-snack-primary hover:underline"
           >
-            Mark all as read
+            Alles als gelezen markeren
           </button>
         </div>
       )}

@@ -3,6 +3,9 @@ const nextConfig = {
   output: 'standalone',
   compress: true,
   reactStrictMode: true,
+  // The dev-tools badge sits bottom-left, on top of the mobile bottom nav: it covered the Home
+  // and Ontdek links in development and intercepted e2e clicks there. Error overlays still show.
+  devIndicators: false,
 
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -39,6 +42,10 @@ const nextConfig = {
       { source: '/product/guides', destination: '/guides', permanent: true },
       { source: '/product/guides/:slug', destination: '/guides/:slug', permanent: true },
       { source: '/releases', destination: '/product/releases', permanent: true },
+      // The city and city-dish pages were /eettentjes from 15 Sep 2026 and are now
+      // /snackplekken. Permanent, so Google moves what it had indexed to the new URLs.
+      { source: '/eettentjes', destination: '/snackplekken', permanent: true },
+      { source: '/eettentjes/:path*', destination: '/snackplekken/:path*', permanent: true },
     ]
   },
 

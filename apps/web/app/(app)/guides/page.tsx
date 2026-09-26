@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { PILLAR_GUIDES } from '@/lib/guides'
 import { BreadcrumbJsonLd } from '@/components/breadcrumb-jsonld'
 
-const TITLE = 'Guides – How to Use SnackSpot'
+const TITLE = 'Uitleg: zo gebruik je SnackSpot'
 const DESCRIPTION =
-  'Step-by-step guides for using SnackSpot: create an account, post a review, add a place, manage your password, and more.'
+  'Handleidingen voor SnackSpot: een account maken, een review plaatsen, een snackplek toevoegen, je wachtwoord wijzigen en meer.'
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -18,15 +18,15 @@ export const metadata: Metadata = {
 export default function GuidesHubPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
-      <BreadcrumbJsonLd items={[{ name: 'Guides', path: '/guides' }]} />
+      <BreadcrumbJsonLd items={[{ name: 'Uitleg', path: '/guides' }]} />
       <header className="max-w-3xl">
         <p className="mb-3 inline-flex rounded-full border border-snack-primary/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-snack-primary">
-          Help &amp; Guides
+          Uitleg
         </p>
-        <h1 className="font-heading text-3xl font-bold text-snack-text md:text-5xl">SnackSpot Guides</h1>
+        <h1 className="font-heading text-3xl font-bold text-snack-text md:text-5xl">Zo gebruik je SnackSpot</h1>
         <p className="mt-4 text-base leading-7 text-snack-muted md:text-lg">
-          Everything you need to get started with SnackSpot, from creating an account and posting your first review to
-          managing your profile and adding new places.
+          Stap voor stap: een account maken, je eerste review plaatsen, een snackplek toevoegen en je account
+          beheren.
         </p>
       </header>
 
@@ -39,7 +39,7 @@ export default function GuidesHubPage() {
               href={guide.href}
               className="mt-4 inline-flex items-center text-sm font-semibold text-snack-primary hover:underline"
             >
-              Read guide
+              Lees de handleiding
             </Link>
           </article>
         ))}

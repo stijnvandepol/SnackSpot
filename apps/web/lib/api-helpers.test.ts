@@ -86,7 +86,7 @@ describe('validationError()', () => {
     const res = validationError({ field: 'email', message: 'Required' })
     expect(res.status).toBe(422)
     const body = await res.json()
-    expect(body.error).toBe('Validation error')
+    expect(body.error).toBe('Controleer de ingevulde gegevens.')
     expect(body.details).toEqual({ field: 'email', message: 'Required' })
   })
 })

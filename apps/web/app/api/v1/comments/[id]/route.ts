@@ -17,17 +17,17 @@ export async function DELETE(
     // token cycling through ids (mods get the same budget — bulk cleanup is
     // an admin-panel task, not an API loop).
     const rl = await rateLimitUser(auth.sub, 'comment_delete', 30, 3600)
-    if (!rl.allowed) return err('Too many requests', 429)
+    if (!rl.allowed) return err('Je gaat even te snel. Probeer het zo opnieuw.', 429)
 
     const comment = await prisma.comment.findUnique({
       where: { id },
       select: { id: true, userId: true, review: { select: { userId: true } } },
     })
-    if (!comment) return err('Comment not found', 404)
+    if (!comment) return err('Reactie niet gevonden.', 404)
 
     const isOwner = comment.userId === auth.sub
     const isMod = auth.role === 'MODERATOR' || auth.role === 'ADMIN'
-    if (!isOwner && !isMod) return err('Forbidden', 403)
+    if (!isOwner && !isMod) return err('Je hebt hier geen toegang toe.', 403)
 
     await prisma.comment.delete({ where: { id } })
     await recalculateUserBadges(comment.review.userId, { criteriaTypes: ['COMMENTS_RECEIVED_COUNT'] })

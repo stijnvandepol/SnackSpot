@@ -17,13 +17,13 @@ export const RegisterSchema = z.object({
     .string()
     .min(3)
     .max(30)
-    .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers and underscores'),
+    .regex(/^[a-zA-Z0-9_]+$/, 'Alleen letters, cijfers en underscores.'),
   password: z
     .string()
     .min(8)
     .max(128)
-    .regex(/[A-Z]/, 'Must contain an uppercase letter')
-    .regex(/[0-9]/, 'Must contain a number'),
+    .regex(/[A-Z]/, 'Gebruik minstens één hoofdletter.')
+    .regex(/[0-9]/, 'Gebruik minstens één cijfer.'),
 })
 
 export const LoginSchema = z.object({
@@ -70,7 +70,7 @@ const RatingValueSchema = z
   .min(1)
   .max(5)
   .refine((value) => Math.abs(value * 2 - Math.round(value * 2)) < Number.EPSILON, {
-    message: 'Rating must be in 0.5 increments',
+    message: 'Geef een score in stappen van 0,5.',
   })
 
 export const REVIEW_TAG_VALUES = [
@@ -105,7 +105,7 @@ export const CreateReviewSchema = z.object({
   photoIds: z.array(z.string()).min(1).max(5),
   mentionedUserIds: z.array(z.string()).max(10).default([]),
 }).refine((data) => Boolean(data.rating || data.ratings), {
-  message: 'rating or ratings is required',
+  message: 'Geef een beoordeling.',
   path: ['ratings'],
 })
 
@@ -133,28 +133,28 @@ export const CreateCommentSchema = z.object({
 // stored on places.cuisine and referenced by collectible criteria.
 
 export const CUISINES = [
-  { key: 'dutch', label: 'Dutch', icon: '🇳🇱' },
+  { key: 'dutch', label: 'Hollands', icon: '🇳🇱' },
   { key: 'snackbar', label: 'Snackbar', icon: '🍟' },
-  { key: 'surinamese', label: 'Surinamese', icon: '🇸🇷' },
-  { key: 'indonesian', label: 'Indonesian', icon: '🇮🇩' },
-  { key: 'turkish', label: 'Turkish', icon: '🇹🇷' },
-  { key: 'moroccan', label: 'Moroccan', icon: '🇲🇦' },
-  { key: 'italian', label: 'Italian', icon: '🇮🇹' },
-  { key: 'chinese', label: 'Chinese', icon: '🇨🇳' },
-  { key: 'japanese', label: 'Japanese', icon: '🇯🇵' },
-  { key: 'korean', label: 'Korean', icon: '🇰🇷' },
-  { key: 'thai', label: 'Thai', icon: '🇹🇭' },
-  { key: 'vietnamese', label: 'Vietnamese', icon: '🇻🇳' },
-  { key: 'indian', label: 'Indian', icon: '🇮🇳' },
-  { key: 'mexican', label: 'Mexican', icon: '🇲🇽' },
-  { key: 'american', label: 'American', icon: '🇺🇸' },
-  { key: 'french', label: 'French', icon: '🇫🇷' },
-  { key: 'spanish', label: 'Spanish', icon: '🇪🇸' },
-  { key: 'greek', label: 'Greek', icon: '🇬🇷' },
-  { key: 'middle-eastern', label: 'Middle Eastern', icon: '🥙' },
-  { key: 'african', label: 'African', icon: '🌍' },
-  { key: 'caribbean', label: 'Caribbean', icon: '🌴' },
-  { key: 'other', label: 'Other', icon: '🍽️' },
+  { key: 'surinamese', label: 'Surinaams', icon: '🇸🇷' },
+  { key: 'indonesian', label: 'Indonesisch', icon: '🇮🇩' },
+  { key: 'turkish', label: 'Turks', icon: '🇹🇷' },
+  { key: 'moroccan', label: 'Marokkaans', icon: '🇲🇦' },
+  { key: 'italian', label: 'Italiaans', icon: '🇮🇹' },
+  { key: 'chinese', label: 'Chinees', icon: '🇨🇳' },
+  { key: 'japanese', label: 'Japans', icon: '🇯🇵' },
+  { key: 'korean', label: 'Koreaans', icon: '🇰🇷' },
+  { key: 'thai', label: 'Thais', icon: '🇹🇭' },
+  { key: 'vietnamese', label: 'Vietnamees', icon: '🇻🇳' },
+  { key: 'indian', label: 'Indiaas', icon: '🇮🇳' },
+  { key: 'mexican', label: 'Mexicaans', icon: '🇲🇽' },
+  { key: 'american', label: 'Amerikaans', icon: '🇺🇸' },
+  { key: 'french', label: 'Frans', icon: '🇫🇷' },
+  { key: 'spanish', label: 'Spaans', icon: '🇪🇸' },
+  { key: 'greek', label: 'Grieks', icon: '🇬🇷' },
+  { key: 'middle-eastern', label: 'Midden-Oosters', icon: '🥙' },
+  { key: 'african', label: 'Afrikaans', icon: '🌍' },
+  { key: 'caribbean', label: 'Caribisch', icon: '🌴' },
+  { key: 'other', label: 'Overig', icon: '🍽️' },
 ] as const
 
 export type CuisineKey = (typeof CUISINES)[number]['key']
@@ -191,7 +191,7 @@ export const UpdateMeProfileSchema = z.object({
     .string()
     .min(3)
     .max(30)
-    .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers and underscores')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Alleen letters, cijfers en underscores.')
     .optional(),
   bio: z.string().max(280).optional(),
 })
@@ -237,8 +237,8 @@ export const ResetPasswordSchema = z.object({
     .string()
     .min(8)
     .max(128)
-    .regex(/[A-Z]/, 'Must contain an uppercase letter')
-    .regex(/[0-9]/, 'Must contain a number'),
+    .regex(/[A-Z]/, 'Gebruik minstens één hoofdletter.')
+    .regex(/[0-9]/, 'Gebruik minstens één cijfer.'),
 })
 
 // ─── Account schemas ─────────────────────────────────────────────────────────

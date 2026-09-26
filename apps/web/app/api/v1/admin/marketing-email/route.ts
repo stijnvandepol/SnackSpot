@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   if (isResponse(auth)) return auth
 
   const rl = await rateLimitUser(auth.sub, 'marketing_email', 5, 3600)
-  if (!rl.allowed) return err('Rate limit exceeded — max 5 sends per hour', 429)
+  if (!rl.allowed) return err('Limiet bereikt: maximaal 5 verzendingen per uur.', 429)
 
   const body = await parseBody(req, BodySchema)
   if (isResponse(body)) return body

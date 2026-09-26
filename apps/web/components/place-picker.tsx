@@ -108,7 +108,7 @@ export function PlacePicker({ accessToken, value, onChange }: PlacePickerProps) 
       if (!controller.signal.aborted) setResults(json.data ?? [])
     } catch (e) {
       if ((e as Error)?.name === 'AbortError') return // superseded by a newer query
-      setError('Could not search places. Check your connection and try again.')
+      setError('Zoeken lukt nu niet. Controleer je internetverbinding en probeer het opnieuw.')
       setResults([])
     } finally {
       if (abortRef.current === controller) setSearching(false)
@@ -150,16 +150,16 @@ export function PlacePicker({ accessToken, value, onChange }: PlacePickerProps) 
     <div className="space-y-3">
       <div className="relative">
         <label className="label" htmlFor="place-search">
-          Find the place *
+          Waar heb je gegeten? *
         </label>
         <p className="mb-2 text-xs text-snack-muted">
-          Search for the restaurant, café or snack bar. Pick it from the list, places already on
-          SnackSpot show first, so you never create a duplicate.
+          Zoek de snackbar, cafetaria of het restaurant en kies hem uit de lijst. Plekken die al op
+          SnackSpot staan, zie je bovenaan. Zo komt je review bij de juiste plek.
         </p>
         <input
           id="place-search"
           className="input"
-          placeholder="Start typing a place name…"
+          placeholder="Typ de naam van de plek…"
           value={query}
           onChange={(e) => onInput(e.target.value)}
           onFocus={() => {
@@ -183,10 +183,10 @@ export function PlacePicker({ accessToken, value, onChange }: PlacePickerProps) 
         >
           <span aria-hidden="true">📍</span>
           {locating
-            ? 'Finding you…'
+            ? 'Locatie zoeken…'
             : coords
-              ? 'Showing places near you'
-              : 'Show places near me'}
+              ? 'Plekken bij jou in de buurt'
+              : 'Toon plekken in de buurt'}
         </button>
 
         {results.length > 0 && (
@@ -196,7 +196,7 @@ export function PlacePicker({ accessToken, value, onChange }: PlacePickerProps) 
           >
             {query.trim().length < 2 && (
               <li className="border-b border-snack-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-snack-muted">
-                Near you
+                In de buurt
               </li>
             )}
             {results.map((r) => (
@@ -211,12 +211,12 @@ export function PlacePicker({ accessToken, value, onChange }: PlacePickerProps) 
                     {r.placeId ? (
                       <span className="rounded-full bg-snack-primary/10 px-2 py-0.5 text-[10px] font-semibold text-snack-primary">
                         {r.reviewCount > 0
-                          ? `On SnackSpot · ${r.reviewCount} review${r.reviewCount === 1 ? '' : 's'}`
-                          : 'On SnackSpot'}
+                          ? `Op SnackSpot · ${r.reviewCount} review${r.reviewCount === 1 ? '' : 's'}`
+                          : 'Op SnackSpot'}
                       </span>
                     ) : (
                       <span className="rounded-full bg-snack-surface px-2 py-0.5 text-[10px] font-semibold text-snack-muted">
-                        Add new
+                        Nieuw
                       </span>
                     )}
                   </div>
@@ -229,8 +229,8 @@ export function PlacePicker({ accessToken, value, onChange }: PlacePickerProps) 
 
         {!searching && query.trim().length >= 2 && results.length === 0 && !error && (
           <div className="mt-2 rounded-xl border border-dashed border-snack-border px-4 py-3 text-sm text-snack-muted">
-            No place matched. Try the exact name, add the street or city, or tap{' '}
-            <span className="font-medium text-snack-text">Search near me</span>.
+            Geen plek gevonden. Probeer de precieze naam, voeg de straat of stad toe, of tik op{' '}
+            <span className="font-medium text-snack-text">Toon plekken in de buurt</span>.
           </div>
         )}
         {error && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>}
@@ -238,7 +238,7 @@ export function PlacePicker({ accessToken, value, onChange }: PlacePickerProps) 
 
       {value && (
         <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 dark:border-green-800 dark:bg-green-950/30">
-          <div className="font-medium text-snack-text">Selected: {value.name}</div>
+          <div className="font-medium text-snack-text">Gekozen: {value.name}</div>
           {value.address && <div className="mt-0.5 text-xs text-snack-muted">{value.address}</div>}
         </div>
       )}

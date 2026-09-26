@@ -4,9 +4,9 @@ import { useTheme } from './theme-provider'
 type ThemeChoice = 'light' | 'dark' | 'system'
 
 const THEME_OPTIONS: Array<{ value: ThemeChoice; label: string; description: string }> = [
-  { value: 'light', label: 'Light', description: 'Always use light mode' },
-  { value: 'dark', label: 'Dark', description: 'Always use dark mode' },
-  { value: 'system', label: 'System', description: 'Follow your device setting' },
+  { value: 'light', label: 'Licht', description: 'Altijd de lichte weergave' },
+  { value: 'dark', label: 'Donker', description: 'Altijd de donkere weergave' },
+  { value: 'system', label: 'Systeem', description: 'Volgt de instelling van je apparaat' },
 ]
 
 export function ThemeSettings() {
@@ -14,7 +14,7 @@ export function ThemeSettings() {
 
   return (
     <fieldset>
-      <legend className="sr-only">Theme preference</legend>
+      <legend className="sr-only">Weergave</legend>
       <div className="space-y-2">
         {THEME_OPTIONS.map((option) => (
           <label
