@@ -32,7 +32,7 @@ export default async function GerechtenIndexPage() {
         <p className="mt-4 text-base leading-7 text-snack-muted md:text-lg">
           Hier staan snackplekken per gerecht gerangschikt, op het cijfer voor dat gerecht en niet op het totaalcijfer.
           Een snackbar met een gemiddeld totaalcijfer kan zo toch bovenaan staan voor kapsalon. De volgorde komt alleen
-          uit reviews van bezoekers.
+          uit reviews van bezoekers, zonder gesponsorde plekken.
         </p>
       </header>
 

@@ -39,7 +39,7 @@ export default async function SnackplekkenIndexPage() {
         </h1>
         <p className="mt-4 text-base leading-7 text-snack-muted md:text-lg">
           Per stad de snackplekken met reviews, gerangschikt op het cijfer dat bezoekers gaven.
-          De volgorde komt alleen uit reviews.
+          De volgorde komt alleen uit reviews: geen advertenties en geen gesponsorde plekken.
         </p>
       </header>
 
