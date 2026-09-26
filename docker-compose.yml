@@ -171,6 +171,8 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       # Web push (optional): without keys the subscribe UI hides itself.
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      # IndexNow (optional): empty disables the ping and the key file.
+      INDEXNOW_KEY: ${INDEXNOW_KEY:-}
     depends_on:
       db:
         condition: service_healthy

@@ -7,6 +7,7 @@ import {
   citySlug,
   getPhotoByPlace,
   getQualifyingCities,
+  isoOrNull,
 } from '@/lib/city-index'
 
 /**
@@ -38,6 +39,8 @@ export interface DishSummary {
   cityCount: number
   reviewCount: number
   avgRating: number
+  /** Newest published review of this dish anywhere; the sitemap's <lastmod>. */
+  lastModified?: string | null
 }
 
 export interface DishPlace {
@@ -71,6 +74,7 @@ interface DishAggregateRow {
   city_count: number
   review_count: number
   avg_rating: number
+  last_modified?: Date | null
 }
 
 interface DishPlaceRow {
@@ -102,6 +106,7 @@ export function toQualifyingDishes(rows: DishAggregateRow[]): DishSummary[] {
         cityCount: row.city_count,
         reviewCount: row.review_count,
         avgRating: row.avg_rating,
+        lastModified: isoOrNull(row.last_modified),
       }))
       .filter((dish) => dish.slug.length > 0)
       // Two spellings that slug the same would make one page unreachable; the most-reviewed wins.
@@ -111,7 +116,7 @@ export function toQualifyingDishes(rows: DishAggregateRow[]): DishSummary[] {
 
 /** Dishes that clear the gate, most-reviewed first. Cached: it also drives internal links. */
 export const getQualifyingDishes = cache(async (): Promise<DishSummary[]> => {
-  const cacheKey = buildCacheKey('qualifying-dishes', 'v1')
+  const cacheKey = buildCacheKey('qualifying-dishes', 'v2')
   const cached = await getCachedJson<DishSummary[]>(cacheKey)
   if (cached) return cached
 
@@ -122,7 +127,8 @@ export const getQualifyingDishes = cache(async (): Promise<DishSummary[]> => {
       COUNT(DISTINCT r.place_id)::int                 AS place_count,
       COUNT(DISTINCT NULLIF(TRIM(p.city), ''))::int   AS city_count,
       COUNT(*)::int                                   AS review_count,
-      ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating
+      ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
+      MAX(r.updated_at)                               AS last_modified
     FROM reviews r
     JOIN places p ON p.id = r.place_id
     WHERE r.status = 'PUBLISHED'

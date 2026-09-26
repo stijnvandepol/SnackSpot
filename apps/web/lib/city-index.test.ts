@@ -76,7 +76,7 @@ describe('getQualifyingCities', () => {
     ] as never)
 
     expect(await getQualifyingCities()).toEqual([
-      { slug: 'uden', name: 'Uden', placeCount: 1, reviewCount: 1 },
+      { slug: 'uden', name: 'Uden', placeCount: 1, reviewCount: 1, lastModified: null },
     ])
   })
 
@@ -92,7 +92,7 @@ describe('getQualifyingCities', () => {
     queryRaw.mockResolvedValue([row('Eindhoven', 3, 15)] as never)
 
     expect(await getQualifyingCities()).toEqual([
-      { slug: 'eindhoven', name: 'Eindhoven', placeCount: 3, reviewCount: 15 },
+      { slug: 'eindhoven', name: 'Eindhoven', placeCount: 3, reviewCount: 15, lastModified: null },
     ])
   })
 
@@ -335,7 +335,24 @@ describe('getCityDetail dish pages', () => {
     // The city page links to these, so they must come from the same gate the dish page
     // itself applies — otherwise the link would 404.
     expect(detail!.dishPages).toEqual([
-      { slug: 'kapsalon', name: 'Kapsalon', key: 'kapsalon', placeCount: 3, reviewCount: 9, avgRating: 4.4 },
+      {
+        slug: 'kapsalon',
+        name: 'Kapsalon',
+        key: 'kapsalon',
+        placeCount: 3,
+        reviewCount: 9,
+        avgRating: 4.4,
+        lastModified: null,
+      },
     ])
+  })
+})
+
+describe('lastModified', () => {
+  it('carries the newest review date of a city as an ISO string, for the sitemap', async () => {
+    queryRaw.mockResolvedValueOnce([
+      { city: 'Eindhoven', place_count: 3, review_count: 9, last_modified: new Date('2026-09-20T10:00:00Z') },
+    ] as never)
+    expect((await getQualifyingCities())[0].lastModified).toBe('2026-09-20T10:00:00.000Z')
   })
 })

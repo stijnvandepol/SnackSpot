@@ -218,6 +218,66 @@ push-infrastructuur in `lib/push-service.ts` + BullMQ-worker).
 
 ---
 
+## 7b. SEO: sneller en beter vindbaar
+
+*Toegevoegd 26 september 2026.*
+
+**De uitgangspositie.** Bijna alle klikken uit Google komen van mensen die "snackspot" al
+kennen. Zaakpagina's krijgen wel vertoningen, maar geen klikken. Er zijn dus twee opgaven:
+Google moet nieuwe pagina's sneller zien, en in de resultaten moet een pagina aantrekkelijker
+ogen dan de concurrent erboven.
+
+### Al gedaan in de code
+- **Sitemap met eerlijke datums.** Elke pagina krijgt als `lastmod` het moment van haar laatste
+  review, niet "nu". Google negeert `lastmod` van sites waar die datum altijd verspringt. Met een
+  eerlijke datum komt Google juist terug naar pagina's die echt veranderd zijn.
+- **Foto's in de sitemap.** Zaak- en reviewpagina's melden hun foto, zodat die in Google
+  Afbeeldingen kan verschijnen. Voor een site met fotoreviews is dat een eigen ingang.
+- **robots.txt dicht.** De AI-zoekcrawlers (ChatGPT, Claude, Perplexity) volgen dezelfde regels
+  als de rest en kruipen niet meer door `/api/`, `/auth/` en `/profile`.
+- **IndexNow.** Een nieuwe review wordt binnen seconden gemeld bij Bing, en daarmee bij
+  DuckDuckGo, Ecosia, Yahoo en ChatGPT Search. Dit gaat pas aan als `INDEXNOW_KEY` is gezet.
+- Eerder al: `/snackplekken`, `/gerechten`, titels met "reviews", JSON-LD met cijfers en
+  breadcrumbs, en feitelijke titels zonder "de beste".
+
+### Zelf doen (buiten de code), in deze volgorde
+1. **Search Console**
+   - Dien `sitemap.xml` opnieuw in.
+   - Vraag via URL-inspectie indexering aan voor `/snackplekken`, `/gerechten` en je drie
+     belangrijkste zaakpagina's.
+   - Bekijk wekelijks "Pagina-indexering" en "Verbeteringen": staan de sterren (review-snippets)
+     erin, en zijn er pagina's "gecrawld, niet geïndexeerd"?
+2. **Bing Webmaster Tools**
+   - Importeer de site vanuit Search Console, dat is één klik.
+   - Zet een `INDEXNOW_KEY` (`openssl rand -hex 16`) in `.env`.
+3. **Cloudflare**
+   - Cache Rule voor `/api/v1/photos/variant` (zie `infra/SEO_CRAWL_HEALTH.md` §1). Snellere
+     foto's betekenen een snellere LCP, en dat weegt mee in de ranking.
+   - Een `www`-redirect.
+4. **Links van buitenaf.** Dit is voor een jonge site de zwaarste factor.
+   - Laat snackbars hun SnackSpot-pagina op hun eigen site of socials zetten, bijvoorbeeld via
+     het QR-programma uit §5.
+   - Pitch een ranglijst ("de hoogst beoordeelde kapsalon van Eindhoven") aan lokale media en
+     studentensites.
+   - Eén link van een regionale nieuwssite weegt zwaarder dan honderd directory-vermeldingen.
+5. **Socials koppelen.** Zodra er Instagram- en TikTok-accounts zijn, zet je die als `sameAs` in de
+   Organization-JSON-LD (`app/layout.tsx`). Dat helpt Google een merkpaneel te tonen bij
+   "snackspot".
+
+### Volgende stappen in de code (geprioriteerd)
+| # | Wat | Waarom | Inspanning |
+|---|---|---|---|
+| 1 | "Meer snackplekken in {stad}"-blok op elke zaakpagina (3 tot 5 links) | Kortere klikafstand, meer interne links naar zaakpagina's; nu is een zaakpagina vaak een doodlopende weg | S |
+| 2 | Betekenisvolle alt-teksten op reviewfoto's ("Kapsalon bij X in Eindhoven"), nu vaak `alt=""` | Google Afbeeldingen leest alt-tekst; toegankelijkheid | S |
+| 3 | Stadstitel met "snackbar": "Snackbars en snackplekken in Eindhoven" | "snackbar eindhoven" wordt veel vaker gezocht dan "snackplekken" | XS |
+| 4 | Leesbare zaak-URL: `/place/{id}/{naam-stad}`, oude URL's canoniek | Zoekwoord in de URL, betrouwbaarder ogende link in de resultaten | M |
+| 5 | Top 3 reviews als `review` in de Restaurant-JSON-LD | Grotere kans op sterren en een reviewfragment in de resultaten, dus hogere CTR | S |
+| 6 | Zaak- en reviewpagina's met ISR in plaats van per request | Snellere eerste byte voor Googlebot en bezoekers | M |
+
+Niet doen: FAQ-markup (Google toont die sinds 2023 alleen nog voor overheids- en
+zorgsites), automatisch gegenereerde "snackbar in {dorp}"-pagina's zonder reviews (dunne
+inhoud), en gekochte links.
+
 ## 8. KPI's
 
 | KPI | Bron | Nu | Doel 90 d |

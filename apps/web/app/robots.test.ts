@@ -67,3 +67,23 @@ describe('robots.txt photo access', () => {
     expect(robots().sitemap).toMatch(/\/sitemap\.xml$/)
   })
 })
+
+describe('robots.txt AI search crawlers', () => {
+  // A crawler obeys only the group that names it. When the AI-search group carried just
+  // `Allow: /`, GPTBot and the others ignored every Disallow in the wildcard group.
+  it('gives named crawlers the same disallow list as everyone else', () => {
+    const rules = robots().rules
+    const list = Array.isArray(rules) ? rules : [rules]
+    const general = list.find((r) => r.userAgent === '*')!
+    const ai = list.find((r) => Array.isArray(r.userAgent) && r.userAgent.includes('GPTBot'))!
+    expect(asList(ai.disallow)).toEqual(asList(general.disallow))
+    expect(asList(ai.disallow)).toContain('/api/')
+  })
+
+  it('keeps training-only crawlers out entirely', () => {
+    const rules = robots().rules
+    const list = Array.isArray(rules) ? rules : [rules]
+    const training = list.find((r) => Array.isArray(r.userAgent) && r.userAgent.includes('CCBot'))!
+    expect(asList(training.disallow)).toEqual(['/'])
+  })
+})

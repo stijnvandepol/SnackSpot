@@ -47,6 +47,11 @@ export interface CitySummary {
   name: string
   placeCount: number
   reviewCount: number
+  /**
+   * When the newest published review in this city was written or edited. The sitemap uses it
+   * as <lastmod>: a date that only moves when the page's content does is one Google trusts.
+   */
+  lastModified?: string | null
 }
 
 export interface CityPlace {
@@ -83,6 +88,8 @@ export interface CityDishSummary {
   placeCount: number
   reviewCount: number
   avgRating: number
+  /** Newest published review of this dish in this city; see CitySummary.lastModified. */
+  lastModified?: string | null
 }
 
 export interface CityDishPlace {
@@ -118,6 +125,7 @@ interface CityAggregateRow {
   city: string
   place_count: number
   review_count: number
+  last_modified?: Date | null
 }
 
 interface CityPlaceRow {
@@ -146,6 +154,7 @@ interface CityDishAggregateRow {
   place_count: number
   review_count: number
   avg_rating: number
+  last_modified?: Date | null
 }
 
 interface CityDishPlaceRow {
@@ -176,7 +185,7 @@ const QUALIFYING_CITIES_TTL_SECONDS = 300
  * Redis shares the result across requests.
  */
 export const getQualifyingCities = cache(async (): Promise<CitySummary[]> => {
-  const cacheKey = buildCacheKey('qualifying-cities', 'v1')
+  const cacheKey = buildCacheKey('qualifying-cities', 'v2')
   const cached = await getCachedJson<CitySummary[]>(cacheKey)
   if (cached) return cached
 
@@ -190,7 +199,8 @@ async function loadQualifyingCities(): Promise<CitySummary[]> {
     SELECT
       p.city                     AS city,
       COUNT(DISTINCT p.id)::int  AS place_count,
-      COUNT(r.id)::int           AS review_count
+      COUNT(r.id)::int           AS review_count,
+      MAX(r.updated_at)          AS last_modified
     FROM places p
     JOIN reviews r ON r.place_id = p.id AND r.status = 'PUBLISHED'
     WHERE p.city IS NOT NULL AND TRIM(p.city) <> ''
@@ -208,8 +218,17 @@ async function loadQualifyingCities(): Promise<CitySummary[]> {
       name: row.city,
       placeCount: row.place_count,
       reviewCount: row.review_count,
+      lastModified: isoOrNull(row.last_modified),
     }))
 }
+
+/** ISO string for a DB timestamp, or null. Kept as a string: these objects are cached as JSON. */
+export function isoOrNull(value: Date | string | null | undefined): string | null {
+  if (!value) return null
+  const date = value instanceof Date ? value : new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date.toISOString()
+}
+
 
 /**
  * Slug of the city landing page a place belongs to, or null when that city has no page.
@@ -329,7 +348,8 @@ export async function getQualifyingCityDishes(city: string): Promise<CityDishSum
       LOWER(TRIM(r.dish_name))                        AS dish_key,
       COUNT(DISTINCT r.place_id)::int                 AS place_count,
       COUNT(*)::int                                   AS review_count,
-      ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating
+      ROUND(AVG(r.rating_overall)::numeric, 1)::float AS avg_rating,
+      MAX(r.updated_at)                               AS last_modified
     FROM reviews r
     JOIN places p ON p.id = r.place_id
     WHERE p.city = ${city}
@@ -355,6 +375,7 @@ export async function getQualifyingCityDishes(city: string): Promise<CityDishSum
       placeCount: row.place_count,
       reviewCount: row.review_count,
       avgRating: row.avg_rating,
+      lastModified: isoOrNull(row.last_modified),
     }))
     // A slug collision would make one of the two pages unreachable; keeping the first
     // (most-reviewed) is deterministic and matches what the city page links to.

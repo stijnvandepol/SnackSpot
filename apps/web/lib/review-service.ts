@@ -16,6 +16,7 @@ import { notifyMention } from './notification-service'
 import { resolveProviderPlace, resolveManualPlace } from './place-service'
 import { logger } from './logger'
 import { recordEvent } from '@/lib/analytics-store'
+import { pingIndexNow } from '@/lib/indexnow'
 
 // ─── Use-case result ──────────────────────────────────────────────────────────
 // The service is transport-agnostic: it returns a domain result that the route
@@ -258,6 +259,10 @@ export async function createReview(params: {
     recordEvent('review_created', isFirstReviewOfPlace ? 'new_place' : 'known_place'), // never throws
     ...(priorUserReviews === 0 ? [recordEvent('first_review_created')] : []),
   ])
+
+  // Tell Bing & co. about the changed pages now rather than at their next crawl. Not awaited:
+  // the ping has its own timeout and never throws, and the author should not wait on it.
+  void pingIndexNow([`/place/${placeId}`, `/review/${review.id}`])
 
   return { ok: true, value: serializeRatings(review) }
 }
