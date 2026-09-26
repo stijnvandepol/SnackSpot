@@ -10,12 +10,14 @@ import { REVIEW_TAG_OPTIONS, type ReviewTag } from '@/lib/review-tags'
 import { shouldUseDirectBrowserUpload, normalizeUploadMime, compressImage } from '@/lib/upload'
 import { AuthGate } from '@/components/auth-gate'
 import { track } from '@/lib/analytics'
+import { FileImagePreview } from '@/components/file-image-preview'
 
 type Step = 'place' | 'review' | 'photos'
 
 interface UploadedPhoto {
   photoId: string
-  previewUrl: string
+  /** The picked file itself; the preview is drawn from it (see FileImagePreview). */
+  file: File
   status: 'uploading' | 'confirming' | 'ready' | 'error'
 }
 
@@ -97,18 +99,7 @@ function AddReviewForm() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const photosRef = useRef<UploadedPhoto[]>([])
 
-  const revokePreviewUrl = (url: string) => {
-    if (url.startsWith('blob:')) {
-      URL.revokeObjectURL(url)
-    }
-  }
-
-  // Photos effect mirror (kept in sync for cleanup on unmount).
-  useEffect(() => {
-    photosRef.current = photos
-  }, [photos])
 
   // Arriving via "Write review" on a place page (?placeId=...) pre-selects that
   // place so the user never has to search for it again.
@@ -129,11 +120,6 @@ function AddReviewForm() {
     }
   }, [prefillPlaceId])
 
-  useEffect(() => {
-    return () => {
-      photosRef.current.forEach((photo) => revokePreviewUrl(photo.previewUrl))
-    }
-  }, [])
 
   // Counted once per visit by a signed-in user; the gap to "review_created" is the
   // form's own drop-off.
@@ -178,11 +164,10 @@ function AddReviewForm() {
         continue
       }
 
-      const previewUrl = URL.createObjectURL(file)
       const tempId = createTempPhotoId()
       let realId = tempId
 
-      setPhotos((prev) => [...prev, { photoId: tempId, previewUrl, status: 'uploading' }])
+      setPhotos((prev) => [...prev, { photoId: tempId, file, status: 'uploading' }])
 
       try {
         // Compress image client-side: resize to max 2048px, convert to WebP/JPEG
@@ -575,11 +560,7 @@ function AddReviewForm() {
             <div className="grid grid-cols-3 gap-2">
               {photos.map((p) => (
                 <div key={p.photoId} className="relative aspect-square rounded-xl overflow-hidden bg-snack-surface">
-                  {/* Scheme guard: only browser-generated blob: object URLs are
-                      ever rendered as the preview source. */}
-                  {p.previewUrl.startsWith('blob:') && (
-                    <img src={p.previewUrl} alt="" className="h-full w-full object-cover" />
-                  )}
+                  <FileImagePreview file={p.file} label="Gekozen foto" className="h-full w-full" />
                   <div className={`absolute inset-0 flex items-center justify-center ${p.status !== 'ready' ? 'bg-black/40' : 'opacity-0'}`}>
                     {p.status === 'uploading' || p.status === 'confirming'
                       ? <div className="h-6 w-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -591,7 +572,6 @@ function AddReviewForm() {
                     className="absolute top-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-sm text-white"
                     aria-label="Foto verwijderen"
                     onClick={() => {
-                      revokePreviewUrl(p.previewUrl)
                       setPhotos((prev) => prev.filter((x) => x.photoId !== p.photoId))
                     }}
                   >

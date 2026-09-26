@@ -8,6 +8,7 @@ import { computeOverallRating } from '@/lib/ratings'
 import { REVIEW_TAG_OPTIONS, type ReviewTag } from '@/lib/review-tags'
 import { shouldUseDirectBrowserUpload, normalizeUploadMime, compressImage } from '@/lib/upload'
 import { AuthGate } from '@/components/auth-gate'
+import { FileImagePreview } from '@/components/file-image-preview'
 
 interface ReviewEditData {
   id: string
@@ -36,7 +37,10 @@ interface RatingDraft {
 
 interface UploadedPhoto {
   photoId: string
-  previewUrl: string
+  /** Server variant URL for a photo already on the review. */
+  previewUrl?: string
+  /** A newly picked file; drawn locally (see FileImagePreview) until the review is saved. */
+  file?: File
   status: 'uploading' | 'confirming' | 'ready' | 'error'
 }
 
@@ -137,13 +141,6 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
   const [pageLoading, setPageLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const photosRef = useRef<UploadedPhoto[]>([])
-
-  const revokePreviewUrl = (url: string) => {
-    if (url.startsWith('blob:')) {
-      URL.revokeObjectURL(url)
-    }
-  }
 
   useEffect(() => {
     fetch(`/api/v1/reviews/${id}`)
@@ -189,15 +186,6 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
       })
   }, [id])
 
-  useEffect(() => {
-    photosRef.current = photos
-  }, [photos])
-
-  useEffect(() => {
-    return () => {
-      photosRef.current.forEach((photo) => revokePreviewUrl(photo.previewUrl))
-    }
-  }, [])
 
   if (loading || pageLoading) {
     return (
@@ -315,11 +303,10 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
         continue
       }
 
-      const previewUrl = URL.createObjectURL(file)
       const tempId = createTempPhotoId()
       let realId = tempId
 
-      setPhotos((prev) => [...prev, { photoId: tempId, previewUrl, status: 'uploading' }])
+      setPhotos((prev) => [...prev, { photoId: tempId, file, status: 'uploading' }])
 
       try {
         // Compress image client-side
@@ -588,7 +575,12 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
             <div className="grid grid-cols-3 gap-2">
               {photos.map((p) => (
                 <div key={p.photoId} className="relative aspect-square overflow-hidden rounded-xl bg-snack-surface">
-                  <img src={p.previewUrl} alt="" className="h-full w-full object-cover" />
+                  {p.file ? (
+                    <FileImagePreview file={p.file} label="Gekozen foto" className="h-full w-full" />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element -- pre-sized WebP variant from our own server
+                    <img src={p.previewUrl} alt="" className="h-full w-full object-cover" />
+                  )}
                   <div className={`absolute inset-0 flex items-center justify-center ${p.status !== 'ready' ? 'bg-black/40' : 'opacity-0'}`}>
                     {p.status === 'uploading' || p.status === 'confirming'
                       ? <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -600,7 +592,6 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
                     className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-xs text-white"
                     aria-label="Foto verwijderen"
                     onClick={() => {
-                      revokePreviewUrl(p.previewUrl)
                       setPhotos((prev) => prev.filter((x) => x.photoId !== p.photoId))
                     }}
                   >
