@@ -233,6 +233,7 @@ Copy `.env.example` to `.env` and fill in the values below.
 | `MAX_FILE_SIZE_BYTES` | `10485760` | Max upload size (10 MB) |
 | `MAX_PHOTOS_PER_REVIEW` | `5` | Max photos per review |
 | `WEB_BIND_ADDRESS` | `0.0.0.0` | Network interface for the web app (port 8080); use `127.0.0.1` when cloudflared runs on the same host |
+| `INDEXNOW_KEY` | – | Optional. Pings IndexNow (Bing, DuckDuckGo, Ecosia, ChatGPT search) when a review is posted; served at `/indexnow-key.txt`. Generate with `openssl rand -hex 16` |
 | `ADMIN_BIND_ADDRESS` | `0.0.0.0` | Network interface for the admin panel |
 
 ### LAN / Cloudflare Tunnel setup

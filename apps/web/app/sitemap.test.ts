@@ -3,16 +3,20 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 vi.mock('@/lib/db', () => ({
   prisma: {
     place: { findMany: vi.fn() },
-    review: { findMany: vi.fn() },
+    review: { findMany: vi.fn(), groupBy: vi.fn() },
     user: { findMany: vi.fn() },
   },
 }))
-vi.mock('@/lib/city-index', () => ({ getQualifyingCities: vi.fn(), getQualifyingCityDishes: vi.fn() }))
+vi.mock('@/lib/city-index', () => ({
+  getQualifyingCities: vi.fn(),
+  getQualifyingCityDishes: vi.fn(),
+  getPhotoByPlace: vi.fn(),
+}))
 vi.mock('@/lib/dish-index', () => ({ getQualifyingDishes: vi.fn() }))
 vi.mock('@/lib/logger', () => ({ logger: { error: vi.fn() } }))
 
 import { prisma } from '@/lib/db'
-import { getQualifyingCities, getQualifyingCityDishes } from '@/lib/city-index'
+import { getPhotoByPlace, getQualifyingCities, getQualifyingCityDishes } from '@/lib/city-index'
 import { getQualifyingDishes } from '@/lib/dish-index'
 import sitemap from './sitemap'
 
@@ -21,7 +25,8 @@ const getCityDishes = vi.mocked(getQualifyingCityDishes)
 
 beforeEach(() => {
   vi.resetAllMocks()
-  vi.mocked(prisma.place.findMany).mockResolvedValue([] as never)
+  vi.mocked(prisma.review.groupBy).mockResolvedValue([] as never)
+  vi.mocked(getPhotoByPlace).mockResolvedValue(new Map())
   vi.mocked(prisma.review.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.user.findMany).mockResolvedValue([] as never)
   getCities.mockResolvedValue([])
@@ -139,7 +144,7 @@ describe('sitemap city entries', () => {
   })
 
   it('still degrades to static entries when the database fails', async () => {
-    vi.mocked(prisma.place.findMany).mockRejectedValue(new Error('connection refused'))
+    vi.mocked(prisma.review.groupBy).mockRejectedValue(new Error('connection refused'))
 
     const result = await urls()
 
@@ -158,5 +163,49 @@ describe('sitemap — national dish pages', () => {
     const all = await urls()
     expect(all).toContain('https://snackspot.online/gerechten')
     expect(all).toContain('https://snackspot.online/gerechten/frikandel-speciaal')
+  })
+})
+
+describe('sitemap dates and images', () => {
+  // Google stops trusting <lastmod> on a site whose dates move without the content moving.
+  // "Now" on every generation was exactly that; each entry now carries its own content date.
+  const reviewedAt = new Date('2026-09-20T10:00:00Z')
+
+  it('dates a place by its newest review and attaches its photo', async () => {
+    vi.mocked(prisma.review.groupBy).mockResolvedValue([
+      { placeId: 'p1', _max: { updatedAt: reviewedAt } },
+    ] as never)
+    vi.mocked(getPhotoByPlace).mockResolvedValue(new Map([['p1', '/api/v1/photos/variant?key=a%2Fb.webp']]))
+
+    const place = (await sitemap()).find((entry) => entry.url.endsWith('/place/p1'))!
+    expect(place.lastModified).toEqual(reviewedAt)
+    expect(place.images).toEqual(['https://snackspot.online/api/v1/photos/variant?key=a%2Fb.webp'])
+  })
+
+  it('escapes & in image URLs, because Next writes <image:loc> verbatim', async () => {
+    vi.mocked(prisma.review.groupBy).mockResolvedValue([{ placeId: 'p1', _max: { updatedAt: reviewedAt } }] as never)
+    vi.mocked(getPhotoByPlace).mockResolvedValue(new Map([['p1', '/x?a=1&b=2']]))
+    const place = (await sitemap()).find((entry) => entry.url.endsWith('/place/p1'))!
+    expect(place.images).toEqual(['https://snackspot.online/x?a=1&amp;b=2'])
+  })
+
+  it('dates city and dish pages by their newest review, not by the build time', async () => {
+    getCities.mockResolvedValue([
+      { slug: 'eindhoven', name: 'Eindhoven', placeCount: 3, reviewCount: 9, lastModified: reviewedAt.toISOString() },
+    ])
+    vi.mocked(getQualifyingDishes).mockResolvedValue([
+      { slug: 'kapsalon', name: 'Kapsalon', key: 'kapsalon', placeCount: 2, cityCount: 1, reviewCount: 3, avgRating: 4, lastModified: reviewedAt.toISOString() },
+    ])
+    const all = await sitemap()
+    expect(all.find((e) => e.url.endsWith('/snackplekken/eindhoven'))!.lastModified).toEqual(reviewedAt)
+    expect(all.find((e) => e.url.endsWith('/gerechten/kapsalon'))!.lastModified).toEqual(reviewedAt)
+    expect(all.find((e) => e.url.endsWith('/snackplekken'))!.lastModified).toEqual(reviewedAt)
+  })
+
+  it('never dates an entry in the future of its content', async () => {
+    const before = Date.now()
+    for (const entry of await sitemap()) {
+      expect(+new Date(entry.lastModified as Date)).toBeLessThan(before)
+    }
   })
 })

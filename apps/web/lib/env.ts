@@ -56,6 +56,16 @@ const envSchema = z.object({
   // Web push is optional: without a VAPID key pair the subscribe UI hides
   // itself and the worker skips push jobs. The private key lives only in the
   // worker's environment.
+  // IndexNow is optional: without a key nothing is pinged and /indexnow-key.txt 404s.
+  // 8-128 characters of a-z, A-Z, 0-9 and '-' (IndexNow spec); generate with `openssl rand -hex 16`.
+  // docker-compose passes an unset variable as '', which must mean "off", not "invalid".
+  INDEXNOW_KEY: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z
+      .string()
+      .regex(/^[a-zA-Z0-9-]{8,128}$/)
+      .optional(),
+  ),
   VAPID_PUBLIC_KEY: z.string().optional(),
 
 })
