@@ -5,6 +5,7 @@ import { useAuth } from '@/components/auth-provider'
 import { normalizeUploadMime, shouldUseDirectBrowserUpload, compressImage } from '@/lib/upload'
 import { MEAL_SLOTS, type MealSlot } from '@/lib/meal'
 import { AuthGate } from '@/components/auth-gate'
+import { FileImagePreview } from '@/components/file-image-preview'
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
 
@@ -35,7 +36,7 @@ interface BiteSuccess {
 export default function AddBitePage() {
   const { user, accessToken, loading } = useAuth()
   const [photoId, setPhotoId] = useState<string | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewFile, setPreviewFile] = useState<File | null>(null)
   const [photoStatus, setPhotoStatus] = useState<'idle' | 'uploading' | 'ready' | 'error'>('idle')
   const [mealSlot, setMealSlot] = useState<MealSlot>(defaultMealSlot)
   const [note, setNote] = useState('')
@@ -49,12 +50,6 @@ export default function AddBitePage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const searchAbortRef = useRef<AbortController | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl)
-    }
-  }, [previewUrl])
 
   // Cancel a pending debounced search + in-flight request on unmount so neither
   // fires against an unmounted component.
@@ -92,8 +87,7 @@ export default function AddBitePage() {
 
     setError(null)
     setPhotoStatus('uploading')
-    if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl)
-    setPreviewUrl(URL.createObjectURL(file))
+    setPreviewFile(file)
 
     try {
       let uploadBlob: Blob = file
@@ -219,8 +213,7 @@ export default function AddBitePage() {
 
   const resetForm = () => {
     setPhotoId(null)
-    if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl)
-    setPreviewUrl(null)
+    setPreviewFile(null)
     setPhotoStatus('idle')
     setMealSlot(defaultMealSlot())
     setNote('')
@@ -302,12 +295,9 @@ export default function AddBitePage() {
         }}
       />
 
-      {previewUrl?.startsWith('blob:') ? (
+      {previewFile ? (
         <div className="relative aspect-square overflow-hidden rounded-2xl bg-snack-surface">
-          {/* Scheme guard: only browser-generated blob: object URLs are ever
-              rendered as the preview source (CodeQL js/xss-through-dom). */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={previewUrl} alt="Je maaltijd" className="h-full w-full object-cover" />
+          <FileImagePreview file={previewFile} label="Je maaltijd" className="h-full w-full" />
           {photoStatus === 'uploading' && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
