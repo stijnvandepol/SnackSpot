@@ -144,7 +144,9 @@ async function processPhoto(job: Job<PhotoJob>): Promise<void> {
         .rotate() // auto-rotate from EXIF orientation, then discard EXIF
         .resize({ width: variant.width, withoutEnlargement: true })
         // withMetadata() intentionally omitted: Sharp strips all metadata (incl. GPS) by default
-        .webp({ quality: variant.quality, effort: 4 })
+        // smartSubsample: plain 4:2:0 chroma smears reds and oranges (sauce, fries, a
+        // frikandel) into their surroundings; this keeps those edges crisp for roughly 10% more bytes.
+        .webp({ quality: variant.quality, effort: 4, smartSubsample: true })
         .toBuffer()
 
       await uploadBuffer(destKey, outputBuffer, 'image/webp')

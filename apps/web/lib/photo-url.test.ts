@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { photoVariantUrl } from './photo-url'
+import { photoSrcSet, photoVariantUrl } from './photo-url'
 
 describe('photoVariantUrl — variant selection', () => {
   it('returns a same-origin /api/v1/photos/variant URL', () => {
@@ -70,5 +70,26 @@ describe('photoVariantUrl — URL encoding', () => {
     const url = photoVariantUrl({ thumb: 'photos/abc.jpg' })
     expect(url).toMatch(/^\/api\//)
     expect(url).not.toMatch(/^https?:\/\//)
+  })
+})
+
+describe('photoSrcSet', () => {
+  it('lists every stored variant with its rendered width', () => {
+    const srcSet = photoSrcSet({ thumb: 't.webp', medium: 'm.webp', large: 'l.webp' })
+    expect(srcSet).toBe(
+      '/api/v1/photos/variant?key=t.webp 256w, /api/v1/photos/variant?key=m.webp 1024w, /api/v1/photos/variant?key=l.webp 2048w',
+    )
+  })
+
+  it('skips missing variants', () => {
+    expect(photoSrcSet({ medium: 'm.webp', large: '' , thumb: 't.webp' })).toBe(
+      '/api/v1/photos/variant?key=t.webp 256w, /api/v1/photos/variant?key=m.webp 1024w',
+    )
+  })
+
+  it('returns undefined when there is nothing to choose from', () => {
+    expect(photoSrcSet(null)).toBeUndefined()
+    expect(photoSrcSet({})).toBeUndefined()
+    expect(photoSrcSet({ medium: 'm.webp' })).toBeUndefined()
   })
 })

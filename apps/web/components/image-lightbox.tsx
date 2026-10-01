@@ -5,6 +5,8 @@ import Image from 'next/image'
 export interface LightboxImage {
   src: string
   thumbnail: string
+  /** Optional srcset for the in-page thumbnail, so it stays sharp on high-DPR screens. */
+  thumbnailSrcSet?: string
   alt: string
   priority?: boolean
 }
@@ -15,6 +17,8 @@ interface ImageLightboxProps {
   containerStyle?: CSSProperties
   itemClassName?: string
   thumbnailClassName?: string
+  /** `sizes` for the in-page thumbnails; only used with `thumbnailSrcSet`. */
+  thumbnailSizes?: string
 }
 
 export function ImageLightbox({
@@ -23,6 +27,7 @@ export function ImageLightbox({
   containerStyle,
   itemClassName,
   thumbnailClassName,
+  thumbnailSizes,
 }: ImageLightboxProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const isOpen = openIndex !== null
@@ -94,14 +99,28 @@ export function ImageLightbox({
             className={`relative ${itemClassName ?? 'cursor-zoom-in'}`}
             aria-label={`${img.alt} groot bekijken`}
           >
-            <Image
-              src={img.thumbnail}
-              alt={img.alt}
-              fill
-              unoptimized
-              className={thumbnailClassName}
-              priority={img.priority}
-            />
+            {img.thumbnailSrcSet ? (
+              // eslint-disable-next-line @next/next/no-img-element -- next/image drops srcset with `unoptimized`
+              <img
+                src={img.thumbnail}
+                srcSet={img.thumbnailSrcSet}
+                sizes={thumbnailSizes ?? '100vw'}
+                alt={img.alt}
+                className={`absolute inset-0 ${thumbnailClassName ?? ''}`}
+                loading={img.priority ? 'eager' : 'lazy'}
+                fetchPriority={img.priority ? 'high' : undefined}
+                decoding="async"
+              />
+            ) : (
+              <Image
+                src={img.thumbnail}
+                alt={img.alt}
+                fill
+                unoptimized
+                className={thumbnailClassName}
+                priority={img.priority}
+              />
+            )}
           </button>
         ))}
       </div>

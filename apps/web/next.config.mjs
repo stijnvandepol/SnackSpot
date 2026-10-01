@@ -6,6 +6,10 @@ const nextConfig = {
   // The dev-tools badge sits bottom-left, on top of the mobile bottom nav: it covered the Home
   // and Ontdek links in development and intercepted e2e clicks there. Error overlays still show.
   devIndicators: false,
+  // pino-pretty runs in a worker thread that pino resolves from its own package path. Bundled
+  // by webpack that path no longer exists, so in development every log call threw "the worker
+  // has exited" and raised the error overlay. Loading pino from node_modules fixes that.
+  serverExternalPackages: ['pino', 'pino-pretty', 'thread-stream'],
 
   images: {
     formats: ['image/avif', 'image/webp'],

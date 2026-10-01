@@ -26,3 +26,22 @@ export function photoVariantUrl(
   return null
 }
 
+/** Widths the worker renders each variant at (apps/worker VARIANTS); smaller originals stay smaller. */
+const VARIANT_WIDTHS = { thumb: 256, medium: 1024, large: 2048 } as const
+
+/**
+ * A `srcset` over all stored variants, so the browser picks by real pixel need.
+ *
+ * Without it every card got the 1024px `medium`, which a 3x phone stretches over a ~1200px
+ * wide card and a retina laptop over ~1300px: food photos came out visibly soft. With it the
+ * phone downloads `large` only where the screen can show it.
+ */
+export function photoSrcSet(variants: PhotoVariants | Record<string, string> | null | undefined): string | undefined {
+  if (!variants) return undefined
+  const entries = VARIANT_ORDER.flatMap((size) => {
+    const url = photoVariantUrl(variants, [size])
+    return url ? [`${url} ${VARIANT_WIDTHS[size]}w`] : []
+  })
+  return entries.length > 1 ? entries.join(', ') : undefined
+}
+

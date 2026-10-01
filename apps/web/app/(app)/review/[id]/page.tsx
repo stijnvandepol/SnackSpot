@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { ReviewStatus } from '@prisma/client'
-import { photoVariantUrl } from '@/lib/photo-url'
+import { photoSrcSet, photoVariantUrl } from '@/lib/photo-url'
 import { getReviewTagLabel } from '@/lib/review-tags'
 import { extractCity } from '@/lib/utils'
 import { getSiteUrl } from '@/lib/site-url'
@@ -177,7 +177,13 @@ export default async function ReviewPage({
       const src = photoVariantUrl(rp.photo.variants as Record<string, string>, ['large', 'medium', 'thumb'])
       const thumbnail = photoVariantUrl(rp.photo.variants as Record<string, string>, ['medium', 'thumb', 'large'])
       if (!src) return null
-      return { src, thumbnail: thumbnail ?? src, alt: review.dishName ?? `Foto bij review van ${review.place.name}`, priority: rp.sortOrder === 0 }
+      return {
+        src,
+        thumbnail: thumbnail ?? src,
+        thumbnailSrcSet: photoSrcSet(rp.photo.variants as Record<string, string>),
+        alt: review.dishName ?? `Foto bij review van ${review.place.name}`,
+        priority: rp.sortOrder === 0,
+      }
     })
     .filter((img): img is NonNullable<typeof img> => img !== null)
 
@@ -267,6 +273,8 @@ export default async function ReviewPage({
           containerStyle={{ gridTemplateColumns: `repeat(${Math.min(galleryImages.length, 3)}, 1fr)` }}
           itemClassName="aspect-square rounded-2xl overflow-hidden bg-snack-surface cursor-zoom-in block w-full"
           thumbnailClassName="h-full w-full object-cover"
+          // The page is max-w-lg (512px) with 16px gutters; the grid splits that over up to 3.
+          thumbnailSizes={`(min-width: 544px) ${Math.round(480 / Math.min(galleryImages.length, 3))}px, ${Math.round(100 / Math.min(galleryImages.length, 3))}vw`}
         />
       )}
 

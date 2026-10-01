@@ -1,7 +1,6 @@
 import { memo } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
-import { photoVariantUrl } from '@/lib/photo-url'
+import { photoSrcSet, photoVariantUrl } from '@/lib/photo-url'
 import { ReviewLikeButton } from '@/components/review-like-button'
 import { ShareButton } from '@/components/share-button'
 import { buildReviewShareText, buildReviewShareTitle, reviewSharePath } from '@/lib/share'
@@ -54,10 +53,14 @@ export const ReviewCard = memo(function ReviewCard({
   backContext,
   priority = false,
 }: ReviewCardProps) {
-  const thumb =
+  const cover =
     review.reviewPhotos
-      ?.map((rp) => photoVariantUrl(rp.photo.variants as Record<string, string>, photoVariantPreference))
-      .find((url): url is string => Boolean(url)) ?? null
+      ?.map((rp) => {
+        const variants = rp.photo.variants as Record<string, string>
+        const src = photoVariantUrl(variants, photoVariantPreference)
+        return src ? { src, srcSet: photoSrcSet(variants) } : null
+      })
+      .find((photo) => photo !== null) ?? null
 
   const reviewHref = backContext
     ? `/review/${review.id}?from=${encodeURIComponent(backContext)}`
@@ -86,15 +89,18 @@ export const ReviewCard = memo(function ReviewCard({
           className="absolute inset-0 z-10 rounded-xl focus-visible:z-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-snack-primary focus-visible:ring-offset-2"
           aria-label={`Bekijk review van ${review.user.username}`}
         />
-        {thumb && (
+        {cover && (
           <div className="relative h-64 w-full bg-snack-surface md:h-72">
-            <Image
-              src={thumb}
+            {/* eslint-disable-next-line @next/next/no-img-element -- srcset over our own variants; next/image would drop it with `unoptimized` */}
+            <img
+              src={cover.src}
+              srcSet={cover.srcSet}
+              sizes="(min-width: 768px) 640px, 100vw"
               alt={review.dishName ?? 'Reviewfoto'}
-              fill
-              unoptimized
-              className="object-cover"
-              priority={priority}
+              className="absolute inset-0 h-full w-full object-cover"
+              loading={priority ? 'eager' : 'lazy'}
+              fetchPriority={priority ? 'high' : undefined}
+              decoding="async"
             />
           </div>
         )}
