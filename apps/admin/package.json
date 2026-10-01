@@ -15,7 +15,7 @@
     "@snackspot/shared": "workspace:*",
     "archiver": "^7.0.1",
     "argon2": "^0.41.1",
-    "ioredis": "^5.4.2",
+    "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
     "minio": "^8.0.3",
     "next": "^15.5.24",
