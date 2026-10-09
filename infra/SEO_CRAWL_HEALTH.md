@@ -4,6 +4,10 @@ Actions that live outside the repo — DNS and Cloudflare — plus how to verify
 fixes after deploy. Written 2026-08-07 from Google Search Console crawl stats covering
 9 May – 5 Aug 2026.
 
+**Quick check.** `bash infra/check-cloudflare.sh` tests all of the Cloudflare items below from
+the outside (proxy, HTTPS and `www` redirects, photo caching, no cached pages, crawler access).
+Pass the origin IP as a second argument to also confirm port 8080 is closed to the internet.
+
 ## Background
 
 GSC reported host status **"Problemen in de afgelopen week"** for `snackspot.online`, with:
